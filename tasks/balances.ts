@@ -49,33 +49,35 @@ async function fetchZetaBalance(
   return parseFloat(ethers.utils.formatEther(balance)).toFixed(2);
 }
 
-async function fetchBalances(
-  address: string,
-  provider: ethers.providers.JsonRpcProvider,
-  networkName: string
-) {
-  try {
-    const { url } = hre.config.networks[networkName];
-    const native = await fetchNativeBalance(address, provider);
-    const zeta = await fetchZetaBalance(address, provider, networkName);
-
-    return { networkName, native, zeta };
-  } catch (error) {}
-}
-
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+  const { ethers, config } = hre as any;
+  async function fetchBalances(
+    address: string,
+    provider: ethers.providers.JsonRpcProvider,
+    networkName: string
+  ) {
+    try {
+      const { config } = hre as any;
+      const { url } = config.networks[networkName];
+      const native = await fetchNativeBalance(address, provider);
+      const zeta = await fetchZetaBalance(address, provider, networkName);
+
+      return { networkName, native, zeta };
+    } catch (error) {}
+  }
+
   let address: string;
   if (args.address) {
     address = args.address;
   } else if (process.env.PRIVATE_KEY) {
-    address = new hre.ethers.Wallet(process.env.PRIVATE_KEY).address;
+    address = new ethers.Wallet(process.env.PRIVATE_KEY).address;
   } else {
     return console.error(walletError);
   }
 
   const balancePromises = Object.keys(hre.config.networks).map(
     (networkName) => {
-      const { url } = hre.config.networks[networkName];
+      const { url } = hre.config.networks[networkName] as any;
       const provider = new ethers.providers.JsonRpcProvider(url);
       return fetchBalances(address, provider, networkName);
     }

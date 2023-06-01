@@ -25,10 +25,11 @@ To resolve this issue, please follow these steps:
 `;
 
 const getRecipientAddress = (args: any, hre: HardhatRuntimeEnvironment) => {
+  const { ethers } = hre as any;
   if (args.address) {
     return args.address;
   } else if (process.env.PRIVATE_KEY) {
-    return new hre.ethers.Wallet(process.env.PRIVATE_KEY).address;
+    return new ethers.Wallet(process.env.PRIVATE_KEY).address;
   } else {
     console.error(walletError);
     throw new Error();

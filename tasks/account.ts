@@ -5,7 +5,8 @@ import * as fs from "fs";
 import * as path from "path";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const { privateKey, address, mnemonic } = hre.ethers.Wallet.createRandom();
+  const { ethers } = hre as any;
+  const { privateKey, address, mnemonic } = ethers.Wallet.createRandom();
   console.log(`
 🔑 Private key: ${privateKey}
 🔐 Mnemonic phrase: ${mnemonic.phrase}
