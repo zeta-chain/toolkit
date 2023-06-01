@@ -17,9 +17,18 @@ yarn
 
 ## Installing tasks
 
+To install all the the tasks into a Hardhat template, add the following import
+statement to `hardhat.config.js`:
+
 ```ts
-// hardhat.config.js
 import "@zetachain/tasks";
+```
+
+You can also import specific tasks:
+
+```ts
+import "@zetachain/tasks/account";
+import "@zetachain/tasks/balances";
 ```
 
 ## Compiling Tasks
