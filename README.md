@@ -1,7 +1,4 @@
-# Template for a ZetaChain Hardhat Project
-
-This is a simple Hardhat template that provides a starting point for developing
-smart contract applications on the ZetaChain blockchain.
+# Hardhat tasks for the ZetaChain template
 
 ## Prerequisites
 
@@ -16,6 +13,19 @@ command in your terminal:
 
 ```
 yarn
+```
+
+## Installing tasks
+
+```ts
+// hardhat.config.js
+import "@zetachain/tasks";
+```
+
+## Compiling Tasks
+
+```
+yarn build
 ```
 
 ## Hardhat Tasks
@@ -93,9 +103,3 @@ Select the contract to verify:
 ```
 
 After the confirmation the contract will be verified.
-
-## Next Steps
-
-To learn more about building decentralized apps on ZetaChain, follow the
-tutorials available in
-[the documentation](https://www.zetachain.com/docs/developers/overview/).
