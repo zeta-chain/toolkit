@@ -17,16 +17,27 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   let wallet;
 
   if (args.recover) {
-    const recovery = await input({
+    let recovery = await input({
       message: "Mnemonic or private key:",
     });
 
-    if (recovery.split(" ").length >= 12) {
-      wallet = ethers.Wallet.fromMnemonic(recovery);
-    } else {
-      wallet = new ethers.Wallet(
-        recovery.startsWith("0x") ? recovery : "0x" + recovery
-      );
+    while (true) {
+      try {
+        if (ethers.utils.isValidMnemonic(recovery)) {
+          wallet = ethers.Wallet.fromMnemonic(recovery);
+        } else {
+          wallet = new ethers.Wallet(
+            recovery.startsWith("0x") ? recovery : "0x" + recovery
+          );
+        }
+        break;
+      } catch (e) {
+        console.log("Invalid mnemonic or private key. Please try again.");
+        recovery = await input({
+          message: "Mnemonic or private key:",
+        });
+        continue;
+      }
     }
   } else {
     wallet = ethers.Wallet.createRandom();
