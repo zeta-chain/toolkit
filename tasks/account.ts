@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { bech32 } from "bech32";
 import { input } from "@inquirer/prompts";
+import { validateMnemonic } from "bip39";
 
 function hexToBech32Address(hexAddress: string, prefix: string): string {
   const data = Buffer.from(hexAddress.substr(2), "hex");
@@ -27,7 +28,7 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
         }
       );
       try {
-        if (ethers.utils.isValidMnemonic(recovery)) {
+        if (validateMnemonic(recovery)) {
           wallet = ethers.Wallet.fromMnemonic(recovery);
         } else {
           wallet = new ethers.Wallet(
@@ -36,7 +37,7 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
         }
         break;
       } catch (e) {
-        console.log(`❌ Invalid mnemonic or private key. Please try again.`);
+        console.error(`❌ Invalid mnemonic or private key: ${e}`);
         continue;
       }
     }
