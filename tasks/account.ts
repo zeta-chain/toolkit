@@ -12,16 +12,15 @@ function hexToBech32Address(hexAddress: string, prefix: string): string {
   return bech32.encode(prefix, words);
 }
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers } = hre as any;
   let wallet;
 
   if (args.recover) {
-    let recovery = await input({
-      message: "Mnemonic or private key:",
-    });
-
     while (true) {
+      let recovery = await input({
+        message: "Mnemonic or private key:",
+      });
       try {
         if (ethers.utils.isValidMnemonic(recovery)) {
           wallet = ethers.Wallet.fromMnemonic(recovery);
@@ -32,10 +31,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
         }
         break;
       } catch (e) {
-        console.log("Invalid mnemonic or private key. Please try again.");
-        recovery = await input({
-          message: "Mnemonic or private key:",
-        });
+        console.log(`❌ Invalid mnemonic or private key. Please try again.`);
         continue;
       }
     }
