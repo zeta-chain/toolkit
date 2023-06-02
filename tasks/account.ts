@@ -18,9 +18,14 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   if (args.recover) {
     while (true) {
-      let recovery = await input({
-        message: "Mnemonic or private key:",
-      });
+      let recovery = await input(
+        {
+          message: "Mnemonic or private key:",
+        },
+        {
+          clearPromptOnDone: true,
+        }
+      );
       try {
         if (ethers.utils.isValidMnemonic(recovery)) {
           wallet = ethers.Wallet.fromMnemonic(recovery);
