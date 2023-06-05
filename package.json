@@ -1,10 +1,10 @@
 {
-  "name": "tasks",
+  "name": "toolkit",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf dist && tsc"
+    "build": "rm -rf dist && npx hardhat clean && npx hardhat compile && tsc"
   },
   "keywords": [],
   "author": "",

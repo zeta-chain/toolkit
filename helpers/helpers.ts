@@ -2,6 +2,7 @@ import { MaxUint256 } from "@ethersproject/constants";
 import { parseUnits } from "@ethersproject/units";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
+import { BigNumber } from "@ethersproject/bignumber";
 
 import {
   TestSystemContract,
@@ -9,12 +10,33 @@ import {
   TestZRC20,
   TestZRC20__factory,
   UniswapV2Router02__factory,
-} from "../../typechain-types";
+} from "../typechain-types";
 
 interface EvmSetupResult {
   ZRC20Contracts: TestZRC20[];
   systemContract: TestSystemContract;
 }
+
+export const encodeParams = (dataTypes: any[], data: any[]) => {
+  const abiCoder = ethers.utils.defaultAbiCoder;
+  return abiCoder.encode(dataTypes, data);
+};
+
+export const getSwapParams = (
+  destination: string,
+  destinationToken: string,
+  minOutput: BigNumber
+) => {
+  const paddedDestination = ethers.utils.hexlify(
+    ethers.utils.zeroPad(destination, 32)
+  );
+  const params = encodeParams(
+    ["address", "bytes32", "uint256"],
+    [destinationToken, paddedDestination, minOutput]
+  );
+
+  return params;
+};
 
 export const addZetaEthLiquidity = async (
   signer: SignerWithAddress,

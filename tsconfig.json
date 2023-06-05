@@ -1,13 +1,19 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
+    "baseUrl": ".",
+    "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "target": "es2020",
     "resolveJsonModule": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "skipLibCheck": true,
+    "sourceMap": false,
+    "strict": true,
+    "typeRoots": ["@types", "./node_modules/@types"]
   },
-  "include": ["src/**/*"]
+  "include": ["helpers/**/*", "tasks/**/*", "typechain-types/**/*"]
 }

@@ -2,7 +2,7 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 import { getHardhatConfigNetworks } from "@zetachain/addresses-tools/dist/networks";
-import "./src/tasks";
+import "./tasks";
 
 dotenv.config();
 const PRIVATE_KEYS =
