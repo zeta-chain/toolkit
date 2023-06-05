@@ -3,13 +3,15 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as fs from "fs";
 import * as path from "path";
 import * as handlebars from "handlebars";
-import { upperFirst } from "lodash";
 
-async function processTemplates(
+const upperFirst = (str: string): string =>
+  str.charAt(0).toUpperCase() + str.slice(1);
+
+const processTemplates = async (
   templateDir: string,
   outputDir: string,
   data: Record<string, unknown>
-): Promise<void> {
+): Promise<void> => {
   try {
     templateDir = path.resolve(__dirname, templateDir);
 
@@ -42,7 +44,7 @@ async function processTemplates(
   } catch (error) {
     console.error(`Error processing templates: ${error}`);
   }
-}
+};
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const templateDir = path.resolve(__dirname, "..", "templates", "omnichain");
