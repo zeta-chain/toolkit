@@ -9,5 +9,5 @@
     "resolveJsonModule": true,
     "outDir": "./dist"
   },
-  "include": ["tasks/**/*"]
+  "include": ["src/**/*"]
 }
