@@ -17,25 +17,15 @@ interface EvmSetupResult {
   systemContract: TestSystemContract;
 }
 
-export const encodeParams = (dataTypes: any[], data: any[]) => {
+export const prepareData = (contract: string, types: string[], args: any[]) => {
   const abiCoder = ethers.utils.defaultAbiCoder;
-  return abiCoder.encode(dataTypes, data);
-};
-
-export const getSwapParams = (
-  destination: string,
-  destinationToken: string,
-  minOutput: BigNumber
-) => {
-  const paddedDestination = ethers.utils.hexlify(
-    ethers.utils.zeroPad(destination, 32)
-  );
-  const params = encodeParams(
-    ["address", "bytes32", "uint256"],
-    [destinationToken, paddedDestination, minOutput]
-  );
-
-  return params;
+  for (let i = 0; i < args.length; i++) {
+    if (types[i] === "bytes32" && typeof args[i] === "string") {
+      args[i] = ethers.utils.hexlify(ethers.utils.zeroPad(args[i], 32));
+    }
+  }
+  const params = abiCoder.encode(types, args);
+  return `${contract}${params.slice(2)}`;
 };
 
 export const addZetaEthLiquidity = async (
