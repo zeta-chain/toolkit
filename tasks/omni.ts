@@ -4,8 +4,13 @@ import * as fs from "fs";
 import * as path from "path";
 import * as handlebars from "handlebars";
 
-const upperFirst = (str: string): string =>
-  str.charAt(0).toUpperCase() + str.slice(1);
+const sanitizeSolidityFunctionName = (str: string): string => {
+  // Remove any character that's not alphanumeric or underscore
+  const cleaned = str.replace(/[^a-zA-Z0-9_]/g, "");
+
+  // If the first character is a digit, prepend with an underscore
+  return cleaned.match(/^\d/) ? `_${cleaned}` : cleaned;
+};
 
 const processTemplates = async (
   templateDir: string,
@@ -62,7 +67,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   const data = {
     args,
-    contractName: upperFirst(args.name),
+    contractName: sanitizeSolidityFunctionName(args.name),
     arguments: { names, types, pairs },
   };
 
