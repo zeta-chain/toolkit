@@ -77,6 +77,13 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
 };
 
-export const omniTask = task("omni", "", main)
-  .addPositionalParam("name")
-  .addOptionalVariadicPositionalParam("arguments");
+export const omniTask = task(
+  "omni",
+  "Generate code for an omnichain smart contract",
+  main
+)
+  .addPositionalParam("name", "Name of the contract")
+  .addOptionalVariadicPositionalParam(
+    "arguments",
+    "Arguments for a crosschain call (e.g. dest:address to:bytes32 output:uint256)"
+  );
