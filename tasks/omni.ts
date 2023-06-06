@@ -73,13 +73,18 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   processTemplates(templateDir, outputDir, data);
 
-  // Prepend a line to "hardhat.config.ts" if it doesn't exist
   const configPath = path.resolve(process.cwd(), "hardhat.config.ts");
-  const prependContent = 'import "./tasks/deploy";\n';
-  const existingContent = fs.readFileSync(configPath, "utf8");
-  if (!existingContent.includes(prependContent.trim())) {
-    fs.writeFileSync(configPath, prependContent + existingContent);
-  }
+  let hardhatConfigContents = fs.readFileSync(configPath, "utf8");
+
+  // Add the omnichain tasks to the hardhat.config.ts file
+  ["deploy", "interact"].forEach((task) => {
+    const content = `import "./tasks/${task}";\n`;
+    if (!hardhatConfigContents.includes(content)) {
+      hardhatConfigContents = content + hardhatConfigContents;
+    }
+  });
+
+  fs.writeFileSync(configPath, hardhatConfigContents);
 };
 
 export const omniTask = task(
