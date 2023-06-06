@@ -1,4 +1,4 @@
-import { task, subtask } from "hardhat/config";
+import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as fs from "fs";
 import * as path from "path";
