@@ -58,7 +58,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const names = argsList.map((i: string) => i.split(":")[0]);
   const types = argsList.map((i: string) => {
     let parts = i.split(":");
-    // If there's a type and it's not empty, use it; if not, default to "string"
+    // If there's a type and it's not empty, use it; if not, default to "bytes32"
     let t =
       parts.length > 1 && parts[1].trim() !== "" ? parts[1].trim() : "bytes32";
     return t;
