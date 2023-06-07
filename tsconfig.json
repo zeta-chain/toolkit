@@ -15,5 +15,5 @@
     "strict": true,
     "typeRoots": ["@types", "./node_modules/@types"]
   },
-  "include": ["helpers/**/*", "tasks/**/*"]
+  "include": ["helpers", "tasks"]
 }
