@@ -32,6 +32,7 @@
     "dotenv": "^16.0.3",
     "envfile": "^6.18.0",
     "ethers": "^5.4.7",
+    "handlebars": "^4.7.7",
     "hardhat": "^2.14.0",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.0",
