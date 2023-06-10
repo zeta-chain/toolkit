@@ -1,11 +1,11 @@
-import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { input } from "@inquirer/prompts";
+import { bech32 } from "bech32";
+import { validateMnemonic } from "bip39";
 import * as envfile from "envfile";
 import * as fs from "fs";
+import { task } from "hardhat/config";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
-import { bech32 } from "bech32";
-import { input } from "@inquirer/prompts";
-import { validateMnemonic } from "bip39";
 
 function hexToBech32Address(hexAddress: string, prefix: string): string {
   const data = Buffer.from(hexAddress.substr(2), "hex");
