@@ -4,3 +4,4 @@ cache
 coverage
 node_modules
 typechain-types
+dist

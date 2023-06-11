@@ -7,11 +7,11 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
 
-function hexToBech32Address(hexAddress: string, prefix: string): string {
+const hexToBech32Address = (hexAddress: string, prefix: string): string => {
   const data = Buffer.from(hexAddress.substr(2), "hex");
   const words = bech32.toWords(data);
   return bech32.encode(prefix, words);
-}
+};
 
 export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers } = hre as any;

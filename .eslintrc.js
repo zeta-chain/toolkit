@@ -21,10 +21,19 @@ module.exports = {
     "simple-import-sort",
     "sort-keys-fix",
     "typescript-sort-keys",
+    "prefer-arrow",
   ],
   rules: {
     "@typescript-eslint/sort-type-union-intersection-members": "error",
     camelcase: "off",
+    "prefer-arrow/prefer-arrow-functions": [
+      "warn",
+      {
+        classPropertiesAllowed: false,
+        disallowPrototype: true,
+        singleReturnOnly: false,
+      },
+    ],
     "simple-import-sort/exports": "error",
     "simple-import-sort/imports": "error",
     "sort-keys-fix/sort-keys-fix": "error",

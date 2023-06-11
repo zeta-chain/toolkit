@@ -25,19 +25,19 @@ To resolve this issue, please follow these steps:
   npx hardhat balances --address <wallet_address>
 `;
 
-async function fetchNativeBalance(
+const fetchNativeBalance = async (
   address: string,
   provider: ethers.providers.JsonRpcProvider
-) {
+) => {
   const balance = await provider.getBalance(address);
   return parseFloat(ethers.utils.formatEther(balance)).toFixed(2);
-}
+};
 
-async function fetchZetaBalance(
+const fetchZetaBalance = async (
   address: string,
   provider: ethers.providers.JsonRpcProvider,
   networkName: string
-) {
+) => {
   if (networkName === "athens") return "";
   const zetaAddress = getAddress({
     address: "zetaToken",
@@ -47,15 +47,15 @@ async function fetchZetaBalance(
   const contract = new ethers.Contract(zetaAddress, ZetaEth, provider);
   const balance = await contract.balanceOf(address);
   return parseFloat(ethers.utils.formatEther(balance)).toFixed(2);
-}
+};
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers, config } = hre as any;
-  async function fetchBalances(
+  const fetchBalances = async (
     address: string,
     provider: ethers.providers.JsonRpcProvider,
     networkName: string
-  ) {
+  ) => {
     try {
       const { config } = hre as any;
       const { url } = config.networks[networkName];
@@ -64,7 +64,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
       return { native, networkName, zeta };
     } catch (error) {}
-  }
+  };
 
   let address: string;
   if (args.address) {
