@@ -92,10 +92,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   console.table(filteredBalances);
 };
 
-const descTask = `Fetch native and ZETA token balances`;
-const descAddressFlag = `Fetch balances for a specific address`;
-
-export const balancesTask = task("balances", descTask, main).addOptionalParam(
-  "address",
-  descAddressFlag
-);
+export const balancesTask = task(
+  "balances",
+  `Fetch native and ZETA token balances`,
+  main
+).addOptionalParam("address", `Fetch balances for a specific address`);

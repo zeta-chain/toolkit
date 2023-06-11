@@ -48,10 +48,13 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   } catch (error) {}
 };
 
-const descTask = `Request ZETA tokens from the faucet on a specific chain.`;
-const descAddressFlag = `Recipient address. (default: address derived from PRIVATE_KEY env variable)`;
-const descChainFlag = `Blockchain network where tokens will be sent.`;
-
-task("faucet", descTask, main)
-  .addOptionalParam("address", descAddressFlag)
-  .addParam("chain", descChainFlag, "zetachain_athens");
+task("faucet", "Request ZETA tokens from the faucet on a specific chain.", main)
+  .addOptionalParam(
+    "address",
+    "Recipient address. (default: address derived from PRIVATE_KEY env variable)"
+  )
+  .addParam(
+    "chain",
+    "Blockchain network where tokens will be sent.",
+    "zetachain_athens"
+  );

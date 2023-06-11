@@ -67,14 +67,14 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
 export const accountTask = task(
   "account",
-  `Generates a new account and prints its private key, mnemonic phrase, and address to the console.`,
+  "Generates a new account and prints its private key, mnemonic phrase, and address to the console.",
   main
 )
   .addFlag(
     "save",
-    `Saves the private key to a '.env' file in the project directory.`
+    "Saves the private key to a '.env' file in the project directory."
   )
   .addFlag(
     "recover",
-    `Recovers a wallet using either a mnemonic or a private key.`
+    "Recovers a wallet using either a mnemonic or a private key."
   );

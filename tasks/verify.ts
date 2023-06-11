@@ -70,7 +70,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
 };
 
-const descTask = `Verify a contract on ZetaChain.`;
-const descContractFlag = "Contract address to verify";
-
-task("verify:zeta", descTask, main).addParam("contract", descContractFlag);
+task("verify:zeta", "Verify a contract on ZetaChain.", main).addParam(
+  "contract",
+  "Contract address to verify"
+);
