@@ -29,7 +29,11 @@ contract TestSystemContract is SystemContractErrors {
     event SetGasZetaPool(uint256, address);
     event SetWZeta(address);
 
-    constructor(address wzeta_, address uniswapv2Factory_, address uniswapv2Router02_) {
+    constructor(
+        address wzeta_,
+        address uniswapv2Factory_,
+        address uniswapv2Router02_
+    ) {
         wZetaContractAddress = wzeta_;
         uniswapv2FactoryAddress = uniswapv2Factory_;
         uniswapv2Router02Address = uniswapv2Router02_;
