@@ -7,10 +7,48 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
 
-const hexToBech32Address = (hexAddress: string, prefix: string): string => {
+export const hexToBech32Address = (
+  hexAddress: string,
+  prefix: string
+): string => {
   const data = Buffer.from(hexAddress.substr(2), "hex");
   const words = bech32.toWords(data);
   return bech32.encode(prefix, words);
+};
+
+export const getWalletFromRecoveryInput = async (ethers: any) => {
+  while (true) {
+    let recovery = await input(
+      {
+        message: "Mnemonic or private key:",
+      },
+      {
+        clearPromptOnDone: true,
+      }
+    );
+    try {
+      if (validateMnemonic(recovery)) {
+        return ethers.Wallet.fromMnemonic(recovery);
+      } else {
+        return new ethers.Wallet(
+          recovery.startsWith("0x") ? recovery : "0x" + recovery
+        );
+      }
+    } catch (e) {
+      console.error(`❌ Invalid mnemonic or private key: ${e}`);
+      continue;
+    }
+  }
+};
+
+export const savePrivateKey = (privateKey: string) => {
+  const filePath = path.join(process.cwd(), ".env");
+  let env = envfile.parse(
+    fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : ""
+  );
+  env.PRIVATE_KEY = privateKey.slice(2);
+  fs.writeFileSync(filePath, envfile.stringify(env));
+  console.log(`✅ Saved the private key to '${filePath}' file.\n`);
 };
 
 export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
@@ -18,29 +56,7 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   let wallet;
 
   if (args.recover) {
-    while (true) {
-      let recovery = await input(
-        {
-          message: "Mnemonic or private key:",
-        },
-        {
-          clearPromptOnDone: true,
-        }
-      );
-      try {
-        if (validateMnemonic(recovery)) {
-          wallet = ethers.Wallet.fromMnemonic(recovery);
-        } else {
-          wallet = new ethers.Wallet(
-            recovery.startsWith("0x") ? recovery : "0x" + recovery
-          );
-        }
-        break;
-      } catch (e) {
-        console.error(`❌ Invalid mnemonic or private key: ${e}`);
-        continue;
-      }
-    }
+    wallet = await getWalletFromRecoveryInput(ethers);
   } else {
     wallet = ethers.Wallet.createRandom();
   }
@@ -55,13 +71,7 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 `);
 
   if (args.save) {
-    const filePath = path.join(process.cwd(), ".env");
-    let env = envfile.parse(
-      fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : ""
-    );
-    env.PRIVATE_KEY = privateKey.slice(2);
-    fs.writeFileSync(filePath, envfile.stringify(env));
-    console.log(`✅ Saved the private key to '${filePath}' file.\n`);
+    savePrivateKey(privateKey);
   }
 };
 
