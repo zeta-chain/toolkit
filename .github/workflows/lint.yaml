@@ -12,6 +12,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Reuse Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:

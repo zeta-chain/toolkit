@@ -1,24 +1,17 @@
-name: Test
+name: Setup Cache
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - main
 
 jobs:
-  test:
+  setup:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
-      - name: Reuse Cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -26,8 +19,13 @@ jobs:
           node-version: "16"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Cache Dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install Dependencies
         run: yarn install
-
-      - name: Run Tests
-        run: yarn test
