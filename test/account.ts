@@ -4,11 +4,7 @@ import fs from "fs";
 import path from "path";
 import sinon from "sinon";
 
-import {
-  getWalletFromRecoveryInputHelper,
-  hexToBech32Address,
-  savePrivateKey,
-} from "../tasks/account";
+import { hexToBech32Address, savePrivateKey } from "../tasks/account";
 
 describe("account", () => {
   const privateKey =
