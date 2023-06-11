@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-const walletError = `
+export const walletError = `
 ❌ Error: Wallet address not found.
 
 To resolve this issue, please follow these steps:
@@ -18,7 +18,9 @@ To resolve this issue, please follow these steps:
   Or you can generate a new private key by running:
 
   npx hardhat account --save
+`;
 
+const balancesError = `
 * Alternatively, you can fetch the balance of any address
   by using the --address flag:
   
@@ -72,7 +74,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   } else if (process.env.PRIVATE_KEY) {
     address = new ethers.Wallet(process.env.PRIVATE_KEY).address;
   } else {
-    return console.error(walletError);
+    return console.error(walletError + balancesError);
   }
 
   const balancePromises = Object.keys(hre.config.networks).map(

@@ -4,24 +4,13 @@ import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-const walletError = `
-❌ Error: Wallet address not found.
+import { walletError } from "./balances";
 
-To resolve this issue, please follow these steps:
-
-* Set your PRIVATE_KEY environment variable. You can write
-  it to a .env file in the root of your project like this:
-
-  PRIVATE_KEY=123... (without the 0x prefix)
-  
-  Or you can generate a new private key by running:
-
-  npx hardhat account --save
-
-* Alternatively, you can fetch the balance of any address
+const faucetError = `
+* Alternatively, you can request tokens on any address
   by using the --address flag:
   
-  npx hardhat balances --address <wallet_address>
+  npx hardhat faucet --address <wallet_address>
 `;
 
 const getRecipientAddress = (args: any, hre: HardhatRuntimeEnvironment) => {
@@ -31,7 +20,7 @@ const getRecipientAddress = (args: any, hre: HardhatRuntimeEnvironment) => {
   } else if (process.env.PRIVATE_KEY) {
     return new ethers.Wallet(process.env.PRIVATE_KEY).address;
   } else {
-    console.error(walletError);
+    console.error(walletError + faucetError);
     throw new Error();
   }
 };
