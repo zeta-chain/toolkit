@@ -48,7 +48,11 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   } catch (error) {}
 };
 
-task("faucet", "Request ZETA tokens from the faucet on a specific chain.", main)
+export const faucetTask = task(
+  "faucet",
+  "Request ZETA tokens from the faucet on a specific chain.",
+  main
+)
   .addOptionalParam(
     "address",
     "Recipient address. (default: address derived from PRIVATE_KEY env variable)"
