@@ -1,10 +1,14 @@
 {
-  "name": "@zetachain/tasks",
-  "version": "1.0.0",
+  "name": "@zetachain/toolkit",
+  "version": "0.0.0-set-on-publish",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf dist && npx hardhat clean && npx hardhat compile && tsc"
+    "clean": "npx hardhat clean && rimraf dist",
+    "compile": "npx hardhat compile && tsc",
+    "copy-templates": "npx cpx './templates/**/*' ./dist/templates",
+    "prebuild": "yarn clean",
+    "build": "yarn copy-templates && yarn compile"
   },
   "keywords": [],
   "author": "",
@@ -36,15 +40,24 @@
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",
     "chai": "^4.2.0",
+    "cpx": "^1.5.0",
     "dotenv": "^16.0.3",
     "envfile": "^6.18.0",
     "ethers": "^5.4.7",
     "handlebars": "^4.7.7",
     "hardhat": "^2.14.0",
     "hardhat-gas-reporter": "^1.0.8",
+    "rimraf": "^5.0.1",
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
     "typechain": "^8.1.0",
     "typescript": ">=4.5.0"
-  }
+  },
+  "files": [
+    "contracts",
+    "dist/helpers",
+    "dist/tasks",
+    "dist/templates",
+    "typechain-types"
+  ]
 }

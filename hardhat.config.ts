@@ -1,5 +1,3 @@
-import "./tasks/interact";
-import "./tasks/deploy";
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
