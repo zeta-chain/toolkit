@@ -4,11 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "clean": "npx hardhat clean && rimraf dist",
-    "compile": "npx hardhat compile && tsc",
-    "copy-templates": "npx cpx './templates/**/*' ./dist/templates",
-    "prebuild": "yarn clean",
-    "build": "yarn copy-templates && yarn compile"
+    "prebuild": "npx hardhat clean && rimraf dist",
+    "build": "npx cpx './templates/**/*' ./dist/templates && npx hardhat compile && tsc || exit 0",
+    "postbuild": "rimraf dist/typechain-types"
   },
   "keywords": [],
   "author": "",
@@ -55,9 +53,7 @@
   },
   "files": [
     "contracts",
-    "dist/helpers",
-    "dist/tasks",
-    "dist/templates",
+    "dist",
     "typechain-types"
   ]
 }
