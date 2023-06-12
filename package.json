@@ -1,10 +1,10 @@
 {
-  "name": "@zetachain/tasks",
+  "name": "@zetachain/toolkit",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf dist && npx hardhat clean && npx hardhat compile && tsc"
+    "build": "rm -rf dist && npx hardhat clean && npx hardhat compile && npx cpx './templates/**/*' ./dist/templates && tsc"
   },
   "keywords": [],
   "author": "",
@@ -36,6 +36,7 @@
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",
     "chai": "^4.2.0",
+    "cpx": "^1.5.0",
     "dotenv": "^16.0.3",
     "envfile": "^6.18.0",
     "ethers": "^5.4.7",

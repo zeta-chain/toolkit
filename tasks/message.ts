@@ -2,10 +2,14 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as fs from "fs";
 import * as path from "path";
-import { processTemplates, sanitizeSolidityFunctionName } from "../lib";
+import {
+  processTemplates,
+  sanitizeSolidityFunctionName,
+  camelToUnderscoreUpper,
+} from "../lib";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const templateDir = path.resolve(__dirname, "..", "templates", "omnichain");
+  const templateDir = path.resolve(__dirname, "..", "templates", "messaging");
   const outputDir = path.resolve(process.cwd());
   const argsList = args.arguments || [];
   const names = argsList.map((i: string) => i.split(":")[0]);
@@ -17,10 +21,12 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     return t;
   });
   const pairs = names.map((v: string, i: string) => [v, types[i]]);
+  const contractName = sanitizeSolidityFunctionName(args.name);
 
   const data = {
     args,
-    contractName: sanitizeSolidityFunctionName(args.name),
+    contractName,
+    contractNameUnderscore: camelToUnderscoreUpper(contractName),
     arguments: { names, types, pairs },
   };
 
@@ -40,9 +46,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   fs.writeFileSync(configPath, hardhatConfigContents);
 };
 
-export const omniTask = task(
-  "omni",
-  "Generate code for an omnichain smart contract",
+export const messageTask = task(
+  "message",
+  "Generate code for a cross-chain messaging contract",
   main
 )
   .addPositionalParam("name", "Name of the contract")
