@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf dist && npx hardhat clean && npx hardhat compile && npx cpx './templates/**/*' ./dist/templates && tsc"
+    "build": "rm -rf dist && npx cpx './templates/**/*' ./dist/templates && tsc"
   },
   "keywords": [],
   "author": "",

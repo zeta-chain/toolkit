@@ -2,35 +2,10 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as fs from "fs";
 import * as path from "path";
-import {
-  processTemplates,
-  sanitizeSolidityFunctionName,
-  camelToUnderscoreUpper,
-} from "../lib";
+import { processTemplates } from "../lib";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const templateDir = path.resolve(__dirname, "..", "templates", "messaging");
-  const outputDir = path.resolve(process.cwd());
-  const argsList = args.arguments || [];
-  const names = argsList.map((i: string) => i.split(":")[0]);
-  const types = argsList.map((i: string) => {
-    let parts = i.split(":");
-    // If there's a type and it's not empty, use it; if not, default to "bytes32"
-    let t =
-      parts.length > 1 && parts[1].trim() !== "" ? parts[1].trim() : "bytes32";
-    return t;
-  });
-  const pairs = names.map((v: string, i: string) => [v, types[i]]);
-  const contractName = sanitizeSolidityFunctionName(args.name);
-
-  const data = {
-    args,
-    contractName,
-    contractNameUnderscore: camelToUnderscoreUpper(contractName),
-    arguments: { names, types, pairs },
-  };
-
-  processTemplates(templateDir, outputDir, data);
+  processTemplates("messaging", args);
 
   const configPath = path.resolve(process.cwd(), "hardhat.config.ts");
   let hardhatConfigContents = fs.readFileSync(configPath, "utf8");
