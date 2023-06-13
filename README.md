@@ -1,4 +1,7 @@
-# Hardhat tasks for the ZetaChain template
+# ZetaChain Toolkit
+
+This repository contains a collection of helper contracts, Hardhat tasks, and
+utility functions that make it easier to build with ZetaChain.
 
 ## Prerequisites
 
