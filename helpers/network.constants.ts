@@ -14,85 +14,88 @@ export const networkVariables: Record<NetworkName, NetworkVariables> = {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
+    crossChainName: "",
   },
   "bitcoin-test": {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
+    crossChainName: "",
   },
   "bsc-localnet": {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
+    crossChainName: "",
   },
   "bsc-testnet": {
     chainId: 97,
     connectorAddress: "0xE626402550fB921E4a47c11568F89dF3496fbEF0",
     crossChainId: 5,
-    crossChainName: "goerli"
+    crossChainName: "goerli",
   },
   "eth-localnet": {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
+    crossChainName: "",
   },
   "eth-mainnet": {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
+    crossChainName: "",
   },
   goerli: {
     chainId: 5,
     connectorAddress: "0x68Bc806414e743D88436AEB771Be387A55B4df70",
     crossChainId: 97,
-    crossChainName: "bsc-testnet"
+    crossChainName: "bsc-testnet",
   },
   hardhat: {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
+    crossChainName: "",
   },
   "klaytn-baobab": {
     chainId: 1001,
     connectorAddress: "",
     crossChainId: 5,
-    crossChainName: "goerli"
+    crossChainName: "goerli",
   },
   "klaytn-cypress": {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
+    crossChainName: "",
   },
   "polygon-localnet": {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
+    crossChainName: "",
   },
   "polygon-mumbai": {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
+    crossChainName: "",
   },
   ropsten: {
     chainId: 0,
     connectorAddress: "",
     crossChainId: 0,
-    crossChainName: ""
-  }
+    crossChainName: "",
+  },
 };
 
-export const isNetworkName = (str: string): str is NetworkName => str in networkVariables;
+export const isNetworkName = (str: string): str is NetworkName =>
+  str in networkVariables;
 export const isEthNetworkName = (networkName: string) =>
-  networkName === "eth-localnet" || networkName === "goerli" || networkName === "eth-mainnet";
+  networkName === "eth-localnet" ||
+  networkName === "goerli" ||
+  networkName === "eth-mainnet";
 
 export type AddressConstants = Partial<
   Record<

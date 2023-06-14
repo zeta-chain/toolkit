@@ -1,4 +1,9 @@
-import { getAddress as getAddressLib, NetworkName, ZetaAddress, ZetaNetworkName } from "@zetachain/addresses";
+import {
+  getAddress as getAddressLib,
+  NetworkName,
+  ZetaAddress,
+  ZetaNetworkName,
+} from "@zetachain/addresses";
 import { network } from "hardhat";
 
 const MissingZetaNetworkError = new Error(
@@ -9,8 +14,11 @@ export const getAddress = (
   address: ZetaAddress,
   {
     customNetworkName,
-    customZetaNetwork
-  }: { customNetworkName?: NetworkName; customZetaNetwork?: ZetaNetworkName } = {}
+    customZetaNetwork,
+  }: {
+    customNetworkName?: NetworkName;
+    customZetaNetwork?: ZetaNetworkName;
+  } = {}
 ): string => {
   const { name: _networkName } = network;
   const networkName = customNetworkName || _networkName;

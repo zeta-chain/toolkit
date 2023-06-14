@@ -2,8 +2,8 @@ import { MaxUint256 } from "@ethersproject/constants";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ZetaTokenConsumerUniV3__factory } from "@zetachain/protocol-contracts/dist/typechain-types";
 import { BigNumber, ContractReceipt } from "ethers";
-import { ERC20__factory, UniswapV2Router02__factory } from "../typechain-types";
 
+import { ERC20__factory, UniswapV2Router02__factory } from "../typechain-types";
 import { getAddress } from "./address.helpers";
 import { getNow } from "./deploy.helpers";
 
