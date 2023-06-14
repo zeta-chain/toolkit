@@ -1,8 +1,8 @@
+import * as fs from "fs";
+import * as handlebars from "handlebars";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import * as fs from "fs";
 import * as path from "path";
-import * as handlebars from "handlebars";
 
 const sanitizeSolidityFunctionName = (str: string): string => {
   // Remove any character that's not alphanumeric or underscore
@@ -67,8 +67,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   const data = {
     args,
+    arguments: { names, pairs, types },
     contractName: sanitizeSolidityFunctionName(args.name),
-    arguments: { names, types, pairs },
   };
 
   processTemplates(templateDir, outputDir, data);

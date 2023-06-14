@@ -4,6 +4,10 @@ import {
   ZetaNetworkName,
 } from "@zetachain/addresses";
 import { getScanVariable } from "@zetachain/addresses-tools";
+import {
+  ZetaTokenConsumerUniV2,
+  ZetaTokenConsumerUniV2__factory,
+} from "@zetachain/protocol-contracts/dist/typechain-types";
 import { execSync } from "child_process";
 import { BaseContract, ContractFactory } from "ethers";
 import { ethers } from "hardhat";
@@ -16,10 +20,6 @@ import {
   ZetaEthMock,
   ZetaEthMock__factory as ZetaEthMockFactory,
 } from "../typechain-types";
-import {
-  ZetaTokenConsumerUniV2,
-  ZetaTokenConsumerUniV2__factory,
-} from "@zetachain/protocol-contracts/dist/typechain-types";
 import { getAddress } from "./address.helpers";
 
 export type GetContractParams<Factory extends ContractFactory> =

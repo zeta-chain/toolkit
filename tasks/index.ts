@@ -1,5 +1,5 @@
-export * from "./account";
-export * from "./omni";
-export * from "./verify";
-export * from "./balances";
-export * from "./faucet";
+export { accountTask } from "./account";
+export { balancesTask } from "./balances";
+export { faucetTask } from "./faucet";
+export { omniTask } from "./omni";
+export { verifyTask } from "./verify";
