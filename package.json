@@ -1,10 +1,12 @@
 {
-  "name": "@zetachain/tasks",
-  "version": "1.0.0",
+  "name": "@zetachain/toolkit",
+  "version": "0.0.0-set-on-publish",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf dist && npx hardhat clean && npx hardhat compile && tsc",
+    "prebuild": "npx hardhat clean && rimraf dist",
+    "build": "npx cpx './templates/**/*' ./dist/templates && npx hardhat compile && tsc || exit 0",
+    "postbuild": "rimraf dist/typechain-types",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "lint:js:fix": "eslint --ext .js,.ts . --fix",
     "lint:js": "eslint --ext .js,.ts .",
@@ -45,6 +47,7 @@
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",
     "chai": "^4.2.0",
+    "cpx": "^1.5.0",
     "dotenv": "^16.0.3",
     "envfile": "^6.18.0",
     "eslint": "^8.42.0",
@@ -60,6 +63,7 @@
     "handlebars": "^4.7.7",
     "hardhat": "^2.14.0",
     "hardhat-gas-reporter": "^1.0.8",
+    "rimraf": "^5.0.1",
     "prettier": "^2.8.8",
     "prettier-plugin-solidity": "^1.1.3",
     "sinon": "^15.1.0",
@@ -68,5 +72,10 @@
     "ts-node": ">=8.0.0",
     "typechain": "^8.1.0",
     "typescript": ">=4.5.0"
-  }
+  },
+  "files": [
+    "contracts",
+    "dist",
+    "typechain-types"
+  ]
 }
