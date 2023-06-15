@@ -1,11 +1,11 @@
-import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import * as dotenv from "dotenv";
-import { ethers } from "ethers";
 import { getAddress } from "@zetachain/addresses";
 import ZetaEth from "@zetachain/interfaces/abi/json/contracts/Zeta.eth.sol/ZetaEth.json";
+import * as dotenv from "dotenv";
+import { ethers } from "ethers";
+import { task } from "hardhat/config";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-const walletError = `
+export const walletError = `
 ❌ Error: Wallet address not found.
 
 To resolve this issue, please follow these steps:
@@ -18,26 +18,28 @@ To resolve this issue, please follow these steps:
   Or you can generate a new private key by running:
 
   npx hardhat account --save
+`;
 
+const balancesError = `
 * Alternatively, you can fetch the balance of any address
   by using the --address flag:
   
   npx hardhat balances --address <wallet_address>
 `;
 
-async function fetchNativeBalance(
+const fetchNativeBalance = async (
   address: string,
   provider: ethers.providers.JsonRpcProvider
-) {
+) => {
   const balance = await provider.getBalance(address);
   return parseFloat(ethers.utils.formatEther(balance)).toFixed(2);
-}
+};
 
-async function fetchZetaBalance(
+const fetchZetaBalance = async (
   address: string,
   provider: ethers.providers.JsonRpcProvider,
   networkName: string
-) {
+) => {
   if (networkName === "athens") return "";
   const zetaAddress = getAddress({
     address: "zetaToken",
@@ -47,24 +49,24 @@ async function fetchZetaBalance(
   const contract = new ethers.Contract(zetaAddress, ZetaEth, provider);
   const balance = await contract.balanceOf(address);
   return parseFloat(ethers.utils.formatEther(balance)).toFixed(2);
-}
+};
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers, config } = hre as any;
-  async function fetchBalances(
+  const fetchBalances = async (
     address: string,
     provider: ethers.providers.JsonRpcProvider,
     networkName: string
-  ) {
+  ) => {
     try {
       const { config } = hre as any;
       const { url } = config.networks[networkName];
       const native = await fetchNativeBalance(address, provider);
       const zeta = await fetchZetaBalance(address, provider, networkName);
 
-      return { networkName, native, zeta };
+      return { native, networkName, zeta };
     } catch (error) {}
-  }
+  };
 
   let address: string;
   if (args.address) {
@@ -72,7 +74,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   } else if (process.env.PRIVATE_KEY) {
     address = new ethers.Wallet(process.env.PRIVATE_KEY).address;
   } else {
-    return console.error(walletError);
+    return console.error(walletError + balancesError);
   }
 
   const balancePromises = Object.keys(hre.config.networks).map(
@@ -92,10 +94,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   console.table(filteredBalances);
 };
 
-const descTask = `Fetch native and ZETA token balances`;
-const descAddressFlag = `Fetch balances for a specific address`;
-
-export const balancesTask = task("balances", descTask, main).addOptionalParam(
-  "address",
-  descAddressFlag
-);
+export const balancesTask = task(
+  "balances",
+  `Fetch native and ZETA token balances`,
+  main
+).addOptionalParam("address", `Fetch balances for a specific address`);

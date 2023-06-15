@@ -1,4 +1,7 @@
-# Hardhat tasks for the ZetaChain template
+# ZetaChain Toolkit
+
+This repository contains a collection of helper contracts, Hardhat tasks, and
+utility functions that make it easier to build with ZetaChain.
 
 ## Prerequisites
 
@@ -21,14 +24,7 @@ To install all the the tasks into a Hardhat template, add the following import
 statement to `hardhat.config.js`:
 
 ```ts
-import "@zetachain/tasks";
-```
-
-You can also import specific tasks:
-
-```ts
-import "@zetachain/tasks/account";
-import "@zetachain/tasks/balances";
+import "@zetachain/toolkit/tasks";
 ```
 
 ## Compiling Tasks
