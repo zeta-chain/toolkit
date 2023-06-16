@@ -1,9 +1,10 @@
-import { getAddress } from "@zetachain/addresses";
+import { getAddress } from "@zetachain/protocol-contracts/lib";
 import ZetaEth from "@zetachain/interfaces/abi/json/contracts/Zeta.eth.sol/ZetaEth.json";
 import * as dotenv from "dotenv";
-import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+
+dotenv.config();
 
 export const walletError = `
 ❌ Error: Wallet address not found.
@@ -27,35 +28,28 @@ const balancesError = `
   npx hardhat balances --address <wallet_address>
 `;
 
-const fetchNativeBalance = async (
-  address: string,
-  provider: ethers.providers.JsonRpcProvider
-) => {
+const fetchNativeBalance = async (address: string, provider: any) => {
   const balance = await provider.getBalance(address);
-  return parseFloat(ethers.utils.formatEther(balance)).toFixed(2);
+  return parseFloat(hre.ethers.utils.formatEther(balance)).toFixed(2);
 };
 
 const fetchZetaBalance = async (
   address: string,
-  provider: ethers.providers.JsonRpcProvider,
+  provider: any,
   networkName: string
 ) => {
   if (networkName === "athens") return "";
-  const zetaAddress = getAddress({
-    address: "zetaToken",
-    networkName,
-    zetaNetwork: "athens",
-  });
-  const contract = new ethers.Contract(zetaAddress, ZetaEth, provider);
+  const zetaAddress = getAddress("zetaToken", networkName as any);
+  const contract = new hre.ethers.Contract(zetaAddress, ZetaEth, provider);
   const balance = await contract.balanceOf(address);
-  return parseFloat(ethers.utils.formatEther(balance)).toFixed(2);
+  return parseFloat(hre.ethers.utils.formatEther(balance)).toFixed(2);
 };
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers, config } = hre as any;
   const fetchBalances = async (
     address: string,
-    provider: ethers.providers.JsonRpcProvider,
+    provider: any,
     networkName: string
   ) => {
     try {
@@ -65,7 +59,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
       const zeta = await fetchZetaBalance(address, provider, networkName);
 
       return { native, networkName, zeta };
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   let address: string;
