@@ -4,6 +4,8 @@ import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
+declare const hre: any;
+
 dotenv.config();
 
 export const walletError = `

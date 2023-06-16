@@ -1,3 +1,5 @@
+declare const hre: any;
+
 export const prepareData = (contract: string, types: string[], args: any[]) => {
   const params = prepareParams(types, args);
   return `${contract}${params.slice(2)}`;
