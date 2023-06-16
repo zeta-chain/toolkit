@@ -59,9 +59,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
       const zeta = await fetchZetaBalance(address, provider, networkName);
 
       return { native, networkName, zeta };
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
 
   let address: string;
