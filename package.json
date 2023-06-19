@@ -10,7 +10,7 @@
   "scripts": {
     "prebuild": "npx hardhat clean && rimraf dist",
     "build": "npx cpx './templates/**/*' ./dist/templates && npx hardhat compile && tsc || exit 0",
-    "postbuild": "rimraf dist/typechain-types",
+    "postbuild": "rimraf dist/typechain-types && cpx './typechain-types/**/*' ./dist/typechain-types",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "lint:js:fix": "eslint --ext .js,.ts . --fix",
     "lint:js": "eslint --ext .js,.ts .",
@@ -75,15 +75,13 @@
     "typechain-types"
   ],
   "dependencies": {
-    "@ethersproject/constants": "^5.7.0",
-    "@ethersproject/units": "^5.7.0",
     "@inquirer/prompts": "^2.1.1",
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@zetachain/faucet-cli": "^2.0.1",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",
-    "ethers": "^6.6.0",
+    "ethers": "^5.4.7",
     "form-data": "^4.0.0",
     "hardhat": "^2.15.0"
   }

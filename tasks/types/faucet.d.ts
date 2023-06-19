@@ -5,18 +5,18 @@ declare module "@zetachain/faucet-cli/dist/commands/drip" {
   }
 
   interface Body {
-    coins: Coin[];
     address: string;
+    coins: Coin[];
   }
 
   interface Response {
-    statusCode: number;
     body: Body;
+    statusCode: number;
   }
 
   interface OptionValues {
-    chain: string;
     address: string;
+    chain: string;
   }
 
   function drip(
