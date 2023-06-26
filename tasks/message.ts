@@ -1,7 +1,8 @@
+import * as fs from "fs";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import * as fs from "fs";
 import * as path from "path";
+
 import { processTemplates } from "../lib";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {

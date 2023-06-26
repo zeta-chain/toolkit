@@ -1,6 +1,6 @@
 import * as fs from "fs";
-import * as path from "path";
 import * as handlebars from "handlebars";
+import * as path from "path";
 
 const prepareData = (args: any) => {
   const argsList = args.arguments || [];
@@ -17,9 +17,9 @@ const prepareData = (args: any) => {
 
   return {
     args,
+    arguments: { names, pairs, types },
     contractName,
     contractNameUnderscore: camelToUnderscoreUpper(contractName),
-    arguments: { names, types, pairs },
   };
 };
 
