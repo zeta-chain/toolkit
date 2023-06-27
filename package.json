@@ -10,7 +10,6 @@
   "scripts": {
     "prebuild": "npx hardhat clean && rimraf dist",
     "build": "npx cpx './templates/**/*' ./dist/templates && npx hardhat compile && tsc || exit 0",
-    "postbuild": "rimraf dist/typechain-types && cpx './typechain-types/**/*' ./dist/typechain-types",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "lint:js:fix": "eslint --ext .js,.ts . --fix",
     "lint:js": "eslint --ext .js,.ts .",
