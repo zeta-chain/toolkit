@@ -1,5 +1,5 @@
 import ZetaEth from "@zetachain/interfaces/abi/json/contracts/Zeta.eth.sol/ZetaEth.json";
-import { getAddress } from "@zetachain/protocol-contracts/lib";
+import { getAddress } from "@zetachain/protocol-contracts";
 import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
