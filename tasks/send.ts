@@ -4,14 +4,7 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getAddress } from "@zetachain/protocol-contracts";
 import { parseEther } from "ethers/lib/utils";
-import {
-  ZetaConnectorBase,
-  ZetaConnectorEth,
-  ZetaConnectorNonEth,
-  ZetaEth,
-  ZetaNonEth,
-  ZetaReceiverMock,
-} from "@zetachain/protocol-contracts/typechain-types";
+import { ZetaConnectorEth } from "@zetachain/protocol-contracts/typechain-types";
 
 declare const hre: any;
 
