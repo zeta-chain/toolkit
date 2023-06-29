@@ -1,4 +1,4 @@
-import ZetaEth from "@zetachain/interfaces/abi/json/contracts/Zeta.eth.sol/ZetaEth.json";
+import ZetaEth from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import { getAddress } from "@zetachain/protocol-contracts";
 import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
@@ -42,7 +42,7 @@ const fetchZetaBalance = async (
 ) => {
   if (networkName === "athens") return "";
   const zetaAddress = getAddress("zetaToken", networkName as any);
-  const contract = new hre.ethers.Contract(zetaAddress, ZetaEth, provider);
+  const contract = new hre.ethers.Contract(zetaAddress, ZetaEth.abi, provider);
   const balance = await contract.balanceOf(address);
   return parseFloat(hre.ethers.utils.formatEther(balance)).toFixed(2);
 };
@@ -60,7 +60,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
       const native = await fetchNativeBalance(address, provider);
       const zeta = await fetchZetaBalance(address, provider, networkName);
 
-      return { native, networkName, zeta };
+      return { networkName, native, zeta };
     } catch (error) {}
   };
 
