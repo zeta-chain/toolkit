@@ -37,10 +37,10 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     destinationAddress: signer.address,
     zetaValueAndGas: parseEther("5"),
     destinationGasLimit: 500000,
-    message: ethers.utils.formatBytes32String(""),
-    zetaParams: ethers.utils.formatBytes32String(""),
+    message: ethers.utils.arrayify([]),
+    zetaParams: ethers.utils.arrayify([]),
   });
   console.log(tx);
 };
 
-export const sendTask = task("send", "", main).addParam("destination");
+export const sendTask = task("send", "", main);
