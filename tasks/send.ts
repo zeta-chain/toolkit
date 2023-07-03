@@ -14,6 +14,12 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers } = hre as any;
 
   const [signer] = await ethers.getSigners();
+
+  const destinationChainId = hre.config.networks[args.destination]?.chainId;
+  if (!destinationChainId) {
+    throw new Error("Invalid destination chain");
+  }
+  const destinationAddress = args.recipient || signer.address;
   const connectorAddress = getAddress("connector", hre.network.name as any);
   const zetaTokenAddress = getAddress("zetaToken", hre.network.name as any);
 
@@ -32,10 +38,11 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
       .connect(signer)
       .approve(connectorAddress, parseEther("5"))
   ).wait();
+
   const tx = await connectorContract.connect(signer).send({
-    destinationChainId: 97,
-    destinationAddress: signer.address,
-    zetaValueAndGas: parseEther("5"),
+    destinationChainId,
+    destinationAddress,
+    zetaValueAndGas: parseEther(args.amount),
     destinationGasLimit: 500000,
     message: ethers.utils.arrayify([]),
     zetaParams: ethers.utils.arrayify([]),
@@ -43,4 +50,6 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   console.log(tx);
 };
 
-export const sendTask = task("send", "", main);
+export const sendTask = task("send", "", main)
+  .addParam("amount", "Amount of ZETA to send")
+  .addParam("destination", "Destination chain");
