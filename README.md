@@ -15,9 +15,9 @@ Before getting started, ensure that you have
 [Node.js](https://nodejs.org/en/download) and [Yarn](https://yarnpkg.com/)
 installed on your system.
 
-## Getting Started
+## Installation
 
-Install the package:
+To install this package in Hardhat project, add it as a development dependency:
 
 ```
 yarn add --dev @zetachain/toolkit
