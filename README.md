@@ -3,7 +3,7 @@
 This repository contains a collection of helper contracts, Hardhat tasks, and
 utility functions that make it easier to build with ZetaChain.
 
-## Building a dapp on ZetaChain
+## Building a dApp on ZetaChain
 
 If you're looking to build a dapp on ZetaChain, we recommend using the Hardhat
 [template](https://github.com/zeta-chain/template). This template has all the
@@ -32,7 +32,7 @@ statement to `hardhat.config.js`:
 import "@zetachain/toolkit/tasks";
 ```
 
-## Importing Helper functions
+## Importing Helper Functions
 
 ```ts
 import {
@@ -44,7 +44,7 @@ import {
 } from "@zetachain/toolkit/helpers";
 ```
 
-## Importing Helper contracts
+## Importing Helper Contracts
 
 ```solidity
 pragma solidity 0.8.7;
