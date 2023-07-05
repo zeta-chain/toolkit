@@ -36,7 +36,7 @@ async function fetchUtxos(address: string): Promise<UTXO[]> {
 
 async function makeTransaction(
   to: string,
-  pk: any,
+  key: any,
   amount: any,
   utxos: any,
   address: string,
@@ -67,9 +67,8 @@ async function makeTransaction(
   // try creating a transaction
   const psbt = new bitcoin.Psbt({ network: TESTNET });
   psbt.addOutput({ address: to, value: amount });
-
   if (memo.length > 0) {
-    const embed = bitcoin.payments.embed({ data: [Buffer.from(memo)] });
+    const embed = bitcoin.payments.embed({ data: [Buffer.from(memo, "hex")] });
     if (!embed.output) throw new Error("Unable to embed memo");
     psbt.addOutput({ script: embed.output, value: 0 });
   }
@@ -113,7 +112,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   const tx = await makeTransaction(
     args.recipient,
-    pk,
+    key,
     parseFloat(args.amount) * 100000000,
     utxos,
     address,
