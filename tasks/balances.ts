@@ -9,6 +9,7 @@ import ECPairFactory from "ecpair";
 import * as ecc from "tiny-secp256k1";
 import { get } from "http";
 import { networks } from "@zetachain/networks";
+import ora from "ora";
 
 declare const hre: any;
 
@@ -115,16 +116,17 @@ const fetchZRC20Balance = async (address: string) => {
 };
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+  const spinner = ora("Fetching balances...").start();
   const { ethers, config } = hre as any;
-
+  const pk = process.env.PRIVATE_KEY;
   let address: string;
   let btc_address: string;
 
   if (args.address) {
     address = args.address;
   } else if (process.env.PRIVATE_KEY) {
-    address = new ethers.Wallet(process.env.PRIVATE_KEY).address;
-    btc_address = bitcoinAddress(process.env.PRIVATE_KEY);
+    address = new ethers.Wallet(pk).address;
+    btc_address = bitcoinAddress(pk);
   } else {
     return console.error(walletError + balancesError);
   }
@@ -137,8 +139,10 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const balances = await Promise.all(balancePromises);
   balances.push(await fetchBitcoinBalance(btc_address));
   const filteredBalances = balances.filter((balance) => balance != null);
+  spinner.stop();
   console.log(`
-📊 Balances for ${address}
+EVM: ${address}
+BTC: ${bitcoinAddress(pk)}
 `);
   console.table(filteredBalances);
 };
