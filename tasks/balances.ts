@@ -1,4 +1,5 @@
 import ZetaEth from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
+import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { getAddress } from "@zetachain/protocol-contracts";
 import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
@@ -6,6 +7,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
 import * as ecc from "tiny-secp256k1";
+import { get } from "http";
+import { networks } from "@zetachain/networks";
 
 declare const hre: any;
 
@@ -57,7 +60,6 @@ const fetchBitcoinBalance = async (address: string) => {
   return {
     networkName: "btc_testnet",
     native: `${bal / 100000000}`,
-    zeta: "0.00",
   };
 };
 
@@ -84,13 +86,32 @@ const fetchBalances = async (
   networkName: string
 ) => {
   try {
-    const { config } = hre as any;
-    const { url } = config.networks[networkName];
     const native = await fetchNativeBalance(address, provider);
     const zeta = await fetchZetaBalance(address, provider, networkName);
-
-    return { networkName, native, zeta };
+    const isZeta = networkName === "zeta_testnet";
+    const zrc20 = isZeta ? { zrc20: await fetchZRC20Balance(address) } : {};
+    return { networkName, native, zeta, ...zrc20 };
   } catch (error) {}
+};
+
+const fetchZRC20Balance = async (address: string) => {
+  const { url } = hre.config.networks["zeta_testnet"] as any;
+  const provider = new hre.ethers.providers.JsonRpcProvider(url);
+
+  const promises = Object.keys(hre.config.networks).map(async (networkName) => {
+    try {
+      const zrc20 = getAddress("zrc20", networkName);
+      const contract = new hre.ethers.Contract(zrc20, ZRC20.abi, provider);
+      const balance = await contract.balanceOf(address);
+      const denom = networks[networkName].assets[0].symbol;
+      if (balance > 0) {
+        return `${hre.ethers.utils.formatEther(balance)} ${denom}`;
+      }
+    } catch (error) {}
+  });
+
+  const result = await Promise.all(promises);
+  return result.filter((item) => item !== undefined).join(", ");
 };
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
@@ -107,7 +128,6 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   } else {
     return console.error(walletError + balancesError);
   }
-
   const balancePromises = Object.keys(config.networks).map((networkName) => {
     const { url } = config.networks[networkName] as any;
     const provider = new ethers.providers.JsonRpcProvider(url);
