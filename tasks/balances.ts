@@ -54,14 +54,16 @@ const bitcoinAddress = (pk: string) => {
 };
 
 const fetchBitcoinBalance = async (address: string) => {
-  const response = await fetch(`${BTC_API}/address/${address}`);
-  const data = await response.json();
-  const bal = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
-
-  return {
-    networkName: "btc_testnet",
-    native: `${bal / 100000000}`,
-  };
+  try {
+    const response = await fetch(`${BTC_API}/address/${address}`);
+    const data = await response.json();
+    const { funded_txo_sum, spent_txo_sum } = data.chain_stats;
+    const balance = funded_txo_sum - spent_txo_sum;
+    return {
+      networkName: "btc_testnet",
+      native: `${balance / 100000000}`,
+    };
+  } catch (error) {}
 };
 
 const fetchNativeBalance = async (address: string, provider: any) => {
@@ -128,6 +130,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     address = new ethers.Wallet(pk).address;
     btc_address = bitcoinAddress(pk);
   } else {
+    spinner.stop();
     return console.error(walletError + balancesError);
   }
   const balancePromises = Object.keys(config.networks).map((networkName) => {
