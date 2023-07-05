@@ -120,13 +120,21 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const tx = await makeTransaction(
     args.recipient,
     pk,
-    parseInt(args.amount),
+    parseFloat(args.amount) * 100000000,
     utxos,
     args.memo
   );
-  console.log(tx);
-  console.log(await decodeTransaction(tx));
-  await confirm({ message: "Continue?" });
+  const decoded = JSON.stringify(await decodeTransaction(tx), null, 2);
+
+  console.log(`\nTransaction:\n\n${tx}\n`);
+  console.log(`Decoded transaction:\n\n${decoded}\n`);
+
+  await confirm(
+    {
+      message: `Send ${parseFloat(args.amount)} tBTC to ${args.recipient}?`,
+    },
+    { clearPromptOnDone: true }
+  );
   const p1 = await fetch(`${ENDPOINT}/push`, {
     method: "POST",
     body: JSON.stringify({ tx }),
