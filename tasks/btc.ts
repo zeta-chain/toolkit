@@ -77,7 +77,7 @@ async function makeTransaction(
   psbt.addOutput({ address: to, value: amount });
 
   if (memo.length > 0) {
-    const embed = bitcoin.payments.embed({ data: [memo] });
+    const embed = bitcoin.payments.embed({ data: [Buffer.from(memo)] });
     psbt.addOutput({ script: embed.output, value: 0 });
   }
   if (change > 0) {
@@ -139,7 +139,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     method: "POST",
     body: JSON.stringify({ tx }),
   });
-  // const data = await p1.json();
+  const data = await p1.json();
+  const txhash = data?.tx?.hash;
+  console.log(`Transaction hash: ${txhash}`);
 };
 
 export const btcTask = task("btc", "", main)
