@@ -8,7 +8,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   await trackCCTX(args.tx);
 };
 
-export const cctxTask = task("cctx", "", main).addParam(
-  "tx",
-  "Transaction hash"
-);
+export const cctxTask = task(
+  "cctx",
+  "Track cross-chain transaction status",
+  main
+).addParam("tx", "Inbound transaction hash");
