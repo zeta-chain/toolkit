@@ -39,17 +39,9 @@ async function makeTransaction(
   pk: any,
   amount: any,
   utxos: any,
+  address: string,
   memo: string = ""
 ) {
-  const ECPair = ECPairFactory(ecc);
-  const key = ECPair.fromPrivateKey(Buffer.from(pk, "hex"), {
-    network: TESTNET,
-  });
-  const { address } = bitcoin.payments.p2wpkh({
-    pubkey: key.publicKey,
-    network: TESTNET,
-  });
-
   if (memo.length >= 78) throw new Error("Memo too long");
   utxos.sort((a: any, b: any) => a.value - b.value); // sort by value, ascending
   const fee = 10000;
@@ -78,6 +70,7 @@ async function makeTransaction(
 
   if (memo.length > 0) {
     const embed = bitcoin.payments.embed({ data: [Buffer.from(memo)] });
+    if (!embed.output) throw new Error("Unable to embed memo");
     psbt.addOutput({ script: embed.output, value: 0 });
   }
   if (change > 0) {
@@ -114,6 +107,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     pubkey: key.publicKey,
     network: TESTNET,
   });
+  if (address === undefined) throw new Error("Address is undefined");
 
   const utxos = await fetchUtxos(address);
 
@@ -122,6 +116,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     pk,
     parseFloat(args.amount) * 100000000,
     utxos,
+    address,
     args.memo
   );
   const decoded = JSON.stringify(await decodeTransaction(tx), null, 2);
