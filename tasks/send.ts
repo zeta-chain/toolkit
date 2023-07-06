@@ -37,16 +37,15 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     ZetaEthContract.abi,
     signer
   );
+  const amount = parseEther(args.amount);
   await (
-    await zetaTokenContract
-      .connect(signer)
-      .approve(connectorAddress, parseEther("5"))
+    await zetaTokenContract.connect(signer).approve(connectorAddress, amount)
   ).wait();
 
   const tx = await connectorContract.connect(signer).send({
     destinationChainId,
     destinationAddress,
-    zetaValueAndGas: parseEther(args.amount),
+    zetaValueAndGas: amount,
     destinationGasLimit: 500000,
     message: ethers.utils.arrayify([]),
     zetaParams: ethers.utils.arrayify([]),
