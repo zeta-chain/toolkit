@@ -2,12 +2,12 @@ import {
   ZetaEth,
   ZetaEth__factory as ZetaEthFactory,
 } from "@zetachain/protocol-contracts/dist/typechain-types";
+import { BaseContract, ContractFactory } from "ethers";
 
 import {
   ZetaConnectorMockValue,
   ZetaConnectorMockValue__factory as ZetaConnectorMockValueFactory,
 } from "../typechain-types";
-import { BaseContract, ContractFactory } from "ethers";
 
 declare const hre: any;
 

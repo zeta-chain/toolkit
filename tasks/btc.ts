@@ -1,10 +1,10 @@
+import confirm from "@inquirer/confirm";
+import * as bitcoin from "bitcoinjs-lib";
+import * as dotenv from "dotenv";
+import ECPairFactory from "ecpair";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import * as bitcoin from "bitcoinjs-lib";
-import ECPairFactory from "ecpair";
 import * as ecc from "tiny-secp256k1";
-import * as dotenv from "dotenv";
-import confirm from "@inquirer/confirm";
 
 dotenv.config();
 
@@ -15,16 +15,16 @@ const ENDPOINT = "https://api.blockcypher.com/v1/btc/test3/txs";
 
 type UTXO = {
   txid: string;
-  vout: number;
   value: number;
+  vout: number;
 };
 
 const decodeTransaction = async (tx: any) => {
   const endpoint = `${ENDPOINT}/decode`;
 
   const p1 = await fetch(endpoint, {
-    method: "POST",
     body: JSON.stringify({ tx }),
+    method: "POST",
   });
   return await p1.json();
 };
@@ -103,8 +103,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     network: TESTNET,
   });
   const { address } = bitcoin.payments.p2wpkh({
-    pubkey: key.publicKey,
     network: TESTNET,
+    pubkey: key.publicKey,
   });
   if (address === undefined) throw new Error("Address is undefined");
 
@@ -130,8 +130,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     { clearPromptOnDone: true }
   );
   const p1 = await fetch(`${ENDPOINT}/push`, {
-    method: "POST",
     body: JSON.stringify({ tx }),
+    method: "POST",
   });
   const data = await p1.json();
   const txhash = data?.tx?.hash;

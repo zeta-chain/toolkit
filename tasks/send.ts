@@ -1,14 +1,14 @@
+import { getAddress } from "@zetachain/protocol-contracts";
+import ZetaEthContract from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import ZetaConnector from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.eth.sol/ZetaConnectorEth.json";
 import ZetaConnectorZetaChain from "@zetachain/protocol-contracts/abi/zevm/ConnectorZEVM.sol/ZetaConnectorZEVM.json";
-import ZetaEthContract from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
-import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { getAddress } from "@zetachain/protocol-contracts";
-import { parseEther } from "ethers/lib/utils";
 import {
   ZetaConnectorEth,
   ZetaConnectorZEVM,
 } from "@zetachain/protocol-contracts/typechain-types";
+import { parseEther } from "ethers/lib/utils";
+import { task } from "hardhat/config";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 declare const hre: any;
 
@@ -43,12 +43,12 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   ).wait();
 
   const tx = await connectorContract.connect(signer).send({
-    destinationChainId,
     destinationAddress,
-    zetaValueAndGas: amount,
+    destinationChainId,
     destinationGasLimit: 500000,
     message: ethers.utils.arrayify([]),
     zetaParams: ethers.utils.arrayify([]),
+    zetaValueAndGas: amount,
   });
   console.log(tx);
 };

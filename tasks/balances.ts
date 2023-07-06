@@ -1,14 +1,14 @@
+import { networks } from "@zetachain/networks";
+import { getAddress } from "@zetachain/protocol-contracts";
 import ZetaEth from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
-import { getAddress } from "@zetachain/protocol-contracts";
+import * as bitcoin from "bitcoinjs-lib";
 import * as dotenv from "dotenv";
+import ECPairFactory from "ecpair";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import * as bitcoin from "bitcoinjs-lib";
-import ECPairFactory from "ecpair";
-import * as ecc from "tiny-secp256k1";
-import { networks } from "@zetachain/networks";
 import ora from "ora";
+import * as ecc from "tiny-secp256k1";
 
 declare const hre: any;
 
@@ -45,8 +45,8 @@ const bitcoinAddress = (pk: string) => {
     network: TESTNET,
   });
   const { address } = bitcoin.payments.p2wpkh({
-    pubkey: key.publicKey,
     network: TESTNET,
+    pubkey: key.publicKey,
   });
   if (!address) throw new Error("Unable to generate bitcoin address");
   return address;
@@ -59,8 +59,8 @@ const fetchBitcoinBalance = async (address: string) => {
     const { funded_txo_sum, spent_txo_sum } = data.chain_stats;
     const balance = funded_txo_sum - spent_txo_sum;
     return {
-      networkName: "btc_testnet",
       native: `${balance / 100000000}`,
+      networkName: "btc_testnet",
     };
   } catch (error) {}
 };
@@ -92,7 +92,7 @@ const fetchBalances = async (
     const zeta = await fetchZetaBalance(address, provider, networkName);
     const isZeta = networkName === "zeta_testnet";
     const zrc20 = isZeta ? { zrc20: await fetchZRC20Balance(address) } : {};
-    return { networkName, native, zeta, ...zrc20 };
+    return { native, networkName, zeta, ...zrc20 };
   } catch (error) {}
 };
 

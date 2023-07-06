@@ -1,10 +1,10 @@
-import WebSocket from "ws";
 import axios from "axios";
 import ora from "ora";
+import WebSocket from "ws";
 
 const URL = {
-  WSS: "wss://zetachain-athens.blockpi.network/rpc/v1/public/websocket",
   API: "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain",
+  WSS: "wss://zetachain-athens.blockpi.network/rpc/v1/public/websocket",
 };
 
 export const trackCCTX = (inboundTxHash: string): Promise<void> => {
@@ -20,10 +20,10 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
 
     socket.on("open", () => {
       const subscribeMessage = {
+        id: 1,
         jsonrpc: "2.0",
         method: "subscribe",
         params: ["tm.event='NewBlock'"],
-        id: 1,
       };
       socket.send(JSON.stringify(subscribeMessage));
     });
