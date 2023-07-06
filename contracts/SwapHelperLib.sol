@@ -62,7 +62,6 @@ library SwapHelperLib {
         if (gasZRC20 != targetZRC20) revert WrongGasContract();
         if (gasFee >= amount) revert NotEnoughToPayGasFee();
 
-        // gasFee = gasFee * 2; // A temporary workaround. Remove when Athens 3 is released.
         IZRC20(targetZRC20).approve(targetZRC20, gasFee);
         IZRC20(targetZRC20).withdraw(
             abi.encodePacked(receipient),
