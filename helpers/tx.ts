@@ -1,6 +1,7 @@
 import axios from "axios";
 import ora from "ora";
 import WebSocket from "ws";
+import moment from "moment";
 
 const URL = {
   API: "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain",
@@ -29,6 +30,8 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
     });
 
     socket.on("message", async (data: any) => {
+      const jsonData = JSON.parse(data);
+      const blockHeight = jsonData?.result?.data?.value?.block?.header?.height;
       if (!cctx_index) {
         try {
           const url = `${URL.API}/inTxHashToCctx/${inboundTxHash}`;
@@ -37,7 +40,7 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
           if (res) {
             cctx_index = res;
             spinner.succeed(`CCTX hash found: ${cctx_index}\n`);
-            spinner.start("Checking status of the CCTX...");
+            spinner.start(`Checking status of the CCTX...`);
           }
         } catch (error) {}
       } else {
@@ -45,11 +48,22 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
           const url = `${URL.API}/cctx/${cctx_index}`;
           const apiResponse = await axios.get(url);
           const cctx = apiResponse?.data?.CrossChainTx;
+          const finalizedBlock =
+            cctx?.inbound_tx_params?.inbound_tx_finalized_zeta_height;
+          const pendingBlocks = blockHeight - finalizedBlock;
           const { status, status_message } = cctx.cctx_status;
           if (status != latest_status) {
             latest_status = status;
             spinner.info(`Status updated to "${status}": ${status_message}\n`);
-            spinner.start("Checking status of the CCTX...");
+            if (status === "PendingOutbound" && pendingBlocks > 100) {
+              const time = moment
+                .duration(pendingBlocks * 5, "seconds")
+                .humanize();
+              spinner.warn(
+                `CCTX is pending for too long (${pendingBlocks} blocks, about ${time})\n`
+              );
+            }
+            spinner.start(`Checking status of the CCTX...`);
             if (/^(Aborted|Reverted|OutboundMined)$/.test(status)) {
               socket.close();
               spinner.succeed("CCTX has been finalized on ZetaChain");
