@@ -1,11 +1,7 @@
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZetaEthContract from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import ZetaConnector from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.eth.sol/ZetaConnectorEth.json";
-import ZetaConnectorZetaChain from "@zetachain/protocol-contracts/abi/zevm/ConnectorZEVM.sol/ZetaConnectorZEVM.json";
-import {
-  ZetaConnectorEth,
-  ZetaConnectorZEVM,
-} from "@zetachain/protocol-contracts/typechain-types";
+import { ZetaConnectorEth } from "@zetachain/protocol-contracts/typechain-types";
 import { parseEther } from "ethers/lib/utils";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -13,7 +9,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 declare const hre: any;
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  let connectorContract: ZetaConnectorZEVM;
+  let connectorContract: ZetaConnectorEth;
 
   const { ethers } = hre as any;
 
@@ -29,7 +25,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   connectorContract = new ethers.Contract(
     connectorAddress,
-    ZetaConnectorZetaChain.abi,
+    ZetaConnector.abi,
     signer
   );
   const zetaTokenContract = new ethers.Contract(
