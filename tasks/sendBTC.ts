@@ -138,7 +138,11 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   console.log(`Transaction hash: ${txhash}`);
 };
 
-export const btcTask = task("btc", "", main)
-  .addParam("recipient")
-  .addParam("amount")
-  .addOptionalParam("memo");
+export const sendBTCTask = task(
+  "send-btc",
+  "Deposit Bitcoin to and call contracts on ZetaChain",
+  main
+)
+  .addParam("recipient", "Address to send to")
+  .addParam("amount", "Amount to send")
+  .addOptionalParam("memo", "Memo to embed in transaction");

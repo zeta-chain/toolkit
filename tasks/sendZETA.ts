@@ -49,6 +49,10 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   console.log(tx);
 };
 
-export const sendTask = task("send", "", main)
+export const sendZETATask = task(
+  "send-zeta",
+  "Send ZETA tokens between connected chains",
+  main
+)
   .addParam("amount", "Amount of ZETA to send")
   .addParam("destination", "Destination chain");
