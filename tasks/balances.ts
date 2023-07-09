@@ -107,7 +107,8 @@ const fetchZRC20Balance = async (address: string) => {
       const balance = await contract.balanceOf(address);
       const denom = networks[networkName].assets[0].symbol;
       if (balance > 0) {
-        return `${hre.ethers.utils.formatEther(balance)} ${denom}`;
+        const b = parseFloat(hre.ethers.utils.formatEther(balance)).toFixed(2);
+        return `${b} ${denom}`;
       }
     } catch (error) {}
   });
