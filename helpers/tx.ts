@@ -1,7 +1,7 @@
 import axios from "axios";
+import moment from "moment";
 import ora from "ora";
 import WebSocket from "ws";
-import moment from "moment";
 
 const URL = {
   API: "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain",
