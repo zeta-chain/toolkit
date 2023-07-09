@@ -56,6 +56,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     zetaParams: ethers.utils.arrayify([]),
     zetaValueAndGas: amount,
   });
+  console.log(`Transaction hash: ${tx.hash}`);
 };
 
 export const sendZETATask = task(
