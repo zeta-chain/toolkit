@@ -26,6 +26,7 @@ module.exports = {
   rules: {
     "@typescript-eslint/sort-type-union-intersection-members": "error",
     camelcase: "off",
+    "func-style": ["error", "expression", { allowArrowFunctions: true }],
     "prefer-arrow/prefer-arrow-functions": [
       "warn",
       {
