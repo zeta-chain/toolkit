@@ -29,19 +29,19 @@ const decodeTransaction = async (tx: any) => {
   return await p1.json();
 };
 
-async function fetchUtxos(address: string): Promise<UTXO[]> {
+const fetchUtxos = async (address: string): Promise<UTXO[]> => {
   const response = await fetch(`${API}/address/${address}/utxo`);
   return response.json();
-}
+};
 
-async function makeTransaction(
+const makeTransaction = async (
   to: string,
   key: any,
   amount: any,
   utxos: any,
   address: string,
   memo: string = ""
-) {
+) => {
   if (memo.length >= 78) throw new Error("Memo too long");
   utxos.sort((a: any, b: any) => a.value - b.value); // sort by value, ascending
   const fee = 10000;
@@ -94,7 +94,7 @@ async function makeTransaction(
 
   psbt.finalizeAllInputs();
   return psbt.extractTransaction().toHex();
-}
+};
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const pk = process.env.PRIVATE_KEY as any;
