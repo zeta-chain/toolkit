@@ -49,7 +49,7 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
           const apiResponse = await axios.get(url);
           const cctx = apiResponse?.data?.CrossChainTx;
           const finalizedBlock =
-            cctx?.inbound_tx_params?.inbound_tx_observed_external_height;
+            cctx?.inbound_tx_params?.inbound_tx_finalized_zeta_height;
           const pendingBlocks = blockHeight - finalizedBlock;
           const { status, status_message } = cctx.cctx_status;
           if (status != latest_status) {
