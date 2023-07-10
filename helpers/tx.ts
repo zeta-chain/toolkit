@@ -55,14 +55,18 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
           if (status != latest_status) {
             latest_status = status;
             spinner.info(`Status updated to "${status}": ${status_message}\n`);
-            if (status === "PendingOutbound" && pendingBlocks > 100) {
-              const time = moment
-                .duration(pendingBlocks * 5, "seconds")
-                .humanize();
-              spinner.warn(
-                `CCTX is pending for too long (${pendingBlocks} blocks, about ${time})\n`
-              );
-            }
+
+            // Disabled until https://github.com/zeta-chain/node/issues/766 is
+            // fixed
+            //
+            // if (status === "PendingOutbound" && pendingBlocks > 100) {
+            //   const time = moment
+            //     .duration(pendingBlocks * 5, "seconds")
+            //     .humanize();
+            //   spinner.warn(
+            //     `CCTX is pending for too long (${pendingBlocks} blocks, about ${time})\n`
+            //   );
+            // }
             spinner.start(`Checking status of the CCTX...`);
             if (/^(Aborted|Reverted|OutboundMined)$/.test(status)) {
               socket.close();
