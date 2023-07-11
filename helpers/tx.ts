@@ -62,8 +62,7 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
             latest_status = status;
             spinner.info(`Status updated to "${status}": ${status_message}\n`);
 
-            // Disabled until https://github.com/zeta-chain/node/issues/766 is
-            // fixed
+            // TODO: disabled until https://github.com/zeta-chain/node/issues/766 is fixed
             //
             // if (status === "PendingOutbound" && pendingBlocks > 100) {
             //   const time = moment

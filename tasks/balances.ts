@@ -116,7 +116,7 @@ const fetchZRC20Balance = async (address: string) => {
   const result = await Promise.all(promises);
 
   // tBTC ZRC-20 balance
-  const btcZRC20 = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"; // use getAddress("zrc20", "btc_testnet") when available
+  const btcZRC20 = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"; // TODO: use getAddress("zrc20", "btc_testnet") when available
   const contract = new hre.ethers.Contract(btcZRC20, ZRC20.abi, provider);
   const balance = (await contract.balanceOf(address)) / 100000000;
   if (balance > 0) {
