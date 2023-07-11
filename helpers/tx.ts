@@ -2,13 +2,19 @@ import axios from "axios";
 import moment from "moment";
 import ora from "ora";
 import WebSocket from "ws";
-
-const URL = {
-  API: "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain",
-  WSS: "wss://zetachain-athens.blockpi.network/rpc/v1/public/websocket",
-};
+import { getEndpoints } from "@zetachain/networks";
 
 export const trackCCTX = (inboundTxHash: string): Promise<void> => {
+  const API = getEndpoints("cosmos-http", "zeta_testnet")[2]?.url;
+  if (API === undefined) {
+    throw new Error("getEndpoints: API endpoint not found");
+  }
+
+  const WSS = getEndpoints("tendermint-ws", "zeta_testnet")[0]?.url;
+  if (WSS === undefined) {
+    throw new Error("getEndpoints: WSS endpoint not found");
+  }
+
   return new Promise((resolve, reject) => {
     let cctx_index: string;
     let latest_status: string;
@@ -17,7 +23,7 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
       "Looking for the cross-chain transaction (CCTX) on ZetaChain..."
     ).start();
 
-    const socket = new WebSocket(URL.WSS);
+    const socket = new WebSocket(WSS);
 
     socket.on("open", () => {
       const subscribeMessage = {
@@ -34,7 +40,7 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
       const blockHeight = jsonData?.result?.data?.value?.block?.header?.height;
       if (!cctx_index) {
         try {
-          const url = `${URL.API}/inTxHashToCctx/${inboundTxHash}`;
+          const url = `${API}/zeta-chain/crosschain/inTxHashToCctx/${inboundTxHash}`;
           const apiResponse = await axios.get(url);
           const res = apiResponse?.data?.inTxHashToCctx?.cctx_index;
           if (res) {
@@ -45,7 +51,7 @@ export const trackCCTX = (inboundTxHash: string): Promise<void> => {
         } catch (error) {}
       } else {
         try {
-          const url = `${URL.API}/cctx/${cctx_index}`;
+          const url = `${API}/zeta-chain/crosschain/cctx/${cctx_index}`;
           const apiResponse = await axios.get(url);
           const cctx = apiResponse?.data?.CrossChainTx;
           const finalizedBlock =
