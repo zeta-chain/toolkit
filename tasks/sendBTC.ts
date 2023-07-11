@@ -5,13 +5,9 @@ import ECPairFactory from "ecpair";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as ecc from "tiny-secp256k1";
+import { getEndpoints } from "@zetachain/networks";
 
 dotenv.config();
-
-const TESTNET = bitcoin.networks.testnet;
-
-const API = "https://blockstream.info/testnet/api";
-const ENDPOINT = "https://api.blockcypher.com/v1/btc/test3/txs";
 
 type UTXO = {
   txid: string;
@@ -20,9 +16,9 @@ type UTXO = {
 };
 
 const decodeTransaction = async (tx: any) => {
-  const endpoint = `${ENDPOINT}/decode`;
+  const API = getEndpoints("blockcypher", "btc_testnet")[0].url;
 
-  const p1 = await fetch(endpoint, {
+  const p1 = await fetch(`${API}/txs/decode`, {
     body: JSON.stringify({ tx }),
     method: "POST",
   });
@@ -30,6 +26,8 @@ const decodeTransaction = async (tx: any) => {
 };
 
 const fetchUtxos = async (address: string): Promise<UTXO[]> => {
+  const API = getEndpoints("esplora", "btc_testnet")[0].url;
+
   const response = await fetch(`${API}/address/${address}/utxo`);
   return response.json();
 };
@@ -42,6 +40,9 @@ const makeTransaction = async (
   address: string,
   memo: string = ""
 ) => {
+  const API = getEndpoints("esplora", "btc_testnet")[0].url;
+  const TESTNET = bitcoin.networks.testnet;
+
   if (memo.length >= 78) throw new Error("Memo too long");
   utxos.sort((a: any, b: any) => a.value - b.value); // sort by value, ascending
   const fee = 10000;
@@ -97,6 +98,9 @@ const makeTransaction = async (
 };
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+  const TESTNET = bitcoin.networks.testnet;
+  const API = getEndpoints("blockcypher", "btc_testnet")[0].url;
+
   const pk = process.env.PRIVATE_KEY as any;
   const ECPair = ECPairFactory(ecc);
   const key = ECPair.fromPrivateKey(Buffer.from(pk, "hex"), {
@@ -129,7 +133,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     },
     { clearPromptOnDone: true }
   );
-  const p1 = await fetch(`${ENDPOINT}/push`, {
+  const p1 = await fetch(`${API}/txs/push`, {
     body: JSON.stringify({ tx }),
     method: "POST",
   });
