@@ -77,7 +77,7 @@
     "@openzeppelin/contracts": "^4.9.2",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@zetachain/faucet-cli": "^2.0.1",
-    "@zetachain/networks": "^2.2.0-athens3",
+    "@zetachain/networks": "^2.3.0-athens3",
     "@zetachain/protocol-contracts": "^1.0.1-athens3",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
