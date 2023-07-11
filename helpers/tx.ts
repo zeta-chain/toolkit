@@ -1,8 +1,8 @@
+import { getEndpoints } from "@zetachain/networks";
 import axios from "axios";
 import moment from "moment";
 import ora from "ora";
 import WebSocket from "ws";
-import { getEndpoints } from "@zetachain/networks";
 
 export const trackCCTX = (inboundTxHash: string): Promise<void> => {
   const API = getEndpoints("cosmos-http", "zeta_testnet")[2]?.url;
