@@ -1,11 +1,11 @@
 import confirm from "@inquirer/confirm";
+import { getEndpoints } from "@zetachain/networks";
 import * as bitcoin from "bitcoinjs-lib";
 import * as dotenv from "dotenv";
 import ECPairFactory from "ecpair";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as ecc from "tiny-secp256k1";
-import { getEndpoints } from "@zetachain/networks";
 
 dotenv.config();
 
