@@ -1,4 +1,5 @@
-import { networks } from "@zetachain/networks";
+import { getEndpoints } from "@zetachain/networks";
+import { networks, getEndpoints } from "@zetachain/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZetaEth from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
@@ -13,9 +14,6 @@ import * as ecc from "tiny-secp256k1";
 declare const hre: any;
 
 dotenv.config();
-
-const BTC_API = "https://blockstream.info/testnet/api";
-const TESTNET = bitcoin.networks.testnet;
 
 export const walletError = `
 ❌ Error: Wallet address not found.
@@ -40,6 +38,8 @@ const balancesError = `
 `;
 
 const bitcoinAddress = (pk: string) => {
+  const TESTNET = bitcoin.networks.testnet;
+
   const ECPair = ECPairFactory(ecc);
   const key = ECPair.fromPrivateKey(Buffer.from(pk, "hex"), {
     network: TESTNET,
@@ -53,8 +53,11 @@ const bitcoinAddress = (pk: string) => {
 };
 
 const fetchBitcoinBalance = async (address: string) => {
+  const API = getEndpoints("esplora", "btc_testnet")[0].url;
+  if (API === undefined) throw new Error("fetchBitcoinBalance: API not found");
+
   try {
-    const response = await fetch(`${BTC_API}/address/${address}`);
+    const response = await fetch(`${API}/address/${address}`);
     const data = await response.json();
     const { funded_txo_sum, spent_txo_sum } = data.chain_stats;
     const balance = funded_txo_sum - spent_txo_sum;
