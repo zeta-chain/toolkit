@@ -8,8 +8,8 @@
     "./helpers": "./dist/helpers/index.js"
   },
   "scripts": {
-    "prebuild": "npx hardhat clean && rimraf dist",
-    "build": "npx cpx './templates/**/*' ./dist/templates && npx hardhat compile && tsc || exit 0",
+    "prebuild": "rimraf dist",
+    "build": "npx cpx './templates/**/*' ./dist/templates && npx hardhat compile --force && tsc || exit 0",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "lint:js:fix": "eslint --ext .js,.ts . --fix",
     "lint:js": "eslint --ext .js,.ts .",
