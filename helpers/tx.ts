@@ -5,7 +5,7 @@ import ora from "ora";
 import WebSocket from "ws";
 
 export const trackCCTX = (inboundTxHash: string): Promise<void> => {
-  const API = getEndpoints("cosmos-http", "zeta_testnet")[2]?.url;
+  const API = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
   if (API === undefined) {
     throw new Error("getEndpoints: API endpoint not found");
   }
