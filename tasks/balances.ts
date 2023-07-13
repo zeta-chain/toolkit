@@ -1,15 +1,12 @@
-import { getEndpoints } from "@zetachain/networks";
 import { getEndpoints, networks } from "@zetachain/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZetaEth from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
-import * as bitcoin from "bitcoinjs-lib";
 import * as dotenv from "dotenv";
-import ECPairFactory from "ecpair";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ora from "ora";
-import * as ecc from "tiny-secp256k1";
+import { bitcoinAddress } from "../lib/bitcoinAddress";
 
 declare const hre: any;
 
@@ -36,21 +33,6 @@ const balancesError = `
   
   npx hardhat balances --address <wallet_address>
 `;
-
-const bitcoinAddress = (pk: string) => {
-  const TESTNET = bitcoin.networks.testnet;
-
-  const ECPair = ECPairFactory(ecc);
-  const key = ECPair.fromPrivateKey(Buffer.from(pk, "hex"), {
-    network: TESTNET,
-  });
-  const { address } = bitcoin.payments.p2wpkh({
-    network: TESTNET,
-    pubkey: key.publicKey,
-  });
-  if (!address) throw new Error("Unable to generate bitcoin address");
-  return address;
-};
 
 const fetchBitcoinBalance = async (address: string) => {
   const API = getEndpoints("esplora", "btc_testnet")[0].url;

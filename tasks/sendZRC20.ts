@@ -7,7 +7,7 @@ declare const hre: any;
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers } = hre as any;
-  // const [signer] = await ethers.getSigners();
+  const [signer] = await ethers.getSigners();
   let amount;
   try {
     amount = ethers.utils.parseEther(args.amount);
@@ -18,12 +18,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
   let tx;
   if (hre.network.name === "zeta_testnet") {
-    let ZRC20Address;
-    try {
-      ZRC20Address = getAddress("zrc20", args.destination);
-    } catch (e) {
-      throw new Error(`getAddress: ${e}`);
-    }
+    const ZRC20Address = getAddress("zrc20", args.destination);
     const contract = new ethers.Contract(ZRC20Address, ZRC20.abi, signer);
     await (await contract.connect(signer).approve(ZRC20Address, amount)).wait();
     tx = await contract.connect(signer).withdraw(signer.address, amount);

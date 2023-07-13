@@ -6,6 +6,7 @@ import * as fs from "fs";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
+import { bitcoinAddress } from "../lib/bitcoinAddress";
 
 export const hexToBech32Address = (
   hexAddress: string,
@@ -62,11 +63,13 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
 
   const { privateKey, address, mnemonic } = wallet;
+  const pk = privateKey.slice(2);
 
   console.log(`
-🔑 Private key: ${privateKey}`);
+🔑 Private key: ${pk}`);
   mnemonic && console.log(`🔐 Mnemonic phrase: ${mnemonic.phrase}`);
-  console.log(`😃 Address: ${address}
+  console.log(`😃 EVM address: ${address}
+😃 Bitcoin address: ${bitcoinAddress(pk)}
 😃 Bech32 address: ${hexToBech32Address(address, "zeta")}
 `);
 
