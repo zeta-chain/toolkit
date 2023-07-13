@@ -20,7 +20,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   if (hre.network.name === "zeta_testnet") {
     let ZRC20Address;
     try {
-      ZRC20Address = getAddress("zrc20s", args.destination);
+      ZRC20Address = getAddress("zrc20", args.destination);
     } catch (e) {
       throw new Error(`getAddress: ${e}`);
     }
