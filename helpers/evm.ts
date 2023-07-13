@@ -1,7 +1,6 @@
 import { MaxUint256 } from "@ethersproject/constants";
 import { parseUnits } from "@ethersproject/units";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers } from "hardhat";
 
 import {
   TestSystemContract,
@@ -11,32 +10,14 @@ import {
   UniswapV2Router02__factory,
 } from "../typechain-types";
 
-interface EvmSetupResult {
-  ZRC20Contracts: TestZRC20[];
-  systemContract: TestSystemContract;
-}
+declare const hre: any;
 
-export const prepareData = (contract: string, types: string[], args: any[]) => {
-  const params = prepareParams(types, args);
-  return `${contract}${params.slice(2)}`;
-};
-
-export const prepareParams = (types: string[], args: any[]) => {
-  const abiCoder = ethers.utils.defaultAbiCoder;
-  for (let i = 0; i < args.length; i++) {
-    if (types[i] === "bytes32" && typeof args[i] === "string") {
-      args[i] = ethers.utils.hexlify(ethers.utils.zeroPad(args[i], 32));
-    }
-  }
-  return abiCoder.encode(types, args);
-};
-
-export const addZetaEthLiquidity = async (
+const addZetaEthLiquidity = async (
   signer: SignerWithAddress,
   token: TestZRC20,
   uniswapRouterAddr: string
 ) => {
-  const block = await ethers.provider.getBlock("latest");
+  const block = await hre.ethers.provider.getBlock("latest");
 
   const tx1 = await token.approve(uniswapRouterAddr, MaxUint256);
   await tx1.wait();
@@ -58,14 +39,19 @@ export const addZetaEthLiquidity = async (
   await tx2.wait();
 };
 
+interface EvmSetupResult {
+  ZRC20Contracts: TestZRC20[];
+  systemContract: TestSystemContract;
+}
+
 export const evmSetup = async (
   wGasToken: string,
   uniswapFactoryAddr: string,
   uniswapRouterAddr: string
 ): Promise<EvmSetupResult> => {
-  const [signer] = await ethers.getSigners();
+  const [signer] = await hre.ethers.getSigners();
 
-  const ZRC20Factory = (await ethers.getContractFactory(
+  const ZRC20Factory = (await hre.ethers.getContractFactory(
     "TestZRC20"
   )) as TestZRC20__factory;
 
@@ -87,7 +73,7 @@ export const evmSetup = async (
 
   const ZRC20Contracts = [token1Contract, token2Contract, token3Contract];
 
-  const SystemContractFactory = (await ethers.getContractFactory(
+  const SystemContractFactory = (await hre.ethers.getContractFactory(
     "TestSystemContract"
   )) as TestSystemContract__factory;
 
@@ -106,4 +92,19 @@ export const evmSetup = async (
   await addZetaEthLiquidity(signer, ZRC20Contracts[2], uniswapRouterAddr);
 
   return { ZRC20Contracts, systemContract };
+};
+
+export const prepareData = (contract: string, types: string[], args: any[]) => {
+  const params = prepareParams(types, args);
+  return `${contract}${params.slice(2)}`;
+};
+
+export const prepareParams = (types: string[], args: any[]) => {
+  const abiCoder = hre.ethers.utils.defaultAbiCoder;
+  for (let i = 0; i < args.length; i++) {
+    if (types[i] === "bytes32") {
+      args[i] = hre.ethers.utils.hexlify(hre.ethers.utils.zeroPad(args[i], 32));
+    }
+  }
+  return abiCoder.encode(types, args);
 };

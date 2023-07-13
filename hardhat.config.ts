@@ -1,17 +1,12 @@
 import "@nomicfoundation/hardhat-toolbox";
 import "./tasks";
 
-import { getHardhatConfigNetworks } from "@zetachain/addresses-tools/dist/networks";
-import * as dotenv from "dotenv";
+import { getHardhatConfigNetworks } from "@zetachain/networks";
 import { HardhatUserConfig } from "hardhat/config";
-
-dotenv.config();
-const PRIVATE_KEYS =
-  process.env.PRIVATE_KEY !== undefined ? [`0x${process.env.PRIVATE_KEY}`] : [];
 
 const config: HardhatUserConfig = {
   networks: {
-    ...getHardhatConfigNetworks(PRIVATE_KEYS),
+    ...getHardhatConfigNetworks(),
   },
   solidity: {
     compilers: [
