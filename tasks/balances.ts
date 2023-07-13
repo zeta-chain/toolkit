@@ -95,7 +95,9 @@ const fetchBalances = async (
     const zeta = await fetchZetaBalance(address, provider, networkName);
     const isZeta = networkName === "zeta_testnet";
     const zrc20 = isZeta ? { zrc20: await fetchZRC20Balance(address) } : {};
-    return { native, networkName, zeta, ...zrc20 };
+    /* eslint-disable */
+    return { networkName, native, zeta, ...zrc20 };
+    /* eslint-enable */
   } catch (error) {}
 };
 

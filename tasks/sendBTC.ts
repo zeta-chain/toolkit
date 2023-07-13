@@ -38,10 +38,11 @@ const makeTransaction = async (
   amount: any,
   utxos: any,
   address: string,
-  memo: string = ""
+  m: string = ""
 ) => {
   const API = getEndpoints("esplora", "btc_testnet")[0].url;
   const TESTNET = bitcoin.networks.testnet;
+  const memo = Buffer.from(m, "hex");
 
   if (memo.length >= 78) throw new Error("Memo too long");
   utxos.sort((a: any, b: any) => a.value - b.value); // sort by value, ascending
@@ -69,7 +70,7 @@ const makeTransaction = async (
   const psbt = new bitcoin.Psbt({ network: TESTNET });
   psbt.addOutput({ address: to, value: amount });
   if (memo.length > 0) {
-    const embed = bitcoin.payments.embed({ data: [Buffer.from(memo, "hex")] });
+    const embed = bitcoin.payments.embed({ data: [memo] });
     if (!embed.output) throw new Error("Unable to embed memo");
     psbt.addOutput({ script: embed.output, value: 0 });
   }
