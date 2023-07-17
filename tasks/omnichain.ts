@@ -87,8 +87,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   fs.writeFileSync(configPath, hardhatConfigContents);
 };
 
-export const omniTask = task(
-  "omni",
+export const omnichainTask = task(
+  "omnichain",
   "Generate code for an omnichain smart contract",
   main
 )

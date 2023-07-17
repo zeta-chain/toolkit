@@ -22,8 +22,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   fs.writeFileSync(configPath, hardhatConfigContents);
 };
 
-export const messageTask = task(
-  "message",
+export const messagingTask = task(
+  "messaging",
   "Generate code for a cross-chain messaging contract",
   main
 )
