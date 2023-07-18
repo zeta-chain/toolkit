@@ -16,10 +16,12 @@ contract {{contractName}} is zContract {
         uint256 amount,
         bytes calldata message
     ) external virtual override {
+        {{#if arguments.pairs}}
         ({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}) = abi.decode(
             message,
             ({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}})
         );
+        {{/if}}
         // TODO: implement the logic
     }
 }
