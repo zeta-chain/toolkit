@@ -1,10 +1,11 @@
 import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
-import { VALID_CHAINS } from "@zetachain/faucet-cli/dist/constants";
 import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { walletError } from "./balances";
+
+dotenv.config();
 
 const faucetError = `
 * Alternatively, you can request tokens on any address
@@ -26,15 +27,12 @@ const getRecipientAddress = (args: any, hre: HardhatRuntimeEnvironment) => {
 };
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  if (!VALID_CHAINS.includes(args.chain)) {
-    const chainNameError = `❌ Invalid chain: ${args.chain}. Must be one of: ${VALID_CHAINS}`;
-    return console.error(chainNameError);
-  }
-
   try {
     const address = getRecipientAddress(args, hre);
     await drip({ address, chain: args.chain }, []);
-  } catch (error) {}
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const faucetTask = task(
@@ -48,6 +46,6 @@ export const faucetTask = task(
   )
   .addParam(
     "chain",
-    "Blockchain network where tokens will be sent.",
-    "zetachain_athens"
+    `Blockchain network where tokens will be sent.`,
+    "zeta_testnet"
   );
