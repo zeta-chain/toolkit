@@ -5,14 +5,17 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getFullyQualifiedName } from "hardhat/utils/contract-names";
 
-const verifyURL = "https://server.sourcify.athens2.zetachain.com/verify";
-const queryURL =
-  "https://repo.sourcify.athens2.zetachain.com/contracts/full_match/7001";
+const URL = "https://sourcify.dev/server";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   try {
-    const response = await axios.get(`${queryURL}/${args.contract}`);
-    if (response.status === 200) {
+    const checkURL = `${URL}/check-by-addresses`;
+    const params = {
+      addresses: args.contract,
+      chainIds: 7001,
+    };
+    const res = await axios.get(checkURL, { params });
+    if (res.status === 200 && res?.data[0]?.status == "perfect") {
       console.log(`✅ Contract has already been verified.`);
       return;
     }
@@ -59,9 +62,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   const headers = { headers: formData.getHeaders() };
   try {
-    await axios.post(verifyURL, formData, headers);
+    await axios.post(URL, formData, headers);
     console.log(
-      `✅ Contract verified: https://explorer.zetachain.com/address/${args.contract}`
+      `✅ Contract verified: https://athens3.explorer.zetachain.com/address/${args.contract}`
     );
   } catch (error: any) {
     console.error(
