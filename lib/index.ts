@@ -65,7 +65,7 @@ const prepareData = (args: any) => {
 
   return {
     args,
-    arguments: { names, pairs, types, casts },
+    arguments: { casts, names, pairs, types },
     contractName,
     contractNameUnderscore: camelToUnderscoreUpper(contractName),
   };
