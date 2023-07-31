@@ -2,22 +2,70 @@ import * as fs from "fs";
 import * as handlebars from "handlebars";
 import * as path from "path";
 
+const numberTypes = [
+  "int",
+  "int8",
+  "int16",
+  "int128",
+  "int256",
+  "uint",
+  "uint8",
+  "uint16",
+  "uint128",
+  "uint256",
+];
+const addressTypes = ["address"];
+const boolTypes = ["bool"];
+const bytesTypes = ["bytes32"];
+const allTypes = [...numberTypes, ...addressTypes, ...boolTypes, ...bytesTypes];
+
+const capitalizeFirstChar = (input: string): string => {
+  if (input.length === 0) {
+    return input; // Return the empty string as is
+  }
+
+  const firstChar = input.charAt(0).toUpperCase();
+  const restOfTheString = input.slice(1);
+
+  return firstChar + restOfTheString;
+};
+
 const prepareData = (args: any) => {
   const argsList = args.arguments || [];
   const names = argsList.map((i: string) => i.split(":")[0]);
   const types = argsList.map((i: string) => {
     let parts = i.split(":");
-    // If there's a type and it's not empty, use it; if not, default to "bytes32"
-    let t =
-      parts.length > 1 && parts[1].trim() !== "" ? parts[1].trim() : "bytes32";
-    return t;
+    if (parts.length === 1) {
+      return "bytes32";
+    }
+    const t = parts[1].trim();
+    return allTypes.includes(t) ? t : "bytes32";
   });
   const pairs = names.map((v: string, i: string) => [v, types[i]]);
   const contractName = sanitizeSolidityFunctionName(args.name);
+  const casts = pairs.map((p: any) => {
+    const n = capitalizeFirstChar(p[0]);
+    const type = p[1];
+
+    if (numberTypes.includes(type)) {
+      return [n, `hre.ethers.BigNumber.from(args.${p[0]})`];
+    }
+
+    if (addressTypes.includes(type)) {
+      return [n, `hre.ethers.utils.getAddress(args.${p[0]})`];
+    }
+
+    if (boolTypes.includes(type)) {
+      return [n, `JSON.parse(args.${p[0]})`];
+    }
+
+    // Default case is "bytes32" and other unexpected cases.
+    return [n, `hre.ethers.utils.toUtf8Bytes(args.${p[0]})`];
+  });
 
   return {
     args,
-    arguments: { names, pairs, types },
+    arguments: { names, pairs, types, casts },
     contractName,
     contractNameUnderscore: camelToUnderscoreUpper(contractName),
   };
