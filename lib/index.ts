@@ -21,7 +21,7 @@ const allTypes = [...numberTypes, ...addressTypes, ...boolTypes, ...bytesTypes];
 
 const capitalizeFirstChar = (input: string): string => {
   if (input.length === 0) {
-    return input; // Return the empty string as is
+    return input;
   }
 
   const firstChar = input.charAt(0).toUpperCase();
@@ -34,12 +34,16 @@ const prepareData = (args: any) => {
   const argsList = args.arguments || [];
   const names = argsList.map((i: string) => i.split(":")[0]);
   const types = argsList.map((i: string) => {
-    let parts = i.split(":");
-    if (parts.length === 1) {
+    let t = i.split(":")[1];
+    if (t === undefined) {
       return "bytes32";
     }
-    const t = parts[1].trim();
-    return allTypes.includes(t) ? t : "bytes32";
+    if (!allTypes.includes(t)) {
+      throw new Error(
+        `Invalid type "${t}", must be one of ${allTypes.join(", ")}`
+      );
+    }
+    return t;
   });
   const pairs = names.map((v: string, i: string) => [v, types[i]]);
   const contractName = sanitizeSolidityFunctionName(args.name);
