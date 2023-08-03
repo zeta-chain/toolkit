@@ -123,7 +123,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   if (args.address) {
     address = args.address;
-  } else if (process.env.PRIVATE_KEY) {
+  } else if (pk) {
     address = new ethers.Wallet(pk).address;
     btc_address = bitcoinAddress(pk);
   } else {
@@ -141,8 +141,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const filteredBalances = balances.filter((balance) => balance != null);
   spinner.stop();
   console.log(`
-EVM: ${address}
-BTC: ${bitcoinAddress(pk)}
+EVM: ${address} ${btc_address ? `\nBitcoin: ${btc_address}` : ""}
 `);
   console.table(filteredBalances);
 };
