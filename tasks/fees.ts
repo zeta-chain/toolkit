@@ -1,10 +1,8 @@
-import { getEndpoints } from "@zetachain/networks";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import type { FeeDetails } from "../helpers/fees";
 import { fetchCCMFees, fetchZEVMFees } from "../helpers/fees";
-import { getAddress } from "@zetachain/protocol-contracts";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers } = hre as any;
