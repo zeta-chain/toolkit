@@ -41,7 +41,9 @@ export const fetchZEVMFees = async (
   provider: any,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const zrc20Address = getAddress("zrc20", network);
+  const btcZRC20 = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"; // TODO: use getAddress("zrc20", "btc_testnet") when available
+  const zrc20Address =
+    network === "btc_testnet" ? btcZRC20 : getAddress("zrc20", network);
   if (!zrc20Address) return;
 
   const contract = new hre.ethers.Contract(zrc20Address, ZRC20.abi, provider);

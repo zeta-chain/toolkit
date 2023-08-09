@@ -4,6 +4,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import type { FeeDetails } from "../helpers/fees";
 import { fetchCCMFees, fetchZEVMFees } from "../helpers/fees";
+import { getAddress } from "@zetachain/protocol-contracts";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers } = hre as any;
@@ -12,19 +13,19 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const feesZEVM: Record<string, FeeDetails> = {};
   const feesCCM: Record<string, FeeDetails> = {};
 
-  const networks = Object.keys(hre.config.networks);
+  const networks = [...Object.keys(hre.config.networks), "btc_testnet"];
 
   await Promise.all(
-    networks.map(async (network) => {
-      return Promise.all([
-        fetchZEVMFees(network, provider, hre),
-        fetchCCMFees(network, hre),
-      ])
-        .then(([zevmFees, ccmFees]) => {
-          if (zevmFees) feesZEVM[network] = zevmFees;
-          if (ccmFees) feesCCM[network] = ccmFees;
-        })
-        .catch(() => {});
+    networks.map(async (n) => {
+      try {
+        const zevmFees = await fetchZEVMFees(n, provider, hre);
+        if (zevmFees) feesZEVM[n] = zevmFees;
+      } catch (err) {}
+
+      try {
+        const ccmFees = await fetchCCMFees(n, hre);
+        if (ccmFees) feesCCM[n] = ccmFees;
+      } catch (err) {}
     })
   );
 
