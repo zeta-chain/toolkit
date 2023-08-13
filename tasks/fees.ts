@@ -1,7 +1,7 @@
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { fetchFees, fetchCCMFees } from "../helpers/fees";
+import { fetchCCMFees, fetchFees } from "../helpers/fees";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const fees = await fetchFees();

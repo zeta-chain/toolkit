@@ -1,10 +1,10 @@
 import { getEndpoints } from "@zetachain/networks";
+import { getHardhatConfigNetworks } from "@zetachain/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import axios from "axios";
-import { formatEther } from "ethers/lib/utils";
 import { ethers } from "ethers";
-import { getHardhatConfigNetworks } from "@zetachain/networks";
+import { formatEther } from "ethers/lib/utils";
 
 const GAS_LIMIT = 350000;
 
@@ -71,8 +71,8 @@ export const fetchCCMFees = async (network: string) => {
 
 export const fetchFees = async () => {
   let fees = {
-    feesZEVM: {} as Record<string, any>,
     feesCCM: {} as Record<string, any>,
+    feesZEVM: {} as Record<string, any>,
   };
 
   const networks = [...Object.keys(getHardhatConfigNetworks()), "btc_testnet"];
