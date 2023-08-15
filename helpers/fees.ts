@@ -41,8 +41,8 @@ export const fetchZEVMFees = async (network: string) => {
   const protocolFee = ethers.BigNumber.from(await contract.PROTOCOL_FLAT_FEE());
   return {
     /* eslint-disable */
-    totalFee: formatTo18Decimals(gasFee.add(protocolFee)),
-    gasFee: formatTo18Decimals(gasFee),
+    totalFee: formatTo18Decimals(gasFee),
+    gasFee: formatTo18Decimals(gasFee.sub(protocolFee)),
     protocolFee: formatTo18Decimals(protocolFee),
     /* eslint-enable */
   };
@@ -84,9 +84,7 @@ export const fetchFees = async () => {
         if (zevmFees) fees.feesZEVM[n] = zevmFees;
         const ccmFees = await fetchCCMFees(n);
         if (ccmFees) fees.feesCCM[n] = ccmFees;
-      } catch (err) {
-        console.log(err);
-      }
+      } catch (err) {}
     })
   );
   return fees;
