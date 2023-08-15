@@ -1383,16 +1383,15 @@
   resolved "https://registry.yarnpkg.com/@zetachain/addresses/-/addresses-0.0.10.tgz#12174031f29b801ebc97fd7098f4f2aa4577d5e2"
   integrity sha512-G4OqEdAQwHrXP1YoNtEyFUCU4Nv3UQy9OCcv9Xn3g395EjLz3EqZQVHUcxsjZ5OkLMSJG08enWvCNuBINfAZEg==
 
-"@zetachain/faucet-cli@^2.0.1-beta.2":
-  version "2.0.1-beta.2"
-  resolved "https://registry.yarnpkg.com/@zetachain/faucet-cli/-/faucet-cli-2.0.1-beta.2.tgz#32c143d849163844037f7bf0602355d557f11353"
-  integrity sha512-d9nlW5lHquWVZmSwJ+VuGB/TlkaMiP7J0arorKyDt3Rw6hjQ3twaGTlK+nOTqJAxo2gwyGNrZVECmX6dWBY7rw==
+"@zetachain/faucet-cli@^2.0.2-athens3.1":
+  version "2.0.2-athens3.1"
+  resolved "https://registry.yarnpkg.com/@zetachain/faucet-cli/-/faucet-cli-2.0.2-athens3.1.tgz#e4d2224097b7620f46ec9a985b45625d350340e3"
+  integrity sha512-BDtpQF7XpYc49BQsPRfi6kcRBKjs2UESPzzK7jTcjRRxsFjMQ9tLnY3cx65U/WjFaS2O0APE4vo96j6lQry7PQ==
   dependencies:
     commander "10.0.1"
     figlet "1.6.0"
     got "11.8.5"
     launchdarkly-node-client-sdk "3.0.2"
-    readline "1.3.0"
     typescript "5.0.4"
     zod "3.19.1"
 
@@ -6275,11 +6274,6 @@ readdirp@~3.6.0:
   integrity sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==
   dependencies:
     picomatch "^2.2.1"
-
-readline@1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/readline/-/readline-1.3.0.tgz#c580d77ef2cfc8752b132498060dc9793a7ac01c"
-  integrity sha512-k2d6ACCkiNYz222Fs/iNze30rRJ1iIicW7JuX/7/cozvih6YCkFZH+J6mAFDVgv0dRBaAyr4jDqC95R2y4IADg==
 
 rechoir@^0.6.2:
   version "0.6.2"
