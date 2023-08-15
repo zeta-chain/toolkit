@@ -57,8 +57,8 @@ export const fetchZEVMFees = async (
 
   return {
     /* eslint-disable */
-    totalFee: formatTo18Decimals(gasFee.add(protocolFee)),
-    gasFee: formatTo18Decimals(gasFee),
+    totalFee: formatTo18Decimals(gasFee),
+    gasFee: formatTo18Decimals(gasFee.sub(protocolFee)),
     protocolFee: formatTo18Decimals(protocolFee),
     /* eslint-enable */
   } as FeeDetails;
