@@ -36,7 +36,8 @@ export const fetchZEVMFees = async (network: string) => {
   if (!zrc20Address) return;
 
   const contract = new ethers.Contract(zrc20Address, ZRC20.abi, provider);
-  const gasFee = ethers.BigNumber.from((await contract.withdrawGasFee())[1]);
+  const [, withdrawGasFee] = await contract.withdrawGasFee();
+  const gasFee = ethers.BigNumber.from(withdrawGasFee);
 
   const protocolFee = ethers.BigNumber.from(await contract.PROTOCOL_FLAT_FEE());
   return {
@@ -59,7 +60,6 @@ export const fetchCCMFees = async (network: string) => {
 
   const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);
   const protocolFee = ethers.BigNumber.from(data.protocolFeeInZeta);
-
   return {
     /* eslint-disable */
     totalFee: formatTo18Decimals(gasFee.add(protocolFee)),
