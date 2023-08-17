@@ -23,9 +23,21 @@ import type {
   PromiseOrValue,
 } from "../../../../../common";
 
+export type ZContextStruct = {
+  origin: PromiseOrValue<BytesLike>;
+  sender: PromiseOrValue<string>;
+  chainID: PromiseOrValue<BigNumberish>;
+};
+
+export type ZContextStructOutput = [string, string, BigNumber] & {
+  origin: string;
+  sender: string;
+  chainID: BigNumber;
+};
+
 export interface ZContractInterface extends utils.Interface {
   functions: {
-    "onCrossChainCall(address,uint256,bytes)": FunctionFragment;
+    "onCrossChainCall((bytes,address,uint256),address,uint256,bytes)": FunctionFragment;
   };
 
   getFunction(nameOrSignatureOrTopic: "onCrossChainCall"): FunctionFragment;
@@ -33,6 +45,7 @@ export interface ZContractInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "onCrossChainCall",
     values: [
+      ZContextStruct,
       PromiseOrValue<string>,
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BytesLike>
@@ -75,6 +88,7 @@ export interface ZContract extends BaseContract {
 
   functions: {
     onCrossChainCall(
+      context: ZContextStruct,
       zrc20: PromiseOrValue<string>,
       amount: PromiseOrValue<BigNumberish>,
       message: PromiseOrValue<BytesLike>,
@@ -83,6 +97,7 @@ export interface ZContract extends BaseContract {
   };
 
   onCrossChainCall(
+    context: ZContextStruct,
     zrc20: PromiseOrValue<string>,
     amount: PromiseOrValue<BigNumberish>,
     message: PromiseOrValue<BytesLike>,
@@ -91,6 +106,7 @@ export interface ZContract extends BaseContract {
 
   callStatic: {
     onCrossChainCall(
+      context: ZContextStruct,
       zrc20: PromiseOrValue<string>,
       amount: PromiseOrValue<BigNumberish>,
       message: PromiseOrValue<BytesLike>,
@@ -102,6 +118,7 @@ export interface ZContract extends BaseContract {
 
   estimateGas: {
     onCrossChainCall(
+      context: ZContextStruct,
       zrc20: PromiseOrValue<string>,
       amount: PromiseOrValue<BigNumberish>,
       message: PromiseOrValue<BytesLike>,
@@ -111,6 +128,7 @@ export interface ZContract extends BaseContract {
 
   populateTransaction: {
     onCrossChainCall(
+      context: ZContextStruct,
       zrc20: PromiseOrValue<string>,
       amount: PromiseOrValue<BigNumberish>,
       message: PromiseOrValue<BytesLike>,

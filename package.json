@@ -5,7 +5,8 @@
   "main": "",
   "exports": {
     "./tasks": "./dist/tasks/index.js",
-    "./helpers": "./dist/helpers/index.js"
+    "./helpers": "./dist/helpers/index.js",
+    "./helpers/fees": "./dist/helpers/fees.js"
   },
   "scripts": {
     "prebuild": "rimraf dist",
@@ -78,7 +79,7 @@
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@zetachain/faucet-cli": "^2.0.2-athens3.1",
     "@zetachain/networks": "^2.3.0-athens3",
-    "@zetachain/protocol-contracts": "^1.0.1-athens3",
+    "@zetachain/protocol-contracts": "^2.0.1",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",
@@ -89,6 +90,7 @@
     "hardhat": "^2.15.0",
     "moment": "^2.29.4",
     "ora": "5.4.1",
+    "readline": "^1.3.0",
     "tiny-secp256k1": "^2.2.3",
     "ws": "^8.13.0"
   }
