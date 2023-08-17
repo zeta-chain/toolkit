@@ -8,22 +8,6 @@ import { formatEther } from "ethers/lib/utils";
 
 const GAS_LIMIT = 350000;
 
-export const getFees = async (type: "ccm" | "zevm", network: string) => {
-  const { url } = getHardhatConfigNetworks()["zeta_testnet"] as any;
-  const provider = new ethers.providers.JsonRpcProvider(url);
-
-  const API = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
-  if (!API) {
-    throw new Error("getEndpoints: API endpoint not found");
-  }
-
-  if (type === "zevm") {
-    return fetchZEVMFees(network);
-  } else if (type === "ccm") {
-    return fetchCCMFees(network);
-  }
-};
-
 const formatTo18Decimals = (n: any) => parseFloat(formatEther(n)).toFixed(18);
 
 export const fetchZEVMFees = async (network: string) => {
