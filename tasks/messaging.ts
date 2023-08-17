@@ -6,7 +6,7 @@ import * as path from "path";
 import { processTemplates } from "../lib";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  processTemplates("messaging", args);
+  await processTemplates("messaging", args);
 
   const configPath = path.resolve(process.cwd(), "hardhat.config.ts");
   let hardhatConfigContents = fs.readFileSync(configPath, "utf8");
