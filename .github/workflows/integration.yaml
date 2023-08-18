@@ -16,6 +16,9 @@ jobs:
       - name: Install dependencies
         run: yarn
 
+      - name: Install build
+        run: yarn build
+
       - name: Integration
         run: ./scripts/integration.sh
         env:
