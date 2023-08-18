@@ -1,4 +1,4 @@
-name: Integration
+name: Build & Integration
 
 on:
   pull_request:
