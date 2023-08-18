@@ -19,4 +19,4 @@ jobs:
       - name: Integration
         run: ./scripts/integration.sh
         env:
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          FOO_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
