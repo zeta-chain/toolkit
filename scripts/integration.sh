@@ -4,6 +4,8 @@ set -e
 
 npx hardhat balances
 
+npx hardhat fees
+
 npx hardhat account --save
 
 if [[ ! -f .env ]]; then
