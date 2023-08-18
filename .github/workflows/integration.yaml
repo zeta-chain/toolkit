@@ -19,4 +19,4 @@ jobs:
       - name: Integration
         run: ./scripts/integration.sh
         env:
-          MY_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
