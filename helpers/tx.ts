@@ -1,6 +1,5 @@
 import { getEndpoints } from "@zetachain/networks";
 import axios from "axios";
-import moment from "moment";
 import ora from "ora";
 import WebSocket from "ws";
 
