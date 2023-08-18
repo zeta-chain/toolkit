@@ -72,7 +72,7 @@
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@zetachain/faucet-cli": "^2.0.2-athens3.1",
-    "@zetachain/networks": "^2.1.0",
+    "@zetachain/networks": "^2.3.0",
     "@zetachain/protocol-contracts": "^2.0.1",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
