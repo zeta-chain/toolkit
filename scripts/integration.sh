@@ -18,14 +18,13 @@ else
     exit 1
 fi
 
-
-git reset --HARD
+git reset --hard HEAD
 npx hardhat omnichain Swap targetZRC20:address recipient minAmountOut:uint256
 npx hardhat compile --force --no-typechain
 npx hardhat deploy --help
 npx hardhat interact --help
 
-git reset --HARD
+git reset --hard HEAD
 npx hardhat messaging CrossChainMessage
 npx hardhat compile --force --no-typechain
 npx hardhat deploy --help
