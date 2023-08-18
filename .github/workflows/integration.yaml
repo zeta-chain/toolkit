@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - name: Install build
+      - name: Build
         run: yarn build
 
       - name: Integration
