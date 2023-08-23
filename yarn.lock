@@ -1407,10 +1407,10 @@
   dependencies:
     dotenv "^16.1.4"
 
-"@zetachain/protocol-contracts@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-2.0.1.tgz#46101ca06115bcd43cbfc7b9437e1d3ecc91eac3"
-  integrity sha512-XvtITedZ+3odIzO9wArnGE3yI0zHQOvumFydUgLeNDsAR+QeKloF7MUdN1toD6hYB3SgF4na/fpj+x6AdJe2Bg==
+"@zetachain/protocol-contracts@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-2.1.0.tgz#775b4eee7c85d115232dece121cbfc798fde6b63"
+  integrity sha512-xmG6p8DizIk0h7Tr8Lt6UMG0ejrfRrPx0qH9ze3enwblo7W+eGP12oQ7djanYu50B0pNhh9z7xy/IYxKa9wD0Q==
 
 abbrev@1:
   version "1.1.1"
@@ -6274,6 +6274,11 @@ readdirp@~3.6.0:
   integrity sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==
   dependencies:
     picomatch "^2.2.1"
+
+readline@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/readline/-/readline-1.3.0.tgz#c580d77ef2cfc8752b132498060dc9793a7ac01c"
+  integrity sha512-k2d6ACCkiNYz222Fs/iNze30rRJ1iIicW7JuX/7/cozvih6YCkFZH+J6mAFDVgv0dRBaAyr4jDqC95R2y4IADg==
 
 rechoir@^0.6.2:
   version "0.6.2"
