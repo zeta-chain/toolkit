@@ -13,6 +13,28 @@ const _abi = [
   {
     inputs: [
       {
+        components: [
+          {
+            internalType: "bytes",
+            name: "origin",
+            type: "bytes",
+          },
+          {
+            internalType: "address",
+            name: "sender",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "chainID",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct zContext",
+        name: "context",
+        type: "tuple",
+      },
+      {
         internalType: "address",
         name: "zrc20",
         type: "address",

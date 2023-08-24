@@ -33,11 +33,11 @@ contract {{contractName}} is
         _zetaConsumer = ZetaTokenConsumer(zetaConsumerAddress);
     }
 
-    function sendMessage(uint256 destinationChainId{{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) external payable {
+    function sendMessage(uint256 destinationChainId{{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) external payable {
         if (!_isValidChainId(destinationChainId))
             revert InvalidDestinationChainId();
 
-        uint256 crossChainGas = 18 * (10 ** 18);
+        uint256 crossChainGas = 2 * (10 ** 18);
         uint256 zetaValueAndGas = _zetaConsumer.getZetaFromEth{
             value: msg.value
         }(address(this), crossChainGas);
@@ -58,31 +58,20 @@ contract {{contractName}} is
     function onZetaMessage(
         ZetaInterfaces.ZetaMessage calldata zetaMessage
     ) external override isValidMessageCall(zetaMessage) {
-        /**
-         * @dev Decode should follow the signature of the message provided to zeta.send.
-         */
-        (bytes32 messageType{{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
+        (bytes32 messageType{{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
             zetaMessage.message, (bytes32{{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
         );
 
-        /**
-         * @dev Setting a message type is a useful pattern to distinguish between different messages.
-         */
         if (messageType != {{contractNameUnderscore}}_MESSAGE_TYPE)
             revert InvalidMessageType();
 
         emit {{contractName}}Event({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}});
     }
 
-    /**
-     * @dev Called by the Zeta Connector contract when the message fails to be sent.
-     * Useful to cleanup and leave the application on its initial state.
-     * Note that the require statements and the functionality are similar to onZetaMessage.
-     */
     function onZetaRevert(
         ZetaInterfaces.ZetaRevert calldata zetaRevert
     ) external override isValidRevertCall(zetaRevert) {
-        (bytes32 messageType{{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
+        (bytes32 messageType{{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
             zetaRevert.message,
             (bytes32{{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
         );

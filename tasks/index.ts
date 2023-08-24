@@ -2,6 +2,7 @@ export { accountTask } from "./account";
 export { balancesTask } from "./balances";
 export { cctxTask } from "./cctx";
 export { faucetTask } from "./faucet";
+export { feesTask } from "./fees";
 export { messagingTask } from "./messaging";
 export { omnichainTask } from "./omnichain";
 export { sendBTCTask } from "./sendBTC";
