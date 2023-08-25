@@ -23,10 +23,8 @@ const fetchCCTX = async (
     const apiResponse = await axios.get(url);
     const res = apiResponse?.data?.inTxHashToCctx?.cctx_index;
     res.forEach((cctxHash: any) => {
-      if (cctxHash) {
-        if (!cctxList[cctxHash]) {
-          cctxList[cctxHash] = [];
-        }
+      if (cctxHash && !cctxList[cctxHash]) {
+        cctxList[cctxHash] = [];
       }
       if (!spinnies.spinners[`spinner-${cctxHash}`]) {
         spinnies.add(`spinner-${cctxHash}`, {
