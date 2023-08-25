@@ -1,8 +1,8 @@
 import { getEndpoints } from "@zetachain/networks";
 import axios from "axios";
-import WebSocket from "ws";
-import Spinnies from "spinnies";
 import clc from "cli-color";
+import Spinnies from "spinnies";
+import WebSocket from "ws";
 
 export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
   const spinnies = new Spinnies();
@@ -71,10 +71,10 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
             const { sender_chain_id } = cctx.inbound_tx_params;
             const { receiver_chainId } = cctx.outbound_tx_params[0];
             const tx = {
+              receiver_chainId,
+              sender_chain_id,
               status,
               status_message,
-              sender_chain_id,
-              receiver_chainId,
             };
             const lastCCTX = cctxList[cctxHash][cctxList[cctxHash].length - 1];
             const isEmpty = cctxList[cctxHash].length === 0;
