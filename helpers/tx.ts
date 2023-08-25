@@ -33,16 +33,18 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
           const url = `${API}/zeta-chain/crosschain/inTxHashToCctx/${hash}`;
           const apiResponse = await axios.get(url);
           const res = apiResponse?.data?.inTxHashToCctx?.cctx_index;
-          if (res) {
-            if (!cctxList[res]) {
-              cctxList[res] = [];
+          res.forEach((cctxHash: any) => {
+            if (cctxHash) {
+              if (!cctxList[cctxHash]) {
+                cctxList[cctxHash] = [];
+              }
             }
-          }
-          if (!spinnies.spinners[`spinner-${res}`]) {
-            spinnies.add(`spinner-${res}`, {
-              text: `${res}`,
-            });
-          }
+            if (!spinnies.spinners[`spinner-${cctxHash}`]) {
+              spinnies.add(`spinner-${cctxHash}`, {
+                text: `${cctxHash}`,
+              });
+            }
+          });
         } catch (error) {}
       };
       if (Object.keys(cctxList).length === 0) {
