@@ -53,18 +53,15 @@ const fetchCCTXData = async (
   const url = `${API}/zeta-chain/crosschain/cctx/${cctxHash}`;
   const apiResponse = await axios.get(url);
   const cctx = apiResponse?.data?.CrossChainTx;
-  const { status, status_message } = cctx.cctx_status;
-  const { sender_chain_id } = cctx.inbound_tx_params;
-  const { receiver_chainId } = cctx.outbound_tx_params[0];
   const tx = {
-    receiver_chainId,
-    sender_chain_id,
-    status,
-    status_message,
+    receiver_chainId: cctx.outbound_tx_params[0].receiver_chainId,
+    sender_chain_id: cctx.inbound_tx_params.sender_chain_id,
+    status: cctx.cctx_status.status,
+    status_message: cctx.cctx_status.status_message,
   };
   const lastCCTX = cctxList[cctxHash][cctxList[cctxHash].length - 1];
   const isEmpty = cctxList[cctxHash].length === 0;
-  if (isEmpty || lastCCTX?.status !== status) {
+  if (isEmpty || lastCCTX?.status !== tx.status) {
     cctxList[cctxHash].push(tx);
     const sender = cctxList[cctxHash]?.[0].sender_chain_id;
     const receiver = cctxList[cctxHash]?.[0].receiver_chainId;
@@ -80,7 +77,7 @@ const fetchCCTXData = async (
       text: `${cctxHash}: ${sender} → ${receiver}: ${path}`,
     };
     const id = `spinner-${cctxHash}`;
-    switch (status) {
+    switch (tx.status) {
       case "OutboundMined":
       case "Reverted":
         spinnies.succeed(id, text);
