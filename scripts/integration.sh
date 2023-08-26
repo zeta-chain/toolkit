@@ -41,7 +41,6 @@ echo "Deployed contract address: $ADDRESS"
 
 npx hardhat interact --contract $ADDRESS --network goerli_testnet --amount 0.000000000000000001 --target-z-r-c20 $ADDRESS --recipient $ADDRESS --min-amount-out 0
 
-
 git reset --hard HEAD
 npx hardhat messaging CrossChainMessage
 npx hardhat compile --force --no-typechain
