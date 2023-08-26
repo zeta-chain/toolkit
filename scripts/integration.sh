@@ -26,7 +26,7 @@ npx hardhat compile --force --no-typechain
 npx hardhat deploy --help
 npx hardhat interact --help
 
-npx hardhat deploy --network zeta_testnet --json
+ADDRESS=$(npx hardhat deploy --network zeta_testnet --json | jq -r '.address')
 
 git reset --hard HEAD
 npx hardhat messaging CrossChainMessage
