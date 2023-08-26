@@ -2,6 +2,14 @@
 
 set -e
 
+git clone https://github.com/zeta-chain/template
+
+cd template
+
+yarn
+
+yarn link @zetachain/toolkit
+
 npx hardhat balances
 
 npx hardhat fees
@@ -27,6 +35,8 @@ npx hardhat deploy --help
 npx hardhat interact --help
 
 ADDRESS=$(npx hardhat deploy --network zeta_testnet --json | jq -r '.address')
+
+echo "Deployed contract address: $ADDRESS"
 
 git reset --hard HEAD
 npx hardhat messaging CrossChainMessage
