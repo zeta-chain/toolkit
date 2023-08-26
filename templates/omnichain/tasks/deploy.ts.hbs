@@ -31,6 +31,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 📜 Contract address: ${contract.address}
 🌍 Explorer: https://athens3.explorer.zetachain.com/address/${contract.address}
 `);
+  }
 };
 
 task("deploy", "Deploy the contract", main).addFlag(
