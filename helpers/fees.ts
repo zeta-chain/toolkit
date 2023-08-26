@@ -39,7 +39,9 @@ export const fetchCCMFees = async (network: string) => {
     throw new Error("getEndpoints: API endpoint not found");
   }
 
-  const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chain=${network}&gasLimit=${GAS_LIMIT}`;
+  const chainID = getHardhatConfigNetworks()[network].chainId;
+
+  const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${GAS_LIMIT}`;
   const { data } = await axios.get(url);
 
   const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);

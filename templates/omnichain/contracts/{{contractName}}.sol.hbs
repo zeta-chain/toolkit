@@ -21,8 +21,8 @@ contract {{contractName}} is zContract {
         if (msg.sender != address(systemContract)) {
             revert SenderNotSystemContract();
         }
-        {{#if arguments.pairs}}
-        ({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}) = abi.decode(
+        {{#if arguments.pairsWithDataLocation}}
+        ({{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}) = abi.decode(
             message,
             ({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}})
         );

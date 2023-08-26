@@ -17,7 +17,14 @@ const numberTypes = [
 const addressTypes = ["address"];
 const boolTypes = ["bool"];
 const bytesTypes = ["bytes32"];
-const allTypes = [...numberTypes, ...addressTypes, ...boolTypes, ...bytesTypes];
+const stringTypes = ["string"];
+const allTypes = [
+  ...numberTypes,
+  ...addressTypes,
+  ...boolTypes,
+  ...bytesTypes,
+  ...stringTypes,
+];
 
 const capitalizeFirstChar = (input: string): string => {
   if (input.length === 0) {
@@ -36,7 +43,7 @@ const prepareData = (args: any) => {
   const types = argsList.map((i: string) => {
     let t = i.split(":")[1];
     if (t === undefined) {
-      return "bytes32";
+      return "string";
     }
     if (!allTypes.includes(t)) {
       throw new Error(
@@ -46,6 +53,13 @@ const prepareData = (args: any) => {
     return t;
   });
   const pairs = names.map((v: string, i: string) => [v, types[i]]);
+  const pairsWithDataLocation = pairs.map((pair: any) => {
+    if (pair[1] === "string") {
+      return [pair[0], "string memory"];
+    } else {
+      return pair;
+    }
+  });
   const contractName = sanitizeSolidityFunctionName(args.name);
   const casts = pairs.map((p: any) => {
     const n = capitalizeFirstChar(p[0]);
@@ -63,13 +77,17 @@ const prepareData = (args: any) => {
       return [n, `JSON.parse(args.${p[0]})`];
     }
 
-    // Default case is "bytes32" and other unexpected cases.
-    return [n, `hre.ethers.utils.toUtf8Bytes(args.${p[0]})`];
+    if (bytesTypes.includes(type)) {
+      return [n, `hre.ethers.utils.toUtf8Bytes(args.${p[0]})`];
+    }
+
+    // Default case is "string" and other unexpected cases.
+    return [n, `args.${p[0]}`];
   });
 
   return {
     args,
-    arguments: { casts, names, pairs, types },
+    arguments: { casts, names, pairs, pairsWithDataLocation, types },
     contractName,
     contractNameUnderscore: camelToUnderscoreUpper(contractName),
   };
