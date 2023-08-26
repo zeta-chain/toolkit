@@ -26,7 +26,7 @@ npx hardhat compile --force --no-typechain
 npx hardhat deploy --help
 npx hardhat interact --help
 
-npx hardhat deploy --network zeta_testnet
+npx hardhat deploy --network zeta_testnet --json
 
 git reset --hard HEAD
 npx hardhat messaging CrossChainMessage
