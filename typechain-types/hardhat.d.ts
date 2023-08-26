@@ -77,6 +77,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZContract__factory>;
     getContractFactory(
+      name: "SystemContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SystemContract__factory>;
+    getContractFactory(
+      name: "SystemContractErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SystemContractErrors__factory>;
+    getContractFactory(
       name: "ZetaEthMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZetaEthMock__factory>;
@@ -181,6 +189,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ZContract>;
+    getContractAt(
+      name: "SystemContract",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SystemContract>;
+    getContractAt(
+      name: "SystemContractErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SystemContractErrors>;
     getContractAt(
       name: "ZetaEthMock",
       address: string,

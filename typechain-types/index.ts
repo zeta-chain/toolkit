@@ -40,12 +40,14 @@ export type { IZRC20 } from "./@zetachain/protocol-contracts/contracts/zevm/inte
 export { IZRC20__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/interfaces/IZRC20__factory";
 export type { ZContract } from "./@zetachain/protocol-contracts/contracts/zevm/interfaces/ZContract";
 export { ZContract__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/interfaces/ZContract__factory";
+export type { SystemContract } from "./@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContract";
+export { SystemContract__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContract__factory";
+export type { SystemContractErrors } from "./@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContractErrors";
+export { SystemContractErrors__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContractErrors__factory";
 export type { ZetaEthMock } from "./contracts/EthZetaMock.sol/ZetaEthMock";
 export { ZetaEthMock__factory } from "./factories/contracts/EthZetaMock.sol/ZetaEthMock__factory";
 export type { SwapHelperLib } from "./contracts/SwapHelperLib";
 export { SwapHelperLib__factory } from "./factories/contracts/SwapHelperLib__factory";
-export type { SystemContractErrors } from "./contracts/TestSystemContract.sol/SystemContractErrors";
-export { SystemContractErrors__factory } from "./factories/contracts/TestSystemContract.sol/SystemContractErrors__factory";
 export type { TestSystemContract } from "./contracts/TestSystemContract.sol/TestSystemContract";
 export { TestSystemContract__factory } from "./factories/contracts/TestSystemContract.sol/TestSystemContract__factory";
 export type { TestZRC20 } from "./contracts/TestZRC20";
