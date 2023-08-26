@@ -23,10 +23,14 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const contract = await factory.deploy(systemContract);
   await contract.deployed();
 
-  console.log(`🚀 Successfully deployed contract on ZetaChain.
+  if (args.json) {
+    console.log(JSON.stringify(contract));
+  } else {
+    console.log(`🚀 Successfully deployed contract on ZetaChain.
 📜 Contract address: ${contract.address}
 🌍 Explorer: https://athens3.explorer.zetachain.com/address/${contract.address}
 `);
+  }
 };
 
-task("deploy", "Deploy the contract", main);
+task("deploy", "Deploy the contract", main).addFlag("json", "Output contract details in JSON");
