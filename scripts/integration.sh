@@ -37,9 +37,10 @@ npx hardhat interact --help
 
 ADDRESS=$(npx hardhat deploy --network zeta_testnet --json | jq -r '.address')
 
-npx hardhat interact --contract $ADDRESS --network goerli_testnet --amount 0.000000000000000001 --target-z-r-c20 0x2cD3D070aE1BD365909dD859d29F387AA96911e1 --recipient 0x2cD3D070aE1BD365909dD859d29F387AA96911e1 --min-amount-out 0
-
 echo "Deployed contract address: $ADDRESS"
+
+npx hardhat interact --contract $ADDRESS --network goerli_testnet --amount 0.000000000000000001 --target-z-r-c20 $ADDRESS --recipient $ADDRESS --min-amount-out 0
+
 
 git reset --hard HEAD
 npx hardhat messaging CrossChainMessage
