@@ -115,7 +115,10 @@ const fetchZRC20Balance = async (address: string) => {
 };
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const spinner = ora("Fetching balances...").start();
+  const spinner = ora("Fetching balances...");
+  if (!args.json) {
+    spinner.start();
+  }
   const { ethers, config } = hre as any;
   const pk = process.env.PRIVATE_KEY;
   let address: string;
@@ -139,15 +142,21 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const balances = await Promise.all(balancePromises);
   balances.push(await fetchBitcoinBalance(btc_address));
   const filteredBalances = balances.filter((balance) => balance != null);
-  spinner.stop();
-  console.log(`
+  if (args.json) {
+    console.log(JSON.stringify(filteredBalances, null, 2));
+  } else {
+    spinner.stop();
+    console.log(`
 EVM: ${address} ${btc_address ? `\nBitcoin: ${btc_address}` : ""}
-`);
-  console.table(filteredBalances);
+  `);
+    console.table(filteredBalances);
+  }
 };
 
 export const balancesTask = task(
   "balances",
   `Fetch native and ZETA token balances`,
   main
-).addOptionalParam("address", `Fetch balances for a specific address`);
+)
+  .addOptionalParam("address", `Fetch balances for a specific address`)
+  .addFlag("json", "Output balances as JSON");
