@@ -1822,10 +1822,10 @@
   resolved "https://registry.yarnpkg.com/@zetachain/addresses/-/addresses-0.0.10.tgz#12174031f29b801ebc97fd7098f4f2aa4577d5e2"
   integrity sha512-G4OqEdAQwHrXP1YoNtEyFUCU4Nv3UQy9OCcv9Xn3g395EjLz3EqZQVHUcxsjZ5OkLMSJG08enWvCNuBINfAZEg==
 
-"@zetachain/faucet-cli@^2.0.2-athens3.1":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@zetachain/faucet-cli/-/faucet-cli-2.0.2.tgz#1d68f13fe42e727981ed88ea21e93302a3bf55d0"
-  integrity sha512-LQEtcBtOvdBGIBN8cTQc1gcZlLix/o51ljVS1gGEPAlqhEf7J6UVBVRFT6KLP39TnVp0fCRNs1oiofaMrMjMUw==
+"@zetachain/faucet-cli@2.0.2-athens3.1":
+  version "2.0.2-athens3.1"
+  resolved "https://registry.yarnpkg.com/@zetachain/faucet-cli/-/faucet-cli-2.0.2-athens3.1.tgz#e4d2224097b7620f46ec9a985b45625d350340e3"
+  integrity sha512-BDtpQF7XpYc49BQsPRfi6kcRBKjs2UESPzzK7jTcjRRxsFjMQ9tLnY3cx65U/WjFaS2O0APE4vo96j6lQry7PQ==
   dependencies:
     commander "10.0.1"
     figlet "1.6.0"
