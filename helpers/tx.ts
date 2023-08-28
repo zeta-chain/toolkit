@@ -61,32 +61,6 @@ const fetchCCTXData = async (
   const isEmpty = cctxList[cctxHash].length === 0;
   if (isEmpty || lastCCTX?.status !== tx.status) {
     cctxList[cctxHash].push(tx);
-    const sender = cctxList[cctxHash]?.[0].sender_chain_id;
-    const receiver = cctxList[cctxHash]?.[0].receiver_chainId;
-    const path = cctxList[cctxHash]
-      .map(
-        (x: any) =>
-          `${clc.bold.underline(x.status)} ${
-            x.status_message && "(" + x.status_message + ")"
-          }`
-      )
-      .join(" → ");
-    const text = {
-      text: `${cctxHash}: ${sender} → ${receiver}: ${path}`,
-    };
-    // const id = `spinner-${cctxHash}`;
-    // switch (tx.status) {
-    //   case "OutboundMined":
-    //   case "Reverted":
-    //     spinnies.succeed(id, text);
-    //     break;
-    //   case "Aborted":
-    //     spinnies.fail(id, text);
-    //     break;
-    //   default:
-    //     spinnies.update(id, text);
-    //     break;
-    // }
   }
 };
 
@@ -101,20 +75,12 @@ const createWebSocketConnection = (
   socket.on("open", () => socket.send(JSON.stringify(SUBSCRIBE_MESSAGE)));
   socket.on("message", async () => {
     if (Object.keys(cctxList).length === 0) {
-      // spinnies.add(`search`, {
-      //   text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
-      // });
       await fetchCCTX(inboundTxHash, spinnies, API, cctxList);
     }
     for (const txHash in cctxList) {
       await fetchCCTX(txHash, spinnies, API, cctxList);
     }
     if (Object.keys(cctxList).length > 0) {
-      // if (spinnies.spinners["search"]) {
-      //   spinnies.succeed(`search`, {
-      //     text: `CCTXs on ZetaChain found.\n`,
-      //   });
-      // }
       for (const cctxHash in cctxList) {
         try {
           await fetchCCTXData(cctxHash, spinnies, API, cctxList);
@@ -172,19 +138,17 @@ const updateSpinners = (cctxList: any, spinnies: any) => {
       } ${last.status_message && "(" + last.status_message + ")"}`,
     };
     if (!spinnies.spinners[id]) spinnies.add(id, text);
-    if (spinnies.spinners[id]) {
-      switch (last.status) {
-        case "OutboundMined":
-        case "Reverted":
-          spinnies.succeed(id, text);
-          break;
-        case "Aborted":
-          spinnies.fail(id, text);
-          break;
-        default:
-          spinnies.update(id, text);
-          break;
-      }
+    switch (last.status) {
+      case "OutboundMined":
+      case "Reverted":
+        spinnies.succeed(id, text);
+        break;
+      case "Aborted":
+        spinnies.fail(id, text);
+        break;
+      default:
+        spinnies.update(id, text);
+        break;
     }
   }
 };
