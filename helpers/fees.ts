@@ -31,7 +31,7 @@ export const fetchZEVMFees = async (network: string) => {
   };
 };
 
-export const fetchCCMFees = async (network: string, gas: Number) => {
+export const fetchCCMFees = async (network: string, gas: Number = 500000) => {
   const API = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
   if (!API) {
     throw new Error("getEndpoints: API endpoint not found");
