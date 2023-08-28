@@ -90,56 +90,86 @@ const fetchCCTXData = async (
   }
 };
 
+const createWebSocketConnection = (
+  WSS: string,
+  inboundTxHash: string,
+  spinnies: any,
+  API: string,
+  cctxList: any
+) => {
+  const socket = new WebSocket(WSS);
+  socket.on("open", () => socket.send(JSON.stringify(SUBSCRIBE_MESSAGE)));
+  socket.on("message", async () => {
+    if (Object.keys(cctxList).length === 0) {
+      spinnies.add(`search`, {
+        text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
+      });
+      await fetchCCTX(inboundTxHash, spinnies, API, cctxList);
+    }
+    for (const txHash in cctxList) {
+      await fetchCCTX(txHash, spinnies, API, cctxList);
+    }
+    if (Object.keys(cctxList).length > 0) {
+      if (spinnies.spinners["search"]) {
+        spinnies.succeed(`search`, {
+          text: `CCTXs on ZetaChain found.\n`,
+        });
+      }
+      for (const cctxHash in cctxList) {
+        try {
+          fetchCCTXData(cctxHash, spinnies, API, cctxList);
+        } catch (error) {}
+      }
+    }
+    if (
+      Object.keys(cctxList).length > 0 &&
+      Object.keys(cctxList)
+        .map((c: any) => {
+          const last = cctxList[c][cctxList[c].length - 1];
+          return last?.status;
+        })
+        .filter((s) => !["OutboundMined", "Aborted", "Reverted"].includes(s))
+        .length === 0
+    ) {
+      socket.close(1000);
+    }
+  });
+
+  socket.on("close", (code) => {
+    if (code !== 1000) {
+      createWebSocketConnection(WSS, inboundTxHash, spinnies, API, cctxList);
+    }
+  });
+
+  socket.on("error", (error: any) => {
+    createWebSocketConnection(WSS, inboundTxHash, spinnies, API, cctxList);
+  });
+
+  return socket;
+};
+
 export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
   const spinnies = new Spinnies();
 
   const API = getEndpoint("cosmos-http");
   const WSS = getEndpoint("tendermint-ws");
+  let cctxList: any = {};
 
-  return new Promise((resolve, reject) => {
-    let cctxList: any = {};
-    const socket = new WebSocket(WSS);
-    socket.on("open", () => socket.send(JSON.stringify(SUBSCRIBE_MESSAGE)));
-    socket.on("message", async () => {
-      if (Object.keys(cctxList).length === 0) {
-        spinnies.add(`search`, {
-          text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
-        });
-        await fetchCCTX(inboundTxHash, spinnies, API, cctxList);
-      }
-      for (const txHash in cctxList) {
-        await fetchCCTX(txHash, spinnies, API, cctxList);
-      }
-      if (Object.keys(cctxList).length > 0) {
-        if (spinnies.spinners["search"]) {
-          spinnies.succeed(`search`, {
-            text: `CCTXs on ZetaChain found.\n`,
-          });
-        }
-        for (const cctxHash in cctxList) {
-          try {
-            fetchCCTXData(cctxHash, spinnies, API, cctxList);
-          } catch (error) {}
-        }
-      }
-      if (
-        Object.keys(cctxList).length > 0 &&
-        Object.keys(cctxList)
-          .map((c: any) => {
-            const last = cctxList[c][cctxList[c].length - 1];
-            return last?.status;
-          })
-          .filter((s) => !["OutboundMined", "Aborted", "Reverted"].includes(s))
-          .length === 0
-      ) {
-        socket.close();
-      }
-    });
+  return new Promise(() => {
+    const socket = createWebSocketConnection(
+      WSS,
+      inboundTxHash,
+      spinnies,
+      API,
+      cctxList
+    );
     socket.on("error", (error: any) => {
-      reject(error);
+      createWebSocketConnection(WSS, inboundTxHash, spinnies, API, cctxList);
     });
-    socket.on("close", () => {
-      resolve();
+    socket.on("close", (code) => {
+      if (code !== 1000) {
+        createWebSocketConnection(WSS, inboundTxHash, spinnies, API, cctxList);
+      }
     });
   });
 };
