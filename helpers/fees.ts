@@ -6,8 +6,6 @@ import axios from "axios";
 import { ethers } from "ethers";
 import { formatEther } from "ethers/lib/utils";
 
-const GAS_LIMIT = 350000;
-
 const formatTo18Decimals = (n: any) => parseFloat(formatEther(n)).toFixed(18);
 
 export const fetchZEVMFees = async (network: string) => {
@@ -33,7 +31,7 @@ export const fetchZEVMFees = async (network: string) => {
   };
 };
 
-export const fetchCCMFees = async (network: string) => {
+export const fetchCCMFees = async (network: string, gas: Number) => {
   const API = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
   if (!API) {
     throw new Error("getEndpoints: API endpoint not found");
@@ -41,7 +39,7 @@ export const fetchCCMFees = async (network: string) => {
 
   const chainID = getHardhatConfigNetworks()[network].chainId;
 
-  const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${GAS_LIMIT}`;
+  const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
   const { data } = await axios.get(url);
 
   const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);
@@ -55,7 +53,7 @@ export const fetchCCMFees = async (network: string) => {
   };
 };
 
-export const fetchFees = async () => {
+export const fetchFees = async (gas: Number) => {
   let fees = {
     feesCCM: {} as Record<string, any>,
     feesZEVM: {} as Record<string, any>,
@@ -68,7 +66,7 @@ export const fetchFees = async () => {
       try {
         const zevmFees = await fetchZEVMFees(n);
         if (zevmFees) fees.feesZEVM[n] = zevmFees;
-        const ccmFees = await fetchCCMFees(n);
+        const ccmFees = await fetchCCMFees(n, gas);
         if (ccmFees) fees.feesCCM[n] = ccmFees;
       } catch (err) {}
     })
