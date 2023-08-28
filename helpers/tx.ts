@@ -26,11 +26,11 @@ const fetchCCTX = async (
       if (cctxHash && !cctxList[cctxHash]) {
         cctxList[cctxHash] = [];
       }
-      if (!spinnies.spinners[`spinner-${cctxHash}`]) {
-        spinnies.add(`spinner-${cctxHash}`, {
-          text: `${cctxHash}`,
-        });
-      }
+      // if (!spinnies.spinners[`spinner-${cctxHash}`]) {
+      //   spinnies.add(`spinner-${cctxHash}`, {
+      //     text: `${cctxHash}`,
+      //   });
+      // }
     });
   } catch (error) {}
 };
@@ -74,19 +74,19 @@ const fetchCCTXData = async (
     const text = {
       text: `${cctxHash}: ${sender} → ${receiver}: ${path}`,
     };
-    const id = `spinner-${cctxHash}`;
-    switch (tx.status) {
-      case "OutboundMined":
-      case "Reverted":
-        spinnies.succeed(id, text);
-        break;
-      case "Aborted":
-        spinnies.fail(id, text);
-        break;
-      default:
-        spinnies.update(id, text);
-        break;
-    }
+    // const id = `spinner-${cctxHash}`;
+    // switch (tx.status) {
+    //   case "OutboundMined":
+    //   case "Reverted":
+    //     spinnies.succeed(id, text);
+    //     break;
+    //   case "Aborted":
+    //     spinnies.fail(id, text);
+    //     break;
+    //   default:
+    //     spinnies.update(id, text);
+    //     break;
+    // }
   }
 };
 
@@ -101,26 +101,27 @@ const createWebSocketConnection = (
   socket.on("open", () => socket.send(JSON.stringify(SUBSCRIBE_MESSAGE)));
   socket.on("message", async () => {
     if (Object.keys(cctxList).length === 0) {
-      spinnies.add(`search`, {
-        text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
-      });
+      // spinnies.add(`search`, {
+      //   text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
+      // });
       await fetchCCTX(inboundTxHash, spinnies, API, cctxList);
     }
     for (const txHash in cctxList) {
       await fetchCCTX(txHash, spinnies, API, cctxList);
     }
     if (Object.keys(cctxList).length > 0) {
-      if (spinnies.spinners["search"]) {
-        spinnies.succeed(`search`, {
-          text: `CCTXs on ZetaChain found.\n`,
-        });
-      }
+      // if (spinnies.spinners["search"]) {
+      //   spinnies.succeed(`search`, {
+      //     text: `CCTXs on ZetaChain found.\n`,
+      //   });
+      // }
       for (const cctxHash in cctxList) {
         try {
-          fetchCCTXData(cctxHash, spinnies, API, cctxList);
+          await fetchCCTXData(cctxHash, spinnies, API, cctxList);
         } catch (error) {}
       }
     }
+    updateSpinners(cctxList, spinnies);
     if (
       Object.keys(cctxList).length > 0 &&
       Object.keys(cctxList)
@@ -146,6 +147,46 @@ const createWebSocketConnection = (
   });
 
   return socket;
+};
+
+const updateSpinners = (cctxList: any, spinnies: any) => {
+  if (!spinnies.spinners["search"]) {
+    if (Object.keys(cctxList).length === 0) {
+      spinnies.add(`search`, {
+        text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
+      });
+    }
+  } else {
+    if (Object.keys(cctxList).length > 0) {
+      spinnies.succeed(`search`, {
+        text: `CCTXs on ZetaChain found.\n`,
+      });
+    }
+  }
+  for (const cctxHash in cctxList) {
+    const last = cctxList[cctxHash][cctxList[cctxHash].length - 1];
+    const id = `spinner-${cctxHash}`;
+    const text = {
+      text: `${cctxHash}: ${last.sender_chain_id} → ${last.receiver_chainId}: ${
+        last.status
+      } ${last.status_message && "(" + last.status_message + ")"}`,
+    };
+    if (!spinnies.spinners[id]) spinnies.add(id, text);
+    if (spinnies.spinners[id]) {
+      switch (last.status) {
+        case "OutboundMined":
+        case "Reverted":
+          spinnies.succeed(id, text);
+          break;
+        case "Aborted":
+          spinnies.fail(id, text);
+          break;
+        default:
+          spinnies.update(id, text);
+          break;
+      }
+    }
+  }
 };
 
 export const trackCCTX = async (inboundTxHash: string): Promise<void> => {

@@ -5,6 +5,7 @@ import ZetaConnectorZEVM from "@zetachain/protocol-contracts/abi/zevm/ConnectorZ
 import { parseEther } from "ethers/lib/utils";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { trackCCTX } from "../helpers/tx";
 
 declare const hre: any;
 
@@ -57,6 +58,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     zetaValueAndGas: amount,
   });
   console.log(`Transaction hash: ${tx.hash}`);
+  await trackCCTX(tx.hash);
 };
 
 export const sendZETATask = task(
