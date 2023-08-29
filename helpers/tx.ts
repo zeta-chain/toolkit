@@ -90,6 +90,14 @@ const fetchCCTXData = async (
   }
 };
 
+const isCCTX = async (hash: string, API: string) => {
+  try {
+    const url = `${API}/zeta-chain/crosschain/cctx/${hash}`;
+    const apiResponse = await axios.get(url);
+    return apiResponse?.data?.CrossChainTx ? true : false;
+  } catch (e) {}
+};
+
 export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
   const spinnies = new Spinnies();
 
@@ -107,6 +115,15 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
         });
         await fetchCCTX(inboundTxHash, spinnies, API, cctxList);
       }
+      if ((await isCCTX(inboundTxHash, API)) && !cctxList[inboundTxHash]) {
+        cctxList[inboundTxHash] = [];
+        if (!spinnies.spinners[`spinner-${inboundTxHash}`]) {
+          spinnies.add(`spinner-${inboundTxHash}`, {
+            text: `${inboundTxHash}`,
+          });
+        }
+      }
+      await fetchCCTX(inboundTxHash, spinnies, API, cctxList);
       for (const txHash in cctxList) {
         await fetchCCTX(txHash, spinnies, API, cctxList);
       }
