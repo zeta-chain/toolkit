@@ -65,4 +65,5 @@ export const sendZETATask = task(
   main
 )
   .addParam("amount", "Amount of ZETA to send")
-  .addParam("destination", "Destination chain");
+  .addParam("destination", "Destination chain")
+  .addOptionalParam("recipient", "Recipient address");
