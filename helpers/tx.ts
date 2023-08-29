@@ -12,7 +12,7 @@ const getEndpoint = (key: any): string => {
   return endpoint;
 };
 
-const fetchCCTX = async (
+const fetchCCTXByInbound = async (
   hash: string,
   spinnies: any,
   API: string,
@@ -48,9 +48,7 @@ const fetchCCTXData = async (
   API: string,
   cctxList: any
 ) => {
-  const url = `${API}/zeta-chain/crosschain/cctx/${cctxHash}`;
-  const apiResponse = await axios.get(url);
-  const cctx = apiResponse?.data?.CrossChainTx;
+  const cctx = await getCCTX(cctxHash, API);
   const tx = {
     receiver_chainId: cctx.outbound_tx_params[0].receiver_chainId,
     sender_chain_id: cctx.inbound_tx_params.sender_chain_id,
@@ -90,11 +88,11 @@ const fetchCCTXData = async (
   }
 };
 
-const isCCTX = async (hash: string, API: string) => {
+const getCCTX = async (hash: string, API: string) => {
   try {
     const url = `${API}/zeta-chain/crosschain/cctx/${hash}`;
     const apiResponse = await axios.get(url);
-    return apiResponse?.data?.CrossChainTx ? true : false;
+    return apiResponse?.data?.CrossChainTx;
   } catch (e) {}
 };
 
@@ -113,9 +111,9 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
         spinnies.add(`search`, {
           text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
         });
-        await fetchCCTX(inboundTxHash, spinnies, API, cctxList);
+        await fetchCCTXByInbound(inboundTxHash, spinnies, API, cctxList);
       }
-      if ((await isCCTX(inboundTxHash, API)) && !cctxList[inboundTxHash]) {
+      if ((await getCCTX(inboundTxHash, API)) && !cctxList[inboundTxHash]) {
         cctxList[inboundTxHash] = [];
         if (!spinnies.spinners[`spinner-${inboundTxHash}`]) {
           spinnies.add(`spinner-${inboundTxHash}`, {
@@ -123,9 +121,9 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
           });
         }
       }
-      await fetchCCTX(inboundTxHash, spinnies, API, cctxList);
+      await fetchCCTXByInbound(inboundTxHash, spinnies, API, cctxList);
       for (const txHash in cctxList) {
-        await fetchCCTX(txHash, spinnies, API, cctxList);
+        await fetchCCTXByInbound(txHash, spinnies, API, cctxList);
       }
       if (Object.keys(cctxList).length > 0) {
         if (spinnies.spinners["search"]) {
