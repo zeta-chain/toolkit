@@ -13,4 +13,4 @@ export const cctxTask = task(
   "cctx",
   "Track cross-chain transaction status",
   main
-).addParam("tx", "Inbound transaction hash");
+).addPositionalParam("tx", "TX hash of an inbound transaction or a CCTX");
