@@ -4,6 +4,7 @@ pragma solidity =0.8.7;
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
 import "@zetachain/protocol-contracts/contracts/zevm/interfaces/IZRC20.sol";
+import "@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol";
 
 library SwapHelperLib {
     uint16 internal constant MAX_DEADLINE = 200;
