@@ -3,18 +3,14 @@ pragma solidity 0.8.7;
 
 import "@zetachain/protocol-contracts/contracts/zevm/interfaces/zContract.sol";
 import "@zetachain/protocol-contracts/contracts/zevm/interfaces/IZRC20.sol";
+import "@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol";
 
-interface SystemContractErrors {
+contract TestSystemContract {
     error CallerIsNotFungibleModule();
-
     error InvalidTarget();
-
     error CantBeIdenticalAddresses();
-
     error CantBeZeroAddress();
-}
 
-contract TestSystemContract is SystemContractErrors {
     mapping(uint256 => uint256) public gasPriceByChainId;
     mapping(uint256 => address) public gasCoinZRC20ByChainId;
     mapping(uint256 => address) public gasZetaPoolByChainId;
