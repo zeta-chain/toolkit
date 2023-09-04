@@ -73,17 +73,19 @@ const fetchCCTXData = async (
       text: `${cctxHash}: ${sender} → ${receiver}: ${path}`,
     };
     const id = `spinner-${cctxHash}`;
-    switch (tx.status) {
-      case "OutboundMined":
-      case "Reverted":
-        spinnies.succeed(id, text);
-        break;
-      case "Aborted":
-        spinnies.fail(id, text);
-        break;
-      default:
-        spinnies.update(id, text);
-        break;
+    if (spinnies.spinners[id]) {
+      switch (tx.status) {
+        case "OutboundMined":
+        case "Reverted":
+          spinnies.succeed(id, text);
+          break;
+        case "Aborted":
+          spinnies.fail(id, text);
+          break;
+        default:
+          spinnies.update(id, text);
+          break;
+      }
     }
   }
 };
@@ -100,7 +102,8 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
   const spinnies = new Spinnies();
 
   const API = getEndpoint("cosmos-http");
-  const WSS = getEndpoint("tendermint-ws");
+  // const WSS = getEndpoint("tendermint-ws");
+  const WSS = "wss://rpc-archive.athens.zetachain.com:26657/websocket";
 
   return new Promise((resolve, reject) => {
     let cctxList: any = {};
@@ -147,7 +150,7 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
           .filter((s) => !["OutboundMined", "Aborted", "Reverted"].includes(s))
           .length === 0
       ) {
-        socket.close();
+        // socket.close();
       }
     });
     socket.on("error", (error: any) => {
