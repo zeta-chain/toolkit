@@ -12,7 +12,10 @@ contract {{contractName}} is zContract {
     }
 
     modifier onlySystem() {
-        require(msg.sender == address(systemContract), "Only system contract can call this function");
+        require(
+            msg.sender == address(systemContract),
+            "Only system contract can call this function"
+        );
         _;
     }
 
