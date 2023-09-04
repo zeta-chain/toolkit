@@ -124,9 +124,6 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
           });
         }
       }
-      if (Object.keys(cctxList).length === 0) {
-        await fetchCCTXByInbound(inboundTxHash, spinnies, API, cctxList);
-      }
       for (const txHash in cctxList) {
         await fetchCCTXByInbound(txHash, spinnies, API, cctxList);
       }
