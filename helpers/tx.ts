@@ -110,10 +110,11 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
     const socket = new WebSocket(WSS);
     socket.on("open", () => socket.send(JSON.stringify(SUBSCRIBE_MESSAGE)));
     socket.on("message", async () => {
+      console.log(cctxList);
       if (Object.keys(cctxList).length === 0) {
-        spinnies.add(`search`, {
-          text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
-        });
+        // spinnies.add(`search`, {
+        //   text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
+        // });
         await fetchCCTXByInbound(inboundTxHash, spinnies, API, cctxList);
       }
       if ((await getCCTX(inboundTxHash, API)) && !cctxList[inboundTxHash]) {
