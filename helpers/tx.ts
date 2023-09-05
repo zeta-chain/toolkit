@@ -97,10 +97,10 @@ const fetchCCTXData = async (
     const receiver = cctxList[cctxHash]?.[0].receiver_chainId;
     const pendingNonce = pendingNonces.find(
       (n: any) => n.chain_id === tx.receiver_chainId
-    )?.nonce_high;
+    )?.nonce_low;
     const txNonce = tx.outbound_tx_tss_nonce;
     const queue =
-      txNonce > pendingNonce ? ` ${txNonce - pendingNonce} remaining` : "";
+      txNonce > pendingNonce ? ` (${txNonce - pendingNonce} in queue)` : "";
     const path = cctxList[cctxHash]
       .map(
         (x: any) =>
