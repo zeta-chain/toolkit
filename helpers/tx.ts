@@ -23,10 +23,12 @@ const fetchCCTXByInbound = async (
     const apiResponse = await axios.get(url);
     const res = apiResponse?.data?.inTxHashToCctx?.cctx_index;
     res.forEach((cctxHash: any) => {
-      if (cctxHash && !cctxList[cctxHash]) {
+      if (
+        cctxHash &&
+        !cctxList[cctxHash] &&
+        !spinnies.spinners[`spinner-${cctxHash}`]
+      ) {
         cctxList[cctxHash] = [];
-      }
-      if (!spinnies.spinners[`spinner-${cctxHash}`]) {
         spinnies.add(`spinner-${cctxHash}`, {
           text: `${cctxHash}`,
         });
@@ -98,7 +100,7 @@ const getCCTX = async (hash: string, API: string) => {
   } catch (e) {}
 };
 
-export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
+export const trackCCTX = async (hash: string): Promise<void> => {
   const spinnies = new Spinnies();
 
   const API = getEndpoint("cosmos-http");
@@ -114,14 +116,16 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
         spinnies.add(`search`, {
           text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
         });
-        await fetchCCTXByInbound(inboundTxHash, spinnies, API, cctxList);
+        await fetchCCTXByInbound(hash, spinnies, API, cctxList);
       }
-      if ((await getCCTX(inboundTxHash, API)) && !cctxList[inboundTxHash]) {
-        cctxList[inboundTxHash] = [];
-        if (!spinnies.spinners[`spinner-${inboundTxHash}`]) {
-          spinnies.add(`spinner-${inboundTxHash}`, {
-            text: `${inboundTxHash}`,
-          });
+      if (Object.keys(cctxList).length === 0 && !cctxList[hash]) {
+        if ((await getCCTX(hash, API)) && !cctxList[hash]) {
+          cctxList[hash] = [];
+          if (!spinnies.spinners[`spinner-${hash}`]) {
+            spinnies.add(`spinner-${hash}`, {
+              text: `${hash}`,
+            });
+          }
         }
       }
       for (const txHash in cctxList) {
@@ -149,7 +153,7 @@ export const trackCCTX = async (inboundTxHash: string): Promise<void> => {
           .filter((s) => !["OutboundMined", "Aborted", "Reverted"].includes(s))
           .length === 0
       ) {
-        // socket.close();
+        socket.close();
       }
     });
     socket.on("error", (error: any) => {
