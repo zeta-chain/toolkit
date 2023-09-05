@@ -48,11 +48,13 @@ const fetchCCTXData = async (
   cctxHash: string,
   spinnies: any,
   API: string,
-  cctxList: any
+  cctxList: any,
+  pendingNonces: any
 ) => {
   const cctx = await getCCTX(cctxHash, API);
   const tx = {
     receiver_chainId: cctx.outbound_tx_params[0].receiver_chainId,
+    outbound_tx_tss_nonce: cctx.outbound_tx_params[0].outbound_tx_tss_nonce,
     sender_chain_id: cctx.inbound_tx_params.sender_chain_id,
     status: cctx.cctx_status.status,
     status_message: cctx.cctx_status.status_message,
@@ -63,6 +65,12 @@ const fetchCCTXData = async (
     cctxList[cctxHash].push(tx);
     const sender = cctxList[cctxHash]?.[0].sender_chain_id;
     const receiver = cctxList[cctxHash]?.[0].receiver_chainId;
+    const pendingNonce = pendingNonces.find(
+      (n: any) => n.chain_id === tx.receiver_chainId
+    )?.nonce_high;
+    const txNonce = tx.outbound_tx_tss_nonce;
+    const queue =
+      txNonce > pendingNonce ? ` ${txNonce - pendingNonce} remaining` : "";
     const path = cctxList[cctxHash]
       .map(
         (x: any) =>
@@ -72,21 +80,17 @@ const fetchCCTXData = async (
       )
       .join(" → ");
     const text = {
-      text: `${cctxHash}: ${sender} → ${receiver}: ${path}`,
+      text: `${cctxHash}: ${sender} → ${receiver}${queue}: ${path}`,
     };
     const id = `spinner-${cctxHash}`;
     if (spinnies.spinners[id]) {
-      switch (tx.status) {
-        case "OutboundMined":
-        case "Reverted":
-          spinnies.succeed(id, text);
-          break;
-        case "Aborted":
-          spinnies.fail(id, text);
-          break;
-        default:
-          spinnies.update(id, text);
-          break;
+      const s = tx.status;
+      if (s == "OutboundMined" || s == "Reverted") {
+        spinnies.succeed(id, text);
+      } else if (s == "Aborted") {
+        spinnies.fail(id, text);
+      } else {
+        spinnies.update(id, text);
       }
     }
   }
@@ -100,18 +104,38 @@ const getCCTX = async (hash: string, API: string) => {
   } catch (e) {}
 };
 
+const fetchNonces = async (API: string, TSS: string) => {
+  try {
+    const url = `${API}/zeta-chain/crosschain/pendingNonces`;
+    const apiResponse = await axios.get(url);
+    const nonces = apiResponse?.data?.pending_nonces;
+    return nonces.filter((n: any) => n.tss === TSS);
+  } catch (e) {}
+};
+
+const fetchTSS = async (API: string) => {
+  try {
+    const url = `${API}/zeta-chain/crosschain/TSS`;
+    const apiResponse = await axios.get(url);
+    return apiResponse?.data?.TSS.tss_pubkey;
+  } catch (e) {}
+};
+
 export const trackCCTX = async (hash: string): Promise<void> => {
   const spinnies = new Spinnies();
 
   const API = getEndpoint("cosmos-http");
-  // const WSS = getEndpoint("tendermint-ws");
   const WSS = "wss://rpc-archive.athens.zetachain.com:26657/websocket";
+  const TSS = await fetchTSS(API);
 
   return new Promise((resolve, reject) => {
     let cctxList: any = {};
+    let pendingNonces: any = [];
+
     const socket = new WebSocket(WSS);
     socket.on("open", () => socket.send(JSON.stringify(SUBSCRIBE_MESSAGE)));
     socket.on("message", async () => {
+      pendingNonces = await fetchNonces(API, TSS);
       if (Object.keys(cctxList).length === 0) {
         spinnies.add(`search`, {
           text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
@@ -139,7 +163,7 @@ export const trackCCTX = async (hash: string): Promise<void> => {
         }
         for (const cctxHash in cctxList) {
           try {
-            fetchCCTXData(cctxHash, spinnies, API, cctxList);
+            fetchCCTXData(cctxHash, spinnies, API, cctxList, pendingNonces);
           } catch (error) {}
         }
       }
@@ -153,13 +177,15 @@ export const trackCCTX = async (hash: string): Promise<void> => {
           .filter((s) => !["OutboundMined", "Aborted", "Reverted"].includes(s))
           .length === 0
       ) {
-        socket.close();
+        // socket.close();
       }
     });
     socket.on("error", (error: any) => {
+      // console.log("error\n");
       reject(error);
     });
-    socket.on("close", () => {
+    socket.on("close", (code) => {
+      // console.log("close\n");
       resolve();
     });
   });
