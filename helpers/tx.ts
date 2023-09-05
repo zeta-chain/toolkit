@@ -3,6 +3,7 @@ import axios from "axios";
 import clc from "cli-color";
 import Spinnies from "spinnies";
 import WebSocket from "ws";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const getEndpoint = (key: any): string => {
   const endpoint = getEndpoints(key, "zeta_testnet")[0]?.url;
@@ -10,6 +11,17 @@ const getEndpoint = (key: any): string => {
     throw new Error(`getEndpoints: ${key} endpoint not found`);
   }
   return endpoint;
+};
+
+const findByChainId = (config: any, targetChainId: Number): Object | null => {
+  for (const key in config) {
+    if (config.hasOwnProperty(key) && config[key].hasOwnProperty("chainId")) {
+      if (config[key].chainId === targetChainId) {
+        return config[key];
+      }
+    }
+  }
+  return null;
 };
 
 const fetchCCTXByInbound = async (
@@ -53,16 +65,30 @@ const fetchCCTXData = async (
   API: string,
   cctxList: any,
   pendingNonces: any,
-  json: Boolean
+  json: Boolean,
+  hre: HardhatRuntimeEnvironment
 ) => {
+  const { networks } = hre.config;
   const cctx = await getCCTX(cctxHash, API);
+  const receiver_chainId = cctx.outbound_tx_params[0].receiver_chainId;
+  const outbound_tx_hash = cctx.outbound_tx_params[0].outbound_tx_hash;
+  let confirmed_on_destination = false;
+  if (outbound_tx_hash) {
+    const rpc = findByChainId(networks, parseInt(receiver_chainId))?.url;
+    const provider = new hre.ethers.providers.JsonRpcProvider(rpc);
+    const confirmed = await provider.getTransaction(outbound_tx_hash);
+    confirmed_on_destination = confirmed !== null;
+  }
   const tx = {
-    receiver_chainId: cctx.outbound_tx_params[0].receiver_chainId,
+    receiver_chainId,
+    confirmed_on_destination,
     outbound_tx_tss_nonce: cctx.outbound_tx_params[0].outbound_tx_tss_nonce,
+    outbound_tx_hash,
     sender_chain_id: cctx.inbound_tx_params.sender_chain_id,
     status: cctx.cctx_status.status,
     status_message: cctx.cctx_status.status_message,
   };
+  // tx.provider = hre.config.networks;
   const lastCCTX = cctxList[cctxHash][cctxList[cctxHash].length - 1];
   const isEmpty = cctxList[cctxHash].length === 0;
   if (isEmpty || lastCCTX?.status !== tx.status) {
@@ -125,7 +151,11 @@ const fetchTSS = async (API: string) => {
   } catch (e) {}
 };
 
-export const trackCCTX = async (hash: string, json: Boolean): Promise<void> => {
+export const trackCCTX = async (
+  hash: string,
+  hre: HardhatRuntimeEnvironment,
+  json: Boolean
+): Promise<void> => {
   const spinnies = new Spinnies();
 
   const API = getEndpoint("cosmos-http");
@@ -175,7 +205,8 @@ export const trackCCTX = async (hash: string, json: Boolean): Promise<void> => {
               API,
               cctxList,
               pendingNonces,
-              json
+              json,
+              hre
             );
           } catch (error) {}
         }
