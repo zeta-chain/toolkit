@@ -16,7 +16,8 @@ const fetchCCTXByInbound = async (
   hash: string,
   spinnies: any,
   API: string,
-  cctxList: any
+  cctxList: any,
+  json: Boolean
 ) => {
   try {
     const url = `${API}/zeta-chain/crosschain/inTxHashToCctx/${hash}`;
@@ -29,9 +30,11 @@ const fetchCCTXByInbound = async (
         !spinnies.spinners[`spinner-${cctxHash}`]
       ) {
         cctxList[cctxHash] = [];
-        spinnies.add(`spinner-${cctxHash}`, {
-          text: `${cctxHash}`,
-        });
+        if (!json) {
+          spinnies.add(`spinner-${cctxHash}`, {
+            text: `${cctxHash}`,
+          });
+        }
       }
     });
   } catch (error) {}
@@ -49,7 +52,8 @@ const fetchCCTXData = async (
   spinnies: any,
   API: string,
   cctxList: any,
-  pendingNonces: any
+  pendingNonces: any,
+  json: Boolean
 ) => {
   const cctx = await getCCTX(cctxHash, API);
   const tx = {
@@ -83,7 +87,7 @@ const fetchCCTXData = async (
       text: `${cctxHash}: ${sender} → ${receiver}${queue}: ${path}`,
     };
     const id = `spinner-${cctxHash}`;
-    if (spinnies.spinners[id]) {
+    if (!json && spinnies.spinners[id]) {
       const s = tx.status;
       if (s == "OutboundMined" || s == "Reverted") {
         spinnies.succeed(id, text);
@@ -121,7 +125,7 @@ const fetchTSS = async (API: string) => {
   } catch (e) {}
 };
 
-export const trackCCTX = async (hash: string): Promise<void> => {
+export const trackCCTX = async (hash: string, json: Boolean): Promise<void> => {
   const spinnies = new Spinnies();
 
   const API = getEndpoint("cosmos-http");
@@ -137,15 +141,17 @@ export const trackCCTX = async (hash: string): Promise<void> => {
     socket.on("message", async () => {
       pendingNonces = await fetchNonces(API, TSS);
       if (Object.keys(cctxList).length === 0) {
-        spinnies.add(`search`, {
-          text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
-        });
-        await fetchCCTXByInbound(hash, spinnies, API, cctxList);
+        if (!json) {
+          spinnies.add(`search`, {
+            text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
+          });
+        }
+        await fetchCCTXByInbound(hash, spinnies, API, cctxList, json);
       }
       if (Object.keys(cctxList).length === 0 && !cctxList[hash]) {
         if ((await getCCTX(hash, API)) && !cctxList[hash]) {
           cctxList[hash] = [];
-          if (!spinnies.spinners[`spinner-${hash}`]) {
+          if (!spinnies.spinners[`spinner-${hash}`] && !json) {
             spinnies.add(`spinner-${hash}`, {
               text: `${hash}`,
             });
@@ -153,17 +159,24 @@ export const trackCCTX = async (hash: string): Promise<void> => {
         }
       }
       for (const txHash in cctxList) {
-        await fetchCCTXByInbound(txHash, spinnies, API, cctxList);
+        await fetchCCTXByInbound(txHash, spinnies, API, cctxList, json);
       }
       if (Object.keys(cctxList).length > 0) {
-        if (spinnies.spinners["search"]) {
+        if (spinnies.spinners["search"] && !json) {
           spinnies.succeed(`search`, {
             text: `CCTXs on ZetaChain found.\n`,
           });
         }
         for (const cctxHash in cctxList) {
           try {
-            fetchCCTXData(cctxHash, spinnies, API, cctxList, pendingNonces);
+            fetchCCTXData(
+              cctxHash,
+              spinnies,
+              API,
+              cctxList,
+              pendingNonces,
+              json
+            );
           } catch (error) {}
         }
       }
@@ -177,15 +190,14 @@ export const trackCCTX = async (hash: string): Promise<void> => {
           .filter((s) => !["OutboundMined", "Aborted", "Reverted"].includes(s))
           .length === 0
       ) {
-        // socket.close();
+        if (json) console.log(JSON.stringify(cctxList, null, 2));
+        socket.close();
       }
     });
     socket.on("error", (error: any) => {
-      // console.log("error\n");
       reject(error);
     });
     socket.on("close", (code) => {
-      // console.log("close\n");
       resolve();
     });
   });
