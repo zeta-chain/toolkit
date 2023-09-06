@@ -88,7 +88,6 @@ const fetchCCTXData = async (
     status: cctx.cctx_status.status,
     status_message: cctx.cctx_status.status_message,
   };
-  // tx.provider = hre.config.networks;
   const lastCCTX = cctxList[cctxHash][cctxList[cctxHash].length - 1];
   const isEmpty = cctxList[cctxHash].length === 0;
   if (isEmpty || lastCCTX?.status !== tx.status) {
