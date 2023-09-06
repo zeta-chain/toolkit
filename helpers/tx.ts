@@ -1,9 +1,9 @@
 import { getEndpoints } from "@zetachain/networks";
 import axios from "axios";
 import clc from "cli-color";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 import Spinnies from "spinnies";
 import WebSocket from "ws";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const getEndpoint = (key: any): string => {
   const endpoint = getEndpoints(key, "zeta_testnet")[0]?.url;
@@ -80,10 +80,10 @@ const fetchCCTXData = async (
     confirmed_on_destination = confirmed !== null;
   }
   const tx = {
-    receiver_chainId,
     confirmed_on_destination,
-    outbound_tx_tss_nonce: cctx.outbound_tx_params[0].outbound_tx_tss_nonce,
     outbound_tx_hash,
+    outbound_tx_tss_nonce: cctx.outbound_tx_params[0].outbound_tx_tss_nonce,
+    receiver_chainId,
     sender_chain_id: cctx.inbound_tx_params.sender_chain_id,
     status: cctx.cctx_status.status,
     status_message: cctx.cctx_status.status_message,
