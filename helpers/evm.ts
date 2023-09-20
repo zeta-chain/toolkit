@@ -1,6 +1,7 @@
 import { MaxUint256 } from "@ethersproject/constants";
 import { parseUnits } from "@ethersproject/units";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "ethers";
 
 import {
   TestSystemContract,
@@ -9,8 +10,6 @@ import {
   TestZRC20__factory,
   UniswapV2Router02__factory,
 } from "../typechain-types";
-
-declare const hre: any;
 
 const addZetaEthLiquidity = async (
   signer: SignerWithAddress,
@@ -100,10 +99,10 @@ export const prepareData = (contract: string, types: string[], args: any[]) => {
 };
 
 export const prepareParams = (types: string[], args: any[]) => {
-  const abiCoder = hre.ethers.utils.defaultAbiCoder;
+  const abiCoder = ethers.utils.defaultAbiCoder;
   for (let i = 0; i < args.length; i++) {
     if (types[i] === "bytes32") {
-      args[i] = hre.ethers.utils.hexlify(hre.ethers.utils.zeroPad(args[i], 32));
+      args[i] = ethers.utils.hexlify(ethers.utils.zeroPad(args[i], 32));
     }
   }
   return abiCoder.encode(types, args);

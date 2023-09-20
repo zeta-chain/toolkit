@@ -6,7 +6,8 @@
   "exports": {
     "./tasks": "./dist/tasks/index.js",
     "./helpers": "./dist/helpers/index.js",
-    "./helpers/fees": "./dist/helpers/fees.js"
+    "./helpers/fees": "./dist/helpers/fees.js",
+    "./helpers/evm": "./dist/helpers/evm.js"
   },
   "scripts": {
     "prebuild": "rimraf dist",
