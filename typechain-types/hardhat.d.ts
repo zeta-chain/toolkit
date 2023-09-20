@@ -93,10 +93,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SwapHelperLib__factory>;
     getContractFactory(
-      name: "SystemContractErrors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SystemContractErrors__factory>;
-    getContractFactory(
       name: "TestSystemContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TestSystemContract__factory>;
@@ -209,11 +205,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SwapHelperLib>;
-    getContractAt(
-      name: "SystemContractErrors",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.SystemContractErrors>;
     getContractAt(
       name: "TestSystemContract",
       address: string,
