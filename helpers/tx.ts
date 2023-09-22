@@ -70,8 +70,8 @@ const fetchCCTXData = async (
 ) => {
   const { networks } = hre.config;
   const cctx = await getCCTX(cctxHash, API);
-  const receiver_chainId = cctx.outbound_tx_params[0].receiver_chainId;
-  const outbound_tx_hash = cctx.outbound_tx_params[0].outbound_tx_hash;
+  const receiver_chainId = cctx?.outbound_tx_params[0]?.receiver_chainId;
+  const outbound_tx_hash = cctx?.outbound_tx_params[0]?.outbound_tx_hash;
   let confirmed_on_destination = false;
   if (outbound_tx_hash) {
     const rpc = findByChainId(networks, parseInt(receiver_chainId))?.url;
@@ -82,24 +82,28 @@ const fetchCCTXData = async (
   const tx = {
     confirmed_on_destination,
     outbound_tx_hash,
-    outbound_tx_tss_nonce: cctx.outbound_tx_params[0].outbound_tx_tss_nonce,
+    outbound_tx_tss_nonce: cctx?.outbound_tx_params[0]?.outbound_tx_tss_nonce,
     receiver_chainId,
-    sender_chain_id: cctx.inbound_tx_params.sender_chain_id,
-    status: cctx.cctx_status.status,
-    status_message: cctx.cctx_status.status_message,
+    sender_chain_id: cctx?.inbound_tx_params?.sender_chain_id,
+    status: cctx?.cctx_status?.status,
+    status_message: cctx?.cctx_status?.status_message,
   };
   const lastCCTX = cctxList[cctxHash][cctxList[cctxHash].length - 1];
   const isEmpty = cctxList[cctxHash].length === 0;
-  if (isEmpty || lastCCTX?.status !== tx.status) {
+  const statusDefined =
+    tx.status !== undefined && tx.status_message !== undefined;
+  if (isEmpty || (statusDefined && lastCCTX.status !== tx.status)) {
     cctxList[cctxHash].push(tx);
     const sender = cctxList[cctxHash]?.[0].sender_chain_id;
     const receiver = cctxList[cctxHash]?.[0].receiver_chainId;
-    const pendingNonce = pendingNonces.find(
-      (n: any) => n.chain_id === tx.receiver_chainId
-    )?.nonce_low;
-    const txNonce = tx.outbound_tx_tss_nonce;
-    const queue =
-      txNonce > pendingNonce ? ` (${txNonce - pendingNonce} in queue)` : "";
+    let queue;
+    if (pendingNonces) {
+      const pending = pendingNonces.find(
+        (n: any) => n.chain_id === tx.receiver_chainId
+      )?.nonce_low;
+      const current = tx.outbound_tx_tss_nonce;
+      queue = current > pending ? ` (${current - pending} in queue)` : "";
+    }
     const path = cctxList[cctxHash]
       .map(
         (x: any) =>
@@ -158,16 +162,13 @@ export const trackCCTX = async (
   const spinnies = new Spinnies();
 
   const API = getEndpoint("cosmos-http");
-  const WSS = "wss://rpc-archive.athens.zetachain.com:26657/websocket";
   const TSS = await fetchTSS(API);
 
   return new Promise((resolve, reject) => {
     let cctxList: any = {};
     let pendingNonces: any = [];
 
-    const socket = new WebSocket(WSS);
-    socket.on("open", () => socket.send(JSON.stringify(SUBSCRIBE_MESSAGE)));
-    socket.on("message", async () => {
+    const loopInterval = setInterval(async () => {
       pendingNonces = await fetchNonces(API, TSS);
       if (Object.keys(cctxList).length === 0) {
         if (!json) {
@@ -221,14 +222,9 @@ export const trackCCTX = async (
           .length === 0
       ) {
         if (json) console.log(JSON.stringify(cctxList, null, 2));
-        socket.close();
+        clearInterval(loopInterval); // Clear the interval
+        resolve();
       }
-    });
-    socket.on("error", (error: any) => {
-      reject(error);
-    });
-    socket.on("close", (code) => {
-      resolve();
-    });
+    }, 3000); // Execute every 3 seconds
   });
 };
