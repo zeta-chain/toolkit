@@ -72,3 +72,5 @@ npx hardhat messaging CrossChainMessage
 npx hardhat compile --force --no-typechain
 npx hardhat deploy --help
 npx hardhat interact --help
+
+npx hardhat deploy --networks goerli_testnet,mumbai_testnet --json
