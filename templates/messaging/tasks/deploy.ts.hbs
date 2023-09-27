@@ -102,9 +102,11 @@ const setInteractors = async (
   }
 };
 
-task("deploy", "Deploy the contract", main).addParam(
-  "networks",
-  `Comma separated list of networks to deploy to (e.g. ${getSupportedNetworks(
-    "ccm"
-  )})`
-);
+task("deploy", "Deploy the contract", main)
+  .addParam(
+    "networks",
+    `Comma separated list of networks to deploy to (e.g. ${getSupportedNetworks(
+      "ccm"
+    )})`
+  )
+  .addFlag("json", "Output JSON");
