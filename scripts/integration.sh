@@ -41,7 +41,11 @@ echo "Deployed contract address: $ADDRESS"
 
 TX=$(npx hardhat interact --contract $ADDRESS --network goerli_testnet --amount 0.000000000000000001 --target-z-r-c20 $ADDRESS --recipient $ADDRESS --min-amount-out 0 --json | jq -r '.hash')
 
-npx hardhat cctx $TX
+echo "Transaction hash: $TX"
+
+CCTX=$(npx hardhat cctx $TX --json)
+
+echo "CCTX: $CCTX"
 
 git reset --hard HEAD
 npx hardhat messaging CrossChainMessage
