@@ -68,7 +68,7 @@ const fetchCCTXData = async (
   json: Boolean,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const { networks } = hre.config;
+  const networks = hre?.config?.networks;
   const cctx = await getCCTX(cctxHash, API);
   const receiver_chainId = cctx?.outbound_tx_params[0]?.receiver_chainId;
   const outbound_tx_hash = cctx?.outbound_tx_params[0]?.outbound_tx_hash;
@@ -221,10 +221,20 @@ export const trackCCTX = async (
           .filter((s) => !["OutboundMined", "Aborted", "Reverted"].includes(s))
           .length === 0
       ) {
-        if (json) console.log(JSON.stringify(cctxList, null, 2));
-        clearInterval(loopInterval); // Clear the interval
-        resolve();
+        const allOutboundMined = Object.keys(cctxList)
+          .map((c: any) => {
+            const last = cctxList[c][cctxList[c].length - 1];
+            return last?.status;
+          })
+          .every((s) => s === "OutboundMined");
+
+        if (!allOutboundMined) {
+          reject("CCTX aborted or reverted");
+        } else {
+          if (json) console.log(JSON.stringify(cctxList, null, 2));
+          resolve();
+        }
       }
-    }, 3000); // Execute every 3 seconds
+    }, 3000);
   });
 };
