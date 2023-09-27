@@ -47,7 +47,7 @@ TX_SHOULD_SUCCEED=$(npx hardhat interact --contract $ADDRESS --network goerli_te
 
 echo "TX hash: $TX_SHOULD_SUCCEED"
 
-CCTX_SHOULD_SUCCEED=$(npx hardhat cctx $TX --json)
+CCTX_SHOULD_SUCCEED=$(npx hardhat cctx $TX_SHOULD_SUCCEED --json)
 
 echo "CCTX: $CCTX_SHOULD_SUCCEED"
 
