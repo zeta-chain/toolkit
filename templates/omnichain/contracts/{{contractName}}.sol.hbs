@@ -5,11 +5,18 @@ import "@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol";
 import "@zetachain/protocol-contracts/contracts/zevm/interfaces/zContract.sol";
 
 contract {{contractName}} is zContract {
-    error SenderNotSystemContract();
     SystemContract public immutable systemContract;
 
     constructor(address systemContractAddress) {
         systemContract = SystemContract(systemContractAddress);
+    }
+
+    modifier onlySystem() {
+        require(
+            msg.sender == address(systemContract),
+            "Only system contract can call this function"
+        );
+        _;
     }
 
     function onCrossChainCall(
@@ -17,10 +24,7 @@ contract {{contractName}} is zContract {
         address zrc20,
         uint256 amount,
         bytes calldata message
-    ) external virtual override {
-        if (msg.sender != address(systemContract)) {
-            revert SenderNotSystemContract();
-        }
+    ) external virtual override onlySystem {
         {{#if arguments.pairsWithDataLocation}}
         ({{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}) = abi.decode(
             message,
