@@ -32,6 +32,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 task("interact", "Interact with the contract", main)
   .addParam("contract", "The address of the withdraw contract on ZetaChain")
   .addParam("amount", "Amount of tokens to send")
+  .addParam("json", "Output in JSON")
   {{#each arguments.names}}
   .addParam("{{this}}")
       {{/each}}
