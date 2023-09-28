@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { task } from "hardhat/config";
+import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
 
@@ -28,6 +28,12 @@ export const messagingTask = task(
   main
 )
   .addPositionalParam("name", "Name of the contract")
+  .addOptionalParam(
+    "fees",
+    "Use ZETA or native gas tokens for cross-chain fees",
+    "native",
+    types.string
+  )
   .addOptionalVariadicPositionalParam(
     "arguments",
     "Arguments for a crosschain call (e.g. dest:address to:bytes32 output:uint256)"

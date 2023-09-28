@@ -85,9 +85,18 @@ const prepareData = (args: any) => {
     return [n, `args.${p[0]}`];
   });
 
+  const feesNative = args.fees === "native";
+
   return {
     args,
-    arguments: { casts, names, pairs, pairsWithDataLocation, types },
+    arguments: {
+      casts,
+      feesNative,
+      names,
+      pairs,
+      pairsWithDataLocation,
+      types,
+    },
     contractName,
     contractNameUnderscore: camelToUnderscoreUpper(contractName),
   };
