@@ -32,7 +32,7 @@ contract {{contractName}} is ZetaInteractor, ZetaReceiver {
         {{/if}}
     }
 
-    function sendMessage(uint256 destinationChainId{{#unless arguments.feesNative}}, uint256 zetaValueAndGas{{/unless}}{{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) external payable {
+    function sendMessage(uint256 destinationChainId{{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}{{#unless arguments.feesNative}}, uint256 zetaValueAndGas{{/unless}}) external payable {
         if (!_isValidChainId(destinationChainId))
             revert InvalidDestinationChainId();
 
