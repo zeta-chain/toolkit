@@ -75,7 +75,7 @@ echo "Deployed CCM contract address: $CCM_CONTRACT"
 
 CCM_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.mumbai_testnet.totalFee")
 
-CCM_TX=$(npx hardhat interact --network goerli_testnet --contract $CCM_CONTRACT --message "Hello World" --destination mumbai_testnet --amount CCM_FEE --json | jq -r '.hash')
+CCM_TX=$(npx hardhat interact --network goerli_testnet --contract $CCM_CONTRACT --message "Hello World" --destination mumbai_testnet --amount $CCM_FEE --json | jq -r '.hash')
 
 echo "CCM TX hash: $CCM_TX"
 
