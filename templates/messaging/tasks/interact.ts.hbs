@@ -1,7 +1,6 @@
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { parseEther } from "@ethersproject/units";
-import { trackCCTX } from "@zetachain/toolkit/helpers";
 
 const contractName = "{{contractName}}";
 
@@ -20,15 +19,16 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   {{#each arguments.casts}}const param{{this.[0]}} = {{this.[1]}};
       {{/each}}
 
+  const value = parseEther(args.amount);
+
   const tx = await contract
     .connect(signer)
-    .sendMessage(destination, {{#each arguments.casts}} param{{this.[0]}}, {{/each}} { value: parseEther(args.amount) });
+    .sendMessage(destination{{#each arguments.casts}}, param{{this.[0]}}{{/each}}{{#if arguments.feesNative}}, { value }{{else}}, value{{/if}});
 
   const receipt = await tx.wait();
   console.log(`✅ The transaction has been broadcasted to ${hre.network.name}
 📝 Transaction hash: ${receipt.transactionHash}
 `);
-  await trackCCTX(tx.hash);
 };
 
 task("interact", "Sends a message from one chain to another.", main)
