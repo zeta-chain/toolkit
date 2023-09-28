@@ -91,11 +91,11 @@ const prepareData = (args: any) => {
     args,
     arguments: {
       casts,
+      feesNative,
       names,
       pairs,
       pairsWithDataLocation,
       types,
-      feesNative,
     },
     contractName,
     contractNameUnderscore: camelToUnderscoreUpper(contractName),
