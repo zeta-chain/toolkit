@@ -25,6 +25,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.log(`🚀 Successfully broadcasted a token transfer transaction on ${hre.network.name} network.
 📝 Transaction hash: ${tx.hash}
 `);
+  }
 };
 
 task("interact", "Interact with the contract", main)
