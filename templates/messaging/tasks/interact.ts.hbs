@@ -46,6 +46,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 };
 
 task("interact", "Sends a message from one chain to another.", main)
+  .addFlag("json", "Output JSON")
   .addParam("contract", "Contract address")
   .addParam("amount", "Token amount to send")
   .addParam("destination", "Destination chain")
