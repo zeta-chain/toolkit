@@ -68,6 +68,15 @@ echo "TESTING CROSS-CHAIN MESSAGING"
 git reset --hard HEAD
 npx hardhat messaging CrossChainMessage message:string --fees zeta
 npx hardhat compile --force --no-typechain
+
 CCM_CONTRACT=$(npx hardhat deploy --networks goerli_testnet,mumbai_testnet --json | jq -r '.goerli_testnet')
 
 echo "Deployed CCM contract address: $CCM_CONTRACT"
+
+CCM_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.mumbai_testnet.totalFee")
+
+CCM_TX=$(npx hardhat interact --network goerli_testnet --contract $CCM_CONTRACT --message "Hello World" --destination mumbai_testnet --amount CCM_FEE --json | jq -r '.hash')
+
+echo "CCM TX hash: $CCM_TX"
+
+CCM_CCTX=$(npx hardhat cctx $CCM_TX --json)
