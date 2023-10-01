@@ -77,7 +77,7 @@ CCM_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.mumbai_testnet.totalFee")
 
 echo "CCM fee: $CCM_FEE"
 
-CCM_TX_OUT=$(npx hardhat interact --network goerli_testnet --contract $CCM_CONTRACT --message "Hello World" --destination mumbai_testnet --amount 3 --json)
+CCM_TX_OUT=$(npx hardhat interact --network goerli_testnet --contract $CCM_CONTRACT --message "Hello World" --destination mumbai_testnet --amount $CCM_FEE --json)
 
 echo "CCM TX out: $CCM_TX_OUT"
 
@@ -86,3 +86,5 @@ CCM_TX=$(echo $CCM_TX_OUT | jq -r '.hash')
 echo "CCM TX hash: $CCM_TX"
 
 CCM_CCTX=$(npx hardhat cctx $CCM_TX --json)
+
+echo "CCM CCTX: $CCM_CCTX"
