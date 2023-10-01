@@ -1,4 +1,4 @@
-name: Build & Integration
+name: Integration Tests
 
 on:
   pull_request:
@@ -6,7 +6,8 @@ on:
       - main
 
 jobs:
-  build:
+  integration:
+    if: github.event.label.name == 'integration'
     runs-on: ubuntu-latest
 
     steps:
