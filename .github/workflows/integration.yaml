@@ -6,7 +6,8 @@ on:
       - main
     types:
       - opened
-      - synchronize
+      - labeled
+      - unlabeled
 
 jobs:
   integration:
