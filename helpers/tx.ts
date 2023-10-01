@@ -1,9 +1,9 @@
 import { getEndpoints } from "@zetachain/networks";
 import axios from "axios";
 import clc from "cli-color";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import Spinnies from "spinnies";
-import WebSocket from "ws";
+import { getHardhatConfigNetworks } from "@zetachain/networks";
+import { ethers } from "ethers";
 
 const getEndpoint = (key: any): string => {
   const endpoint = getEndpoints(key, "zeta_testnet")[0]?.url;
@@ -52,30 +52,22 @@ const fetchCCTXByInbound = async (
   } catch (error) {}
 };
 
-const SUBSCRIBE_MESSAGE = {
-  id: 1,
-  jsonrpc: "2.0",
-  method: "subscribe",
-  params: ["tm.event='NewBlock'"],
-};
-
 const fetchCCTXData = async (
   cctxHash: string,
   spinnies: any,
   API: string,
   cctxList: any,
   pendingNonces: any,
-  json: Boolean,
-  hre: HardhatRuntimeEnvironment
+  json: Boolean
 ) => {
-  const networks = hre?.config?.networks;
+  const networks = getHardhatConfigNetworks();
   const cctx = await getCCTX(cctxHash, API);
   const receiver_chainId = cctx?.outbound_tx_params[0]?.receiver_chainId;
   const outbound_tx_hash = cctx?.outbound_tx_params[0]?.outbound_tx_hash;
   let confirmed_on_destination = false;
   if (outbound_tx_hash) {
     const rpc = findByChainId(networks, parseInt(receiver_chainId))?.url;
-    const provider = new hre.ethers.providers.JsonRpcProvider(rpc);
+    const provider = new ethers.providers.JsonRpcProvider(rpc);
     const confirmed = await provider.getTransaction(outbound_tx_hash);
     confirmed_on_destination = confirmed !== null;
   }
@@ -156,8 +148,7 @@ const fetchTSS = async (API: string) => {
 
 export const trackCCTX = async (
   hash: string,
-  hre: HardhatRuntimeEnvironment,
-  json: Boolean
+  json: Boolean = false
 ): Promise<void> => {
   const spinnies = new Spinnies();
 
@@ -205,8 +196,7 @@ export const trackCCTX = async (
               API,
               cctxList,
               pendingNonces,
-              json,
-              hre
+              json
             );
           } catch (error) {}
         }
