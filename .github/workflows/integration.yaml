@@ -8,6 +8,7 @@ on:
       - opened
       - labeled
       - unlabeled
+  workflow_dispatch:
 
 jobs:
   integration:
