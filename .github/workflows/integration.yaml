@@ -1,20 +1,12 @@
 name: Integration Tests
 
 on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - converted_to_draft
-      - ready_for_review
+  schedule:
+    - cron: "0 0 * * *" # Runs every day at midnight
   workflow_dispatch:
 
 jobs:
   integration:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:
