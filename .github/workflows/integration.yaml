@@ -9,6 +9,7 @@ on:
       - reopened
       - synchronize
       - converted_to_draft
+      - ready_for_review
   workflow_dispatch:
 
 jobs:
