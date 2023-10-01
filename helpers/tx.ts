@@ -1,9 +1,9 @@
 import { getEndpoints } from "@zetachain/networks";
+import { getHardhatConfigNetworks } from "@zetachain/networks";
 import axios from "axios";
 import clc from "cli-color";
-import Spinnies from "spinnies";
-import { getHardhatConfigNetworks } from "@zetachain/networks";
 import { ethers } from "ethers";
+import Spinnies from "spinnies";
 
 const getEndpoint = (key: any): string => {
   const endpoint = getEndpoints(key, "zeta_testnet")[0]?.url;
