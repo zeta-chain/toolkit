@@ -1,18 +1,19 @@
 name: Integration Tests
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
     types:
       - opened
-      - labeled
-      - unlabeled
+      - reopened
+      - synchronize
+      - converted_to_draft
   workflow_dispatch:
 
 jobs:
   integration:
-    if: github.event.label.name == 'integration'
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:
