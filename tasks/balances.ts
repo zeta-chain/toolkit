@@ -131,7 +131,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     btc_address = bitcoinAddress(pk);
   } else {
     spinner.stop();
-    return console.error(walletError + balancesError);
+    console.error(walletError + balancesError);
+    return process.exit(1);
   }
   const balancePromises = Object.keys(config.networks).map((networkName) => {
     const { url } = config.networks[networkName] as any;

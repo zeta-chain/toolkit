@@ -6,7 +6,7 @@ import { trackCCTX } from "../helpers";
 declare const hre: any;
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  await trackCCTX(args.tx, hre, args.json);
+  await trackCCTX(args.tx);
 };
 
 export const cctxTask = task(
@@ -14,5 +14,5 @@ export const cctxTask = task(
   "Track cross-chain transaction status",
   main
 )
-  .addPositionalParam("tx", "TX hash of an inbound transaction or a CCTX")
+  .addPositionalParam("tx", "Hash of an inbound or a cross-chain transaction")
   .addFlag("json", "Output as JSON");
