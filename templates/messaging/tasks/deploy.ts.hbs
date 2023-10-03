@@ -116,4 +116,5 @@ task("deploy", "Deploy the contract", main)
       "ccm"
     )})`
   )
+  .addOptionalParam("gasLimit", "Gas limit", 10000000, types.int)
   .addFlag("json", "Output JSON");
