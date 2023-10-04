@@ -1,7 +1,7 @@
 import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
 import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { ethers } from "ethers";
 
 import { walletError } from "./balances";
 
@@ -14,8 +14,7 @@ const faucetError = `
   npx hardhat faucet --address <wallet_address>
 `;
 
-const getRecipientAddress = (args: any, hre: HardhatRuntimeEnvironment) => {
-  const { ethers } = hre as any;
+const getRecipientAddress = (args: any) => {
   if (args.address) {
     return args.address;
   } else if (process.env.PRIVATE_KEY) {
@@ -26,10 +25,10 @@ const getRecipientAddress = (args: any, hre: HardhatRuntimeEnvironment) => {
   }
 };
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+const main = async (args: any) => {
   try {
-    const address = getRecipientAddress(args, hre);
-    await drip({ address, chain: args.chain }, []);
+    const address = getRecipientAddress(args);
+    await drip({ address });
   } catch (error) {
     console.error(error);
   }
@@ -39,13 +38,7 @@ export const faucetTask = task(
   "faucet",
   "Request ZETA tokens from the faucet on a specific chain.",
   main
-)
-  .addOptionalParam(
-    "address",
-    "Recipient address. (default: address derived from PRIVATE_KEY env variable)"
-  )
-  .addParam(
-    "chain",
-    `Blockchain network where tokens will be sent.`,
-    "zeta_testnet"
-  );
+).addOptionalParam(
+  "address",
+  "Recipient address. (default: address derived from PRIVATE_KEY env variable)"
+);
