@@ -1,7 +1,7 @@
 import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
 import * as dotenv from "dotenv";
-import { task } from "hardhat/config";
 import { ethers } from "ethers";
+import { task } from "hardhat/config";
 
 import { walletError } from "./balances";
 
