@@ -1,10 +1,6 @@
-import { getEndpoints } from "@zetachain/networks";
-import { getHardhatConfigNetworks } from "@zetachain/networks";
+import { getEndpoints, getHardhatConfigNetworks } from "@zetachain/networks";
 import axios from "axios";
-import clc from "cli-color";
 import { ethers } from "ethers";
-import Spinnies from "spinnies";
-import EventEmitter from "eventemitter3";
 
 const getEndpoint = (key: any): string => {
   const endpoint = getEndpoints(key, "zeta_testnet")[0]?.url;
@@ -38,7 +34,7 @@ const fetchCCTXByInbound = async (
     const apiResponse = await axios.get(url);
     const res = apiResponse?.data?.inTxHashToCctx?.cctx_index;
     res.forEach((cctxHash: any) => {
-      if (cctxHash && !cctxList[cctxHash] && !spinners[`spinner-${cctxHash}`]) {
+      if (cctxHash && !cctxList[cctxHash] && !spinners[cctxHash]) {
         cctxList[cctxHash] = [];
         if (!json) {
           if (emitter) {
@@ -47,7 +43,7 @@ const fetchCCTXByInbound = async (
               text: `${cctxHash}`,
             });
           }
-          spinners[`spinner-${cctxHash}`] = true;
+          spinners[cctxHash] = true;
         }
       }
     });
@@ -103,21 +99,19 @@ const fetchCCTXData = async (
     const path = cctxList[cctxHash]
       .map(
         (x: any) =>
-          `${clc.bold.underline(x.status)} ${
-            x.status_message && "(" + x.status_message + ")"
-          }`
+          `${x.status} ${x.status_message && "(" + x.status_message + ")"}`
       )
       .join(" → ");
     const text = `${cctxHash}: ${sender} → ${receiver}${queue}: ${path}`;
 
-    if (!json && spinners[`spinner-${cctxHash}`]) {
+    if (!json && spinners[cctxHash]) {
       const s = tx.status;
       if (s == "OutboundMined" || s == "Reverted") {
         if (emitter) emitter.emit("succeed", { hash: cctxHash, text });
-        spinners[`spinner-${cctxHash}`] = false;
+        spinners[cctxHash] = false;
       } else if (s == "Aborted") {
         if (emitter) emitter.emit("fail", { hash: cctxHash, text });
-        spinners[`spinner-${cctxHash}`] = false;
+        spinners[cctxHash] = false;
       } else {
         if (emitter) emitter.emit("update", { hash: cctxHash, text });
       }
@@ -150,24 +144,6 @@ const fetchTSS = async (API: string) => {
   } catch (e) {}
 };
 
-export const trackCCTXInteractive = async (
-  hash: string,
-  json: Boolean = false
-) => {
-  const s = new Spinnies();
-  const emitter = new EventEmitter();
-
-  const searchAddText = `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`;
-  emitter
-    .on("search-add", () => s.add(`search`, { text: searchAddText }))
-    .on("search-end", ({ text }) => s.succeed(`search`, { text }))
-    .on("add", ({ hash, text }) => s.add(hash, { text }))
-    .on("succeed", ({ hash, text }) => s.succeed(hash, { text }))
-    .on("fail", ({ hash, text }) => s.fail(hash, { text }))
-    .on("update", ({ hash, text }) => s.update(hash, { text }));
-  await trackCCTX(hash, json, emitter);
-};
-
 export const trackCCTX = async (
   hash: string,
   json: Boolean = false,
@@ -182,7 +158,7 @@ export const trackCCTX = async (
     let cctxList: any = {};
     let pendingNonces: any = [];
 
-    const loopInterval = setInterval(async () => {
+    setInterval(async () => {
       pendingNonces = await fetchNonces(API, TSS);
       if (Object.keys(cctxList).length === 0) {
         if (!json && emitter) {
@@ -198,14 +174,14 @@ export const trackCCTX = async (
       if (Object.keys(cctxList).length === 0 && !cctxList[hash]) {
         if ((await getCCTX(hash, API)) && !cctxList[hash]) {
           cctxList[hash] = [];
-          if (!spinners[`spinner-${hash}`] && !json) {
-            spinners[`spinner-${hash}`] = true;
+          if (!spinners[hash] && !json) {
+            spinners[hash] = true;
             if (emitter) {
               emitter.emit("add", {
                 hash: hash,
                 text: `${hash}`,
               });
-              spinners[`spinner-${hash}`] = true;
+              spinners[hash] = true;
             }
           }
         }

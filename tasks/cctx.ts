@@ -1,11 +1,25 @@
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { trackCCTXInteractive } from "../helpers";
+import Spinnies from "spinnies";
+import EventEmitter from "eventemitter3";
 
-declare const hre: any;
+import { trackCCTX } from "../helpers";
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+const trackCCTXInteractive = async (hash: string, json: Boolean = false) => {
+  const s = new Spinnies();
+  const emitter = new EventEmitter();
+  emitter
+    .on("search-add", ({ text }) => s.add(`search`, { text }))
+    .on("search-end", ({ text }) => s.succeed(`search`, { text }))
+    .on("add", ({ hash, text }) => s.add(hash, { text }))
+    .on("succeed", ({ hash, text }) => s.succeed(hash, { text }))
+    .on("fail", ({ hash, text }) => s.fail(hash, { text }))
+    .on("update", ({ hash, text }) => s.update(hash, { text }));
+  await trackCCTX(hash, json, emitter);
+};
+
+const main = async (args: any) => {
   await trackCCTXInteractive(args.tx, args.json);
 };
 
