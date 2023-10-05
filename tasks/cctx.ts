@@ -1,6 +1,5 @@
 import EventEmitter from "eventemitter3";
 import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import Spinnies from "spinnies";
 
 import { trackCCTX } from "../helpers";
