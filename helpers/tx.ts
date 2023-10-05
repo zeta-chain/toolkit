@@ -36,10 +36,8 @@ const fetchCCTXByInbound = async (
     res.forEach((hash: any) => {
       if (hash && !cctxList[hash] && !spinners[hash]) {
         cctxList[hash] = [];
-        if (!json) {
-          if (emitter) {
-            emitter.emit("add", { hash, text: hash });
-          }
+        if (!json && emitter) {
+          emitter.emit("add", { hash, text: hash });
           spinners[hash] = true;
         }
       }
@@ -101,16 +99,16 @@ const fetchCCTXData = async (
       .join(" → ");
     const text = `${hash}: ${sender} → ${receiver}${queue}: ${path}`;
 
-    if (!json && spinners[hash]) {
+    if (!json && spinners[hash] && emitter) {
       const s = tx.status;
       if (s == "OutboundMined" || s == "Reverted") {
-        if (emitter) emitter.emit("succeed", { hash, text });
+        emitter.emit("succeed", { hash, text });
         spinners[hash] = false;
       } else if (s == "Aborted") {
-        if (emitter) emitter.emit("fail", { hash, text });
+        emitter.emit("fail", { hash, text });
         spinners[hash] = false;
       } else {
-        if (emitter) emitter.emit("update", { hash, text });
+        emitter.emit("update", { hash, text });
       }
     }
   }
@@ -159,28 +157,24 @@ export const trackCCTX = async (
       pendingNonces = await fetchNonces(API, TSS);
       if (Object.keys(cctxList).length === 0) {
         if (!json && emitter) {
-          if (emitter) {
-            emitter.emit("search-add", {
-              text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
-            });
-          }
+          emitter.emit("search-add", {
+            text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
+          });
           spinners["search"] = true;
         }
         await fetchCCTXByInbound(hash, emitter, spinners, API, cctxList, json);
       }
-      if (Object.keys(cctxList).length === 0 && !cctxList[hash]) {
-        if ((await getCCTX(hash, API)) && !cctxList[hash]) {
-          cctxList[hash] = [];
-          if (!spinners[hash] && !json) {
-            spinners[hash] = true;
-            if (emitter) {
-              emitter.emit("add", {
-                hash: hash,
-                text: `${hash}`,
-              });
-              spinners[hash] = true;
-            }
-          }
+      if (
+        Object.keys(cctxList).length === 0 &&
+        !cctxList[hash] &&
+        (await getCCTX(hash, API)) &&
+        !cctxList[hash]
+      ) {
+        cctxList[hash] = [];
+        if (!spinners[hash] && !json && emitter) {
+          spinners[hash] = true;
+          emitter.emit("add", { hash, text: hash });
+          spinners[hash] = true;
         }
       }
       for (const txHash in cctxList) {
@@ -194,12 +188,10 @@ export const trackCCTX = async (
         );
       }
       if (Object.keys(cctxList).length > 0) {
-        if (spinners["search"] && !json) {
-          if (emitter) {
-            emitter.emit("search-end", {
-              text: `CCTXs on ZetaChain found.\n`,
-            });
-          }
+        if (spinners["search"] && !json && emitter) {
+          emitter.emit("search-end", {
+            text: `CCTXs on ZetaChain found.\n`,
+          });
           spinners["search"] = false;
         }
         for (const hash in cctxList) {
