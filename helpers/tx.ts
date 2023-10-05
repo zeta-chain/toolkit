@@ -38,10 +38,7 @@ const fetchCCTXByInbound = async (
         cctxList[hash] = [];
         if (!json) {
           if (emitter) {
-            emitter.emit("add", {
-              hash,
-              text: hash,
-            });
+            emitter.emit("add", { hash, text: hash });
           }
           spinners[hash] = true;
         }
@@ -51,7 +48,7 @@ const fetchCCTXByInbound = async (
 };
 
 const fetchCCTXData = async (
-  cctxHash: string,
+  hash: string,
   emitter: any,
   spinners: any,
   API: string,
@@ -60,7 +57,7 @@ const fetchCCTXData = async (
   json: Boolean
 ) => {
   const networks = getHardhatConfigNetworks();
-  const cctx = await getCCTX(cctxHash, API);
+  const cctx = await getCCTX(hash, API);
   const receiver_chainId = cctx?.outbound_tx_params[0]?.receiver_chainId;
   const outbound_tx_hash = cctx?.outbound_tx_params[0]?.outbound_tx_hash;
   let confirmed_on_destination = false;
@@ -79,14 +76,14 @@ const fetchCCTXData = async (
     status: cctx?.cctx_status?.status,
     status_message: cctx?.cctx_status?.status_message,
   };
-  const lastCCTX = cctxList[cctxHash][cctxList[cctxHash].length - 1];
-  const isEmpty = cctxList[cctxHash].length === 0;
+  const lastCCTX = cctxList[hash][cctxList[hash].length - 1];
+  const isEmpty = cctxList[hash].length === 0;
   const statusDefined =
     tx.status !== undefined && tx.status_message !== undefined;
   if (isEmpty || (statusDefined && lastCCTX.status !== tx.status)) {
-    cctxList[cctxHash].push(tx);
-    const sender = cctxList[cctxHash]?.[0].sender_chain_id;
-    const receiver = cctxList[cctxHash]?.[0].receiver_chainId;
+    cctxList[hash].push(tx);
+    const sender = cctxList[hash]?.[0].sender_chain_id;
+    const receiver = cctxList[hash]?.[0].receiver_chainId;
     let queue;
     if (pendingNonces) {
       const pending = pendingNonces.find(
@@ -96,24 +93,24 @@ const fetchCCTXData = async (
       const diff = current - pending;
       queue = diff > 0 ? ` (${diff} in queue)` : "";
     }
-    const path = cctxList[cctxHash]
+    const path = cctxList[hash]
       .map(
         (x: any) =>
           `${x.status} ${x.status_message && "(" + x.status_message + ")"}`
       )
       .join(" → ");
-    const text = `${cctxHash}: ${sender} → ${receiver}${queue}: ${path}`;
+    const text = `${hash}: ${sender} → ${receiver}${queue}: ${path}`;
 
-    if (!json && spinners[cctxHash]) {
+    if (!json && spinners[hash]) {
       const s = tx.status;
       if (s == "OutboundMined" || s == "Reverted") {
-        if (emitter) emitter.emit("succeed", { hash: cctxHash, text });
-        spinners[cctxHash] = false;
+        if (emitter) emitter.emit("succeed", { hash, text });
+        spinners[hash] = false;
       } else if (s == "Aborted") {
-        if (emitter) emitter.emit("fail", { hash: cctxHash, text });
-        spinners[cctxHash] = false;
+        if (emitter) emitter.emit("fail", { hash, text });
+        spinners[hash] = false;
       } else {
-        if (emitter) emitter.emit("update", { hash: cctxHash, text });
+        if (emitter) emitter.emit("update", { hash, text });
       }
     }
   }
@@ -205,10 +202,10 @@ export const trackCCTX = async (
           }
           spinners["search"] = false;
         }
-        for (const cctxHash in cctxList) {
+        for (const hash in cctxList) {
           try {
             fetchCCTXData(
-              cctxHash,
+              hash,
               emitter,
               spinners,
               API,
