@@ -157,9 +157,8 @@ export const trackCCTX = async (
       pendingNonces = await fetchNonces(API, TSS);
       if (Object.keys(cctxs).length === 0) {
         if (!json && emitter) {
-          emitter.emit("search-add", {
-            text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
-          });
+          const text = `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`;
+          emitter.emit("search-add", { text });
           spinners["search"] = true;
         }
         await fetchCCTXByInbound(hash, emitter, spinners, API, cctxs, json);
