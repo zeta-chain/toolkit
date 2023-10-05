@@ -1,12 +1,12 @@
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { trackCCTX } from "../helpers";
+import { trackCCTXInteractive } from "../helpers";
 
 declare const hre: any;
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  await trackCCTX(args.tx);
+  await trackCCTXInteractive(args.tx, args.json);
 };
 
 export const cctxTask = task(

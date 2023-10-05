@@ -4,6 +4,7 @@ import axios from "axios";
 import clc from "cli-color";
 import { ethers } from "ethers";
 import Spinnies from "spinnies";
+import EventEmitter from "eventemitter3";
 
 const getEndpoint = (key: any): string => {
   const endpoint = getEndpoints(key, "zeta_testnet")[0]?.url;
@@ -26,7 +27,8 @@ const findByChainId = (config: any, targetChainId: Number): Object | null => {
 
 const fetchCCTXByInbound = async (
   hash: string,
-  spinnies: any,
+  emitter: any,
+  spinners: any,
   API: string,
   cctxList: any,
   json: Boolean
@@ -36,16 +38,16 @@ const fetchCCTXByInbound = async (
     const apiResponse = await axios.get(url);
     const res = apiResponse?.data?.inTxHashToCctx?.cctx_index;
     res.forEach((cctxHash: any) => {
-      if (
-        cctxHash &&
-        !cctxList[cctxHash] &&
-        !spinnies.spinners[`spinner-${cctxHash}`]
-      ) {
+      if (cctxHash && !cctxList[cctxHash] && !spinners[`spinner-${cctxHash}`]) {
         cctxList[cctxHash] = [];
         if (!json) {
-          spinnies.add(`spinner-${cctxHash}`, {
-            text: `${cctxHash}`,
-          });
+          if (emitter) {
+            emitter.emit("add", {
+              hash: cctxHash,
+              text: `${cctxHash}`,
+            });
+          }
+          spinners[`spinner-${cctxHash}`] = true;
         }
       }
     });
@@ -54,7 +56,8 @@ const fetchCCTXByInbound = async (
 
 const fetchCCTXData = async (
   cctxHash: string,
-  spinnies: any,
+  emitter: any,
+  spinners: any,
   API: string,
   cctxList: any,
   pendingNonces: any,
@@ -94,7 +97,8 @@ const fetchCCTXData = async (
         (n: any) => n.chain_id === tx.receiver_chainId
       )?.nonce_low;
       const current = tx.outbound_tx_tss_nonce;
-      queue = current > pending ? ` (${current - pending} in queue)` : "";
+      const diff = current - pending;
+      queue = diff > 0 ? ` (${diff} in queue)` : "";
     }
     const path = cctxList[cctxHash]
       .map(
@@ -104,18 +108,18 @@ const fetchCCTXData = async (
           }`
       )
       .join(" → ");
-    const text = {
-      text: `${cctxHash}: ${sender} → ${receiver}${queue}: ${path}`,
-    };
-    const id = `spinner-${cctxHash}`;
-    if (!json && spinnies.spinners[id]) {
+    const text = `${cctxHash}: ${sender} → ${receiver}${queue}: ${path}`;
+
+    if (!json && spinners[`spinner-${cctxHash}`]) {
       const s = tx.status;
       if (s == "OutboundMined" || s == "Reverted") {
-        spinnies.succeed(id, text);
+        if (emitter) emitter.emit("succeed", { hash: cctxHash, text });
+        spinners[`spinner-${cctxHash}`] = false;
       } else if (s == "Aborted") {
-        spinnies.fail(id, text);
+        if (emitter) emitter.emit("fail", { hash: cctxHash, text });
+        spinners[`spinner-${cctxHash}`] = false;
       } else {
-        spinnies.update(id, text);
+        if (emitter) emitter.emit("update", { hash: cctxHash, text });
       }
     }
   }
@@ -146,11 +150,30 @@ const fetchTSS = async (API: string) => {
   } catch (e) {}
 };
 
-export const trackCCTX = async (
+export const trackCCTXInteractive = async (
   hash: string,
   json: Boolean = false
+) => {
+  const s = new Spinnies();
+  const emitter = new EventEmitter();
+
+  const searchAddText = `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`;
+  emitter
+    .on("search-add", () => s.add(`search`, { text: searchAddText }))
+    .on("search-end", ({ text }) => s.succeed(`search`, { text }))
+    .on("add", ({ hash, text }) => s.add(hash, { text }))
+    .on("succeed", ({ hash, text }) => s.succeed(hash, { text }))
+    .on("fail", ({ hash, text }) => s.fail(hash, { text }))
+    .on("update", ({ hash, text }) => s.update(hash, { text }));
+  await trackCCTX(hash, json, emitter);
+};
+
+export const trackCCTX = async (
+  hash: string,
+  json: Boolean = false,
+  emitter: any = null
 ): Promise<void> => {
-  const spinnies = new Spinnies();
+  const spinners: any = {};
 
   const API = getEndpoint("cosmos-http");
   const TSS = await fetchTSS(API);
@@ -162,37 +185,56 @@ export const trackCCTX = async (
     const loopInterval = setInterval(async () => {
       pendingNonces = await fetchNonces(API, TSS);
       if (Object.keys(cctxList).length === 0) {
-        if (!json) {
-          spinnies.add(`search`, {
-            text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
-          });
+        if (!json && emitter) {
+          if (emitter) {
+            emitter.emit("search-add", {
+              text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
+            });
+          }
+          spinners["search"] = true;
         }
-        await fetchCCTXByInbound(hash, spinnies, API, cctxList, json);
+        await fetchCCTXByInbound(hash, emitter, spinners, API, cctxList, json);
       }
       if (Object.keys(cctxList).length === 0 && !cctxList[hash]) {
         if ((await getCCTX(hash, API)) && !cctxList[hash]) {
           cctxList[hash] = [];
-          if (!spinnies.spinners[`spinner-${hash}`] && !json) {
-            spinnies.add(`spinner-${hash}`, {
-              text: `${hash}`,
-            });
+          if (!spinners[`spinner-${hash}`] && !json) {
+            spinners[`spinner-${hash}`] = true;
+            if (emitter) {
+              emitter.emit("add", {
+                hash: hash,
+                text: `${hash}`,
+              });
+              spinners[`spinner-${hash}`] = true;
+            }
           }
         }
       }
       for (const txHash in cctxList) {
-        await fetchCCTXByInbound(txHash, spinnies, API, cctxList, json);
+        await fetchCCTXByInbound(
+          txHash,
+          emitter,
+          spinners,
+          API,
+          cctxList,
+          json
+        );
       }
       if (Object.keys(cctxList).length > 0) {
-        if (spinnies.spinners["search"] && !json) {
-          spinnies.succeed(`search`, {
-            text: `CCTXs on ZetaChain found.\n`,
-          });
+        if (spinners["search"] && !json) {
+          if (emitter) {
+            emitter.emit("search-end", {
+              text: `CCTXs on ZetaChain found.\n`,
+            });
+          }
+          spinners["search"] = false;
         }
         for (const cctxHash in cctxList) {
           try {
             fetchCCTXData(
               cctxHash,
-              spinnies,
+              emitter,
+              spinners,
               API,
               cctxList,
               pendingNonces,
