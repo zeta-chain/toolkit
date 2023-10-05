@@ -26,7 +26,7 @@ const fetchCCTXByInbound = async (
   emitter: any,
   spinners: any,
   API: string,
-  cctxList: any,
+  cctxs: any,
   json: Boolean
 ) => {
   try {
@@ -34,8 +34,8 @@ const fetchCCTXByInbound = async (
     const apiResponse = await axios.get(url);
     const res = apiResponse?.data?.inTxHashToCctx?.cctx_index;
     res.forEach((hash: any) => {
-      if (hash && !cctxList[hash] && !spinners[hash]) {
-        cctxList[hash] = [];
+      if (hash && !cctxs[hash] && !spinners[hash]) {
+        cctxs[hash] = [];
         if (!json && emitter) {
           emitter.emit("add", { hash, text: hash });
           spinners[hash] = true;
@@ -50,7 +50,7 @@ const fetchCCTXData = async (
   emitter: any,
   spinners: any,
   API: string,
-  cctxList: any,
+  cctxs: any,
   pendingNonces: any,
   json: Boolean
 ) => {
@@ -74,14 +74,14 @@ const fetchCCTXData = async (
     status: cctx?.cctx_status?.status,
     status_message: cctx?.cctx_status?.status_message,
   };
-  const lastCCTX = cctxList[hash][cctxList[hash].length - 1];
-  const isEmpty = cctxList[hash].length === 0;
+  const lastCCTX = cctxs[hash][cctxs[hash].length - 1];
+  const isEmpty = cctxs[hash].length === 0;
   const statusDefined =
     tx.status !== undefined && tx.status_message !== undefined;
   if (isEmpty || (statusDefined && lastCCTX.status !== tx.status)) {
-    cctxList[hash].push(tx);
-    const sender = cctxList[hash]?.[0].sender_chain_id;
-    const receiver = cctxList[hash]?.[0].receiver_chainId;
+    cctxs[hash].push(tx);
+    const sender = cctxs[hash]?.[0].sender_chain_id;
+    const receiver = cctxs[hash]?.[0].receiver_chainId;
     let queue;
     if (pendingNonces) {
       const pending = pendingNonces.find(
@@ -91,7 +91,7 @@ const fetchCCTXData = async (
       const diff = current - pending;
       queue = diff > 0 ? ` (${diff} in queue)` : "";
     }
-    const path = cctxList[hash]
+    const path = cctxs[hash]
       .map(
         (x: any) =>
           `${x.status} ${x.status_message && "(" + x.status_message + ")"}`
@@ -150,58 +150,51 @@ export const trackCCTX = async (
   const TSS = await fetchTSS(API);
 
   return new Promise((resolve, reject) => {
-    let cctxList: any = {};
+    let cctxs: any = {};
     let pendingNonces: any = [];
 
     setInterval(async () => {
       pendingNonces = await fetchNonces(API, TSS);
-      if (Object.keys(cctxList).length === 0) {
+      if (Object.keys(cctxs).length === 0) {
         if (!json && emitter) {
           emitter.emit("search-add", {
             text: `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`,
           });
           spinners["search"] = true;
         }
-        await fetchCCTXByInbound(hash, emitter, spinners, API, cctxList, json);
+        await fetchCCTXByInbound(hash, emitter, spinners, API, cctxs, json);
       }
       if (
-        Object.keys(cctxList).length === 0 &&
-        !cctxList[hash] &&
+        Object.keys(cctxs).length === 0 &&
+        !cctxs[hash] &&
         (await getCCTX(hash, API)) &&
-        !cctxList[hash]
+        !cctxs[hash]
       ) {
-        cctxList[hash] = [];
+        cctxs[hash] = [];
         if (!spinners[hash] && !json && emitter) {
           spinners[hash] = true;
           emitter.emit("add", { hash, text: hash });
           spinners[hash] = true;
         }
       }
-      for (const txHash in cctxList) {
-        await fetchCCTXByInbound(
-          txHash,
-          emitter,
-          spinners,
-          API,
-          cctxList,
-          json
-        );
+      for (const txHash in cctxs) {
+        await fetchCCTXByInbound(txHash, emitter, spinners, API, cctxs, json);
       }
-      if (Object.keys(cctxList).length > 0) {
+      if (Object.keys(cctxs).length > 0) {
         if (spinners["search"] && !json && emitter) {
           emitter.emit("search-end", {
             text: `CCTXs on ZetaChain found.\n`,
           });
           spinners["search"] = false;
         }
-        for (const hash in cctxList) {
+        for (const hash in cctxs) {
           try {
             fetchCCTXData(
               hash,
               emitter,
               spinners,
               API,
-              cctxList,
+              cctxs,
               pendingNonces,
               json
             );
@@ -209,18 +202,18 @@ export const trackCCTX = async (
         }
       }
       if (
-        Object.keys(cctxList).length > 0 &&
-        Object.keys(cctxList)
+        Object.keys(cctxs).length > 0 &&
+        Object.keys(cctxs)
           .map((c: any) => {
-            const last = cctxList[c][cctxList[c].length - 1];
+            const last = cctxs[c][cctxs[c].length - 1];
             return last?.status;
           })
           .filter((s) => !["OutboundMined", "Aborted", "Reverted"].includes(s))
           .length === 0
       ) {
-        const allOutboundMined = Object.keys(cctxList)
+        const allOutboundMined = Object.keys(cctxs)
           .map((c: any) => {
-            const last = cctxList[c][cctxList[c].length - 1];
+            const last = cctxs[c][cctxs[c].length - 1];
             return last?.status;
           })
           .every((s) => s === "OutboundMined");
@@ -228,7 +221,7 @@ export const trackCCTX = async (
         if (!allOutboundMined) {
           reject("CCTX aborted or reverted");
         } else {
-          if (json) console.log(JSON.stringify(cctxList, null, 2));
+          if (json) console.log(JSON.stringify(cctxs, null, 2));
           resolve();
         }
       }
