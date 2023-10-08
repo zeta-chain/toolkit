@@ -1,6 +1,6 @@
 import { getAddress } from "@zetachain/protocol-contracts";
 import { ethers } from "ethers";
-import { task } from "hardhat/config";
+import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getSupportedNetworks } from "@zetachain/networks";
 
@@ -11,12 +11,17 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const contracts: { [key: string]: string } = {};
   await Promise.all(
     networks.map(async (networkName: string) => {
-      contracts[networkName] = await deployContract(hre, networkName, args.json);
+      contracts[networkName] = await deployContract(
+        hre,
+        networkName,
+        args.json,
+        args.gasLimit
+      );
     })
   );
 
   for (const source in contracts) {
-    await setInteractors(hre, source, contracts, args.json);
+    await setInteractors(hre, source, contracts, args.json, args.gasLimit);
   }
 
   if (args.json) {
@@ -35,7 +40,8 @@ const initWallet = (hre: HardhatRuntimeEnvironment, networkName: string) => {
 const deployContract = async (
   hre: HardhatRuntimeEnvironment,
   networkName: string,
-  json: boolean = false
+  json: boolean = false,
+  gasLimit: number
 ) => {
   const wallet = initWallet(hre, networkName);
 
@@ -54,7 +60,7 @@ const deployContract = async (
 
   const { abi, bytecode } = await hre.artifacts.readArtifact(contractName);
   const factory = new ethers.ContractFactory(abi, bytecode, wallet);
-  const contract = await factory.deploy(connector, zetaToken{{#if arguments.feesNative}}, zetaTokenConsumerUniV2 || zetaTokenConsumerUniV3{{/if}});
+  const contract = await factory.deploy(connector, zetaToken{{#if arguments.feesNative}}, zetaTokenConsumerUniV2 || zetaTokenConsumerUniV3{{/if}}, { gasLimit });
 
   await contract.deployed();
   if (!json) {
@@ -69,7 +75,8 @@ const setInteractors = async (
   hre: HardhatRuntimeEnvironment,
   source: string,
   contracts: { [key: string]: string },
-  json: boolean = false
+  json: boolean = false,
+  gasLimit: number
 ) => {
   if (!json) {
     console.log(`
@@ -90,7 +97,9 @@ const setInteractors = async (
     );
     const chainId = hre.config.networks[counterparty].chainId;
     await (
-      await contract.setInteractorByChainId(chainId, counterpartyContract)
+      await contract.setInteractorByChainId(chainId, counterpartyContract, {
+        gasLimit,
+      })
     ).wait();
     if (!json) {
       console.log(
@@ -107,4 +116,5 @@ task("deploy", "Deploy the contract", main)
       "ccm"
     )})`
   )
+  .addOptionalParam("gasLimit", "Gas limit", 10000000, types.int)
   .addFlag("json", "Output JSON");
