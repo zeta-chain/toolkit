@@ -73,7 +73,11 @@ CCM_CONTRACT=$(npx hardhat deploy --networks goerli_testnet,mumbai_testnet --jso
 
 echo "Deployed CCM contract address: $CCM_CONTRACT"
 
-CCM_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.mumbai_testnet.totalFee")
+PROTOCOL_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.mumbai_testnet.protocolFee")
+GAS_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.mumbai_testnet.gasFee")
+
+# Multiply by 2 to be on the safe side
+CCM_FEE=$(echo "$PROTOCOL_FEE + $GAS_FEE * 2" | bc -l)
 
 echo "CCM fee: $CCM_FEE"
 
