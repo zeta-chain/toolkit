@@ -1,10 +1,10 @@
-import networks from "@zetachain/networks/dist/src/networks";
 import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
+import networks from "@zetachain/networks/dist/src/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZetaEth from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
-import { formatEther } from "ethers/lib/utils";
 import { ethers } from "ethers";
+import { formatEther } from "ethers/lib/utils";
 
 const fetchBitcoinBalance = async (address: string) => {
   const API = getEndpoints("esplora", "btc_testnet")[0].url;
