@@ -1834,10 +1834,10 @@
     typescript "5.0.4"
     zod "3.19.1"
 
-"@zetachain/networks@^2.3.0-athens3":
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-2.3.0.tgz#ef268fd318456dc2d5f19d4a8a9f9b7eabf613a4"
-  integrity sha512-+rP1GDA64fpyG0KKJdJFbmSaUIY2WG84J2yDsmPPgMhpXb/MkT1jZAFwlrTSmT+H0k2loIqtta6jk4pPDlSADg==
+"@zetachain/networks@^2.4.3":
+  version "2.4.3"
+  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-2.4.3.tgz#870b2cda4b91f913be990246831378f60688d452"
+  integrity sha512-ZoqN8M6+59OkujZCl3FcSEgSftIN1tw5bpuFwI/2+f0SlKH+8ztAk7aF1QHmzrPqolIJKt29ogsfvIjiynXNkg==
   dependencies:
     dotenv "^16.1.4"
 

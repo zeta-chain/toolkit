@@ -7,7 +7,8 @@
     "./tasks": "./dist/tasks/index.js",
     "./helpers": "./dist/helpers/index.js",
     "./helpers/fees": "./dist/helpers/fees.js",
-    "./helpers/evm": "./dist/helpers/evm.js"
+    "./helpers/evm": "./dist/helpers/evm.js",
+    "./helpers/balances": "./dist/helpers/balances.js"
   },
   "scripts": {
     "prebuild": "rimraf dist",
@@ -74,14 +75,14 @@
     "@openzeppelin/contracts": "^4.9.2",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@zetachain/faucet-cli": "2.0.2-athens3.1",
-    "@zetachain/networks": "^2.3.0-athens3",
+    "@zetachain/networks": "^2.4.3",
     "@zetachain/protocol-contracts": "^2.1.0",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",
     "bitcoinjs-lib": "^6.1.3",
-    "dotenv": "16.0.3",
     "cli-color": "^2.0.3",
+    "dotenv": "16.0.3",
     "ecpair": "^2.1.0",
     "envfile": "^6.18.0",
     "ethers": "5.4.7",
