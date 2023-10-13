@@ -1,8 +1,8 @@
+import fetch from "isomorphic-fetch";
 import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import networks from "@zetachain/networks/dist/src/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
-import axios from "axios";
 import { ethers } from "ethers";
 import { formatEther } from "ethers/lib/utils";
 
@@ -40,7 +40,8 @@ export const fetchCCMFees = async (network: string, gas: Number = 500000) => {
   const chainID = networks[network as keyof typeof networks]?.chain_id;
 
   const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
-  const { data } = await axios.get(url);
+  const response = await fetch(url);
+  const data = await response.json();
 
   const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);
   const protocolFee = ethers.BigNumber.from(data.protocolFeeInZeta);
