@@ -1,5 +1,5 @@
-import { getEndpoints } from "@zetachain/networks";
-import { getHardhatConfigNetworks } from "@zetachain/networks";
+import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
+import networks from "@zetachain/networks/dist/src/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import axios from "axios";
@@ -9,7 +9,7 @@ import { formatEther } from "ethers/lib/utils";
 const formatTo18Decimals = (n: any) => parseFloat(formatEther(n)).toFixed(18);
 
 export const fetchZEVMFees = async (network: string) => {
-  const { url } = getHardhatConfigNetworks()["zeta_testnet"] as any;
+  const url = getEndpoints("evm", "zeta_testnet")[0].url;
 
   const provider = new ethers.providers.JsonRpcProvider(url);
   const btcZRC20 = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"; // TODO: use getAddress("zrc20", "btc_testnet") when available
@@ -37,7 +37,7 @@ export const fetchCCMFees = async (network: string, gas: Number = 500000) => {
     throw new Error("getEndpoints: API endpoint not found");
   }
 
-  const chainID = getHardhatConfigNetworks()[network].chainId;
+  const chainID = networks[network as keyof typeof networks]?.chain_id;
 
   const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
   const { data } = await axios.get(url);
@@ -59,10 +59,10 @@ export const fetchFees = async (gas: Number) => {
     feesZEVM: {} as Record<string, any>,
   };
 
-  const networks = [...Object.keys(getHardhatConfigNetworks()), "btc_testnet"];
+  const networkList = [...Object.keys(networks), "btc_testnet"];
 
   await Promise.all(
-    networks.map(async (n) => {
+    networkList.map(async (n) => {
       try {
         const zevmFees = await fetchZEVMFees(n);
         if (zevmFees) fees.feesZEVM[n] = zevmFees;
