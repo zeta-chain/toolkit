@@ -1,4 +1,5 @@
-import { getEndpoints, getHardhatConfigNetworks } from "@zetachain/networks";
+import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
+import networks from "@zetachain/networks/dist/src/networks";
 import axios from "axios";
 import { ethers } from "ethers";
 
@@ -54,7 +55,6 @@ const fetchCCTXData = async (
   pendingNonces: any,
   json: Boolean
 ) => {
-  const networks = getHardhatConfigNetworks();
   const cctx = await getCCTX(hash, API);
   const receiver_chainId = cctx?.outbound_tx_params[0]?.receiver_chainId;
   const outbound_tx_hash = cctx?.outbound_tx_params[0]?.outbound_tx_hash;
