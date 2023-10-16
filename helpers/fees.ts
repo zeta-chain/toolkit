@@ -1,10 +1,10 @@
-import fetch from "isomorphic-fetch";
 import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import networks from "@zetachain/networks/dist/src/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 import { formatEther } from "ethers/lib/utils";
+import fetch from "isomorphic-fetch";
 
 const formatTo18Decimals = (n: any) => parseFloat(formatEther(n)).toFixed(18);
 
