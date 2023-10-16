@@ -14,9 +14,9 @@ const getEndpoint = (key: any): string => {
 
 const findByChainId = (config: any, targetChainId: Number): Object | null => {
   for (const key in config) {
-    if (config.hasOwnProperty(key) && config[key].hasOwnProperty("chainId")) {
-      if (config[key].chainId === targetChainId) {
-        return config[key];
+    if (config.hasOwnProperty(key) && config[key].hasOwnProperty("chain_id")) {
+      if (config[key].chain_id === targetChainId) {
+        return key;
       }
     }
   }
@@ -61,7 +61,8 @@ const fetchCCTXData = async (
   const outbound_tx_hash = cctx?.outbound_tx_params[0]?.outbound_tx_hash;
   let confirmed_on_destination = false;
   if (outbound_tx_hash) {
-    const rpc = findByChainId(networks, parseInt(receiver_chainId))?.url;
+    const chainName = findByChainId(networks, parseInt(receiver_chainId));
+    const rpc = getEndpoints("evm", chainName)[0]?.url;
     const provider = new ethers.providers.JsonRpcProvider(rpc);
     const confirmed = await provider.getTransaction(outbound_tx_hash);
     confirmed_on_destination = confirmed !== null;
