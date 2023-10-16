@@ -2,6 +2,7 @@ import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import networks from "@zetachain/networks/dist/src/networks";
 import axios from "axios";
 import { ethers } from "ethers";
+import fetch from "isomorphic-fetch";
 
 const getEndpoint = (key: any): string => {
   const endpoint = getEndpoints(key, "zeta_testnet")[0]?.url;
