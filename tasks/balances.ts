@@ -1,9 +1,4 @@
-import { getEndpoints, networks } from "@zetachain/networks";
-import { getAddress } from "@zetachain/protocol-contracts";
-import ZetaEth from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
-import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import * as dotenv from "dotenv";
-import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ora from "ora";
