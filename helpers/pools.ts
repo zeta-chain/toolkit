@@ -1,8 +1,8 @@
 import UniswapV2Factory from "@uniswap/v2-core/build/UniswapV2Factory.json";
 import UniswapV2Pair from "@uniswap/v2-core/build/UniswapV2Pair.json";
+import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import { getAddress } from "@zetachain/protocol-contracts";
 import { ethers } from "ethers";
-import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import fetch from "isomorphic-fetch";
 
 export const getPools = async () => {
@@ -46,7 +46,7 @@ export const getPools = async () => {
       reservesZRC20 = ethers.utils.formatEther(reserves[0]);
       reservesZETA = ethers.utils.formatEther(reserves[1]);
     }
-    return { ...token, reservesZRC20, reservesZETA };
+    return { ...token, reservesZETA, reservesZRC20 };
   });
 
   const pools = await Promise.all(poolPromises);
