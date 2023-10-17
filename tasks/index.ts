@@ -5,6 +5,7 @@ export { faucetTask } from "./faucet";
 export { feesTask } from "./fees";
 export { messagingTask } from "./messaging";
 export { omnichainTask } from "./omnichain";
+export { poolsTask } from "./pools";
 export { sendBTCTask } from "./sendBTC";
 export { sendZETATask } from "./sendZETA";
 export { sendZRC20Task } from "./sendZRC20";
