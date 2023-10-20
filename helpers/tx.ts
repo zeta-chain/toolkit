@@ -162,7 +162,7 @@ export const trackCCTX = async (
     let cctxs: any = {};
     let pendingNonces: any = [];
 
-    setInterval(async () => {
+    const intervalID = setInterval(async () => {
       pendingNonces = await fetchNonces(API, TSS);
       if (Object.keys(cctxs).length === 0) {
         if (!json && emitter) {
@@ -225,6 +225,8 @@ export const trackCCTX = async (
             return last?.status;
           })
           .every((s) => s === "OutboundMined");
+
+        clearInterval(intervalID);
 
         if (!allOutboundMined) {
           reject("CCTX aborted or reverted");
