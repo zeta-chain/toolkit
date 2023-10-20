@@ -1,8 +1,15 @@
 import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import networks from "@zetachain/networks/dist/src/networks";
-import axios from "axios";
 import { ethers } from "ethers";
 import fetch from "isomorphic-fetch";
+
+const apiFetch = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Fetch failed with status: ${response.status}`);
+  }
+  return await response.json();
+};
 
 const getEndpoint = (key: any): string => {
   const endpoint = getEndpoints(key, "zeta_testnet")[0]?.url;
@@ -33,8 +40,8 @@ const fetchCCTXByInbound = async (
 ) => {
   try {
     const url = `${API}/zeta-chain/crosschain/inTxHashToCctx/${hash}`;
-    const apiResponse = await axios.get(url);
-    const res = apiResponse?.data?.inTxHashToCctx?.cctx_index;
+    const apiResponseData = await apiFetch(url);
+    const res = apiResponseData?.inTxHashToCctx?.cctx_index;
     res.forEach((hash: any) => {
       if (hash && !cctxs[hash] && !spinners[hash]) {
         cctxs[hash] = [];
@@ -119,16 +126,16 @@ const fetchCCTXData = async (
 const getCCTX = async (hash: string, API: string) => {
   try {
     const url = `${API}/zeta-chain/crosschain/cctx/${hash}`;
-    const apiResponse = await axios.get(url);
-    return apiResponse?.data?.CrossChainTx;
+    const apiResponseData = await apiFetch(url);
+    return apiResponseData?.CrossChainTx;
   } catch (e) {}
 };
 
 const fetchNonces = async (API: string, TSS: string) => {
   try {
     const url = `${API}/zeta-chain/crosschain/pendingNonces`;
-    const apiResponse = await axios.get(url);
-    const nonces = apiResponse?.data?.pending_nonces;
+    const apiResponseData = await apiFetch(url);
+    const nonces = apiResponseData?.pending_nonces;
     return nonces.filter((n: any) => n.tss === TSS);
   } catch (e) {}
 };
@@ -136,8 +143,8 @@ const fetchNonces = async (API: string, TSS: string) => {
 const fetchTSS = async (API: string) => {
   try {
     const url = `${API}/zeta-chain/crosschain/TSS`;
-    const apiResponse = await axios.get(url);
-    return apiResponse?.data?.TSS.tss_pubkey;
+    const apiResponseData = await apiFetch(url);
+    return apiResponseData?.TSS.tss_pubkey;
   } catch (e) {}
 };
 
