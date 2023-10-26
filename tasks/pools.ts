@@ -15,7 +15,19 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     .sort((a: any, b: any) => {
       if (a.name > b.name) return -1;
     });
-  console.table(poolsFiltered);
+  if (args.json) {
+    console.log(JSON.stringify(poolsFiltered, null, 2));
+  } else {
+    const output = poolsFiltered.reduce((acc: any, item: any) => {
+      const { name, ...rest } = item;
+      acc[name] = rest;
+      return acc;
+    }, {});
+    console.table(output);
+  }
 };
 
-export const poolsTask = task("pools", "", main);
+export const poolsTask = task("pools", "", main).addFlag(
+  "json",
+  "Print the result in JSON format"
+);
