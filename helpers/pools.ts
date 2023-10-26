@@ -37,16 +37,17 @@ export const getPools = async () => {
     let reservesZETA = "0";
 
     if (pair !== ethers.constants.AddressZero) {
-      const uniswapPairContract = new ethers.Contract(
-        pair,
-        UniswapV2Pair.abi,
-        provider
-      );
-      const reserves = await uniswapPairContract.getReserves();
+      const contract = new ethers.Contract(pair, UniswapV2Pair.abi, provider);
+      const reserves = await contract.getReserves();
       reservesZRC20 = ethers.utils.formatEther(reserves[0]);
       reservesZETA = ethers.utils.formatEther(reserves[1]);
     }
-    return { ...token, reservesZETA, reservesZRC20 };
+    return {
+      ...token,
+      reservesZETA,
+      reservesZRC20,
+      pair,
+    };
   });
 
   const pools = await Promise.all(poolPromises);
