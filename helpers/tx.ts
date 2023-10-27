@@ -69,7 +69,7 @@ const fetchCCTXData = async (
   let confirmed_on_destination = false;
   if (outbound_tx_hash) {
     const chainName = findByChainId(networks, parseInt(receiver_chainId));
-    const rpc = getEndpoints("evm", chainName)[0]?.url;
+    const rpc = getEndpoints("evm", chainName as any)[0]?.url;
     const provider = new ethers.providers.JsonRpcProvider(rpc);
     const confirmed = await provider.getTransaction(outbound_tx_hash);
     confirmed_on_destination = confirmed !== null;

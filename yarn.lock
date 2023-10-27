@@ -1566,6 +1566,11 @@
     "@types/minimatch" "*"
     "@types/node" "*"
 
+"@types/isomorphic-fetch@^0.0.38":
+  version "0.0.38"
+  resolved "https://registry.yarnpkg.com/@types/isomorphic-fetch/-/isomorphic-fetch-0.0.38.tgz#90882932a371e294a3c6143430275c15cb6ebf1b"
+  integrity sha512-DcXWx26qmt89lQ1Saoit0P38yHqT7fGceVs7UpMy2gU7AjEZISPdM7rqoFY5VHtl33H+cJ+VBDYmNRssTM4Zlw==
+
 "@types/json-schema@^7.0.9":
   version "7.0.12"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.12.tgz#d70faba7039d5fca54c83c7dbab41051d2b6f6cb"

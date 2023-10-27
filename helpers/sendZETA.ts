@@ -13,7 +13,8 @@ export const sendZETA = async (
   recipient: string
 ) => {
   let connectorContract: any;
-  const destinationChainId = networks[destination]?.chain_id;
+  const destinationChainId =
+    networks[destination as keyof typeof networks]?.chain_id;
   if (!destinationChainId) {
     throw new Error("Invalid destination chain");
   }

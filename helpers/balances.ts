@@ -62,10 +62,11 @@ const fetchZRC20Balance = async (address: string) => {
   const provider = new ethers.providers.JsonRpcProvider(rpc);
   const promises = Object.keys(networks).map(async (networkName) => {
     try {
-      const zrc20 = getAddress("zrc20", networkName);
+      const zrc20 = getAddress("zrc20", networkName as any);
       const contract = new ethers.Contract(zrc20, ZRC20.abi, provider);
       const balance = await contract.balanceOf(address);
-      const denom = networks[networkName].assets[0].symbol;
+      const denom =
+        networks[networkName as keyof typeof networks].assets[0].symbol;
       if (balance > 0) {
         const b = parseFloat(formatEther(balance)).toFixed(2);
         return `${b} ${denom}`;
@@ -86,7 +87,7 @@ const fetchZRC20Balance = async (address: string) => {
   return result.filter((item) => item !== undefined).join(", ");
 };
 
-export const getBalances = async (address, btc_address = null) => {
+export const getBalances = async (address: any, btc_address = null) => {
   const balancePromises = Object.keys(networks).map((networkName) => {
     const api = getEndpoints("evm", networkName as any);
     if (api.length >= 1) {
@@ -96,6 +97,7 @@ export const getBalances = async (address, btc_address = null) => {
     }
   });
   const balances = await Promise.all(balancePromises);
-  if (btc_address) balances.push(await fetchBitcoinBalance(btc_address));
+  if (btc_address)
+    balances.push((await fetchBitcoinBalance(btc_address)) as any);
   return balances.filter((balance) => balance != null);
 };
