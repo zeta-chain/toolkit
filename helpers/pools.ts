@@ -44,9 +44,9 @@ export const getPools = async () => {
     }
     return {
       ...token,
+      pair,
       reservesZETA,
       reservesZRC20,
-      pair,
     };
   });
 

@@ -7,10 +7,10 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const pools = await getPools();
   const poolsFiltered = pools
     .map((n: any) => ({
+      Contract: n.pair,
       ZETA: parseFloat(n.reservesZETA).toFixed(2),
       "ZRC-20": parseFloat(n.reservesZRC20).toFixed(2),
       name: n.asset ? n.name : n.symbol,
-      Contract: n.pair,
     }))
     .sort((a: any, b: any) => {
       if (a.name > b.name) return -1;
