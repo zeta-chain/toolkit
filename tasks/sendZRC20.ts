@@ -26,4 +26,5 @@ export const sendZRC20Task = task(
 )
   .addParam("amount", "Amount of ZRC-20 to send")
   .addParam("destination", "Destination chain")
+  .addParam("recipient", "Recipient address")
   .addParam("token", "Token to send (geth, usdc, etc)");

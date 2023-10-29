@@ -43,8 +43,7 @@ export const sendZRC20 = async (
   } else if (destination === "zeta_testnet") {
     const TSSAddress = getAddress("tss", network as any);
     const zrc20 = foreignCoinsFiltered.find(
-      (coin: any) =>
-        coin.symbol.toLocaleLowerCase() === token.toLocaleLowerCase()
+      (coin: any) => coin.symbol.toLowerCase() === token.toLowerCase()
     );
     if (zrc20.coin_type.toLocaleLowerCase() === "erc20") {
       if (zrc20 === undefined) {
@@ -59,7 +58,6 @@ export const sendZRC20 = async (
         signer
       );
       const balance = await erc20TokenContract.balanceOf(signer.address);
-      console.log(ethers.utils.formatEther(balance));
       if (balance.lt(value)) {
         throw new Error("Insufficient token balance.");
       }
