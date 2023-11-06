@@ -229,10 +229,16 @@ export const trackCCTX = async (
         clearInterval(intervalID);
 
         if (!allOutboundMined) {
+          emitter.emit("mined-fail", {
+            cctxs,
+          });
           reject("CCTX aborted or reverted");
         } else {
+          emitter.emit("mined-success", {
+            cctxs,
+          });
           if (json) console.log(JSON.stringify(cctxs, null, 2));
-          resolve();
+          resolve(cctxs);
         }
       }
     }, 3000);
