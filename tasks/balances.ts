@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ora from "ora";
+import { ethers } from "ethers";
 
 import { getBalances } from "../helpers/balances";
 import { bitcoinAddress } from "../lib/bitcoinAddress";
@@ -32,6 +33,40 @@ const balancesError = `
   npx hardhat balances --address <wallet_address>
 `;
 
+const summarizeTokens = (tokens: any[]) => {
+  let table = {} as any;
+  tokens.forEach((token) => {
+    if (!table[token.chain_name]) {
+      table[token.chain_name] = {};
+    }
+    const balance = parseFloat(token.balance).toFixed(2);
+    if (parseFloat(token.balance) > 0) {
+      if (token.coin_type === "Gas") {
+        table[token.chain_name].gas = balance;
+      } else if (token.symbol === "ZETA") {
+        table[token.chain_name].zeta = balance;
+      } else if (token.coin_type === "ERC20") {
+        table[token.chain_name].erc20 =
+          (table[token.chain_name].erc20
+            ? table[token.chain_name].erc20 + " "
+            : "") +
+          balance +
+          " " +
+          token.symbol;
+      } else if (token.coin_type === "ZRC20") {
+        table[token.chain_name].zrc20 =
+          (table[token.chain_name].zrc20
+            ? table[token.chain_name].zrc20 + " "
+            : "") +
+          balance +
+          " " +
+          token.symbol;
+      }
+    }
+  });
+  return table;
+};
+
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const spinner = ora("Fetching balances...");
   if (!args.json) {
@@ -40,7 +75,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers, config } = hre as any;
   const pk = process.env.PRIVATE_KEY;
   let address: string;
-  let btc_address: string;
+  let btc_address: any;
 
   if (args.address) {
     address = args.address;
@@ -52,17 +87,16 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.error(walletError + balancesError);
     return process.exit(1);
   }
-
-  const filteredBalances = await getBalances(address, btc_address);
+  const balances = (await getBalances(address, btc_address)) as any;
 
   if (args.json) {
-    console.log(JSON.stringify(filteredBalances, null, 2));
+    console.log(JSON.stringify(balances, null, 2));
   } else {
     spinner.stop();
     console.log(`
 EVM: ${address} ${btc_address ? `\nBitcoin: ${btc_address}` : ""}
-  `);
-    console.table(filteredBalances);
+    `);
+    console.table(summarizeTokens(balances));
   }
 };
 

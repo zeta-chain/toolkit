@@ -37,9 +37,13 @@ export const sendZRC20 = async (
   if (network === "zeta_testnet") {
     const ZRC20Address = getAddress("zrc20", destination as any);
     const contract = new ethers.Contract(ZRC20Address, ZRC20.abi, signer);
+    const value = ethers.utils.parseUnits(amount, 8);
     await (await contract.connect(signer).approve(ZRC20Address, value)).wait();
-    tx = await contract.connect(signer).withdraw(signer.address, value);
-    return tx;
+    const to =
+      destination === "btc_testnet"
+        ? ethers.utils.toUtf8Bytes(recipient)
+        : signer.address;
+    return await contract.connect(signer).withdraw(to, value);
   } else if (destination === "zeta_testnet") {
     const TSSAddress = getAddress("tss", network as any);
     const zrc20 = foreignCoinsFiltered.find(

@@ -18,7 +18,10 @@ export const getPools = async () => {
     "uniswapv2Factory",
     "zeta_testnet"
   );
-  const zetaTokenAddress = getAddress("zetaToken", "zeta_testnet");
+  const zetaTokenAddress = getAddress(
+    "zetaToken",
+    "zeta_testnet"
+  ).toLowerCase();
 
   const UniswapV2FactoryContract = new ethers.Contract(
     uniswapV2FactoryAddress,
@@ -27,7 +30,7 @@ export const getPools = async () => {
   );
 
   const poolPromises = data.foreignCoins.map(async (token: any) => {
-    const zrc20Address = token.zrc20_contract_address;
+    const zrc20Address = token.zrc20_contract_address.toLowerCase();
     const pair = await UniswapV2FactoryContract.getPair(
       zrc20Address,
       zetaTokenAddress
@@ -43,8 +46,10 @@ export const getPools = async () => {
         provider
       );
       const reserves = await uniswapPairContract.getReserves();
-      reservesZRC20 = ethers.utils.formatEther(reserves[0]);
-      reservesZETA = ethers.utils.formatEther(reserves[1]);
+      const r0 = ethers.utils.formatEther(reserves[0]);
+      const r1 = ethers.utils.formatEther(reserves[1]);
+      [reservesZRC20, reservesZETA] =
+        zrc20Address < zetaTokenAddress ? [r0, r1] : [r1, r0];
     }
     return { ...token, reservesZETA, reservesZRC20 };
   });
