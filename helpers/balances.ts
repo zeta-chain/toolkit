@@ -65,7 +65,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
       tokens.push({
         chain_id: chain.chain_id,
         decimals: 18,
-        symbol: "ZETA",
+        symbol: "WZETA",
         coin_type: "ERC20",
         contract,
       });
@@ -79,6 +79,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
   });
 
   tokens = tokens.map((token: any) => {
+    const ticker = token.symbol.split("-")[0];
     const chain_name =
       token.chain_id === 7001
         ? "zeta_testnet"
@@ -86,7 +87,11 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
             ?.chain_name;
     return {
       ...token,
+      ticker,
       chain_name,
+      id: `${token.chain_id
+        .toString()
+        .toLowerCase()}__${token.symbol.toLowerCase()}`,
     };
   });
 
