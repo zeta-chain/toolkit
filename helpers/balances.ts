@@ -34,6 +34,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
         decimals: token.decimals,
         symbol: token.symbol,
         coin_type: token.coin_type,
+        zrc20: token.zrc20_contract_address,
       });
       tokens.push({
         chain_id: 7001,
@@ -49,6 +50,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
         symbol: token.symbol,
         coin_type: "ERC20",
         contract: token.asset,
+        zrc20: token.zrc20_contract_address,
       });
       tokens.push({
         chain_id: 7001,
