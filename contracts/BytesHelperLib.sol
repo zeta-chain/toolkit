@@ -12,6 +12,19 @@ library BytesHelperLib {
         }
     }
 
+    function bytesMemoryToAddress(
+        bytes memory data,
+        uint256 offset
+    ) internal pure returns (address output) {
+        bytes memory b = new bytes(20);
+        for (uint256 i = 0; i < 20; i++) {
+            b[i] = data[i + offset];
+        }
+        assembly {
+            output := mload(add(b, 20))
+        }
+    }
+
     function bytesToUint32(
         bytes calldata data,
         uint256 offset
@@ -38,18 +51,5 @@ library BytesHelperLib {
         }
 
         return bech32Bytes;
-    }
-
-    function bytesToAddress(
-        bytes memory data,
-        uint256 offset
-    ) internal pure returns (address output) {
-        bytes memory b = new bytes(20);
-        for (uint256 i = 0; i < 20; i++) {
-            b[i] = data[i + offset];
-        }
-        assembly {
-            output := mload(add(b, 20))
-        }
     }
 }
