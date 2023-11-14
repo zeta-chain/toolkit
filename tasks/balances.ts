@@ -62,7 +62,14 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.log(`
 EVM: ${address} ${btc_address ? `\nBitcoin: ${btc_address}` : ""}
   `);
-    console.table(filteredBalances);
+
+    const output = filteredBalances.reduce((acc: any, item: any) => {
+      const { networkName, ...rest } = item;
+      acc[networkName] = rest;
+      return acc;
+    }, {});
+
+    console.table(output);
   }
 };
 
