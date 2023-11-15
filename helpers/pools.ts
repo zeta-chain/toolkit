@@ -46,10 +46,12 @@ export const getPools = async () => {
         provider
       );
       const reserves = await uniswapPairContract.getReserves();
-      const r0 = ethers.utils.formatEther(reserves[0]);
-      const r1 = ethers.utils.formatEther(reserves[1]);
+      const [r0, r1] = reserves;
       [reservesZRC20, reservesZETA] =
         zrc20Address < zetaTokenAddress ? [r0, r1] : [r1, r0];
+
+      reservesZRC20 = ethers.utils.formatUnits(reservesZRC20, token.decimals);
+      reservesZETA = ethers.utils.formatUnits(reservesZETA);
     }
     return { ...token, pair, reservesZETA, reservesZRC20 };
   });
