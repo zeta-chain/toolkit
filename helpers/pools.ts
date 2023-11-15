@@ -51,7 +51,7 @@ export const getPools = async () => {
       [reservesZRC20, reservesZETA] =
         zrc20Address < zetaTokenAddress ? [r0, r1] : [r1, r0];
     }
-    return { ...token, reservesZETA, reservesZRC20 };
+    return { ...token, pair, reservesZETA, reservesZRC20 };
   });
 
   const pools = await Promise.all(poolPromises);
