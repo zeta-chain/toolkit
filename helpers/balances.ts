@@ -1,11 +1,11 @@
+import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZetaEth from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
+import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 import { formatEther, formatUnits } from "ethers/lib/utils";
 import fetch from "isomorphic-fetch";
-import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
-import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 
 export const getForeignCoins = async () => {
   const api = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
@@ -31,33 +31,33 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
     if (token.coin_type === "Gas") {
       tokens.push({
         chain_id: token.foreign_chain_id,
+        coin_type: token.coin_type,
         decimals: token.decimals,
         symbol: token.symbol,
-        coin_type: token.coin_type,
         zrc20: token.zrc20_contract_address,
       });
       tokens.push({
         chain_id: 7001,
-        decimals: token.decimals,
-        symbol: token.symbol,
         coin_type: "ZRC20",
         contract: token.zrc20_contract_address,
+        decimals: token.decimals,
+        symbol: token.symbol,
       });
     } else if (token.coin_type === "ERC20") {
       tokens.push({
         chain_id: token.foreign_chain_id,
-        decimals: token.decimals,
-        symbol: token.symbol,
         coin_type: "ERC20",
         contract: token.asset,
+        decimals: token.decimals,
+        symbol: token.symbol,
         zrc20: token.zrc20_contract_address,
       });
       tokens.push({
         chain_id: 7001,
-        decimals: token.decimals,
-        symbol: token.name,
         coin_type: "ZRC20",
         contract: token.zrc20_contract_address,
+        decimals: token.decimals,
+        symbol: token.name,
       });
     }
   });
@@ -66,18 +66,18 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
     if (contract) {
       tokens.push({
         chain_id: chain.chain_id,
-        decimals: 18,
-        symbol: "WZETA",
         coin_type: "ERC20",
         contract,
+        decimals: 18,
+        symbol: "WZETA",
       });
     }
   });
   tokens.push({
     chain_id: 7001,
+    coin_type: "Gas",
     decimals: 18,
     symbol: "ZETA",
-    coin_type: "Gas",
   });
 
   tokens = tokens.map((token: any) => {
@@ -89,11 +89,11 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
             ?.chain_name;
     return {
       ...token,
-      ticker,
       chain_name,
       id: `${token.chain_id
         .toString()
         .toLowerCase()}__${token.symbol.toLowerCase()}`,
+      ticker,
     };
   });
 
