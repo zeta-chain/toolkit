@@ -2,7 +2,7 @@ import networks from "@zetachain/networks/dist/src/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZetaEthContract from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import ZetaConnectorEth from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.eth.sol/ZetaConnectorEth.json";
-import ZetaConnectorZEVM from "@zetachain/protocol-contracts/abi/zevm/ConnectorZEVM.sol/ZetaConnectorZEVM.json";
+import ZetaConnectorZEVM from "@zetachain/protocol-contracts/abi/zevm/ZetaConnectorZEVM.sol/ZetaConnectorZEVM.json";
 import { ethers } from "ethers";
 
 export const sendZETA = async (
