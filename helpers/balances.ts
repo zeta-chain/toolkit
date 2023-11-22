@@ -105,7 +105,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
       const isZRC = token.coin_type === "ZRC20";
       if (isGas && !isBitcoin) {
         const rpc = getEndpoints("evm", token.chain_name)[0]?.url;
-        const provider = new ethers.providers.JsonRpcProvider(rpc);
+        const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
         return provider.getBalance(evmAddress).then((balance) => {
           return { ...token, balance: formatUnits(balance, token.decimals) };
         });
@@ -122,7 +122,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
         });
       } else if (isERC) {
         const rpc = getEndpoints("evm", token.chain_name)[0]?.url;
-        const provider = new ethers.providers.JsonRpcProvider(rpc);
+        const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
         const contract = new ethers.Contract(
           token.contract,
           ERC20_ABI.abi,
@@ -133,7 +133,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
         });
       } else if (isZRC) {
         const rpc = getEndpoints("evm", token.chain_name)[0]?.url;
-        const provider = new ethers.providers.JsonRpcProvider(rpc);
+        const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
         const contract = new ethers.Contract(
           token.contract,
           ZRC20.abi,
