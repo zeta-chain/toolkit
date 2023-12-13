@@ -23,6 +23,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   addressToInfo[WZETA_ADDRESS] = { symbol: "WZETA", decimals: 18 };
 
   const poolsWithSymbolsAndDecimals = pools.map((pool) => {
+    pool.t0.reserve = formatUnits(pool.t0.reserve, pool.t0.decimals);
+    pool.t1.reserve = formatUnits(pool.t1.reserve, pool.t1.decimals);
     const t0Info = addressToInfo[pool.t0.address.toLowerCase()] || {
       symbol: "Unknown",
       decimals: 18,
@@ -41,20 +43,20 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   const tableData = {} as any;
   poolsWithSymbolsAndDecimals.forEach((pool) => {
-    const t0ReserveFormatted = parseFloat(
-      formatUnits(pool.t0.reserve, pool.t0.decimals)
-    ).toFixed(2);
-    const t1ReserveFormatted = parseFloat(
-      formatUnits(pool.t1.reserve, pool.t1.decimals)
-    ).toFixed(2);
+    const r0 = parseFloat(pool.t0.reserve).toFixed(2);
+    const r1 = parseFloat(pool.t1.reserve).toFixed(2);
 
     tableData[pool.pair] = {
       Pool: `${pool.t0.symbol} / ${pool.t1.symbol}`,
-      Reserves: `${t0ReserveFormatted} / ${t1ReserveFormatted}`,
+      Reserves: `${r0} / ${r1}`,
     };
   });
 
-  console.table(tableData);
+  if (args.json) {
+    console.log(poolsWithSymbolsAndDecimals);
+  } else {
+    console.table(tableData);
+  }
 };
 
 export const poolsTask = task("pools", "", main).addFlag(
