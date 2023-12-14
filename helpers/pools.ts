@@ -38,9 +38,9 @@ export const getPools = async () => {
 
   const poolPromises = pairs.map(async (pair: any) => {
     let pool = {
+      pair,
       t0: {},
       t1: {},
-      pair,
     } as any;
     const pairContract = new ethers.Contract(pair, UniswapV2Pair.abi, provider);
 
