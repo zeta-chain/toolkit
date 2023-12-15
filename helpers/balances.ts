@@ -132,6 +132,34 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
           provider
         );
 
+        const router = new ethers.Contract(
+          getAddress("uniswapv2Router02", "zeta_testnet"),
+          UniswapV2Router.abi,
+          provider
+        );
+
+        const factory = new ethers.Contract(
+          getAddress("uniswapv2Factory", "zeta_testnet"),
+          UniswapV2Factory.abi,
+          provider
+        );
+
+        const srcToken = token.contract;
+        const dstToken = "0x07865c6e87b9f70255377e024ace6630c1eaa37f"; // Goerli USDC
+        let price = "0";
+        const pairWithUSDCExists =
+          (await factory.getPair(srcToken, dstToken)) !=
+          0x0000000000000000000000000000000000000000;
+        // if (pairWithUSDCExists) {
+        //   try {
+        //     const dstOut = await router.getAmountsOut(
+        //       parseUnits("1", token.decimals),
+        //       [srcToken, dstToken]
+        //     );
+        //     if (dstOut[1]) price = formatUnits(dstOut[1], 6);
+        //   } catch (e) {}
+        // }
+
         return contract.balanceOf(evmAddress).then((balance: any) => {
           return { ...token, balance: formatUnits(balance, token.decimals) };
         });
