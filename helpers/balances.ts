@@ -1,14 +1,10 @@
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import { getAddress } from "@zetachain/protocol-contracts";
-import ZetaEth from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
-import { formatEther, formatUnits, parseUnits } from "ethers/lib/utils";
+import { formatUnits } from "ethers/lib/utils";
 import fetch from "isomorphic-fetch";
-import UniswapV2Router from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
-import UniswapV2Factory from "@uniswap/v2-periphery/build/IUniswapV2Factory.json";
-import { parse } from "path";
 
 export const getForeignCoins = async () => {
   const api = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
