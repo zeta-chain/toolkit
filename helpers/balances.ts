@@ -142,61 +142,10 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
           ZRC20.abi,
           provider
         );
-
-        const providerZetaChain = new ethers.providers.StaticJsonRpcProvider(
-          getEndpoints("evm", "zeta_testnet")[0]?.url
-        );
-
-        const router = new ethers.Contract(
-          getAddress("uniswapv2Router02", "zeta_testnet"),
-          UniswapV2Router.abi,
-          providerZetaChain
-        );
-
-        const factory = new ethers.Contract(
-          getAddress("uniswapv2Factory", "zeta_testnet"),
-          UniswapV2Factory.abi,
-          providerZetaChain
-        );
-
-        const zetaToken = "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf";
-        const srcToken = token.contract;
-        const dstToken = "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"; // Goerli USDC
-        let price = "0";
-        const pairWithUSDCExists =
-          (await factory.getPair(srcToken, dstToken)) !=
-          0x0000000000000000000000000000000000000000;
-        if (pairWithUSDCExists) {
-          try {
-            const dstOut = await router.getAmountsOut(
-              parseUnits("1", token.decimals),
-              [srcToken, dstToken]
-            );
-            if (dstOut[1]) price = formatUnits(dstOut[1], 6);
-          } catch (e) {}
-        }
-        if (parseInt(price) === 0) {
-          let zetaOut;
-          try {
-            zetaOut = await router.getAmountsOut(
-              parseUnits("1", token.decimals),
-              [srcToken, zetaToken]
-            );
-          } catch (e) {}
-          try {
-            const dstOut = await router.getAmountsOut(zetaOut[1], [
-              zetaToken,
-              dstToken,
-            ]);
-            if (dstOut[1]) price = formatUnits(dstOut[1], 6);
-          } catch (e) {}
-        }
-
         return contract.balanceOf(evmAddress).then((balance: any) => {
           return {
             ...token,
             balance: formatUnits(balance, token.decimals),
-            price,
           };
         });
       } else {
