@@ -1566,6 +1566,11 @@
     "@types/minimatch" "*"
     "@types/node" "*"
 
+"@types/isomorphic-fetch@^0.0.38":
+  version "0.0.38"
+  resolved "https://registry.yarnpkg.com/@types/isomorphic-fetch/-/isomorphic-fetch-0.0.38.tgz#90882932a371e294a3c6143430275c15cb6ebf1b"
+  integrity sha512-DcXWx26qmt89lQ1Saoit0P38yHqT7fGceVs7UpMy2gU7AjEZISPdM7rqoFY5VHtl33H+cJ+VBDYmNRssTM4Zlw==
+
 "@types/json-schema@^7.0.9":
   version "7.0.12"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.12.tgz#d70faba7039d5fca54c83c7dbab41051d2b6f6cb"
@@ -1802,10 +1807,10 @@
   dependencies:
     dotenv "^16.1.4"
 
-"@zetachain/protocol-contracts@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-2.1.0.tgz#775b4eee7c85d115232dece121cbfc798fde6b63"
-  integrity sha512-xmG6p8DizIk0h7Tr8Lt6UMG0ejrfRrPx0qH9ze3enwblo7W+eGP12oQ7djanYu50B0pNhh9z7xy/IYxKa9wD0Q==
+"@zetachain/protocol-contracts@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-3.0.1.tgz#fefbc93dfea7d50193831b541fd8b847f3db57c7"
+  integrity sha512-F0ZY3z25TftUFHWjNP63gPh1ppFcTaATAqDX87Ld9ED2iDQ7tUEAN7R2A8BEzbcIi+n8dfLWQSPCFcgP1vFB/w==
 
 abbrev@1:
   version "1.1.1"

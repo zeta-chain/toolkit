@@ -123,4 +123,43 @@ library SwapHelperLib {
             );
         return amounts[path.length - 1];
     }
+
+    function swapTokensForExactTokens(
+        address zetaToken,
+        address uniswapV2Factory,
+        address uniswapV2Router,
+        address zrc20,
+        uint256 amount,
+        address targetZRC20,
+        uint256 amountInMax
+    ) internal returns (uint256) {
+        bool existsPairPool = _existsPairPool(
+            uniswapV2Factory,
+            zrc20,
+            targetZRC20
+        );
+
+        address[] memory path;
+        if (existsPairPool) {
+            path = new address[](2);
+            path[0] = zrc20;
+            path[1] = targetZRC20;
+        } else {
+            path = new address[](3);
+            path[0] = zrc20;
+            path[1] = zetaToken;
+            path[2] = targetZRC20;
+        }
+
+        IZRC20(zrc20).approve(address(uniswapV2Router), amountInMax);
+        uint256[] memory amounts = IUniswapV2Router01(uniswapV2Router)
+            .swapTokensForExactTokens(
+                amount,
+                amountInMax,
+                path,
+                address(this),
+                block.timestamp + MAX_DEADLINE
+            );
+        return amounts[0];
+    }
 }

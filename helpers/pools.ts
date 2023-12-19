@@ -12,13 +12,17 @@ export const getPools = async () => {
   const data = await response.json();
 
   const rpc = getEndpoints("evm", "zeta_testnet")[0]?.url;
-  const provider = new ethers.providers.JsonRpcProvider(rpc);
+  const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
 
   const uniswapV2FactoryAddress = getAddress(
     "uniswapv2Factory",
     "zeta_testnet"
   );
-  const zetaTokenAddress = getAddress("zetaToken", "zeta_testnet");
+
+  const zetaTokenAddress = getAddress(
+    "zetaToken",
+    "zeta_testnet"
+  ).toLowerCase();
 
   const UniswapV2FactoryContract = new ethers.Contract(
     uniswapV2FactoryAddress,
@@ -26,28 +30,28 @@ export const getPools = async () => {
     provider
   );
 
-  const poolPromises = data.foreignCoins.map(async (token: any) => {
-    const zrc20Address = token.zrc20_contract_address;
-    const pair = await UniswapV2FactoryContract.getPair(
-      zrc20Address,
-      zetaTokenAddress
-    );
+  const totalPairs = await UniswapV2FactoryContract.allPairsLength();
+  let pairs = [];
+  for (let i = 0; i < totalPairs; i++) {
+    pairs.push(await UniswapV2FactoryContract.allPairs(i));
+  }
 
-    let reservesZRC20 = "0";
-    let reservesZETA = "0";
-
-    if (pair !== ethers.constants.AddressZero) {
-      const contract = new ethers.Contract(pair, UniswapV2Pair.abi, provider);
-      const reserves = await contract.getReserves();
-      reservesZRC20 = ethers.utils.formatEther(reserves[0]);
-      reservesZETA = ethers.utils.formatEther(reserves[1]);
-    }
-    return {
-      ...token,
+  const poolPromises = pairs.map(async (pair: any) => {
+    let pool = {
       pair,
-      reservesZETA,
-      reservesZRC20,
-    };
+      t0: {},
+      t1: {},
+    } as any;
+    const pairContract = new ethers.Contract(pair, UniswapV2Pair.abi, provider);
+
+    pool.t0.address = await pairContract.token0();
+    pool.t1.address = await pairContract.token1();
+
+    const reserves = await pairContract.getReserves();
+    pool.t0.reserve = reserves[0];
+    pool.t1.reserve = reserves[1];
+
+    return pool;
   });
 
   const pools = await Promise.all(poolPromises);

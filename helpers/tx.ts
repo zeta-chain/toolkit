@@ -69,10 +69,12 @@ const fetchCCTXData = async (
   let confirmed_on_destination = false;
   if (outbound_tx_hash) {
     const chainName = findByChainId(networks, parseInt(receiver_chainId));
-    const rpc = getEndpoints("evm", chainName)[0]?.url;
-    const provider = new ethers.providers.JsonRpcProvider(rpc);
-    const confirmed = await provider.getTransaction(outbound_tx_hash);
-    confirmed_on_destination = confirmed !== null;
+    if (chainName) {
+      const rpc = getEndpoints("evm", chainName as any)[0]?.url;
+      const provider = new ethers.providers.JsonRpcProvider(rpc);
+      const confirmed = await provider.getTransaction(outbound_tx_hash);
+      confirmed_on_destination = confirmed !== null;
+    }
   }
   const tx = {
     confirmed_on_destination,
@@ -229,10 +231,16 @@ export const trackCCTX = async (
         clearInterval(intervalID);
 
         if (!allOutboundMined) {
+          emitter.emit("mined-fail", {
+            cctxs,
+          });
           reject("CCTX aborted or reverted");
         } else {
+          emitter.emit("mined-success", {
+            cctxs,
+          });
           if (json) console.log(JSON.stringify(cctxs, null, 2));
-          resolve();
+          resolve(cctxs);
         }
       }
     }, 3000);

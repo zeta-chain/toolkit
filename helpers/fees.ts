@@ -11,7 +11,7 @@ const formatTo18Decimals = (n: any) => parseFloat(formatEther(n)).toFixed(18);
 export const fetchZEVMFees = async (network: string) => {
   const url = getEndpoints("evm", "zeta_testnet")[0].url;
 
-  const provider = new ethers.providers.JsonRpcProvider(url);
+  const provider = new ethers.providers.StaticJsonRpcProvider(url);
   const btcZRC20 = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"; // TODO: use getAddress("zrc20", "btc_testnet") when available
   const zrc20Address =
     network === "btc_testnet" ? btcZRC20 : getAddress("zrc20", network as any);
