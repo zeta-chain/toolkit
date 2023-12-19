@@ -1800,10 +1800,10 @@
     typescript "5.0.4"
     zod "3.19.1"
 
-"@zetachain/networks@^2.4.3":
-  version "2.4.3"
-  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-2.4.3.tgz#870b2cda4b91f913be990246831378f60688d452"
-  integrity sha512-ZoqN8M6+59OkujZCl3FcSEgSftIN1tw5bpuFwI/2+f0SlKH+8ztAk7aF1QHmzrPqolIJKt29ogsfvIjiynXNkg==
+"@zetachain/networks@3.0.0-rc2":
+  version "3.0.0-rc2"
+  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-3.0.0-rc2.tgz#3c9ff508ae4cb0381be10e3a4b475a40abd941e2"
+  integrity sha512-9LYzflDFYOaVzq737ZuxAUlO24g7LxxFYLHxAKHNtOH7NstsuljoER9kGYwJ9lB3r7antKDXLr7A70N01hBK1Q==
   dependencies:
     dotenv "^16.1.4"
 
