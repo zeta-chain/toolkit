@@ -1800,17 +1800,17 @@
     typescript "5.0.4"
     zod "3.19.1"
 
-"@zetachain/networks@3.0.0-rc2":
-  version "3.0.0-rc2"
-  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-3.0.0-rc2.tgz#3c9ff508ae4cb0381be10e3a4b475a40abd941e2"
-  integrity sha512-9LYzflDFYOaVzq737ZuxAUlO24g7LxxFYLHxAKHNtOH7NstsuljoER9kGYwJ9lB3r7antKDXLr7A70N01hBK1Q==
+"@zetachain/networks@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-3.0.0.tgz#4af60859e6fe057002d17d81f088be5581cdcf9a"
+  integrity sha512-Yq6kbXhxou7SOazDYBhHev8k6JtWMkX+QAzshg/JYW07mDQg78MFEfqWDWmfD4xtWOsPKvnjrURpGgROc5xqKw==
   dependencies:
     dotenv "^16.1.4"
 
-"@zetachain/protocol-contracts@^3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-3.0.1.tgz#fefbc93dfea7d50193831b541fd8b847f3db57c7"
-  integrity sha512-F0ZY3z25TftUFHWjNP63gPh1ppFcTaATAqDX87Ld9ED2iDQ7tUEAN7R2A8BEzbcIi+n8dfLWQSPCFcgP1vFB/w==
+"@zetachain/protocol-contracts@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-3.0.2.tgz#384b73484fedd1cba130af473f92664293f3ac1e"
+  integrity sha512-5Z66o0AdOtHYWFfcgjsH9Y79bHHK/h9I+TsOwHsIiqOp/fTdGLZ2HJO/PKgjbeUsfvI2RMm/UyYYWgsX6gucBQ==
 
 abbrev@1:
   version "1.1.1"
