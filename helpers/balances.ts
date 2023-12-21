@@ -8,7 +8,7 @@ import fetch from "isomorphic-fetch";
 
 export const getForeignCoins = async () => {
   const api = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
-  const endpoint = `${api}/zeta-chain/zetacore/fungible/foreign_coins`;
+  const endpoint = `${api}/zeta-chain/fungible/foreign_coins`;
   const response = await fetch(endpoint);
   const data = await response.json();
   return data.foreignCoins;

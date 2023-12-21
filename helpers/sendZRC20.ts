@@ -24,9 +24,7 @@ export const sendZRC20 = async (
   }
 
   const API = getEndpoints("cosmos-http", "zeta_testnet")?.[0]?.url;
-  const response = await fetch(
-    `${API}/zeta-chain/zetacore/fungible/foreign_coins`
-  );
+  const response = await fetch(`${API}/zeta-chain/fungible/foreign_coins`);
   const data = await response.json();
   const foreignCoins = data.foreignCoins;
   const networkChainID = networks[network as keyof typeof networks]?.chain_id;
