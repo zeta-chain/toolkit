@@ -135,7 +135,7 @@ const getCCTX = async (hash: string, API: string) => {
 
 const fetchNonces = async (API: string, TSS: string) => {
   try {
-    const url = `${API}/zeta-chain/crosschain/pendingNonces`;
+    const url = `${API}/zeta-chain/observer/pendingNonces`;
     const apiResponseData = await apiFetch(url);
     const nonces = apiResponseData?.pending_nonces;
     return nonces.filter((n: any) => n.tss === TSS);
@@ -144,7 +144,7 @@ const fetchNonces = async (API: string, TSS: string) => {
 
 const fetchTSS = async (API: string) => {
   try {
-    const url = `${API}/zeta-chain/crosschain/TSS`;
+    const url = `${API}/zeta-chain/observer/TSS`;
     const apiResponseData = await apiFetch(url);
     return apiResponseData?.TSS.tss_pubkey;
   } catch (e) {}
