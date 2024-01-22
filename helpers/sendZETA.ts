@@ -10,7 +10,8 @@ export const sendZETA = async (
   amount: string,
   from: string,
   destination: string,
-  recipient: string
+  recipient: string,
+  gas: number = 5000000
 ) => {
   let connectorContract: any;
   const destinationChainId =
@@ -47,7 +48,7 @@ export const sendZETA = async (
   return await connectorContract.connect(signer).send({
     destinationAddress,
     destinationChainId,
-    destinationGasLimit: 5000000,
+    destinationGasLimit: gas,
     message: ethers.utils.arrayify([]),
     zetaParams: ethers.utils.arrayify([]),
     zetaValueAndGas: value,

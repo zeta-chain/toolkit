@@ -125,15 +125,33 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   );
   const decoded = JSON.stringify(await decodeTransaction(tx), null, 2);
 
-  console.log(`\nTransaction:\n\n${tx}\n`);
-  console.log(`Decoded transaction:\n\n${decoded}\n`);
+  if (args.verboseOutput) {
+    console.log(`Transaction:
+
+${decoded}
+
+Encoded transaction:
+
+${tx}
+`);
+  }
+
+  console.log(`
+Networks:        btc_testnet → zeta_testnet
+Amount:          ${args.amount} tBTC
+Amount received: ${args.amount} ZRC-20 tBTC
+From address:    ${address}
+To address:      ${args.recipient}
+Memo:            ${args.memo}
+`);
 
   await confirm(
     {
-      message: `Send ${parseFloat(args.amount)} tBTC to ${args.recipient}?`,
+      message: `Please, confirm the transaction`,
     },
     { clearPromptOnDone: true }
   );
+
   const p1 = await fetch(`${API}/txs/push`, {
     body: JSON.stringify({ tx }),
     method: "POST",
@@ -150,4 +168,5 @@ export const sendBTCTask = task(
 )
   .addParam("recipient", "Address to send to")
   .addParam("amount", "Amount to send")
-  .addOptionalParam("memo", "Memo to embed in transaction");
+  .addOptionalParam("memo", "Memo to embed in transaction")
+  .addFlag("verboseOutput", "Verbose output");
