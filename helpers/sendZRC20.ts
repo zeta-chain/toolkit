@@ -31,10 +31,6 @@ export const sendZRC20 = async (
   });
   let tx;
   if (network === "zeta_testnet") {
-    const ZRC20Address = getAddress("zrc20", destination as any);
-    const gasContract = new ethers.Contract(ZRC20Address, ZRC20.abi, signer);
-    const gasDecimals = await gasContract.decimals();
-
     const { zrc20_contract_address } = foreignCoins.find(
       (c: any) =>
         parseInt(c.foreign_chain_id) === getChainId(destination) &&
@@ -46,18 +42,17 @@ export const sendZRC20 = async (
       signer
     );
     const targetDecimals = await targetContract.decimals();
-    const targetValue = ethers.utils.parseUnits(amount, targetDecimals);
-
-    const fees = await fetchFees(5000000);
-    const fee = fees.feesZEVM[destination].totalFee;
     const to =
       destination === "btc_testnet"
         ? ethers.utils.toUtf8Bytes(recipient)
         : signer.address;
+
+    const [gasAddress, gasFee] = await targetContract.withdrawGasFee();
+    const gasContract = new ethers.Contract(gasAddress, ZRC20.abi, signer);
+
+    const targetValue = ethers.utils.parseUnits(amount, targetDecimals);
     await (
-      await gasContract
-        .connect(signer)
-        .approve(ZRC20Address, ethers.utils.parseUnits(fee, gasDecimals))
+      await gasContract.connect(signer).approve(gasAddress, gasFee)
     ).wait();
     return await targetContract.connect(signer).withdraw(to, targetValue);
   } else if (destination === "zeta_testnet") {
