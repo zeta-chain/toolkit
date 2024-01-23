@@ -5,7 +5,65 @@ import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 import { getForeignCoins } from "../helpers/balances";
 import { getChainId } from "@zetachain/networks";
-import { fetchFees } from "../helpers/fees";
+
+export const withdraw = async ({
+  signer,
+  amount,
+  to,
+  zrc20,
+}: {
+  signer: any;
+  amount: string;
+  to: any;
+  zrc20: string;
+}) => {
+  const targetContract = new ethers.Contract(zrc20, ZRC20.abi, signer);
+  const targetDecimals = await targetContract.decimals();
+
+  const [gasAddress, gasFee] = await targetContract.withdrawGasFee();
+  const gasContract = new ethers.Contract(gasAddress, ZRC20.abi, signer);
+
+  const targetValue = ethers.utils.parseUnits(amount, targetDecimals);
+  await (await gasContract.connect(signer).approve(gasAddress, gasFee)).wait();
+  return await targetContract.connect(signer).withdraw(to, targetValue);
+};
+
+export const deposit = async ({
+  signer,
+  amount,
+  to,
+  erc20,
+  message,
+}: {
+  signer: any;
+  amount: string;
+  to: string;
+  erc20?: string;
+  message?: string;
+}) => {
+  const { chainId } = signer.provider.network;
+  const chain = Object.entries(networks).find(
+    (x) => x[1].chain_id === chainId
+  )?.[0];
+  const tss = getAddress("tss", chain as any);
+  if (erc20) {
+    const contract = new ethers.Contract(erc20, ERC20_ABI.abi, signer);
+    const balance = await contract.balanceOf(signer.address);
+    if (balance.lt(amount)) {
+      throw new Error("Insufficient token balance.");
+    }
+    const decimals = await contract.decimals();
+    const value = ethers.utils.parseUnits(amount, decimals);
+    const approveTx = await contract.approve(tss, value);
+    return await approveTx.wait();
+  } else {
+    return await signer.sendTransaction({
+      to: tss,
+      value: ethers.utils.parseUnits(amount, 18),
+      data: `${to}${message ?? ""}`,
+    });
+  }
+};
 
 export const sendZRC20 = async (
   signer: any,
@@ -25,68 +83,25 @@ export const sendZRC20 = async (
   }
 
   const foreignCoins = await getForeignCoins();
-  const networkChainID = networks[network as keyof typeof networks]?.chain_id;
-  const foreignCoinsFiltered = foreignCoins.filter((coin: any) => {
-    return coin.foreign_chain_id === networkChainID.toString();
-  });
-  let tx;
+  const counterparty = destination === "zeta_testnet" ? network : destination;
+  const chainId =
+    destination === "btc_testnet" ? 18332 : getChainId(counterparty); // https://github.com/zeta-chain/networks/pull/34/
+  const { zrc20_contract_address: zrc20, asset: erc20 } = foreignCoins.find(
+    (c: any) =>
+      parseInt(c.foreign_chain_id) === chainId &&
+      c.symbol.toLocaleLowerCase() === token.toLocaleLowerCase()
+  );
+  console.log("recipient", recipient);
+  console.log("to utf8", ethers.utils.toUtf8Bytes(recipient));
   if (network === "zeta_testnet") {
-    const { zrc20_contract_address } = foreignCoins.find(
-      (c: any) =>
-        parseInt(c.foreign_chain_id) === getChainId(destination) &&
-        c.symbol.toLocaleLowerCase() === token.toLocaleLowerCase()
-    );
-    const targetContract = new ethers.Contract(
-      zrc20_contract_address,
-      ZRC20.abi,
-      signer
-    );
-    const targetDecimals = await targetContract.decimals();
     const to =
       destination === "btc_testnet"
         ? ethers.utils.toUtf8Bytes(recipient)
-        : signer.address;
-
-    const [gasAddress, gasFee] = await targetContract.withdrawGasFee();
-    const gasContract = new ethers.Contract(gasAddress, ZRC20.abi, signer);
-
-    const targetValue = ethers.utils.parseUnits(amount, targetDecimals);
-    await (
-      await gasContract.connect(signer).approve(gasAddress, gasFee)
-    ).wait();
-    return await targetContract.connect(signer).withdraw(to, targetValue);
+        : recipient;
+    return await withdraw({ signer, amount, to, zrc20 });
   } else if (destination === "zeta_testnet") {
-    const TSSAddress = getAddress("tss", network as any);
-    const zrc20 = foreignCoinsFiltered.find(
-      (coin: any) => coin.symbol.toLowerCase() === token.toLowerCase()
-    );
-    if (zrc20.coin_type.toLocaleLowerCase() === "erc20") {
-      if (zrc20 === undefined) {
-        throw new Error(
-          `Token ${token} is not one of the available tokens to be deposited from ${network} to zeta_testnet`
-        );
-      }
-      const erc20ContractAddress = zrc20.asset;
-      const erc20TokenContract = new ethers.Contract(
-        erc20ContractAddress,
-        ERC20_ABI.abi,
-        signer
-      );
-      const balance = await erc20TokenContract.balanceOf(signer.address);
-      if (balance.lt(value)) {
-        throw new Error("Insufficient token balance.");
-      }
-      const approveTx = await erc20TokenContract.approve(TSSAddress, value);
-      await approveTx.wait();
-      tx = await erc20TokenContract.transfer(TSSAddress, value);
-    } else if (zrc20.coin_type.toLocaleLowerCase() === "gas") {
-      tx = await signer.sendTransaction({
-        to: TSSAddress,
-        value,
-      });
-    }
-    return tx;
+    return await deposit({ signer, amount, to: recipient, erc20 });
   } else {
-    throw new Error("Either --network or --destination should be zeta_testnet");
+    throw new Error("Either network or destination should be zeta_testnet");
   }
 };
