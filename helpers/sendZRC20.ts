@@ -1,10 +1,11 @@
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { networks } from "@zetachain/networks";
+import { getChainId } from "@zetachain/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
+
 import { getForeignCoins } from "../helpers/balances";
-import { getChainId } from "@zetachain/networks";
 
 export const withdraw = async ({
   signer,
@@ -12,8 +13,8 @@ export const withdraw = async ({
   to,
   zrc20,
 }: {
-  signer: any;
   amount: string;
+  signer: any;
   to: any;
   zrc20: string;
 }) => {
@@ -35,11 +36,11 @@ export const deposit = async ({
   erc20,
   message,
 }: {
-  signer: any;
   amount: string;
-  to: string;
   erc20?: string;
   message?: string;
+  signer: any;
+  to: string;
 }) => {
   const { chainId } = signer.provider.network;
   const chain = Object.entries(networks).find(
@@ -58,9 +59,9 @@ export const deposit = async ({
     return await approveTx.wait();
   } else {
     return await signer.sendTransaction({
+      data: `${to}${message ?? ""}`,
       to: tss,
       value: ethers.utils.parseUnits(amount, 18),
-      data: `${to}${message ?? ""}`,
     });
   }
 };
@@ -98,9 +99,9 @@ export const sendZRC20 = async (
       destination === "btc_testnet"
         ? ethers.utils.toUtf8Bytes(recipient)
         : recipient;
-    return await withdraw({ signer, amount, to, zrc20 });
+    return await withdraw({ amount, signer, to, zrc20 });
   } else if (destination === "zeta_testnet") {
-    return await deposit({ signer, amount, to: recipient, erc20 });
+    return await deposit({ amount, erc20, signer, to: recipient });
   } else {
     throw new Error("Either network or destination should be zeta_testnet");
   }

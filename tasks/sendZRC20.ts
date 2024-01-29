@@ -1,11 +1,11 @@
-import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { fetchFees } from "../helpers/fees";
-
-import { sendZRC20 } from "../helpers/sendZRC20";
 import confirm from "@inquirer/confirm";
 import { getChainId } from "@zetachain/networks";
+import { task } from "hardhat/config";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { getForeignCoins } from "../helpers/balances";
+import { fetchFees } from "../helpers/fees";
+import { sendZRC20 } from "../helpers/sendZRC20";
 
 declare const hre: any;
 

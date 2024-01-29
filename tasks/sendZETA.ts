@@ -1,9 +1,9 @@
+import confirm from "@inquirer/confirm";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { sendZETA } from "../helpers/sendZETA";
 import { fetchFees } from "../helpers/fees";
-import confirm from "@inquirer/confirm";
+import { sendZETA } from "../helpers/sendZETA";
 
 declare const hre: any;
 
