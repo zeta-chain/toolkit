@@ -1,16 +1,23 @@
-import { createClient } from "./helpers/client";
+import { ZetaChainClient } from "./helpers/client";
 
-console.log(
-  createClient({
-    chains: {
-      goerli_testnet: {
-        api: [
-          {
-            url: "https://rpc.example.org",
-            type: "evm",
-          },
-        ],
-      },
+const client = new ZetaChainClient({
+  chains: {
+    goerli_testnet: {
+      api: [
+        {
+          url: "https://rpc.ankr.com/eth_goerli",
+          type: "evm",
+        },
+      ],
     },
-  })
-);
+  },
+});
+
+(async () => {
+  console.log(
+    await client.getBalances(
+      "testnet",
+      "0x2cD3D070aE1BD365909dD859d29F387AA96911e1"
+    )
+  );
+})();

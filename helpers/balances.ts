@@ -1,31 +1,46 @@
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
-import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import fetch from "isomorphic-fetch";
 
-export const getForeignCoins = async () => {
-  const api = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
+export const getEndpoints = (chains: any, type: any, network: string): any => {
+  if (!(chains as any)[network]) {
+    throw new Error(`Network ${network} does not exist.`);
+  }
+
+  return (chains as any)[network].api.filter((api: any) => api.type === type);
+};
+
+export const getForeignCoins = async (api: string) => {
   const endpoint = `${api}/zeta-chain/fungible/foreign_coins`;
   const response = await fetch(endpoint);
   const data = await response.json();
   return data.foreignCoins;
 };
 
-export const getSupportedChains = async () => {
-  const api = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
+export const getSupportedChains = async (api: string) => {
   const endpoint = `${api}/zeta-chain/observer/supportedChains`;
   const response = await fetch(endpoint);
   const data = await response.json();
   return data.chains;
 };
 
-export const getBalances = async (evmAddress: any, btcAddress = null) => {
+export const getBalances = async (
+  chains: any,
+  network: any,
+  evmAddress: any,
+  btcAddress = null
+) => {
   let tokens = [];
-  const foreignCoins = await getForeignCoins();
-  const supportedChains = await getSupportedChains();
+  const zetaCosmosHTTP = getEndpoints(
+    chains,
+    "cosmos-http",
+    `zeta_${network}`
+  )[0]?.url;
+  const foreignCoins = await getForeignCoins(zetaCosmosHTTP);
+  const supportedChains = await getSupportedChains(zetaCosmosHTTP);
   foreignCoins.forEach((token: any) => {
     if (token.coin_type === "Gas") {
       tokens.push({
@@ -36,7 +51,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
         zrc20: token.zrc20_contract_address,
       });
       tokens.push({
-        chain_id: 7001,
+        chain_id: network === "mainnet" ? 7000 : 7001,
         coin_type: "ZRC20",
         contract: token.zrc20_contract_address,
         decimals: token.decimals,
@@ -52,7 +67,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
         zrc20: token.zrc20_contract_address,
       });
       tokens.push({
-        chain_id: 7001,
+        chain_id: network === "mainnet" ? 7000 : 7001,
         coin_type: "ZRC20",
         contract: token.zrc20_contract_address,
         decimals: token.decimals,
@@ -73,7 +88,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
     }
   });
   tokens.push({
-    chain_id: 7001,
+    chain_id: network === "mainnet" ? 7000 : 7001,
     coin_type: "Gas",
     decimals: 18,
     symbol: "ZETA",
@@ -81,17 +96,23 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
 
   tokens = tokens.map((token: any) => {
     const ticker = token.symbol.split("-")[0];
-    const chain_name =
-      token.chain_id === 7001
-        ? "zeta_testnet"
-        : supportedChains.find((c: any) => c.chain_id === token.chain_id)
-            ?.chain_name;
+    let chain_name;
+    if (token.chain_id === 7001) {
+      chain_name = "zeta_testnet";
+    } else if (token.chain_id === 7000) {
+      chain_name = "zeta_mainnet";
+    } else {
+      chain_name = supportedChains.find(
+        (c: any) => c.chain_id === token.chain_id
+      )?.chain_name;
+    }
     return {
       ...token,
       chain_name,
-      id: `${token.chain_id
-        .toString()
-        .toLowerCase()}__${token.symbol.toLowerCase()}`,
+      id: `${token.chain_id.toString().toLowerCase()}__${token.symbol
+        .toLowerCase()
+        .split(" ")
+        .join("_")}`,
       ticker,
     };
   });
@@ -103,24 +124,30 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
       const isERC = token.coin_type === "ERC20";
       const isZRC = token.coin_type === "ZRC20";
       if (isGas && !isBitcoin) {
-        const rpc = getEndpoints("evm", token.chain_name)[0]?.url;
-        const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-        return provider.getBalance(evmAddress).then((balance) => {
-          return { ...token, balance: formatUnits(balance, token.decimals) };
-        });
+        try {
+          const rpc = getEndpoints(chains, "evm", token.chain_name)[0]?.url;
+          const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+          return provider.getBalance(evmAddress).then((balance) => {
+            return { ...token, balance: formatUnits(balance, token.decimals) };
+          });
+        } catch (e) {}
       } else if (isGas && isBitcoin && btcAddress) {
-        const API = getEndpoints("esplora", "btc_testnet")[0]?.url;
-        return fetch(`${API}/address/${btcAddress}`).then(async (response) => {
-          const r = await response.json();
-          const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
-          const balance = (
-            (funded_txo_sum - spent_txo_sum) /
-            100000000
-          ).toString();
-          return { ...token, balance };
-        });
+        try {
+          const API = getEndpoints(chains, "esplora", "btc_testnet")[0]?.url;
+          return fetch(`${API}/address/${btcAddress}`).then(
+            async (response) => {
+              const r = await response.json();
+              const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
+              const balance = (
+                (funded_txo_sum - spent_txo_sum) /
+                100000000
+              ).toString();
+              return { ...token, balance };
+            }
+          );
+        } catch (e) {}
       } else if (isERC) {
-        const rpc = getEndpoints("evm", token.chain_name)[0]?.url;
+        const rpc = getEndpoints(chains, "evm", token.chain_name)[0]?.url;
         const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
         const contract = new ethers.Contract(
           token.contract,
@@ -131,7 +158,7 @@ export const getBalances = async (evmAddress: any, btcAddress = null) => {
           return { ...token, balance: formatUnits(balance, token.decimals) };
         });
       } else if (isZRC) {
-        const rpc = getEndpoints("evm", token.chain_name)[0]?.url;
+        const rpc = getEndpoints(chains, "evm", token.chain_name)[0]?.url;
         const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
         const contract = new ethers.Contract(
           token.contract,

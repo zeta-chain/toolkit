@@ -1,12 +1,28 @@
 import { networks } from "@zetachain/networks";
 import merge from "lodash/merge";
+import { getBalances } from "./balances";
 
-export const createClient = (params: any = { chains: {} }): any => {
-  const chains: any = { ...networks };
+export class ZetaChainClient {
+  private chains: any;
 
-  for (const key in params.chains) {
-    chains[key] = merge({}, chains[key], params.chains[key]);
+  constructor(params: any = { chains: {} }) {
+    const mergeChains = (customChains: any): void => {
+      for (const key in customChains) {
+        if (customChains.hasOwnProperty(key)) {
+          this.chains[key] = merge({}, this.chains[key], customChains[key]);
+        }
+      }
+    };
+    this.chains = { ...networks };
+
+    mergeChains(params.chains);
   }
 
-  return chains;
-};
+  public getChains(): any {
+    return this.chains;
+  }
+
+  public async getBalances(network: any, evmAddress: any, btcAddress = null) {
+    return await getBalances(this.chains, network, evmAddress, btcAddress);
+  }
+}
