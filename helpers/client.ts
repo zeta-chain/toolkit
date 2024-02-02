@@ -1,5 +1,6 @@
 import { networks } from "@zetachain/networks";
 import merge from "lodash/merge";
+
 import { getBalances } from "./balances";
 
 export class ZetaChainClient {

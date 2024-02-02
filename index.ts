@@ -5,8 +5,8 @@ const client = new ZetaChainClient({
     goerli_testnet: {
       api: [
         {
-          url: "https://rpc.ankr.com/eth_goerli",
           type: "evm",
+          url: "https://rpc.ankr.com/eth_goerli",
         },
       ],
     },
