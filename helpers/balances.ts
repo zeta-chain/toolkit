@@ -4,14 +4,7 @@ import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import fetch from "isomorphic-fetch";
-
-export const getEndpoints = (chains: any, type: any, network: string): any => {
-  if (!(chains as any)[network]) {
-    throw new Error(`Network ${network} does not exist.`);
-  }
-
-  return (chains as any)[network].api.filter((api: any) => api.type === type);
-};
+import { getEndpoints } from "../utils/getEndpoints";
 
 export const getForeignCoins = async (api: string) => {
   const endpoint = `${api}/zeta-chain/fungible/foreign_coins`;

@@ -1,15 +1,15 @@
-import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import networks from "@zetachain/networks/dist/src/networks";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 import { formatEther } from "ethers/lib/utils";
 import fetch from "isomorphic-fetch";
+import { getEndpoints } from "../utils/getEndpoints";
 
 const formatTo18Decimals = (n: any) => parseFloat(formatEther(n)).toFixed(18);
 
-export const fetchZEVMFees = async (network: string) => {
-  const url = getEndpoints("evm", "zeta_testnet")[0].url;
+export const fetchZEVMFees = async (chains: any, network: string) => {
+  const url = getEndpoints(chains, "evm", "zeta_testnet")[0].url;
 
   const provider = new ethers.providers.StaticJsonRpcProvider(url);
   const btcZRC20 = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"; // TODO: use getAddress("zrc20", "btc_testnet") when available
@@ -31,8 +31,12 @@ export const fetchZEVMFees = async (network: string) => {
   };
 };
 
-export const fetchCCMFees = async (network: string, gas: Number = 500000) => {
-  const API = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
+export const fetchCCMFees = async (
+  chains: any,
+  network: string,
+  gas: Number = 500000
+) => {
+  const API = getEndpoints(chains, "cosmos-http", "zeta_testnet")[0]?.url;
   if (!API) {
     throw new Error("getEndpoints: API endpoint not found");
   }
@@ -54,7 +58,7 @@ export const fetchCCMFees = async (network: string, gas: Number = 500000) => {
   };
 };
 
-export const fetchFees = async (gas: Number) => {
+export const getFees = async (chains: any, network: any, gas: Number) => {
   let fees = {
     feesCCM: {} as Record<string, any>,
     feesZEVM: {} as Record<string, any>,
@@ -65,9 +69,9 @@ export const fetchFees = async (gas: Number) => {
   await Promise.all(
     networkList.map(async (n) => {
       try {
-        const zevmFees = await fetchZEVMFees(n);
+        const zevmFees = await fetchZEVMFees(chains, n);
         if (zevmFees) fees.feesZEVM[n] = zevmFees;
-        const ccmFees = await fetchCCMFees(n, gas);
+        const ccmFees = await fetchCCMFees(chains, n, gas);
         if (ccmFees) fees.feesCCM[n] = ccmFees;
       } catch (err) {}
     })

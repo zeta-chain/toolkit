@@ -2,6 +2,7 @@ import { networks } from "@zetachain/networks";
 import merge from "lodash/merge";
 
 import { getBalances } from "./balances";
+import { getFees } from "./fees";
 
 export class ZetaChainClient {
   private chains: any;
@@ -25,5 +26,9 @@ export class ZetaChainClient {
 
   public async getBalances(network: any, evmAddress: any, btcAddress = null) {
     return await getBalances(this.chains, network, evmAddress, btcAddress);
+  }
+
+  public async getFees(network: any, gas: Number = 500000) {
+    return await getFees(this.chains, network, gas);
   }
 }
