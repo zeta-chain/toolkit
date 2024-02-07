@@ -35,7 +35,7 @@ export class ZetaChainClient {
     return await getFees(this.chains, this.network, gas);
   }
 
-  // public async getPools(network: any) {
-  //   return await getPools(this.chains, network);
-  // }
+  public async getPools() {
+    return await getPools(this.chains, this.network);
+  }
 }
