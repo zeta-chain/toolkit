@@ -5,20 +5,8 @@ import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import fetch from "isomorphic-fetch";
 import { getEndpoints } from "../utils/getEndpoints";
-
-export const getForeignCoins = async (api: string) => {
-  const endpoint = `${api}/zeta-chain/fungible/foreign_coins`;
-  const response = await fetch(endpoint);
-  const data = await response.json();
-  return data.foreignCoins;
-};
-
-export const getSupportedChains = async (api: string) => {
-  const endpoint = `${api}/zeta-chain/observer/supportedChains`;
-  const response = await fetch(endpoint);
-  const data = await response.json();
-  return data.chains;
-};
+import { getSupportedChains } from "../utils/getSupportedChains";
+import { getForeignCoins } from "../utils/getForeignCoins";
 
 export const getBalances = async (
   chains: any,
@@ -32,8 +20,8 @@ export const getBalances = async (
     "cosmos-http",
     `zeta_${network}`
   )[0]?.url;
-  const foreignCoins = await getForeignCoins(zetaCosmosHTTP);
   const supportedChains = await getSupportedChains(zetaCosmosHTTP);
+  const foreignCoins = await getForeignCoins(zetaCosmosHTTP);
   foreignCoins.forEach((token: any) => {
     if (token.coin_type === "Gas") {
       tokens.push({

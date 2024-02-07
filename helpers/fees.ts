@@ -1,32 +1,22 @@
-import networks from "@zetachain/networks/dist/src/networks";
-import { getAddress } from "@zetachain/protocol-contracts";
+import { getAddress, testnet, mainnet } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
-import { ethers } from "ethers";
-import { formatEther } from "ethers/lib/utils";
+import { ethers, utils } from "ethers";
 import fetch from "isomorphic-fetch";
 import { getEndpoints } from "../utils/getEndpoints";
+import { getSupportedChains } from "../utils/getSupportedChains";
 
-const formatTo18Decimals = (n: any) => parseFloat(formatEther(n)).toFixed(18);
-
-export const fetchZEVMFees = async (chains: any, network: string) => {
-  const url = getEndpoints(chains, "evm", "zeta_testnet")[0].url;
-
-  const provider = new ethers.providers.StaticJsonRpcProvider(url);
-  const btcZRC20 = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"; // TODO: use getAddress("zrc20", "btc_testnet") when available
-  const zrc20Address =
-    network === "btc_testnet" ? btcZRC20 : getAddress("zrc20", network as any);
-  if (!zrc20Address) return;
-
-  const contract = new ethers.Contract(zrc20Address, ZRC20.abi, provider);
+export const fetchZEVMFees = async (zrc20: any, rpc: any) => {
+  const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+  const contract = new ethers.Contract(zrc20.address, ZRC20.abi, provider);
   const [, withdrawGasFee] = await contract.withdrawGasFee();
   const gasFee = ethers.BigNumber.from(withdrawGasFee);
 
   const protocolFee = ethers.BigNumber.from(await contract.PROTOCOL_FLAT_FEE());
   return {
     /* eslint-disable */
-    totalFee: formatTo18Decimals(gasFee),
-    gasFee: formatTo18Decimals(gasFee.sub(protocolFee)),
-    protocolFee: formatTo18Decimals(protocolFee),
+    totalFee: utils.formatUnits(gasFee, 18),
+    gasFee: utils.formatUnits(gasFee.sub(protocolFee), 18),
+    protocolFee: utils.formatUnits(protocolFee, 18),
     /* eslint-enable */
   };
 };
@@ -34,26 +24,25 @@ export const fetchZEVMFees = async (chains: any, network: string) => {
 export const fetchCCMFees = async (
   chains: any,
   network: string,
+  chainID: any,
   gas: Number = 500000
 ) => {
-  const API = getEndpoints(chains, "cosmos-http", "zeta_testnet")[0]?.url;
+  // Skip ZetaChain as we can't send messages from ZetaChain to ZetaChain
+  if (chainID === "7000" || chainID === "7001") return;
+  const API = getEndpoints(chains, "cosmos-http", `zeta_${network}`)[0]?.url;
   if (!API) {
     throw new Error("getEndpoints: API endpoint not found");
   }
-
-  const chainID = networks[network as keyof typeof networks]?.chain_id;
-
   const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
   const response = await fetch(url);
   const data = await response.json();
-
   const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);
   const protocolFee = ethers.BigNumber.from(data.protocolFeeInZeta);
   return {
     /* eslint-disable */
-    totalFee: formatTo18Decimals(gasFee.add(protocolFee)),
-    gasFee: formatTo18Decimals(gasFee),
-    protocolFee: formatTo18Decimals(protocolFee),
+    totalFee: utils.formatUnits(gasFee.add(protocolFee), 18),
+    gasFee: utils.formatUnits(gasFee, 18),
+    protocolFee: utils.formatUnits(protocolFee, 18),
     /* eslint-enable */
   };
 };
@@ -63,17 +52,34 @@ export const getFees = async (chains: any, network: any, gas: Number) => {
     feesCCM: {} as Record<string, any>,
     feesZEVM: {} as Record<string, any>,
   };
+  const zetaCosmosHTTP = getEndpoints(
+    chains,
+    "cosmos-http",
+    `zeta_${network}`
+  )[0]?.url;
+  const supportedChains = await getSupportedChains(zetaCosmosHTTP);
 
-  const networkList = [...Object.keys(networks), "btc_testnet"];
+  const addresses = network === "mainnet" ? mainnet : testnet;
+  const zrc20Addresses = addresses.filter((a: any) => a.type === "zrc20");
 
   await Promise.all(
-    networkList.map(async (n) => {
+    supportedChains.map(async (n: any) => {
       try {
-        const zevmFees = await fetchZEVMFees(chains, n);
-        if (zevmFees) fees.feesZEVM[n] = zevmFees;
-        const ccmFees = await fetchCCMFees(chains, n, gas);
-        if (ccmFees) fees.feesCCM[n] = ccmFees;
-      } catch (err) {}
+        const ccmFees = await fetchCCMFees(chains, network, n.chain_id, gas);
+        if (ccmFees) fees.feesCCM[n.chain_name] = ccmFees;
+      } catch (err) {
+        console.log(err);
+      }
+    })
+  );
+  await Promise.all(
+    zrc20Addresses.map(async (zrc20: any) => {
+      try {
+        const rpc = getEndpoints(chains, "evm", `zeta_${network}`)[0].url;
+        fees.feesZEVM[zrc20.symbol] = await fetchZEVMFees(zrc20, rpc);
+      } catch (err) {
+        console.log(err);
+      }
     })
   );
   return fees;

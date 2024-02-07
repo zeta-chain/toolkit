@@ -1,17 +1,17 @@
 import UniswapV2Factory from "@uniswap/v2-core/build/UniswapV2Factory.json";
 import UniswapV2Pair from "@uniswap/v2-core/build/UniswapV2Pair.json";
-import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
+import { getEndpoints } from "../utils/getEndpoints";
 import { getAddress } from "@zetachain/protocol-contracts";
 import { ethers } from "ethers";
 import fetch from "isomorphic-fetch";
 
-export const getPools = async () => {
-  const api = getEndpoints("cosmos-http", "zeta_testnet")[0]?.url;
+export const getPools = async (chains: any, network: any) => {
+  const api = getEndpoints(chains, "cosmos-http", "zeta_testnet")[0]?.url;
   const endpoint = `${api}/zeta-chain/fungible/foreign_coins`;
   const response = await fetch(endpoint);
   const data = await response.json();
 
-  const rpc = getEndpoints("evm", "zeta_testnet")[0]?.url;
+  const rpc = getEndpoints(chains, "evm", "zeta_testnet")[0]?.url;
   const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
 
   const uniswapV2FactoryAddress = getAddress(

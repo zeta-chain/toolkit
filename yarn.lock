@@ -1812,10 +1812,10 @@
   dependencies:
     dotenv "^16.1.4"
 
-"@zetachain/protocol-contracts@4.0.0-rc1":
-  version "4.0.0-rc1"
-  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-4.0.0-rc1.tgz#bb8edcefc1b12451797a632508984149088edf20"
-  integrity sha512-wye/6m3jUtL188TqaVKqlSysaeKIHMBaF1T/Dp0l+o36EHjA88jTK1gTPIBbzuLlW00N/nsbkqQH+s9FeFoxlQ==
+"@zetachain/protocol-contracts@5.0.0-rc6":
+  version "5.0.0-rc6"
+  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-5.0.0-rc6.tgz#1ec1419a71cdea831ac8de159bfbffae257785f5"
+  integrity sha512-NIN3mkR4csq1yGtv9miOWKHj2S6azTo/QET7ALKh5dxPnpCmTHx9Lgf+xuDa95W/Tbw8BAGHdRoyp0z3j72kXQ==
 
 abbrev@1:
   version "1.1.1"
