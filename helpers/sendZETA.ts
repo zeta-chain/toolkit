@@ -6,6 +6,8 @@ import ZetaConnectorZEVM from "@zetachain/protocol-contracts/abi/zevm/ZetaConnec
 import { ethers } from "ethers";
 
 export const sendZETA = async (
+  chains: any,
+  network: string,
   signer: any,
   amount: string,
   from: string,

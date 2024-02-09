@@ -4,6 +4,7 @@ import merge from "lodash/merge";
 import { getBalances } from "./balances";
 import { getFees } from "./fees";
 import { getPools } from "./pools";
+import { sendZETA } from "./sendZETA";
 
 export class ZetaChainClient {
   private chains: any;
@@ -37,5 +38,23 @@ export class ZetaChainClient {
 
   public async getPools() {
     return await getPools(this.chains, this.network);
+  }
+
+  public async sendZETA(
+    signer: any,
+    amount: string,
+    from: string,
+    destination: string,
+    recipient: string
+  ) {
+    return await sendZETA(
+      this.chains,
+      this.network,
+      signer,
+      amount,
+      from,
+      destination,
+      recipient
+    );
   }
 }

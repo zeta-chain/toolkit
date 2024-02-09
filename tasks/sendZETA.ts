@@ -1,16 +1,16 @@
 import confirm from "@inquirer/confirm";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-
-import { fetchFees } from "../helpers/fees";
-import { sendZETA } from "../helpers/sendZETA";
+import { ZetaChainClient } from "../helpers/client";
 
 declare const hre: any;
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+  const client = new ZetaChainClient({ network: "testnet" });
   const [signer] = await hre.ethers.getSigners();
 
-  const fees = await fetchFees(5000000);
+  const fees = await client.getFees(5000000);
+  console.log(fees.feesCCM);
   const fee = fees.feesCCM[args.destination].totalFee;
   if (parseFloat(args.amount) < parseFloat(fee))
     throw new Error(
@@ -22,7 +22,13 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const from = hre.network.name;
 
   if (args.json) {
-    const tx = await sendZETA(signer, amount, from, destination, recipient);
+    const tx = await client.sendZETA(
+      signer,
+      amount,
+      from,
+      destination,
+      recipient
+    );
     console.log(JSON.stringify(tx, null, 2));
   } else {
     console.log(`
@@ -42,7 +48,13 @@ To address:      ${recipient}
       },
       { clearPromptOnDone: true }
     );
-    const tx = await sendZETA(signer, amount, from, destination, recipient);
+    const tx = await client.sendZETA(
+      signer,
+      amount,
+      from,
+      destination,
+      recipient
+    );
     console.log(`Transaction successfully broadcasted!
 Hash: ${tx.hash}`);
   }

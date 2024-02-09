@@ -5,11 +5,6 @@ import { getAddress } from "@zetachain/protocol-contracts";
 import { ethers } from "ethers";
 
 export const getPools = async (chains: any, network: any) => {
-  // const api = getEndpoints(chains, "cosmos-http", `zeta_${network}`)[0]?.url;
-  // const endpoint = `${api}/zeta-chain/fungible/foreign_coins`;
-  // const response = await fetch(endpoint);
-  // const data = await response.json();
-
   const rpc = getEndpoints(chains, "evm", "zeta_testnet")[0]?.url;
   const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
 
@@ -17,11 +12,6 @@ export const getPools = async (chains: any, network: any) => {
     "uniswapV2Factory" as any,
     `zeta_${network}` as any
   );
-  console.log(network, uniswapV2FactoryAddress);
-  // const zetaTokenAddress = getAddress(
-  //   "zetaToken",
-  //   "zeta_testnet"
-  // ).toLowerCase();
 
   const UniswapV2FactoryContract = new ethers.Contract(
     uniswapV2FactoryAddress as any,
