@@ -6,8 +6,6 @@ import ZetaConnectorZEVM from "@zetachain/protocol-contracts/abi/zevm/ZetaConnec
 import { ethers } from "ethers";
 
 export const sendZETA = async (
-  chains: any,
-  network: string,
   signer: any,
   amount: string,
   from: string,
@@ -28,12 +26,12 @@ export const sendZETA = async (
   const connectorAddress = getAddress("connector", from as any);
   const zetaTokenAddress = getAddress("zetaToken", from as any);
   connectorContract = new ethers.Contract(
-    connectorAddress,
+    connectorAddress as any,
     fromZetaChain ? ZetaConnectorZEVM.abi : ZetaConnectorEth.abi,
     signer
   );
   const zetaTokenContract = new ethers.Contract(
-    zetaTokenAddress,
+    zetaTokenAddress as any,
     ZetaEthContract.abi,
     signer
   );

@@ -3,8 +3,8 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ora from "ora";
 
-import { getBalances } from "../helpers/balances";
 import { bitcoinAddress } from "../lib/bitcoinAddress";
+import { ZetaChainClient } from "../helpers/client";
 
 declare const hre: any;
 
@@ -67,6 +67,7 @@ const summarizeTokens = (tokens: any[]) => {
 };
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+  const client = new ZetaChainClient({ network: "testnet" });
   const spinner = ora("Fetching balances...");
   if (!args.json) {
     spinner.start();
@@ -86,7 +87,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.error(walletError + balancesError);
     return process.exit(1);
   }
-  const balances = (await getBalances(address, btc_address)) as any;
+  const balances = (await client.getBalances(address, btc_address)) as any;
 
   if (args.json) {
     console.log(JSON.stringify(balances, null, 2));

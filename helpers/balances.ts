@@ -4,24 +4,20 @@ import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import fetch from "isomorphic-fetch";
-import { getEndpoints } from "../utils/getEndpoints";
-import { getSupportedChains } from "../utils/getSupportedChains";
-import { getForeignCoins } from "../utils/getForeignCoins";
+import { ZetaChainClient } from "./client";
 
-export const getBalances = async (
-  chains: any,
-  network: any,
+export async function getBalances(
+  this: ZetaChainClient,
   evmAddress: any,
   btcAddress = null
-) => {
+) {
   let tokens = [];
-  const zetaCosmosHTTP = getEndpoints(
-    chains,
+  const zetaCosmosHTTP = this.getEndpoints(
     "cosmos-http",
-    `zeta_${network}`
-  )[0]?.url;
-  const supportedChains = await getSupportedChains(zetaCosmosHTTP);
-  const foreignCoins = await getForeignCoins(zetaCosmosHTTP);
+    `zeta_${this.network}`
+  );
+  const supportedChains = await this.getSupportedChains();
+  const foreignCoins = await this.getForeignCoins();
   foreignCoins.forEach((token: any) => {
     if (token.coin_type === "Gas") {
       tokens.push({
@@ -32,7 +28,7 @@ export const getBalances = async (
         zrc20: token.zrc20_contract_address,
       });
       tokens.push({
-        chain_id: network === "mainnet" ? 7000 : 7001,
+        chain_id: this.network === "mainnet" ? 7000 : 7001,
         coin_type: "ZRC20",
         contract: token.zrc20_contract_address,
         decimals: token.decimals,
@@ -48,7 +44,7 @@ export const getBalances = async (
         zrc20: token.zrc20_contract_address,
       });
       tokens.push({
-        chain_id: network === "mainnet" ? 7000 : 7001,
+        chain_id: this.network === "mainnet" ? 7000 : 7001,
         coin_type: "ZRC20",
         contract: token.zrc20_contract_address,
         decimals: token.decimals,
@@ -69,7 +65,7 @@ export const getBalances = async (
     }
   });
   tokens.push({
-    chain_id: network === "mainnet" ? 7000 : 7001,
+    chain_id: this.network === "mainnet" ? 7000 : 7001,
     coin_type: "Gas",
     decimals: 18,
     symbol: "ZETA",
@@ -106,7 +102,7 @@ export const getBalances = async (
       const isZRC = token.coin_type === "ZRC20";
       if (isGas && !isBitcoin) {
         try {
-          const rpc = getEndpoints(chains, "evm", token.chain_name)[0]?.url;
+          const rpc = await this.getEndpoints("evm", token.chain_name);
           const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
           return provider.getBalance(evmAddress).then((balance) => {
             return { ...token, balance: formatUnits(balance, token.decimals) };
@@ -114,7 +110,7 @@ export const getBalances = async (
         } catch (e) {}
       } else if (isGas && isBitcoin && btcAddress) {
         try {
-          const API = getEndpoints(chains, "esplora", "btc_testnet")[0]?.url;
+          const API = this.getEndpoints("esplora", "btc_testnet");
           return fetch(`${API}/address/${btcAddress}`).then(
             async (response) => {
               const r = await response.json();
@@ -128,7 +124,7 @@ export const getBalances = async (
           );
         } catch (e) {}
       } else if (isERC) {
-        const rpc = getEndpoints(chains, "evm", token.chain_name)[0]?.url;
+        const rpc = await this.getEndpoints("evm", token.chain_name);
         const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
         const contract = new ethers.Contract(
           token.contract,
@@ -139,7 +135,7 @@ export const getBalances = async (
           return { ...token, balance: formatUnits(balance, token.decimals) };
         });
       } else if (isZRC) {
-        const rpc = getEndpoints(chains, "evm", token.chain_name)[0]?.url;
+        const rpc = await this.getEndpoints("evm", token.chain_name);
         const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
         const contract = new ethers.Contract(
           token.contract,
@@ -158,4 +154,4 @@ export const getBalances = async (
     })
   );
   return balances;
-};
+}

@@ -1,7 +1,7 @@
-import { getEndpoints } from "@zetachain/networks/dist/src/getEndpoints";
 import networks from "@zetachain/networks/dist/src/networks";
 import { ethers } from "ethers";
 import fetch from "isomorphic-fetch";
+import type { ZetaChainClient } from "./client";
 
 const apiFetch = async (url: string) => {
   const response = await fetch(url);
@@ -9,14 +9,6 @@ const apiFetch = async (url: string) => {
     throw new Error(`Fetch failed with status: ${response.status}`);
   }
   return await response.json();
-};
-
-const getEndpoint = (key: any): string => {
-  const endpoint = getEndpoints(key, "zeta_testnet")[0]?.url;
-  if (!endpoint) {
-    throw new Error(`getEndpoints: ${key} endpoint not found`);
-  }
-  return endpoint;
 };
 
 const findByChainId = (config: any, targetChainId: Number): Object | null => {
@@ -54,7 +46,8 @@ const fetchCCTXByInbound = async (
   } catch (error) {}
 };
 
-const fetchCCTXData = async (
+async function fetchCCTXData(
+  this: ZetaChainClient,
   hash: string,
   emitter: any,
   spinners: any,
@@ -62,7 +55,7 @@ const fetchCCTXData = async (
   cctxs: any,
   pendingNonces: any,
   json: Boolean
-) => {
+) {
   const cctx = await getCCTX(hash, API);
   const receiver_chainId = cctx?.outbound_tx_params[0]?.receiver_chainId;
   const outbound_tx_hash = cctx?.outbound_tx_params[0]?.outbound_tx_hash;
@@ -70,7 +63,7 @@ const fetchCCTXData = async (
   if (outbound_tx_hash) {
     const chainName = findByChainId(networks, parseInt(receiver_chainId));
     if (chainName) {
-      const rpc = getEndpoints("evm", chainName as any)[0]?.url;
+      const rpc = this.getEndpoints("evm", chainName as any);
       const provider = new ethers.providers.JsonRpcProvider(rpc);
       const confirmed = await provider.getTransaction(outbound_tx_hash);
       confirmed_on_destination = confirmed !== null;
@@ -123,7 +116,7 @@ const fetchCCTXData = async (
       }
     }
   }
-};
+}
 
 const getCCTX = async (hash: string, API: string) => {
   try {
@@ -135,7 +128,7 @@ const getCCTX = async (hash: string, API: string) => {
 
 const fetchNonces = async (API: string, TSS: string) => {
   try {
-    const url = `${API}/zeta-chain/crosschain/pendingNonces`;
+    const url = `${API}/zeta-chain/observer/pendingNonces`;
     const apiResponseData = await apiFetch(url);
     const nonces = apiResponseData?.pending_nonces;
     return nonces.filter((n: any) => n.tss === TSS);
@@ -144,20 +137,21 @@ const fetchNonces = async (API: string, TSS: string) => {
 
 const fetchTSS = async (API: string) => {
   try {
-    const url = `${API}/zeta-chain/crosschain/TSS`;
+    const url = `${API}/zeta-chain/observer/TSS`;
     const apiResponseData = await apiFetch(url);
     return apiResponseData?.TSS.tss_pubkey;
   } catch (e) {}
 };
 
-export const trackCCTX = async (
+export async function trackCCTX(
+  this: ZetaChainClient,
   hash: string,
   json: Boolean = false,
   emitter: any = null
-): Promise<void> => {
+): Promise<void> {
   const spinners: any = {};
 
-  const API = getEndpoint("cosmos-http");
+  const API = this.getEndpoints("cosmos-http", `zeta_${this.network}`);
   const TSS = await fetchTSS(API);
 
   return new Promise((resolve, reject) => {
@@ -199,7 +193,8 @@ export const trackCCTX = async (
         }
         for (const hash in cctxs) {
           try {
-            fetchCCTXData(
+            fetchCCTXData.call(
+              this,
               hash,
               emitter,
               spinners,
@@ -245,4 +240,4 @@ export const trackCCTX = async (
       }
     }, 3000);
   });
-};
+}

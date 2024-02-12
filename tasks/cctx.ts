@@ -1,10 +1,10 @@
 import EventEmitter from "eventemitter3";
 import { task } from "hardhat/config";
 import Spinnies from "spinnies";
-
-import { trackCCTX } from "../helpers";
+import { ZetaChainClient } from "../helpers/client";
 
 const trackCCTXInteractive = async (hash: string, json: Boolean = false) => {
+  const client = new ZetaChainClient({ network: "testnet" });
   const s = new Spinnies();
   const emitter = new EventEmitter();
   emitter
@@ -14,7 +14,7 @@ const trackCCTXInteractive = async (hash: string, json: Boolean = false) => {
     .on("succeed", ({ hash, text }) => s.succeed(hash, { text }))
     .on("fail", ({ hash, text }) => s.fail(hash, { text }))
     .on("update", ({ hash, text }) => s.update(hash, { text }));
-  await trackCCTX(hash, json, emitter);
+  await client.trackCCTX(hash, json, emitter);
 };
 
 const main = async (args: any) => {

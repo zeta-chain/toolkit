@@ -5,7 +5,7 @@ import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
-import { getForeignCoins } from "../helpers/balances";
+import { ZetaChainClient } from "./client";
 
 export const withdraw = async ({
   signer,
@@ -66,14 +66,15 @@ export const deposit = async ({
   }
 };
 
-export const sendZRC20 = async (
+export async function sendZRC20(
+  this: ZetaChainClient,
   signer: any,
   amount: string,
   network: string,
   destination: string,
   recipient: string,
   token: string
-) => {
+) {
   let value;
   try {
     value = ethers.utils.parseEther(amount);
@@ -83,7 +84,7 @@ export const sendZRC20 = async (
     );
   }
 
-  const foreignCoins = await getForeignCoins();
+  const foreignCoins = await this.getForeignCoins();
   const counterparty = destination === "zeta_testnet" ? network : destination;
   const chainId =
     destination === "btc_testnet" ? 18332 : getChainId(counterparty); // https://github.com/zeta-chain/networks/pull/34/
@@ -105,4 +106,4 @@ export const sendZRC20 = async (
   } else {
     throw new Error("Either network or destination should be zeta_testnet");
   }
-};
+}

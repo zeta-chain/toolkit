@@ -1,16 +1,17 @@
 import UniswapV2Factory from "@uniswap/v2-core/build/UniswapV2Factory.json";
 import UniswapV2Pair from "@uniswap/v2-core/build/UniswapV2Pair.json";
-import { getEndpoints } from "../utils/getEndpoints";
+import { getEndpoints } from "./getEndpoints";
 import { getAddress } from "@zetachain/protocol-contracts";
 import { ethers } from "ethers";
+import { ZetaChainClient } from "./client";
 
-export const getPools = async (chains: any, network: any) => {
-  const rpc = getEndpoints(chains, "evm", "zeta_testnet")[0]?.url;
+export async function getPools(this: ZetaChainClient) {
+  const rpc = this.getEndpoints("evm", "zeta_testnet");
   const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
 
   const uniswapV2FactoryAddress = getAddress(
     "uniswapV2Factory" as any,
-    `zeta_${network}` as any
+    `zeta_${this.network}` as any
   );
 
   const UniswapV2FactoryContract = new ethers.Contract(
@@ -45,4 +46,4 @@ export const getPools = async (chains: any, network: any) => {
 
   const pools = await Promise.all(poolPromises);
   return pools;
-};
+}

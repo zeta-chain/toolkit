@@ -5,10 +5,15 @@ import { getBalances } from "./balances";
 import { getFees } from "./fees";
 import { getPools } from "./pools";
 import { sendZETA } from "./sendZETA";
+import { sendZRC20 } from "./sendZRC20";
+import { getForeignCoins } from "./getForeignCoins";
+import { getEndpoints } from "./getEndpoints";
+import { getSupportedChains } from "./getSupportedChains";
+import { trackCCTX } from "./trackCCTX";
 
 export class ZetaChainClient {
-  private chains: any;
-  private network: any;
+  public chains: any;
+  public network: any;
 
   constructor(params: any = { chains: {}, network: "" }) {
     const mergeChains = (customChains: any): void => {
@@ -28,33 +33,13 @@ export class ZetaChainClient {
     return this.chains;
   }
 
-  public async getBalances(evmAddress: any, btcAddress = null) {
-    return await getBalances(this.chains, this.network, evmAddress, btcAddress);
-  }
-
-  public async getFees(gas: Number = 500000) {
-    return await getFees(this.chains, this.network, gas);
-  }
-
-  public async getPools() {
-    return await getPools(this.chains, this.network);
-  }
-
-  public async sendZETA(
-    signer: any,
-    amount: string,
-    from: string,
-    destination: string,
-    recipient: string
-  ) {
-    return await sendZETA(
-      this.chains,
-      this.network,
-      signer,
-      amount,
-      from,
-      destination,
-      recipient
-    );
-  }
+  getEndpoints = getEndpoints;
+  getBalances = getBalances;
+  getForeignCoins = getForeignCoins;
+  getSupportedChains = getSupportedChains;
+  getFees = getFees;
+  getPools = getPools;
+  sendZETA = sendZETA;
+  sendZRC20 = sendZRC20;
+  trackCCTX = trackCCTX;
 }

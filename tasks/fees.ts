@@ -1,10 +1,10 @@
 import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-
-import { fetchFees } from "../helpers/fees";
+import { ZetaChainClient } from "../helpers/client";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const fees = await fetchFees(args.gas);
+  const client = new ZetaChainClient({ network: "testnet" });
+  const fees = await client.getFees(args.gas);
 
   if (args.json) {
     console.log(JSON.stringify(fees, null, 2));

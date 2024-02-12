@@ -3,12 +3,12 @@ import { formatUnits } from "ethers/lib/utils";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { getForeignCoins } from "../helpers/balances";
-import { getPools } from "../helpers/pools";
+import { ZetaChainClient } from "../helpers/client";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const foreignCoins = await getForeignCoins();
-  const pools = await getPools();
+  const client = new ZetaChainClient({ network: "testnet" });
+  const foreignCoins = await client.getForeignCoins();
+  const pools = await client.getPools();
 
   const addressToInfo = foreignCoins.reduce((acc: any, coin: any) => {
     acc[coin.zrc20_contract_address.toLowerCase()] = {

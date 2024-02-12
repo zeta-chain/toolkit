@@ -2,21 +2,19 @@ import confirm from "@inquirer/confirm";
 import { getChainId } from "@zetachain/networks";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-
-import { getForeignCoins } from "../helpers/balances";
-import { fetchFees } from "../helpers/fees";
-import { sendZRC20 } from "../helpers/sendZRC20";
+import { ZetaChainClient } from "../helpers/client";
 
 declare const hre: any;
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+  const client = new ZetaChainClient({ network: "testnet" });
   const { ethers } = hre as any;
   const [signer] = await ethers.getSigners();
 
   const { amount, destination, token } = args;
   const from = hre.network.name;
   const recipient = args.recipient || signer.address;
-  const foreign_coins = await getForeignCoins();
+  const foreign_coins = await client.getForeignCoins();
   const symbol = foreign_coins.find(
     (c: any) =>
       c.coin_type === "Gas" &&
@@ -25,8 +23,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   let fee = 0;
   if (args.destination !== "zeta_testnet") {
-    const fees = await fetchFees(5000000);
-    fee = fees.feesZEVM[args.destination].totalFee;
+    const fees = await client.getFees(5000000);
+    console.log("fees", fees);
+    fee = fees.feesZEVM[args.token].totalFee;
   }
 
   console.log(`
@@ -44,7 +43,7 @@ To address:      ${recipient}
     { clearPromptOnDone: true }
   );
 
-  const tx = (await sendZRC20(
+  const tx = (await client.sendZRC20(
     signer,
     args.amount,
     from,

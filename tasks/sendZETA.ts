@@ -10,7 +10,6 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const [signer] = await hre.ethers.getSigners();
 
   const fees = await client.getFees(5000000);
-  console.log(fees.feesCCM);
   const fee = fees.feesCCM[args.destination].totalFee;
   if (parseFloat(args.amount) < parseFloat(fee))
     throw new Error(
