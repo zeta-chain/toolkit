@@ -1,6 +1,7 @@
 import networks from "@zetachain/networks/dist/src/networks";
 import { ethers } from "ethers";
 import fetch from "isomorphic-fetch";
+
 import type { ZetaChainClient } from "./client";
 
 const apiFetch = async (url: string) => {
@@ -46,7 +47,7 @@ const fetchCCTXByInbound = async (
   } catch (error) {}
 };
 
-async function fetchCCTXData(
+const fetchCCTXData = async function (
   this: ZetaChainClient,
   hash: string,
   emitter: any,
@@ -116,7 +117,7 @@ async function fetchCCTXData(
       }
     }
   }
-}
+};
 
 const getCCTX = async (hash: string, API: string) => {
   try {
@@ -143,7 +144,7 @@ const fetchTSS = async (API: string) => {
   } catch (e) {}
 };
 
-export async function trackCCTX(
+export const trackCCTX = async function (
   this: ZetaChainClient,
   hash: string,
   json: Boolean = false,
@@ -240,4 +241,4 @@ export async function trackCCTX(
       }
     }, 3000);
   });
-}
+};

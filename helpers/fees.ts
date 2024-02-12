@@ -1,10 +1,11 @@
-import { getAddress, testnet, mainnet } from "@zetachain/protocol-contracts";
+import { getAddress, mainnet, testnet } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers, utils } from "ethers";
 import fetch from "isomorphic-fetch";
+
 import { ZetaChainClient } from "./client";
 
-async function fetchZEVMFees(zrc20: any, rpc: any) {
+const fetchZEVMFees = async function (zrc20: any, rpc: any) {
   const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
   const contract = new ethers.Contract(zrc20.address, ZRC20.abi, provider);
   const [, withdrawGasFee] = await contract.withdrawGasFee();
@@ -18,9 +19,13 @@ async function fetchZEVMFees(zrc20: any, rpc: any) {
     protocolFee: utils.formatUnits(protocolFee, 18),
     /* eslint-enable */
   };
-}
+};
 
-async function fetchCCMFees(this: ZetaChainClient, chainID: any, gas: Number) {
+const fetchCCMFees = async function (
+  this: ZetaChainClient,
+  chainID: any,
+  gas: Number
+) {
   // Skip ZetaChain as we can't send messages from ZetaChain to ZetaChain
   if (chainID === "7000" || chainID === "7001") return;
   const API = this.getEndpoints("cosmos-http", `zeta_${this.network}`);
@@ -39,9 +44,9 @@ async function fetchCCMFees(this: ZetaChainClient, chainID: any, gas: Number) {
     protocolFee: utils.formatUnits(protocolFee, 18),
     /* eslint-enable */
   };
-}
+};
 
-export async function getFees(this: ZetaChainClient, gas: Number) {
+export const getFees = async function (this: ZetaChainClient, gas: Number) {
   let fees = {
     feesCCM: {} as Record<string, any>,
     feesZEVM: {} as Record<string, any>,
@@ -75,4 +80,4 @@ export async function getFees(this: ZetaChainClient, gas: Number) {
     })
   );
   return fees;
-}
+};

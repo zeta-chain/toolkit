@@ -1,6 +1,7 @@
 import EventEmitter from "eventemitter3";
 import { task } from "hardhat/config";
 import Spinnies from "spinnies";
+
 import { ZetaChainClient } from "../helpers/client";
 
 const trackCCTXInteractive = async (hash: string, json: Boolean = false) => {

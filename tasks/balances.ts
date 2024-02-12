@@ -3,8 +3,8 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ora from "ora";
 
-import { bitcoinAddress } from "../lib/bitcoinAddress";
 import { ZetaChainClient } from "../helpers/client";
+import { bitcoinAddress } from "../lib/bitcoinAddress";
 
 declare const hre: any;
 

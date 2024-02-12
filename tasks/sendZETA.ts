@@ -1,6 +1,7 @@
 import confirm from "@inquirer/confirm";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { ZetaChainClient } from "../helpers/client";
 
 declare const hre: any;

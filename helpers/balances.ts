@@ -4,9 +4,10 @@ import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import fetch from "isomorphic-fetch";
+
 import { ZetaChainClient } from "./client";
 
-export async function getBalances(
+export const getBalances = async function (
   this: ZetaChainClient,
   evmAddress: any,
   btcAddress = null
@@ -154,4 +155,4 @@ export async function getBalances(
     })
   );
   return balances;
-}
+};

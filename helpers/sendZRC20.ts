@@ -66,7 +66,7 @@ export const deposit = async ({
   }
 };
 
-export async function sendZRC20(
+export const sendZRC20 = async function (
   this: ZetaChainClient,
   signer: any,
   amount: string,
@@ -106,4 +106,4 @@ export async function sendZRC20(
   } else {
     throw new Error("Either network or destination should be zeta_testnet");
   }
-}
+};

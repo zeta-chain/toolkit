@@ -1,5 +1,6 @@
 import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { ZetaChainClient } from "../helpers/client";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {

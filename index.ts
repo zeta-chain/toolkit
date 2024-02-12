@@ -1,7 +1,6 @@
 import { ZetaChainClient } from "./helpers/client";
 
 const client = new ZetaChainClient({
-  network: "testnet",
   chains: {
     zeta_testnet: {
       api: [
@@ -12,6 +11,7 @@ const client = new ZetaChainClient({
       ],
     },
   },
+  network: "testnet",
 });
 
 (async () => {

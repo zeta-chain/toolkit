@@ -3,12 +3,12 @@ import merge from "lodash/merge";
 
 import { getBalances } from "./balances";
 import { getFees } from "./fees";
+import { getEndpoints } from "./getEndpoints";
+import { getForeignCoins } from "./getForeignCoins";
+import { getSupportedChains } from "./getSupportedChains";
 import { getPools } from "./pools";
 import { sendZETA } from "./sendZETA";
 import { sendZRC20 } from "./sendZRC20";
-import { getForeignCoins } from "./getForeignCoins";
-import { getEndpoints } from "./getEndpoints";
-import { getSupportedChains } from "./getSupportedChains";
 import { trackCCTX } from "./trackCCTX";
 
 export class ZetaChainClient {
