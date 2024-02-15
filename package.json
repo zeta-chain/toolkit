@@ -5,9 +5,12 @@
   "main": "A library of ZetaChain helper utilities, contracts, and Hardhat tasks for smart-contract development",
   "exports": {
     "./tasks": "./dist/tasks/index.js",
-    "./helpers": "./dist/helpers/index.js",
-    "./helpers/fees": "./dist/helpers/fees.js",
-    "./helpers/balances": "./dist/helpers/balances.js"
+    "./client": {
+      "import": "./dist/helpers/client.js",
+      "require": "./dist/helpers/client.js",
+      "types": "./dist/helpers/client.d.ts"
+    },
+    "./helpers": "./dist/helpers/index.js"
   },
   "scripts": {
     "prebuild": "rimraf dist",

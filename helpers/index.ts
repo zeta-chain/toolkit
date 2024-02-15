@@ -4,4 +4,4 @@ export * from "./pools";
 export * from "./prepare";
 export * from "./sendZETA";
 export * from "./sendZRC20";
-export * from "./tx";
+export * from "./client";
