@@ -40,7 +40,6 @@ export const getBalances = async function (
         chain_id: token.foreign_chain_id,
         coin_type: "ERC20",
         contract: token.asset,
-        decimals: token.decimals,
         symbol: token.symbol,
         zrc20: token.zrc20_contract_address,
       });
@@ -132,8 +131,13 @@ export const getBalances = async function (
           ERC20_ABI.abi,
           provider
         );
+        const decimals = await contract.decimals();
         return contract.balanceOf(evmAddress).then((balance: any) => {
-          return { ...token, balance: formatUnits(balance, token.decimals) };
+          return {
+            ...token,
+            balance: formatUnits(balance, decimals),
+            decimals,
+          };
         });
       } else if (isZRC) {
         const rpc = await this.getEndpoints("evm", token.chain_name);
