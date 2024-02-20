@@ -7,7 +7,7 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
 
-import { bitcoinAddress } from "../lib/bitcoinAddress";
+import { bitcoinAddress } from "./bitcoinAddress";
 
 export const hexToBech32Address = (
   hexAddress: string,

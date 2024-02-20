@@ -8,7 +8,6 @@ declare const hre: any;
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const client = new ZetaChainClient({ network: "testnet" });
-  // @ts-ignore
   const [signer] = await hre.ethers.getSigners();
 
   const fees = await client.getFees(5000000);

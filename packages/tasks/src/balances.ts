@@ -4,7 +4,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ora from "ora";
 
 import { ZetaChainClient } from "@zetachain/client";
-import { bitcoinAddress } from "../lib/bitcoinAddress";
+import { bitcoinAddress } from "./bitcoinAddress";
 
 declare const hre: any;
 

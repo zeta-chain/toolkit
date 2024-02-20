@@ -3,7 +3,7 @@ import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
 
-import { processTemplates } from "../lib";
+import { processTemplates } from "./processTemplates";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   await processTemplates("messaging", args);

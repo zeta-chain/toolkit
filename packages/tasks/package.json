@@ -2,10 +2,6 @@
   "name": "@zetachain/tasks",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
   "scripts": {
     "build": "tsc"
   },
@@ -13,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@zetachain/client": "workspace:*",
     "typescript": "^5.3.3"
   },
   "devDependencies": {

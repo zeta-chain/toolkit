@@ -9,7 +9,8 @@
   "author": "ZetaChain",
   "license": "MIT",
   "scripts": {
-    "build": "yarn workspaces foreach exec build"
+    "build": "yarn workspaces foreach -Apt run build",
+    "clean": "yarn workspaces foreach -A exec rimraf dist cache"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
@@ -81,5 +82,5 @@
     "tiny-secp256k1": "^2.2.3",
     "ws": "^8.13.0"
   },
-  "packageManager": "yarn@3.7.0"
+  "packageManager": "yarn@4.1.0"
 }
