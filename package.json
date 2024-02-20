@@ -1,31 +1,16 @@
 {
   "name": "@zetachain/toolkit",
-  "version": "0.0.0-set-on-publish",
+  "workspaces": [
+    "packages/*"
+  ],
+  "version": "0.0.0",
   "description": "",
-  "main": "A library of ZetaChain helper utilities, contracts, and Hardhat tasks for smart-contract development",
-  "exports": {
-    "./tasks": "./dist/tasks/index.js",
-    "./client": {
-      "import": "./dist/helpers/client.js",
-      "require": "./dist/helpers/client.js",
-      "types": "./dist/helpers/client.d.ts"
-    },
-    "./helpers": "./dist/helpers/index.js"
-  },
-  "scripts": {
-    "prebuild": "rimraf dist",
-    "build": "npx cpx './templates/**/*' ./dist/templates && npx hardhat compile --force && tsc || exit 0",
-    "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
-    "lint:js:fix": "eslint --ext .js,.ts . --fix",
-    "lint:js": "eslint --ext .js,.ts .",
-    "test": "npx hardhat test",
-    "lint:sol:fix": "prettier --write \"contracts/**/*.sol\"",
-    "lint:sol": "solhint 'contracts/**/*.sol' && prettier -c 'contracts/**/*.sol'",
-    "lint": "npm run lint:js && npm run lint:sol"
-  },
   "keywords": [],
   "author": "ZetaChain",
   "license": "MIT",
+  "scripts": {
+    "build": "yarn workspaces foreach exec build"
+  },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
@@ -67,11 +52,6 @@
     "typechain": "^8.1.0",
     "typescript": ">=4.5.0"
   },
-  "files": [
-    "contracts",
-    "dist",
-    "typechain-types"
-  ],
   "dependencies": {
     "@inquirer/prompts": "^2.1.1",
     "@inquirer/select": "1.1.3",
@@ -100,5 +80,6 @@
     "spinnies": "^0.5.1",
     "tiny-secp256k1": "^2.2.3",
     "ws": "^8.13.0"
-  }
+  },
+  "packageManager": "yarn@3.7.0"
 }

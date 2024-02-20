@@ -14,7 +14,5 @@
     "sourceMap": false,
     "strict": true,
     "typeRoots": ["@types", "./node_modules/@types", "./tasks/types"]
-  },
-  "include": ["helpers", "tasks"],
-  "exclude": ["./typechain-types"]
+  }
 }
