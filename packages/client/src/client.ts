@@ -1,35 +1,43 @@
 import { networks } from "@zetachain/networks";
 import merge from "lodash/merge";
 
-import { getBalances } from "./balances";
-import { getFees } from "./fees";
-import { getEndpoints } from "./getEndpoints";
-import { getForeignCoins } from "./getForeignCoins";
-import { getSupportedChains } from "./getSupportedChains";
-import { getPools } from "./pools";
-import { sendZETA } from "./sendZETA";
-import { sendZRC20 } from "./sendZRC20";
-import { trackCCTX } from "./trackCCTX";
+import {
+  getBalances,
+  getFees,
+  getEndpoints,
+  getForeignCoins,
+  getSupportedChains,
+  getPools,
+  sendZETA,
+  sendZRC20,
+  trackCCTX,
+} from "./";
+
+interface ZetaChainClientParams {
+  chains?: { [key: string]: any };
+  network?: string;
+}
 
 export class ZetaChainClient {
-  public chains: any;
-  public network: any;
+  public chains: { [key: string]: any };
+  public network: string;
 
-  constructor(params: any = { chains: {}, network: "" }) {
-    const mergeChains = (customChains: any): void => {
-      for (const key in customChains) {
-        if (customChains.hasOwnProperty(key)) {
-          this.chains[key] = merge({}, this.chains[key], customChains[key]);
-        }
-      }
-    };
+  constructor(params: ZetaChainClientParams = {}) {
     this.chains = { ...networks };
-    this.network = params.network;
+    this.network = params.network || "";
 
-    mergeChains(params.chains);
+    this.mergeChains(params.chains);
   }
 
-  public getChains(): any {
+  private mergeChains(customChains: { [key: string]: any } = {}): void {
+    Object.entries(customChains).forEach(([key, value]) => {
+      if (customChains.hasOwnProperty(key)) {
+        this.chains[key] = merge({}, this.chains[key], value);
+      }
+    });
+  }
+
+  public getChains(): { [key: string]: any } {
     return this.chains;
   }
 

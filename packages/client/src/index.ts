@@ -5,3 +5,7 @@ export * from "./pools";
 export * from "./prepare";
 export * from "./sendZETA";
 export * from "./sendZRC20";
+export * from "./getEndpoints";
+export * from "./getSupportedChains";
+export * from "./getForeignCoins";
+export * from "./trackCCTX";
