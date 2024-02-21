@@ -23,7 +23,7 @@ const fetchZEVMFees = async function (zrc20: any, rpc: any) {
 
 const fetchCCMFees = async function (
   this: ZetaChainClient,
-  chainID: any,
+  chainID: string,
   gas: Number
 ) {
   // Skip ZetaChain as we can't send messages from ZetaChain to ZetaChain
