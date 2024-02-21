@@ -11,7 +11,7 @@ import {
   sendZETA,
   sendZRC20,
   trackCCTX,
-} from "./";
+} from ".";
 
 interface ZetaChainClientParams {
   chains?: { [key: string]: any };

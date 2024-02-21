@@ -4,7 +4,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ZetaChainClient } from "../../client/src/";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const client = new ZetaChainClient({ network: "testnet" });
+  const client = new ZetaChainClient({ network: args.type });
   const fees = await client.getFees(args.gas);
 
   if (args.json) {
@@ -32,4 +32,5 @@ export const feesTask = task(
     500000,
     types.int
   )
-  .addFlag("json", "Print the result in JSON format");
+  .addFlag("json", "Print the result in JSON format")
+  .addOptionalParam("type", "Testnet or mainnet", "testnet");

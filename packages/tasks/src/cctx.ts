@@ -4,8 +4,12 @@ import Spinnies from "spinnies";
 
 import { ZetaChainClient } from "../../client/src/";
 
-const trackCCTXInteractive = async (hash: string, json: Boolean = false) => {
-  const client = new ZetaChainClient({ network: "testnet" });
+const trackCCTXInteractive = async (
+  type: string,
+  hash: string,
+  json: Boolean = false
+) => {
+  const client = new ZetaChainClient({ network: type });
   const s = new Spinnies();
   const emitter = new EventEmitter();
   emitter
@@ -19,7 +23,7 @@ const trackCCTXInteractive = async (hash: string, json: Boolean = false) => {
 };
 
 const main = async (args: any) => {
-  await trackCCTXInteractive(args.tx, args.json);
+  await trackCCTXInteractive(args.type, args.tx, args.json);
 };
 
 export const cctxTask = task(
@@ -28,4 +32,5 @@ export const cctxTask = task(
   main
 )
   .addPositionalParam("tx", "Hash of an inbound or a cross-chain transaction")
-  .addFlag("json", "Output as JSON");
+  .addFlag("json", "Output as JSON")
+  .addOptionalParam("type", "Testnet or mainnet", "testnet");

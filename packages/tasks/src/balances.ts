@@ -35,31 +35,33 @@ const balancesError = `
 const summarizeTokens = (tokens: any[]) => {
   let table = {} as any;
   tokens.forEach((token) => {
-    if (!table[token.chain_name]) {
-      table[token.chain_name] = {};
-    }
-    const balance = parseFloat(token.balance).toFixed(2);
-    if (parseFloat(token.balance) > 0) {
-      if (token.coin_type === "Gas") {
-        table[token.chain_name].gas = balance;
-      } else if (token.symbol === "ZETA") {
-        table[token.chain_name].zeta = balance;
-      } else if (token.coin_type === "ERC20") {
-        table[token.chain_name].erc20 =
-          (table[token.chain_name].erc20
-            ? table[token.chain_name].erc20 + " "
-            : "") +
-          balance +
-          " " +
-          token.symbol;
-      } else if (token.coin_type === "ZRC20") {
-        table[token.chain_name].zrc20 =
-          (table[token.chain_name].zrc20
-            ? table[token.chain_name].zrc20 + " "
-            : "") +
-          balance +
-          " " +
-          token.symbol;
+    if (token && token.chain_name) {
+      if (!table[token.chain_name]) {
+        table[token.chain_name] = {};
+      }
+      const balance = parseFloat(token.balance).toFixed(2);
+      if (parseFloat(token.balance) > 0) {
+        if (token.coin_type === "Gas") {
+          table[token.chain_name].gas = balance;
+        } else if (token.symbol === "ZETA") {
+          table[token.chain_name].zeta = balance;
+        } else if (token.coin_type === "ERC20") {
+          table[token.chain_name].erc20 =
+            (table[token.chain_name].erc20
+              ? table[token.chain_name].erc20 + " "
+              : "") +
+            balance +
+            " " +
+            token.symbol;
+        } else if (token.coin_type === "ZRC20") {
+          table[token.chain_name].zrc20 =
+            (table[token.chain_name].zrc20
+              ? table[token.chain_name].zrc20 + " "
+              : "") +
+            balance +
+            " " +
+            token.symbol;
+        }
       }
     }
   });
@@ -67,7 +69,7 @@ const summarizeTokens = (tokens: any[]) => {
 };
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const client = new ZetaChainClient({ network: "testnet" });
+  const client = new ZetaChainClient({ network: args.type });
   const spinner = ora("Fetching balances...");
   if (!args.json) {
     spinner.start();
@@ -106,4 +108,5 @@ export const balancesTask = task(
   main
 )
   .addOptionalParam("address", `Fetch balances for a specific address`)
-  .addFlag("json", "Output balances as JSON");
+  .addFlag("json", "Output balances as JSON")
+  .addOptionalParam("type", "Testnet or mainnet", "testnet");

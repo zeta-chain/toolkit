@@ -6,7 +6,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ZetaChainClient } from "../../client/src/";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const client = new ZetaChainClient({ network: "testnet" });
+  const client = new ZetaChainClient({ network: args.type });
   const foreignCoins = await client.getForeignCoins();
   const pools = await client.getPools();
 
@@ -25,7 +25,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const WZETA_ADDRESS = wzeta.toLowerCase();
   addressToInfo[WZETA_ADDRESS] = { decimals: 18, symbol: "WZETA" };
 
-  const poolsWithSymbolsAndDecimals = pools.map((pool) => {
+  const poolsWithSymbolsAndDecimals = pools.map((pool: any) => {
     pool.t0.reserve = formatUnits(pool.t0.reserve, pool.t0.decimals);
     pool.t1.reserve = formatUnits(pool.t1.reserve, pool.t1.decimals);
     const t0Info = addressToInfo[pool.t0.address.toLowerCase()] || {
@@ -45,7 +45,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   });
 
   const tableData = {} as any;
-  poolsWithSymbolsAndDecimals.forEach((pool) => {
+  poolsWithSymbolsAndDecimals.forEach((pool: any) => {
     const r0 = parseFloat(pool.t0.reserve).toFixed(2);
     const r1 = parseFloat(pool.t1.reserve).toFixed(2);
 
@@ -62,7 +62,6 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
 };
 
-export const poolsTask = task("pools", "", main).addFlag(
-  "json",
-  "Print the result in JSON format"
-);
+export const poolsTask = task("pools", "", main)
+  .addFlag("json", "Print the result in JSON format")
+  .addOptionalParam("type", "Testnet or mainnet", "testnet");
