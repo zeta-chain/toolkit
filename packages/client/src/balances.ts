@@ -8,16 +8,16 @@ import fetch from "isomorphic-fetch";
 import { ZetaChainClient } from "./client";
 
 export interface TokenBalance {
-  chain_id: string | number;
+  balance: string;
+  chain_id: number | string;
+  chain_name: string;
   coin_type: string;
   contract?: string;
   decimals: number;
-  symbol: string;
-  zrc20?: string;
-  chain_name: string;
   id: string;
+  symbol: string;
   ticker: string;
-  balance: string;
+  zrc20?: string;
 }
 
 export const getBalances = async function (
