@@ -7,16 +7,25 @@ import fetch from "isomorphic-fetch";
 
 import { ZetaChainClient } from "./client";
 
+export interface TokenBalance {
+  chain_id: string | number;
+  coin_type: string;
+  contract?: string;
+  decimals: number;
+  symbol: string;
+  zrc20?: string;
+  chain_name: string;
+  id: string;
+  ticker: string;
+  balance: string;
+}
+
 export const getBalances = async function (
   this: ZetaChainClient,
-  evmAddress: any,
-  btcAddress = null
-) {
+  evmAddress: string,
+  btcAddress: string | null = null
+): Promise<TokenBalance[]> {
   let tokens = [];
-  const zetaCosmosHTTP = this.getEndpoints(
-    "cosmos-http",
-    `zeta_${this.network}`
-  );
   const supportedChains = await this.getSupportedChains();
   const foreignCoins = await this.getForeignCoins();
   foreignCoins.forEach((token: any) => {
