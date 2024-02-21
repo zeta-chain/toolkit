@@ -80,7 +80,7 @@ const makeTransaction = async (
 
   for (let i = 0; i < pickUtxos.length; i++) {
     const utxo = pickUtxos[i];
-    const inputData = {};
+    const inputData = { hash: "", index: 0, witnessUtxo: {} };
     inputData.hash = txs[i].txid;
     inputData.index = utxo.vout;
     const witnessUtxo = {
@@ -88,7 +88,7 @@ const makeTransaction = async (
       value: utxo.value,
     };
     inputData.witnessUtxo = witnessUtxo;
-    psbt.addInput(inputData);
+    psbt.addInput(inputData as any);
   }
   for (let i = 0; i < pickUtxos.length; i++) {
     psbt.signInput(i, key);

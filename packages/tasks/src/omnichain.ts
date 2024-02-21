@@ -3,7 +3,7 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
 
-import { processTemplates } from "../lib";
+import { processTemplates } from "./processTemplates";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   processTemplates("omnichain", args);

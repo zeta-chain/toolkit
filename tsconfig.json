@@ -13,8 +13,13 @@
     "skipLibCheck": true,
     "sourceMap": false,
     "strict": true,
-    "typeRoots": ["@types", "./node_modules/@types", "./tasks/types"]
+    "typeRoots": [
+      "@types",
+      "./node_modules/@types",
+      "./packages/tasks/src",
+      "./packages/client/src"
+    ]
   },
-  "include": ["helpers", "tasks"],
+  "include": ["packages/client", "packages/tasks"],
   "exclude": ["./typechain-types"]
 }

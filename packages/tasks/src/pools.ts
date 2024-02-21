@@ -3,7 +3,7 @@ import { formatUnits } from "ethers/lib/utils";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { ZetaChainClient } from "../helpers/client";
+import { ZetaChainClient } from "../../client/src/";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const client = new ZetaChainClient({ network: "testnet" });
@@ -19,6 +19,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }, {});
 
   const wzeta = getAddress("zetaToken", "zeta_testnet");
+  if (!wzeta) {
+    throw new Error("Could not find the WZETA address");
+  }
   const WZETA_ADDRESS = wzeta.toLowerCase();
   addressToInfo[WZETA_ADDRESS] = { decimals: 18, symbol: "WZETA" };
 

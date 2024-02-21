@@ -3,7 +3,7 @@ import { getChainId } from "@zetachain/networks";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { ZetaChainClient } from "../helpers/client";
+import { ZetaChainClient } from "../../client/src/";
 
 declare const hre: any;
 

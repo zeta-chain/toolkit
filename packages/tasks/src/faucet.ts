@@ -1,3 +1,4 @@
+// @ts-ignore
 import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
 import * as dotenv from "dotenv";
 import { ethers } from "ethers";
