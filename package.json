@@ -1,8 +1,8 @@
 {
   "name": "@zetachain/toolkit",
   "version": "0.0.0-set-on-publish",
-  "description": "",
-  "main": "A library of ZetaChain helper utilities, contracts, and Hardhat tasks for smart-contract development",
+  "description": "A library of ZetaChain helper utilities, contracts, and Hardhat tasks for smart-contract development",
+  "main": "",
   "exports": {
     "./tasks": {
       "import": "./dist/tasks/index.js",
