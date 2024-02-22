@@ -5,9 +5,9 @@
   "main": "",
   "exports": {
     "./tasks": {
-      "import": "./dist/tasks/index.js",
-      "requires": "./dist/tasks/index.js",
-      "types": "./dist/tasks/index.d.ts"
+      "import": "./dist/tasks/src/index.js",
+      "requires": "./dist/tasks/src/index.js",
+      "types": "./dist/tasks/src/index.d.ts"
     },
     "./client": {
       "import": "./dist/client/src/index.js",
