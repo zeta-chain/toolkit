@@ -93,8 +93,6 @@ export const sendZRC20 = async function (
       parseInt(c.foreign_chain_id) === chainId &&
       c.symbol.toLocaleLowerCase() === token.toLocaleLowerCase()
   );
-  console.log("recipient", recipient);
-  console.log("to utf8", ethers.utils.toUtf8Bytes(recipient));
   if (network === "zeta_testnet") {
     const to =
       destination === "btc_testnet"

@@ -25,14 +25,13 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   let fee = 0;
   if (args.destination !== "zeta_testnet") {
     const fees = await client.getFees(5000000);
-    console.log("fees", fees);
     fee = fees.feesZEVM[args.token].totalFee;
   }
 
   console.log(`
 Networks:        ${from} → ${destination}
 Amount sent:     ${amount} ${token.toUpperCase()}
-Cross-chain fee: ${fee} ${symbol?.toUpperCase()}
+Cross-chain fee: ${fee} ${symbol ? symbol?.toUpperCase() : ""}
 From address:    ${signer.address}
 To address:      ${recipient}
 `);
