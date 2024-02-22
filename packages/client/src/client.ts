@@ -3,11 +3,11 @@ import merge from "lodash/merge";
 
 import {
   getBalances,
-  getFees,
   getEndpoints,
+  getFees,
   getForeignCoins,
-  getSupportedChains,
   getPools,
+  getSupportedChains,
   sendZETA,
   sendZRC20,
   trackCCTX,
