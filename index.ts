@@ -8,6 +8,7 @@ const main = async () => {
     wallet: ethers.Wallet.fromMnemonic(
       "shove supply bounce favorite vibrant pizza table share crumble drift awake pig blood grief shift garage gate bulk destroy clay always destroy long opera"
     ),
+    provider: 123,
   });
 
   const tx = await client.deposit({

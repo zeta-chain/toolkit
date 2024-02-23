@@ -19,17 +19,24 @@ interface ZetaChainClientParams {
   chains?: { [key: string]: any };
   network?: string;
   wallet?: any;
+  provider?: any;
 }
 
 export class ZetaChainClient {
   public chains: { [key: string]: any };
   public network: string;
   public wallet: Wallet;
+  public provider: any;
 
   constructor(params: ZetaChainClientParams = {}) {
+    if (params.wallet && params.provider) {
+      throw new Error("You can only provide a wallet or a provider, not both.");
+    }
+
     this.chains = { ...networks };
     this.network = params.network || "";
     this.wallet = params.wallet;
+    this.provider = params.provider;
 
     this.mergeChains(params.chains);
   }
