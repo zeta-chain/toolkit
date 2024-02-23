@@ -2,13 +2,11 @@ import { ZetaChainClient } from "./packages/client/src";
 import { ethers } from "ethers";
 
 const main = async () => {
-  console.log(process.env);
   const client = new ZetaChainClient({
     network: "testnet",
     wallet: ethers.Wallet.fromMnemonic(
       "shove supply bounce favorite vibrant pizza table share crumble drift awake pig blood grief shift garage gate bulk destroy clay always destroy long opera"
     ),
-    provider: 123,
   });
 
   const tx = await client.deposit({

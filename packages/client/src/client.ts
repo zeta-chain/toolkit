@@ -15,28 +15,30 @@ import {
   deposit,
 } from ".";
 
-interface ZetaChainClientParams {
+interface ZetaChainClientParamsBase {
   chains?: { [key: string]: any };
   network?: string;
-  wallet?: any;
-  provider?: any;
 }
+
+type ZetaChainClientParams = ZetaChainClientParamsBase &
+  ({ wallet: any; signer?: never } | { wallet?: never; signer: any });
 
 export class ZetaChainClient {
   public chains: { [key: string]: any };
   public network: string;
-  public wallet: Wallet;
-  public provider: any;
+  public wallet: Wallet | undefined;
+  public signer: any | undefined;
 
-  constructor(params: ZetaChainClientParams = {}) {
-    if (params.wallet && params.provider) {
-      throw new Error("You can only provide a wallet or a provider, not both.");
+  constructor(params: ZetaChainClientParams) {
+    if (params.wallet && params.signer) {
+      throw new Error("You can only provide a wallet or a signer, not both.");
+    } else if (params.wallet) {
+      this.wallet = params.wallet;
+    } else if (params.signer) {
+      this.signer = params.signer;
     }
-
     this.chains = { ...networks };
     this.network = params.network || "";
-    this.wallet = params.wallet;
-    this.provider = params.provider;
 
     this.mergeChains(params.chains);
   }

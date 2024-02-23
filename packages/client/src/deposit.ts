@@ -21,13 +21,17 @@ export const deposit = async function (
     recipient?: string;
   }
 ) {
-  if (!this.wallet) {
-    throw new Error("The client has been initialized without a wallet.");
+  let signer;
+  if (this.signer) {
+    signer = this.signer;
+  } else if (this.wallet) {
+    const rpc = this.getEndpoints("evm", chain);
+    if (!rpc) throw new Error(`No EVM RPC endpoint found for ${chain} chain.`);
+    const provider = new ethers.providers.JsonRpcProvider(rpc);
+    signer = this.wallet.connect(provider);
+  } else {
+    throw new Error("No wallet or signer found.");
   }
-  const rpc = this.getEndpoints("evm", chain);
-  if (!rpc) throw new Error(`No EVM RPC endpoint found for ${chain} chain.`);
-  const provider = new ethers.providers.JsonRpcProvider(rpc);
-  const signer = this.wallet.connect(provider);
   if (asset) {
     const custody = getAddress("erc20Custody", chain as any) as string;
     if (!custody) {
@@ -52,7 +56,7 @@ export const deposit = async function (
     }
     const approveTx = await contract.approve(custody, value);
     await approveTx.wait();
-    const to = recipient ? recipient : this.wallet.address;
+    const to = recipient ? recipient : signer.address;
     const data = message
       ? prepareParams(message[0], message[1])
       : ethers.utils.hexlify([]);
