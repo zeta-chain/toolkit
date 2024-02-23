@@ -29,7 +29,7 @@ export const withdraw = async ({
   return await targetContract.connect(signer).withdraw(to, targetValue);
 };
 
-export const deposit = async ({
+const deposit = async ({
   signer,
   amount,
   to,

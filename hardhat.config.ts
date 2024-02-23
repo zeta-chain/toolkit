@@ -7,10 +7,6 @@ import { HardhatUserConfig } from "hardhat/config";
 const config: HardhatUserConfig = {
   networks: {
     ...getHardhatConfigNetworks(),
-    zeta_testnet: {
-      ...getHardhatConfigNetworks()["zeta_testnet"],
-      url: "https://zetachain-testnet-evm.itrocket.net",
-    },
   },
   solidity: {
     compilers: [
