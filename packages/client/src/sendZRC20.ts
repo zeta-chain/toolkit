@@ -7,7 +7,7 @@ import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
 
-export const withdraw = async ({
+const withdraw = async ({
   signer,
   amount,
   to,

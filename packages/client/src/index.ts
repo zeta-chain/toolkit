@@ -10,3 +10,4 @@ export * from "./sendZETA";
 export * from "./sendZRC20";
 export * from "./trackCCTX";
 export * from "./deposit";
+export * from "./withdraw";

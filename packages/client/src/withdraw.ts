@@ -1,9 +1,5 @@
 import { ZetaChainClient } from "./client";
-import { getAddress } from "@zetachain/protocol-contracts";
 import { ethers } from "ethers";
-import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
-import ERC20Custody from "@zetachain/protocol-contracts/abi/evm/ERC20Custody.sol/ERC20Custody.json";
-import { prepareParams } from "./prepareData";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 
 export const withdraw = async function (
@@ -38,7 +34,8 @@ export const withdraw = async function (
   const gasContract = new ethers.Contract(gasAddress, ZRC20.abi, signer);
 
   const value = ethers.utils.parseUnits(amount, targetDecimals);
-  await (await gasContract.connect(signer).approve(gasAddress, gasFee)).wait();
+
+  await (await gasContract.connect(signer).approve(zrc20, gasFee)).wait();
 
   const to = recipient ? recipient : signer.address;
   return await targetContract.connect(signer).withdraw(to, value);
