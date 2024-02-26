@@ -10,13 +10,13 @@ export const deposit = async function (
   {
     chain,
     amount,
-    asset,
+    erc20,
     message,
     recipient,
   }: {
     chain: string;
     amount: string;
-    asset?: string;
+    erc20?: string;
     message?: [string[], string[]];
     recipient?: string;
   }
@@ -32,7 +32,7 @@ export const deposit = async function (
   } else {
     throw new Error("No wallet or signer found.");
   }
-  if (asset) {
+  if (erc20) {
     const custody = getAddress("erc20Custody", chain as any) as string;
     if (!custody) {
       throw new Error(`No ERC-20 custody contract found for ${chain} chain.`);
@@ -42,7 +42,7 @@ export const deposit = async function (
       ERC20Custody.abi,
       signer
     );
-    const contract = new ethers.Contract(asset, ERC20_ABI.abi, signer);
+    const contract = new ethers.Contract(erc20, ERC20_ABI.abi, signer);
     const decimals = await contract.decimals();
     let value;
     try {
@@ -60,7 +60,7 @@ export const deposit = async function (
     const data = message
       ? prepareParams(message[0], message[1])
       : ethers.utils.hexlify([]);
-    return await custodyContract.deposit(to, asset, value, data);
+    return await custodyContract.deposit(to, erc20, value, data);
   } else {
     const tss = getAddress("tss", chain as any);
     if (!tss) {
