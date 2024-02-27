@@ -10,13 +10,11 @@ const main = async () => {
     wallet: ethers.Wallet.fromMnemonic(process.env.MNEMONIC as string),
   });
 
-  const tx = await client.withdraw({
-    chain: "zeta_testnet",
-    amount: "1",
-    zrc20: "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a",
+  const tx = await client.getBalances({
+    evm: "0x4955a3F38ff86ae92A914445099caa8eA2B9bA32",
   });
 
-  console.log(tx.hash);
+  console.log(tx);
 };
 
 main();

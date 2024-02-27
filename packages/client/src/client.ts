@@ -9,11 +9,11 @@ import {
   getForeignCoins,
   getPools,
   getSupportedChains,
-  sendZETA,
   sendZRC20,
   trackCCTX,
   deposit,
   withdraw,
+  sendZeta,
 } from ".";
 
 interface ZetaChainClientParamsBase {
@@ -22,7 +22,11 @@ interface ZetaChainClientParamsBase {
 }
 
 type ZetaChainClientParams = ZetaChainClientParamsBase &
-  ({ wallet: any; signer?: never } | { wallet?: never; signer: any });
+  (
+    | { wallet?: undefined; signer?: undefined }
+    | { wallet: any; signer?: never }
+    | { wallet?: never; signer: any }
+  );
 
 export class ZetaChainClient {
   public chains: { [key: string]: any };
@@ -62,9 +66,9 @@ export class ZetaChainClient {
   getSupportedChains = getSupportedChains;
   getFees = getFees;
   getPools = getPools;
-  sendZETA = sendZETA;
   sendZRC20 = sendZRC20;
   trackCCTX = trackCCTX;
   deposit = deposit;
   withdraw = withdraw;
+  sendZeta = sendZeta;
 }

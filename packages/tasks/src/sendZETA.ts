@@ -22,13 +22,12 @@ const main = async (args: any, hre: any) => {
   const from = hre.network.name;
 
   if (args.json) {
-    const tx = await client.sendZETA(
-      signer,
+    const tx = await client.sendZeta({
       amount,
-      from,
+      chain: from,
       destination,
-      recipient
-    );
+      recipient,
+    });
     console.log(JSON.stringify(tx, null, 2));
   } else {
     console.log(`
@@ -48,13 +47,12 @@ To address:      ${recipient}
       },
       { clearPromptOnDone: true }
     );
-    const tx = await client.sendZETA(
-      signer,
+    const tx = await client.sendZeta({
       amount,
-      from,
+      chain: from,
       destination,
-      recipient
-    );
+      recipient,
+    });
     console.log(`Transaction successfully broadcasted!
 Hash: ${tx.hash}`);
   }

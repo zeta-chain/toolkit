@@ -76,27 +76,27 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
   const { ethers, config } = hre as any;
   const pk = process.env.PRIVATE_KEY;
-  let address: string;
-  let btc_address: any;
+  let evm: string;
+  let btc: any;
 
   if (args.address) {
-    address = args.address;
+    evm = args.address;
   } else if (pk) {
-    address = new ethers.Wallet(pk).address;
-    btc_address = bitcoinAddress(pk);
+    evm = new ethers.Wallet(pk).address;
+    btc = bitcoinAddress(pk);
   } else {
     spinner.stop();
     console.error(walletError + balancesError);
     return process.exit(1);
   }
-  const balances = (await client.getBalances(address, btc_address)) as any;
+  const balances = (await client.getBalances({ evm, btc })) as any;
 
   if (args.json) {
     console.log(JSON.stringify(balances, null, 2));
   } else {
     spinner.stop();
     console.log(`
-EVM: ${address} ${btc_address ? `\nBitcoin: ${btc_address}` : ""}
+EVM: ${evm} ${btc ? `\nBitcoin: ${btc}` : ""}
     `);
     console.table(summarizeTokens(balances));
   }

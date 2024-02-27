@@ -2,15 +2,26 @@ import { ZetaChainClient } from "./client";
 import { ethers } from "ethers";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
 
+/**
+ * Initiates a withdraw transaction of a ZRC-20 token from ZetaChain to a
+ * connected chain as a native gas or ERC-20 token.
+ *
+ * @param this - ZetaChainClient instance.
+ * @param options - Withdrawal options.
+ * @param options.amount - Amount to be withdrawn in human readable form.
+ * @param options.zrc20 - ZRC-20 token contract address.
+ * @param options.recipient - Recipient address for the withdrawal. If not provided,
+ * the withdrawal is made to the signer's address.
+ *
+ * @returns A promise that resolves with the transaction details upon success.
+ */
 export const withdraw = async function (
   this: ZetaChainClient,
   {
-    chain,
     amount,
     zrc20,
     recipient,
   }: {
-    chain: "zeta_testnet" | "zeta_mainnet";
     amount: string;
     zrc20: string;
     recipient?: string;
@@ -20,6 +31,7 @@ export const withdraw = async function (
   if (this.signer) {
     signer = this.signer;
   } else if (this.wallet) {
+    const chain = `zeta_${this.network}`;
     const rpc = this.getEndpoints("evm", chain);
     if (!rpc) throw new Error(`No EVM RPC endpoint found for ${chain} chain.`);
     const provider = new ethers.providers.JsonRpcProvider(rpc);

@@ -5,6 +5,26 @@ import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import ERC20Custody from "@zetachain/protocol-contracts/abi/evm/ERC20Custody.sol/ERC20Custody.json";
 import { prepareParams } from "./prepareData";
 
+/**
+ * Initiates a deposit transaction of native gas or ERC-20 assets as ZRC-20 from
+ * a connected chain to ZetaChain.
+ *
+ * @param this - ZetaChainClient instance.
+ * @param options - Deposit options.
+ * @param options.sourceChain - Label of the connected chain from which the deposit is
+ * made.
+ * @param options.amount - Amount to be deposited in human readable form.
+ * @param options.erc20 - If an ERC-20 token is being deposited, the address of
+ * the ERC-20 token contract. If not provided, the deposit is assumed to be in
+ * native gas token.
+ * @param options.message - If a message is specified, ZetaChain will deposit
+ * tokens into the `recipient` contract and call with with the message as an argument.
+ * @param options.recipient - Recipient address for the deposit. If not provided,
+ * the deposit is made to the signer's address. If the message is provided, the
+ * recipient is assumed to be a contract address.
+ *
+ * @returns A promise that resolves with the transaction details upon success.
+ */
 export const deposit = async function (
   this: ZetaChainClient,
   {

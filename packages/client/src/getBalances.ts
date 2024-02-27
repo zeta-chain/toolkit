@@ -22,8 +22,7 @@ export interface TokenBalance {
 
 export const getBalances = async function (
   this: ZetaChainClient,
-  evmAddress: string,
-  btcAddress: string | null = null
+  { evm, btc }: { evm: string; btc?: string }
 ): Promise<TokenBalance[]> {
   let tokens = [];
   const supportedChains = await this.getSupportedChains();
@@ -113,24 +112,22 @@ export const getBalances = async function (
         try {
           const rpc = await this.getEndpoints("evm", token.chain_name);
           const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-          return provider.getBalance(evmAddress).then((balance) => {
+          return provider.getBalance(evm).then((balance) => {
             return { ...token, balance: formatUnits(balance, token.decimals) };
           });
         } catch (e) {}
-      } else if (isGas && isBitcoin && btcAddress) {
+      } else if (isGas && isBitcoin && btc) {
         try {
           const API = this.getEndpoints("esplora", "btc_testnet");
-          return fetch(`${API}/address/${btcAddress}`).then(
-            async (response) => {
-              const r = await response.json();
-              const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
-              const balance = (
-                (funded_txo_sum - spent_txo_sum) /
-                100000000
-              ).toString();
-              return { ...token, balance };
-            }
-          );
+          return fetch(`${API}/address/${btc}`).then(async (response) => {
+            const r = await response.json();
+            const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
+            const balance = (
+              (funded_txo_sum - spent_txo_sum) /
+              100000000
+            ).toString();
+            return { ...token, balance };
+          });
         } catch (e) {}
       } else if (isERC) {
         const rpc = await this.getEndpoints("evm", token.chain_name);
@@ -141,7 +138,7 @@ export const getBalances = async function (
           provider
         );
         const decimals = await contract.decimals();
-        return contract.balanceOf(evmAddress).then((balance: any) => {
+        return contract.balanceOf(evm).then((balance: any) => {
           return {
             ...token,
             balance: formatUnits(balance, decimals),
@@ -156,7 +153,7 @@ export const getBalances = async function (
           ZRC20.abi,
           provider
         );
-        return contract.balanceOf(evmAddress).then((balance: any) => {
+        return contract.balanceOf(evm).then((balance: any) => {
           return {
             ...token,
             balance: formatUnits(balance, token.decimals),

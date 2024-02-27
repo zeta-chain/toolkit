@@ -1,56 +1,81 @@
-import networks from "@zetachain/networks/dist/src/networks";
-import { getAddress } from "@zetachain/protocol-contracts";
-import ZetaEthContract from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
-import ZetaConnectorEth from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.eth.sol/ZetaConnectorEth.json";
-import ZetaConnectorZEVM from "@zetachain/protocol-contracts/abi/zevm/ZetaConnectorZEVM.sol/ZetaConnectorZEVM.json";
+import { ZetaChainClient } from "./client";
 import { ethers } from "ethers";
+import { getAddress } from "@zetachain/protocol-contracts";
+import ZetaConnector from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.base.sol/ZetaConnectorBase.json";
+import ZetaToken from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 
-export const sendZETA = async (
-  signer: any,
-  amount: string,
-  from: string,
-  destination: string,
-  recipient: string,
-  gas: number = 5000000
-) => {
-  let connectorContract: any;
-  const destinationChainId =
-    networks[destination as keyof typeof networks]?.chain_id;
-  if (!destinationChainId) {
-    throw new Error("Invalid destination chain");
+/**
+ *
+ * Initiates a cross-chain transfer of ZETA tokens from the source chain to the
+ * destination chain.
+ *
+ * @param this - ZetaChainClient instance.
+ * @param options - Send ZETA options.
+ * @param options.chain - Source chain label.
+ * @param options.destination - Destination chain label.
+ * @param options.amount - Amount of ZETA tokens to be sent in human readable form.
+ * @param options.recipient - Optional recipient address for the token transfer. If not
+ * provided, the token transfer is made to the signer's address.
+ * @param options.gasLimit - Optional gas limit on the destination chain.
+ *
+ * @returns A promise that resolves with the transaction details upon success.
+ */
+export const sendZeta = async function (
+  this: ZetaChainClient,
+  {
+    chain,
+    destination,
+    recipient,
+    gasLimit,
+    amount,
+  }: {
+    chain: string;
+    destination: string;
+    recipient: string;
+    gasLimit?: Number;
+    amount: string;
   }
-  const destinationAddress = recipient || signer.address;
+) {
+  let signer;
+  if (this.signer) {
+    signer = this.signer;
+  } else if (this.wallet) {
+    const rpc = this.getEndpoints("evm", chain);
+    if (!rpc) throw new Error(`No EVM RPC endpoint found for ${chain} chain.`);
+    const provider = new ethers.providers.JsonRpcProvider(rpc);
+    signer = this.wallet.connect(provider);
+  } else {
+    throw new Error("No wallet or signer found.");
+  }
 
-  const fromZetaChain = from === "zeta_testnet";
-
-  const connectorAddress = getAddress("connector", from as any);
-  const zetaTokenAddress = getAddress("zetaToken", from as any);
-  connectorContract = new ethers.Contract(
-    connectorAddress as any,
-    fromZetaChain ? ZetaConnectorZEVM.abi : ZetaConnectorEth.abi,
+  const connector = getAddress("connector", chain as any);
+  const connectorContract = new ethers.Contract(
+    connector as any,
+    ZetaConnector.abi,
     signer
   );
+  const zetaToken = getAddress("zetaToken", chain as any);
   const zetaTokenContract = new ethers.Contract(
-    zetaTokenAddress as any,
-    ZetaEthContract.abi,
+    zetaToken as any,
+    ZetaToken.abi,
     signer
   );
-  const value = ethers.utils.parseEther(amount);
 
-  if (fromZetaChain) {
-    await signer.sendTransaction({ to: zetaTokenAddress, value });
-  }
+  const approveTx = await zetaTokenContract.approve(
+    connector,
+    ethers.utils.parseEther(amount)
+  );
+  await approveTx.wait();
 
-  await (
-    await zetaTokenContract.connect(signer).approve(connectorAddress, value)
-  ).wait();
+  const destinationChainId = this.getChains()[destination]?.chain_id;
+  const destinationAddress = recipient ? recipient : signer.address;
 
-  return await connectorContract.connect(signer).send({
-    destinationAddress,
+  return await connectorContract.send({
     destinationChainId,
-    destinationGasLimit: gas,
-    message: ethers.utils.arrayify([]),
-    zetaParams: ethers.utils.arrayify([]),
-    zetaValueAndGas: value,
+    destinationAddress,
+    destinationGasLimit: gasLimit,
+    message: ethers.utils.toUtf8Bytes(""),
+    zetaValueAndGas: ethers.utils.parseEther(amount),
+    zetaParams: ethers.utils.toUtf8Bytes(""),
   });
 };
