@@ -1,6 +1,7 @@
-import { ZetaChainClient } from "./packages/client/src";
-import { ethers } from "ethers";
 import * as dotenv from "dotenv";
+import { ethers } from "ethers";
+
+import { ZetaChainClient } from "./packages/client/src";
 
 dotenv.config();
 

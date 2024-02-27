@@ -1,8 +1,9 @@
-import { ZetaChainClient } from "./client";
-import { getAddress } from "@zetachain/protocol-contracts";
-import { ethers } from "ethers";
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
+import { getAddress } from "@zetachain/protocol-contracts";
 import ERC20Custody from "@zetachain/protocol-contracts/abi/evm/ERC20Custody.sol/ERC20Custody.json";
+import { ethers } from "ethers";
+
+import { ZetaChainClient } from "./client";
 import { prepareParams } from "./prepareData";
 
 /**
@@ -34,8 +35,8 @@ export const deposit = async function (
     message,
     recipient,
   }: {
-    chain: string;
     amount: string;
+    chain: string;
     erc20?: string;
     message?: [string[], string[]];
     recipient?: string;

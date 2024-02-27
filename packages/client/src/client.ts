@@ -1,19 +1,19 @@
 import { networks } from "@zetachain/networks";
-import merge from "lodash/merge";
 import type { Wallet } from "ethers";
+import merge from "lodash/merge";
 
 import {
+  deposit,
   getBalances,
   getEndpoints,
   getFees,
   getForeignCoins,
   getPools,
   getSupportedChains,
+  sendZeta,
   sendZRC20,
   trackCCTX,
-  deposit,
   withdraw,
-  sendZeta,
 } from ".";
 
 interface ZetaChainClientParamsBase {
@@ -23,9 +23,9 @@ interface ZetaChainClientParamsBase {
 
 type ZetaChainClientParams = ZetaChainClientParamsBase &
   (
-    | { wallet?: undefined; signer?: undefined }
-    | { wallet: any; signer?: never }
-    | { wallet?: never; signer: any }
+    | { signer: any; wallet?: never }
+    | { signer?: never; wallet: any }
+    | { signer?: undefined; wallet?: undefined }
   );
 
 export class ZetaChainClient {

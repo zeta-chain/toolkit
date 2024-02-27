@@ -1,4 +1,5 @@
 export * from "./client";
+export * from "./deposit";
 export * from "./getBalances";
 export * from "./getEndpoints";
 export * from "./getFees";
@@ -6,8 +7,7 @@ export * from "./getForeignCoins";
 export * from "./getPools";
 export * from "./getSupportedChains";
 export * from "./prepareData";
+export * from "./sendZeta";
 export * from "./sendZRC20";
 export * from "./trackCCTX";
-export * from "./deposit";
 export * from "./withdraw";
-export * from "./sendZeta";

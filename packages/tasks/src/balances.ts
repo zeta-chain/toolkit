@@ -89,7 +89,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.error(walletError + balancesError);
     return process.exit(1);
   }
-  const balances = (await client.getBalances({ evm, btc })) as any;
+  const balances = (await client.getBalances({ btc, evm })) as any;
 
   if (args.json) {
     console.log(JSON.stringify(balances, null, 2));

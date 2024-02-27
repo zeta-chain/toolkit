@@ -22,7 +22,7 @@ export interface TokenBalance {
 
 export const getBalances = async function (
   this: ZetaChainClient,
-  { evm, btc }: { evm: string; btc?: string }
+  { evm, btc }: { btc?: string; evm: string }
 ): Promise<TokenBalance[]> {
   let tokens = [];
   const supportedChains = await this.getSupportedChains();

@@ -1,8 +1,9 @@
-import { ZetaChainClient } from "./client";
-import { ethers } from "ethers";
 import { getAddress } from "@zetachain/protocol-contracts";
-import ZetaConnector from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.base.sol/ZetaConnectorBase.json";
 import ZetaToken from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
+import ZetaConnector from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.base.sol/ZetaConnectorBase.json";
+import { ethers } from "ethers";
+
+import { ZetaChainClient } from "./client";
 
 /**
  *
@@ -29,11 +30,11 @@ export const sendZeta = async function (
     gasLimit,
     amount,
   }: {
+    amount: string;
     chain: string;
     destination: string;
-    recipient: string;
     gasLimit?: Number;
-    amount: string;
+    recipient: string;
   }
 ) {
   let signer;
@@ -71,11 +72,11 @@ export const sendZeta = async function (
   const destinationAddress = recipient ? recipient : signer.address;
 
   return await connectorContract.send({
-    destinationChainId,
     destinationAddress,
+    destinationChainId,
     destinationGasLimit: gasLimit,
     message: ethers.utils.toUtf8Bytes(""),
-    zetaValueAndGas: ethers.utils.parseEther(amount),
     zetaParams: ethers.utils.toUtf8Bytes(""),
+    zetaValueAndGas: ethers.utils.parseEther(amount),
   });
 };

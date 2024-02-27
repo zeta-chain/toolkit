@@ -1,6 +1,7 @@
-import { ZetaChainClient } from "./client";
-import { ethers } from "ethers";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
+import { ethers } from "ethers";
+
+import { ZetaChainClient } from "./client";
 
 /**
  * Initiates a withdraw transaction of a ZRC-20 token from ZetaChain to a
@@ -23,8 +24,8 @@ export const withdraw = async function (
     recipient,
   }: {
     amount: string;
-    zrc20: string;
     recipient?: string;
+    zrc20: string;
   }
 ) {
   let signer;
