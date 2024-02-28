@@ -19,7 +19,10 @@
     "lint:js": "eslint --ext .js,.ts .",
     "lint:sol:fix": "prettier --write \"contracts/**/*.sol\"",
     "lint:sol": "solhint 'contracts/**/*.sol' && prettier -c 'contracts/**/*.sol'",
-    "lint": "npm run lint:js && npm run lint:sol"
+    "lint": "npm run lint:js && npm run lint:sol",
+    "docs:build": "typedoc ./packages/client/src/index.ts",
+    "docs:start": "http-server ./docs",
+    "docs": "yarn docs:build && yarn docs:start"
   },
   "keywords": [],
   "author": "ZetaChain",
@@ -56,6 +59,7 @@
     "eslint-plugin-sort-keys-fix": "^1.1.2",
     "eslint-plugin-typescript-sort-keys": "^2.3.0",
     "hardhat-gas-reporter": "^1.0.8",
+    "http-server": "^14.1.1",
     "prettier": "^2.8.8",
     "prettier-plugin-solidity": "^1.1.3",
     "rimraf": "^5.0.1",
@@ -64,6 +68,7 @@
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
     "typechain": "^8.1.0",
+    "typedoc": "^0.25.9",
     "typescript": ">=4.5.0"
   },
   "files": [
