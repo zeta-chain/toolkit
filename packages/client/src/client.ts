@@ -5,6 +5,7 @@ import merge from "lodash/merge";
 import {
   deposit,
   getBalances,
+  getChainId,
   getEndpoints,
   getFees,
   getForeignCoins,
@@ -14,7 +15,6 @@ import {
   sendZRC20,
   trackCCTX,
   withdraw,
-  getChainId,
 } from ".";
 
 interface ZetaChainClientParamsBase {

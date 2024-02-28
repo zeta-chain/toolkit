@@ -1,7 +1,7 @@
 import confirm from "@inquirer/confirm";
+import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 
 import { ZetaChainClient } from "../../client/src";
 
