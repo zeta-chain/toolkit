@@ -11,3 +11,4 @@ export * from "./sendZeta";
 export * from "./sendZRC20";
 export * from "./trackCCTX";
 export * from "./withdraw";
+export * from "./getChainId";

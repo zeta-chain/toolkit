@@ -14,6 +14,7 @@ import {
   sendZRC20,
   trackCCTX,
   withdraw,
+  getChainId,
 } from ".";
 
 interface ZetaChainClientParamsBase {
@@ -71,4 +72,5 @@ export class ZetaChainClient {
   deposit = deposit;
   withdraw = withdraw;
   sendZeta = sendZeta;
+  getChainId = getChainId;
 }

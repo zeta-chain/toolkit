@@ -87,13 +87,11 @@ export const deposit = async function (
     if (!tss) {
       throw new Error(`No TSS contract found for ${chain} chain.`);
     }
-    if (recipient) {
-      const tx: any = {
-        to: tss,
-        value: ethers.utils.parseUnits(amount, 18),
-      };
-      if (recipient) tx.data = `${recipient}${message ?? ""}`;
-      return await signer.sendTransaction(tx);
-    }
+    const tx: any = {
+      to: tss,
+      value: ethers.utils.parseUnits(amount, 18),
+    };
+    if (recipient) tx.data = `${recipient}${message ?? ""}`;
+    return await signer.sendTransaction(tx);
   }
 };
