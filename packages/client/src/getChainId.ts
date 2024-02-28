@@ -1,5 +1,12 @@
 import { ZetaChainClient } from "./client";
 
+/**
+ * Get chain ID from a chain label.
+ *
+ * @param this - ZetaChainClient instance.
+ * @param chainNameOrAlias Chain label like goerli_testnet
+ * @returns
+ */
 export const getChainId = function (
   this: ZetaChainClient,
   chainNameOrAlias: string

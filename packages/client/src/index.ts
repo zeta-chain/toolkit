@@ -2,7 +2,7 @@ export * from "./client";
 export * from "./deposit";
 export * from "./getBalances";
 export * from "./getChainId";
-export * from "./getEndpoints";
+export * from "./getEndpoint";
 export * from "./getFees";
 export * from "./getForeignCoins";
 export * from "./getPools";

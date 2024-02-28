@@ -14,7 +14,8 @@ import { prepareParams } from "./prepareData";
  * @param options - Deposit options.
  * @param options.sourceChain - Label of the connected chain from which the deposit is
  * made.
- * @param options.amount - Amount to be deposited in human readable form.
+ * @param options.amount - Amount to be deposited in human readable form. For
+ * example, 1.5 ETH is "1.5".
  * @param options.erc20 - If an ERC-20 token is being deposited, the address of
  * the ERC-20 token contract. If not provided, the deposit is assumed to be in
  * native gas token.
@@ -46,7 +47,7 @@ export const deposit = async function (
   if (this.signer) {
     signer = this.signer;
   } else if (this.wallet) {
-    const rpc = this.getEndpoints("evm", chain);
+    const rpc = this.getEndpoint("evm", chain);
     if (!rpc) throw new Error(`No EVM RPC endpoint found for ${chain} chain.`);
     const provider = new ethers.providers.JsonRpcProvider(rpc);
     signer = this.wallet.connect(provider);

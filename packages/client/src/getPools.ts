@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import { ZetaChainClient } from "./client";
 
 export const getPools = async function (this: ZetaChainClient) {
-  const rpc = this.getEndpoints("evm", "zeta_testnet");
+  const rpc = this.getEndpoint("evm", "zeta_testnet");
   const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
 
   const uniswapV2FactoryAddress = getAddress(

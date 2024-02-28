@@ -1,6 +1,6 @@
 import { ZetaChainClient } from "./client";
 
-export const getEndpoints = function (
+export const getEndpoint = function (
   this: ZetaChainClient,
   type: any,
   network: any

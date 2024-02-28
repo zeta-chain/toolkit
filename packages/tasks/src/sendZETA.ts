@@ -19,19 +19,19 @@ const main = async (args: any, hre: any) => {
 
   const { amount, destination } = args;
   const recipient = args.recipient || signer.address;
-  const from = hre.network.name;
+  const chain = hre.network.name;
 
   if (args.json) {
     const tx = await client.sendZeta({
       amount,
-      chain: from,
+      chain,
       destination,
       recipient,
     });
     console.log(JSON.stringify(tx, null, 2));
   } else {
     console.log(`
-Networks:        ${from} → ${destination}
+Networks:        ${chain} → ${destination}
 Amount sent:     ${amount} ZETA
 Cross-chain fee: ${fee} ZETA
 Amount received: ${(parseFloat(amount) - parseFloat(fee)).toFixed(

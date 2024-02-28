@@ -28,9 +28,9 @@ const fetchCCMFees = async function (
 ) {
   // Skip ZetaChain as we can't send messages from ZetaChain to ZetaChain
   if (chainID === "7000" || chainID === "7001") return;
-  const API = this.getEndpoints("cosmos-http", `zeta_${this.network}`);
+  const API = this.getEndpoint("cosmos-http", `zeta_${this.network}`);
   if (!API) {
-    throw new Error("getEndpoints: API endpoint not found");
+    throw new Error("API endpoint not found");
   }
   const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
   const response = await fetch(url);
@@ -69,7 +69,7 @@ export const getFees = async function (this: ZetaChainClient, gas: Number) {
   await Promise.all(
     zrc20Addresses.map(async (zrc20: any) => {
       try {
-        const rpc = this.getEndpoints("evm", `zeta_${this.network}`);
+        const rpc = this.getEndpoint("evm", `zeta_${this.network}`);
         fees.feesZEVM[zrc20.symbol.toLowerCase()] = await fetchZEVMFees(
           zrc20,
           rpc

@@ -6,7 +6,7 @@ import {
   deposit,
   getBalances,
   getChainId,
-  getEndpoints,
+  getEndpoint,
   getFees,
   getForeignCoins,
   getPools,
@@ -17,12 +17,12 @@ import {
   withdraw,
 } from ".";
 
-interface ZetaChainClientParamsBase {
+export interface ZetaChainClientParamsBase {
   chains?: { [key: string]: any };
   network?: string;
 }
 
-type ZetaChainClientParams = ZetaChainClientParamsBase &
+export type ZetaChainClientParams = ZetaChainClientParamsBase &
   (
     | { signer: any; wallet?: never }
     | { signer?: never; wallet: any }
@@ -35,6 +35,51 @@ export class ZetaChainClient {
   public wallet: Wallet | undefined;
   public signer: any | undefined;
 
+  /**
+   * Initializes ZetaChainClient instance.
+   *
+   * ```ts
+   * new ZetaChainClient({
+   *   network: "testnet"
+   * })
+   * ```
+   *
+   * With an Ethers.js wallet:
+   *
+   * ```ts
+   * const client = new ZetaChainClient({
+   *   network: "testnet",
+   *   wallet: ethers.Wallet.fromMnemonic(process.env.MNEMONIC as string),
+   * });
+   * ```
+   *
+   * With a signer:
+   *
+   * ```ts
+   * const client = new ZetaChainClient({
+   *   network: "testnet",
+   *   signer: await ethers.getSigners(),
+   * });
+   * ```
+   *
+   * Use a custom RPC endpoint for ZetaChain or any connected chain:
+   *
+   * ```ts
+   * const client = new ZetaChainClient({
+   *   network: "testnet",
+   *   chains: {
+   *     zeta_testnet: {
+   *       api: {
+   *         url: "https://zetachain-testnet-archive.allthatnode.com:8545/${process.env.KEY}",
+   *         type: "evm",
+   *       },
+   *     },
+   *   },
+   * });
+   * ```
+   *
+   * @param params
+   */
   constructor(params: ZetaChainClientParams) {
     if (params.wallet && params.signer) {
       throw new Error("You can only provide a wallet or a signer, not both.");
@@ -61,7 +106,7 @@ export class ZetaChainClient {
     return this.chains;
   }
 
-  getEndpoints = getEndpoints;
+  getEndpoint = getEndpoint;
   getBalances = getBalances;
   getForeignCoins = getForeignCoins;
   getSupportedChains = getSupportedChains;

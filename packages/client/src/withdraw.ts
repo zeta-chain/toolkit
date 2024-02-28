@@ -33,7 +33,7 @@ export const withdraw = async function (
     signer = this.signer;
   } else if (this.wallet) {
     const chain = `zeta_${this.network}`;
-    const rpc = this.getEndpoints("evm", chain);
+    const rpc = this.getEndpoint("evm", chain);
     if (!rpc) throw new Error(`No EVM RPC endpoint found for ${chain} chain.`);
     const provider = new ethers.providers.JsonRpcProvider(rpc);
     signer = this.wallet.connect(provider);

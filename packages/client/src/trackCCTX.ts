@@ -64,7 +64,7 @@ const fetchCCTXData = async function (
   if (outbound_tx_hash) {
     const chainName = findByChainId(networks, parseInt(receiver_chainId));
     if (chainName) {
-      const rpc = this.getEndpoints("evm", chainName as any);
+      const rpc = this.getEndpoint("evm", chainName as any);
       const provider = new ethers.providers.JsonRpcProvider(rpc);
       const confirmed = await provider.getTransaction(outbound_tx_hash);
       confirmed_on_destination = confirmed !== null;
@@ -152,7 +152,7 @@ export const trackCCTX = async function (
 ): Promise<void> {
   const spinners: any = {};
 
-  const API = this.getEndpoints("cosmos-http", `zeta_${this.network}`);
+  const API = this.getEndpoint("cosmos-http", `zeta_${this.network}`);
   const TSS = await fetchTSS(API);
 
   return new Promise((resolve, reject) => {

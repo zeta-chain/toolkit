@@ -11,6 +11,8 @@ const main = async () => {
     wallet: ethers.Wallet.fromMnemonic(process.env.MNEMONIC as string),
   });
 
+  console.log(client.chains);
+
   const tx = await client.getBalances({
     evm: "0x4955a3F38ff86ae92A914445099caa8eA2B9bA32",
   });
