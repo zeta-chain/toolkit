@@ -1,0 +1,41 @@
+import confirm from "@inquirer/confirm";
+import { task } from "hardhat/config";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
+
+import { ZetaChainClient } from "../../client/src";
+
+const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+  const { ethers } = hre as any;
+  const [signer] = await ethers.getSigners();
+
+  const client = new ZetaChainClient({ network: "testnet", signer });
+
+  const recipient = args.recipient || signer.address;
+  const amount = args.amount;
+  const zrc20 = args.zrc20;
+
+  console.log("");
+  await confirm(
+    {
+      message: `Please, confirm the transaction`,
+    },
+    { clearPromptOnDone: true }
+  );
+  const tx = await client.withdraw({
+    amount,
+    zrc20,
+    recipient,
+  });
+  console.log(`Transaction successfully broadcasted!
+Hash: ${tx.hash}`);
+};
+
+export const withdrawTask = task(
+  "withdraw",
+  "Withdraw ZRC-20 from ZetaChain to a connected chain as native asset or ERC-20.",
+  main
+)
+  .addParam("amount", "Amount of ZRC-20 to withdraw")
+  .addParam("zrc20", "ZRC-20 token address")
+  .addOptionalParam("recipient", "Recipient address");

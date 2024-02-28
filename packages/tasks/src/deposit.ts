@@ -78,8 +78,12 @@ Recipient:   ${recipient}`);
   Hash: ${tx.hash}`);
 };
 
-export const depositTask = task("deposit", "Deposit", main)
-  .addParam("amount", "Amount of ZRC-20 to send")
+export const depositTask = task(
+  "deposit",
+  "Deposit native gas or ERC-20 assets to ZetaChain as ZRC-20.",
+  main
+)
+  .addParam("amount", "Amount tokens to send")
   .addOptionalParam("recipient", "Recipient address")
   .addOptionalParam("erc20", "ERC-20 token address")
   .addOptionalParam("message", `Message, like '[["string"], ["hello"]]'`);

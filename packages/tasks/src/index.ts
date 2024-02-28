@@ -10,3 +10,4 @@ export { sendBTCTask } from "./sendBTC";
 export { sendZETATask } from "./sendZETA";
 export { depositTask } from "./deposit";
 export { verifyTask } from "./verify";
+export { withdrawTask } from "./withdraw";
