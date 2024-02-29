@@ -69,7 +69,9 @@ const summarizeTokens = (tokens: any[]) => {
 };
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const client = new ZetaChainClient({ network: args.type });
+  const client = new ZetaChainClient({
+    network: args.mainnet ? "mainnet" : "testnet",
+  });
   const spinner = ora("Fetching balances...");
   if (!args.json) {
     spinner.start();
@@ -109,4 +111,4 @@ export const balancesTask = task(
 )
   .addOptionalParam("address", `Fetch balances for a specific address`)
   .addFlag("json", "Output balances as JSON")
-  .addOptionalParam("type", "Testnet or mainnet", "testnet");
+  .addFlag("mainnet", "Run the task on mainnet");

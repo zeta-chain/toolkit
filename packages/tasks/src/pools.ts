@@ -6,7 +6,10 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ZetaChainClient } from "../../client/src/";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const client = new ZetaChainClient({ network: args.type });
+  const client = new ZetaChainClient({
+    network: args.mainnet ? "mainnet" : "testnet",
+  });
+
   const foreignCoins = await client.getForeignCoins();
   const pools = await client.getPools();
 
@@ -64,4 +67,4 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
 export const poolsTask = task("pools", "", main)
   .addFlag("json", "Print the result in JSON format")
-  .addOptionalParam("type", "Testnet or mainnet", "testnet");
+  .addFlag("mainnet", "Run the task on mainnet");

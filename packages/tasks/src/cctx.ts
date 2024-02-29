@@ -5,11 +5,11 @@ import Spinnies from "spinnies";
 import { ZetaChainClient } from "../../client/src/";
 
 const trackCCTXInteractive = async (
-  type: string,
+  network: string,
   hash: string,
   json: Boolean = false
 ) => {
-  const client = new ZetaChainClient({ network: type });
+  const client = new ZetaChainClient({ network });
   const s = new Spinnies();
   const emitter = new EventEmitter();
   emitter
@@ -23,7 +23,9 @@ const trackCCTXInteractive = async (
 };
 
 const main = async (args: any) => {
-  await trackCCTXInteractive(args.type, args.tx, args.json);
+  const network = args.mainnet ? "mainnet" : "testnet";
+
+  await trackCCTXInteractive(network, args.tx, args.json);
 };
 
 export const cctxTask = task(
