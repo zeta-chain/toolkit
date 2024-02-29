@@ -9,5 +9,5 @@ export { omnichainTask } from "./omnichain";
 export { poolsTask } from "./pools";
 export { sendBTCTask } from "./sendBTC";
 export { sendZETATask } from "./sendZETA";
-export { verifyTask } from "./verify";
+// export { verifyTask } from "./verify";
 export { withdrawTask } from "./withdraw";
