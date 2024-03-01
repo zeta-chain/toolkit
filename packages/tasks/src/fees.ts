@@ -14,13 +14,23 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.log(JSON.stringify(fees, null, 2));
   } else {
     console.log(
-      "\nOmnichain fees (in native gas tokens of destination chain):"
+      "\nOmnichain withdraw fees (in native gas tokens of destination chain):"
     );
-    console.table(fees.feesZEVM);
+    console.table(
+      fees.omnichain.map(
+        ({ description, totalFee, gasFee, protocolFee, foreign_chain_id }) => ({
+          description,
+          foreign_chain_id,
+          gasFee,
+          protocolFee,
+          totalFee,
+        })
+      )
+    );
     console.log(
       `\nCross-chain messaging fees (in ZETA, gas limit: ${args.gas}):`
     );
-    console.table(fees.feesCCM);
+    console.table(fees.messaging);
   }
 };
 
