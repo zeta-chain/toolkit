@@ -11,7 +11,7 @@ const main = async (args: any, hre: any) => {
   const [signer] = await hre.ethers.getSigners();
 
   const fees = await client.getFees(5000000);
-  const fee = fees.feesCCM[args.destination].totalFee;
+  const fee = fees.messaging[args.destination].totalFee;
   if (parseFloat(args.amount) < parseFloat(fee))
     throw new Error(
       `Amount must be greater than ${fee} ZETA to cover the cross-chain fees`
@@ -49,7 +49,7 @@ To address:      ${recipient}
     );
     const tx = await client.sendZeta({
       amount,
-      chain: from,
+      chain,
       destination,
       recipient,
     });
