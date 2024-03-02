@@ -12,7 +12,6 @@ import {
   getPools,
   getSupportedChains,
   sendZeta,
-  sendZRC20,
   trackCCTX,
   withdraw,
 } from ".";
@@ -112,7 +111,6 @@ export class ZetaChainClient {
   getSupportedChains = getSupportedChains;
   getFees = getFees;
   getPools = getPools;
-  sendZRC20 = sendZRC20;
   trackCCTX = trackCCTX;
   deposit = deposit;
   withdraw = withdraw;

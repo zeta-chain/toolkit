@@ -9,6 +9,5 @@ export * from "./getPools";
 export * from "./getSupportedChains";
 export * from "./prepareData";
 export * from "./sendZeta";
-export * from "./sendZRC20";
 export * from "./trackCCTX";
 export * from "./withdraw";
