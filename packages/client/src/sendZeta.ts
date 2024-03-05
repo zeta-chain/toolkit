@@ -1,4 +1,4 @@
-import { getAddress } from "@zetachain/protocol-contracts";
+import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZetaToken from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
 import ZetaConnector from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.base.sol/ZetaConnectorBase.json";
 import { ethers } from "ethers";
@@ -49,13 +49,13 @@ export const sendZeta = async function (
     throw new Error("No wallet or signer found.");
   }
 
-  const connector = getAddress("connector", chain as any);
+  const connector = getAddress("connector", chain as ParamChainName);
   const connectorContract = new ethers.Contract(
     connector as any,
     ZetaConnector.abi,
     signer
   );
-  const zetaToken = getAddress("zetaToken", chain as any);
+  const zetaToken = getAddress("zetaToken", chain as ParamChainName);
   const zetaTokenContract = new ethers.Contract(
     zetaToken as any,
     ZetaToken.abi,
