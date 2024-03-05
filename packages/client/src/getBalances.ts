@@ -89,16 +89,9 @@ export const getBalances = async function (
 
   tokens = tokens.map((token: any) => {
     const ticker = token.symbol.split("-")[0];
-    let chain_name;
-    if (token.chain_id === 7001) {
-      chain_name = "zeta_testnet";
-    } else if (token.chain_id === 7000) {
-      chain_name = "zeta_mainnet";
-    } else {
-      chain_name = supportedChains.find(
-        (c: any) => c.chain_id === token.chain_id
-      )?.chain_name;
-    }
+    const { chain_name } = supportedChains.find(
+      (c: any) => c.chain_id === token.chain_id.toString()
+    );
     return {
       ...token,
       chain_name,
