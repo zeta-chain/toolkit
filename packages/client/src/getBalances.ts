@@ -45,7 +45,7 @@ export const getBalances = async function (
         zrc20: token.zrc20_contract_address,
       });
       tokens.push({
-        chain_id: this.network === "mainnet" ? 7000 : 7001,
+        chain_id: this.getChainId(`zeta_${this.network}`),
         coin_type: "ZRC20",
         contract: token.zrc20_contract_address,
         decimals: token.decimals,
@@ -60,7 +60,7 @@ export const getBalances = async function (
         zrc20: token.zrc20_contract_address,
       });
       tokens.push({
-        chain_id: this.network === "mainnet" ? 7000 : 7001,
+        chain_id: this.getChainId(`zeta_${this.network}`),
         coin_type: "ZRC20",
         contract: token.zrc20_contract_address,
         decimals: token.decimals,
@@ -81,7 +81,7 @@ export const getBalances = async function (
     }
   });
   tokens.push({
-    chain_id: this.network === "mainnet" ? 7000 : 7001,
+    chain_id: this.getChainId(`zeta_${this.network}`),
     coin_type: "Gas",
     decimals: 18,
     symbol: "ZETA",
