@@ -144,7 +144,7 @@ export const getBalances = async function (
           provider
         );
         const decimals = await contract.decimals();
-        return contract.balanceOf(evmAddress).then((balance: any) => {
+        return contract.balanceOf(evmAddress).then((balance: string) => {
           return {
             ...token,
             balance: formatUnits(balance, decimals),
@@ -159,7 +159,7 @@ export const getBalances = async function (
           ZRC20.abi,
           provider
         );
-        return contract.balanceOf(evmAddress).then((balance: any) => {
+        return contract.balanceOf(evmAddress).then((balance: string) => {
           return {
             ...token,
             balance: formatUnits(balance, token.decimals),
