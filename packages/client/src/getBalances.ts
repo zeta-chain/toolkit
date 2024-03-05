@@ -117,26 +117,22 @@ export const getBalances = async function (
       const isERC = token.coin_type === "ERC20";
       const isZRC = token.coin_type === "ZRC20";
       if (isGas && !isBitcoin) {
-        try {
-          const rpc = await this.getEndpoint("evm", token.chain_name);
-          const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-          return provider.getBalance(evm).then((balance) => {
-            return { ...token, balance: formatUnits(balance, token.decimals) };
-          });
-        } catch (e) {}
+        const rpc = await this.getEndpoint("evm", token.chain_name);
+        const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+        return provider.getBalance(evm).then((balance) => {
+          return { ...token, balance: formatUnits(balance, token.decimals) };
+        });
       } else if (isGas && isBitcoin && btc) {
-        try {
-          const API = this.getEndpoint("esplora", "btc_testnet");
-          return fetch(`${API}/address/${btc}`).then(async (response) => {
-            const r = await response.json();
-            const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
-            const balance = (
-              (funded_txo_sum - spent_txo_sum) /
-              100000000
-            ).toString();
-            return { ...token, balance };
-          });
-        } catch (e) {}
+        const API = this.getEndpoint("esplora", "btc_testnet");
+        return fetch(`${API}/address/${btc}`).then(async (response) => {
+          const r = await response.json();
+          const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
+          const balance = (
+            (funded_txo_sum - spent_txo_sum) /
+            100000000
+          ).toString();
+          return { ...token, balance };
+        });
       } else if (isERC) {
         const rpc = await this.getEndpoint("evm", token.chain_name);
         const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
