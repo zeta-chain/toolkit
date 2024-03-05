@@ -5,8 +5,8 @@ import fetch from "isomorphic-fetch";
 
 import { ZetaChainClient } from "./client";
 
-const fetchZEVMFees = async function (zrc20: any, rpc: string) {
-  const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+const fetchZEVMFees = async function (zrc20: any, rpcUrl: string) {
+  const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl);
   const contract = new ethers.Contract(zrc20.address, ZRC20.abi, provider);
   const [, withdrawGasFee] = await contract.withdrawGasFee();
   const gasFee = ethers.BigNumber.from(withdrawGasFee);
@@ -74,8 +74,8 @@ export const getFees = async function (this: ZetaChainClient, gas: Number) {
   await Promise.all(
     zrc20Addresses.map(async (zrc20: any) => {
       try {
-        const rpc = this.getEndpoint("evm", `zeta_${this.network}`);
-        const fee = await fetchZEVMFees(zrc20, rpc);
+        const rpcUrl = this.getEndpoint("evm", `zeta_${this.network}`);
+        const fee = await fetchZEVMFees(zrc20, rpcUrl);
         fees.omnichain.push(fee);
       } catch (err) {
         console.log(err);
