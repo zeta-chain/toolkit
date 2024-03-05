@@ -146,9 +146,11 @@ const fetchTSS = async (API: string) => {
 
 export const trackCCTX = async function (
   this: ZetaChainClient,
-  hash: string,
-  json: Boolean = false,
-  emitter: any = null
+  {
+    hash,
+    json = false,
+    emitter = null,
+  }: { hash: string; json: Boolean; emitter: any }
 ): Promise<void> {
   const spinners: any = {};
 

@@ -19,7 +19,7 @@ const trackCCTXInteractive = async (
     .on("succeed", ({ hash, text }) => s.succeed(hash, { text }))
     .on("fail", ({ hash, text }) => s.fail(hash, { text }))
     .on("update", ({ hash, text }) => s.update(hash, { text }));
-  await client.trackCCTX(hash, json, emitter);
+  await client.trackCCTX({ hash, json, emitter });
 };
 
 const main = async (args: any) => {
