@@ -62,7 +62,7 @@ export const getFees = async function (this: ZetaChainClient, gas: Number) {
   const zrc20Addresses = addresses.filter((a: any) => a.type === "zrc20");
 
   await Promise.all(
-    supportedChains.map(async (n: any) => {
+    supportedChains.map(async (n: { chain_id: string; chain_name: string }) => {
       try {
         const fee = await fetchCCMFees.call(this, n.chain_id, gas);
         if (fee) fees.messaging.push(fee);
