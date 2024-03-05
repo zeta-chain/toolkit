@@ -78,7 +78,7 @@ export const deposit = async function (
     }
     const approveTx = await contract.approve(custody, value);
     await approveTx.wait();
-    const to = recipient ? recipient : signer.address;
+    const to = recipient || signer.address;
     const data = message
       ? prepareParams(message[0], message[1])
       : ethers.utils.hexlify([]);
