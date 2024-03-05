@@ -30,7 +30,7 @@ export interface TokenBalance {
  */
 export const getBalances = async function (
   this: ZetaChainClient,
-  { evm, btc }: { btc?: string; evm: string }
+  { evmAddress, btcAddress }: { btcAddress?: string; evmAddress: string }
 ): Promise<TokenBalance[]> {
   let tokens = [];
   const supportedChains = await this.getSupportedChains();
@@ -121,12 +121,12 @@ export const getBalances = async function (
       if (isGas && !isBitcoin) {
         const rpc = await this.getEndpoint("evm", token.chain_name);
         const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-        return provider.getBalance(evm).then((balance) => {
+        return provider.getBalance(evmAddress).then((balance) => {
           return { ...token, balance: formatUnits(balance, token.decimals) };
         });
-      } else if (isGas && isBitcoin && btc) {
+      } else if (isGas && isBitcoin && btcAddress) {
         const API = this.getEndpoint("esplora", "btc_testnet");
-        return fetch(`${API}/address/${btc}`).then(async (response) => {
+        return fetch(`${API}/address/${btcAddress}`).then(async (response) => {
           const r = await response.json();
           const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
           const balance = (
@@ -144,7 +144,7 @@ export const getBalances = async function (
           provider
         );
         const decimals = await contract.decimals();
-        return contract.balanceOf(evm).then((balance: any) => {
+        return contract.balanceOf(evmAddress).then((balance: any) => {
           return {
             ...token,
             balance: formatUnits(balance, decimals),
@@ -159,7 +159,7 @@ export const getBalances = async function (
           ZRC20.abi,
           provider
         );
-        return contract.balanceOf(evm).then((balance: any) => {
+        return contract.balanceOf(evmAddress).then((balance: any) => {
           return {
             ...token,
             balance: formatUnits(balance, token.decimals),
