@@ -14,8 +14,12 @@ export const getPools = async function (this: ZetaChainClient) {
     `zeta_${this.network}` as ParamChainName
   );
 
+  if (!uniswapV2FactoryAddress) {
+    throw new Error("uniswapV2Factory is not defined");
+  }
+
   const UniswapV2FactoryContract = new ethers.Contract(
-    uniswapV2FactoryAddress as any,
+    uniswapV2FactoryAddress,
     UniswapV2Factory.abi,
     provider
   );
