@@ -50,14 +50,22 @@ export const sendZeta = async function (
   }
 
   const connector = getAddress("connector", chain as ParamChainName);
+  if (!connector) {
+    throw new Error(`connector address on chain ${chain} not found`);
+  }
+
   const connectorContract = new ethers.Contract(
-    connector as any,
+    connector,
     ZetaConnector.abi,
     signer
   );
   const zetaToken = getAddress("zetaToken", chain as ParamChainName);
+  if (!zetaToken) {
+    throw new Error(`zetaToken address on chain ${chain} not found`);
+  }
+
   const zetaTokenContract = new ethers.Contract(
-    zetaToken as any,
+    zetaToken,
     ZetaToken.abi,
     signer
   );
