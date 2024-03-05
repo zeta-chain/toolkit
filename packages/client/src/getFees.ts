@@ -39,6 +39,7 @@ const fetchCCMFees = async function (
   const protocolFee = ethers.BigNumber.from(data.protocolFeeInZeta);
   return {
     /* eslint-disable */
+    chainID,
     totalFee: utils.formatUnits(gasFee.add(protocolFee), 18),
     gasFee: utils.formatUnits(gasFee, 18),
     protocolFee: utils.formatUnits(protocolFee, 18),

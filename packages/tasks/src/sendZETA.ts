@@ -10,12 +10,24 @@ const main = async (args: any, hre: any) => {
   const client = new ZetaChainClient({ network: "testnet" });
   const [signer] = await hre.ethers.getSigners();
 
-  const fees = await client.getFees(5000000);
-  const fee = fees.messaging[args.destination].totalFee;
-  if (parseFloat(args.amount) < parseFloat(fee))
-    throw new Error(
-      `Amount must be greater than ${fee} ZETA to cover the cross-chain fees`
-    );
+  const isDestinationZeta = ["zeta_testnet", "zeta_mainnet"].includes(
+    args.destination
+  );
+  let fee = "0";
+
+  if (!isDestinationZeta) {
+    const fees = await client.getFees(5000000);
+    const chainID = client.chains[args.destination].chain_id;
+    const chainFee = fees.messaging.find((f: any) => f.chainID == chainID);
+    if (!chainFee) {
+      throw new Error(`Cannot fetch fees for chain ID ${chainID}`);
+    }
+    fee = chainFee.totalFee;
+    if (parseFloat(args.amount) < parseFloat(fee))
+      throw new Error(
+        `Amount must be greater than ${fee} ZETA to cover the cross-chain fees`
+      );
+  }
 
   const { amount, destination } = args;
   const recipient = args.recipient || signer.address;
