@@ -113,7 +113,9 @@ export const getBalances = async function (
   const balances = await Promise.all(
     tokens.map(async (token: any) => {
       const isGas = token.coin_type === "Gas";
-      const isBitcoin = token.chain_name === "btc_testnet";
+      const isBitcoin = ["btc_testnet", "btc_mainnet"].includes(
+        token.chain_name
+      );
       const isERC = token.coin_type === "ERC20";
       const isZRC = token.coin_type === "ZRC20";
       if (isGas && !isBitcoin) {
