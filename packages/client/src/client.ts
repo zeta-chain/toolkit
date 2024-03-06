@@ -1,5 +1,5 @@
 import { networks } from "@zetachain/networks";
-import type { Wallet } from "ethers";
+import type { Wallet, Signer } from "ethers";
 import merge from "lodash/merge";
 
 import {
@@ -23,8 +23,8 @@ export interface ZetaChainClientParamsBase {
 
 export type ZetaChainClientParams = ZetaChainClientParamsBase &
   (
-    | { signer: any; wallet?: never }
-    | { signer?: never; wallet: any }
+    | { signer: Signer; wallet?: never }
+    | { signer?: never; wallet: Wallet }
     | { signer?: undefined; wallet?: undefined }
   );
 
