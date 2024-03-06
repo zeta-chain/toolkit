@@ -6,8 +6,6 @@ import ora from "ora";
 import { ZetaChainClient } from "../../client/src/";
 import { bitcoinAddress } from "./bitcoinAddress";
 
-declare const hre: any;
-
 dotenv.config();
 
 export const walletError = `

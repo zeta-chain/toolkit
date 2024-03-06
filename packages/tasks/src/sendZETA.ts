@@ -1,10 +1,7 @@
 import confirm from "@inquirer/confirm";
 import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { ZetaChainClient } from "../../client/src/";
-
-declare const hre: any;
 
 const main = async (args: any, hre: any) => {
   const [signer] = await hre.ethers.getSigners();
