@@ -16,13 +16,13 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   let message;
   if (args.message) {
     try {
-      const m = JSON.parse(args.message);
+      const msg = JSON.parse(args.message);
       if (
-        Array.isArray(m) &&
-        m.length === 2 &&
-        Array.isArray(m[0]) &&
-        m[0].every((item: string) => typeof item === "string") &&
-        m[1].every((item: string) => typeof item === "string")
+        Array.isArray(msg) &&
+        msg.length === 2 &&
+        Array.isArray(msg[0]) &&
+        msg[0].every((item: string) => typeof item === "string") &&
+        msg[1].every((item: string) => typeof item === "string")
       ) {
         message = args.message;
       } else {
