@@ -1,6 +1,6 @@
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZetaToken from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
-import ZetaConnector from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.base.sol/ZetaConnectorBase.json";
+import ZetaConnectorEth from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.eth.sol/ZetaConnectorEth.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
@@ -27,7 +27,7 @@ export const sendZeta = async function (
     chain,
     destination,
     recipient,
-    gasLimit,
+    gasLimit = 500000,
     amount,
   }: {
     amount: string;
@@ -53,16 +53,16 @@ export const sendZeta = async function (
   if (!connector) {
     throw new Error(`connector address on chain ${chain} not found`);
   }
-
-  const connectorContract = new ethers.Contract(
-    connector,
-    ZetaConnector.abi,
-    signer
-  );
   const zetaToken = getAddress("zetaToken", chain as ParamChainName);
   if (!zetaToken) {
     throw new Error(`zetaToken address on chain ${chain} not found`);
   }
+
+  const connectorContract = new ethers.Contract(
+    connector,
+    ZetaConnectorEth.abi,
+    signer
+  );
 
   const zetaTokenContract = new ethers.Contract(
     zetaToken,
@@ -70,10 +70,9 @@ export const sendZeta = async function (
     signer
   );
 
-  const approveTx = await zetaTokenContract.approve(
-    connector,
-    ethers.utils.parseEther(amount)
-  );
+  const value = ethers.utils.parseEther(amount);
+
+  const approveTx = await zetaTokenContract.approve(connector, value);
   await approveTx.wait();
 
   const destinationChainId = this.getChains()[destination]?.chain_id;
@@ -85,6 +84,6 @@ export const sendZeta = async function (
     destinationGasLimit: gasLimit,
     message: ethers.utils.toUtf8Bytes(""),
     zetaParams: ethers.utils.toUtf8Bytes(""),
-    zetaValueAndGas: ethers.utils.parseEther(amount),
+    zetaValueAndGas: value,
   });
 };

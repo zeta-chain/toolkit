@@ -7,8 +7,8 @@ import { ZetaChainClient } from "../../client/src/";
 declare const hre: any;
 
 const main = async (args: any, hre: any) => {
-  const client = new ZetaChainClient({ network: "testnet" });
   const [signer] = await hre.ethers.getSigners();
+  const client = new ZetaChainClient({ network: "testnet", signer });
 
   const isDestinationZeta = ["zeta_testnet", "zeta_mainnet"].includes(
     args.destination
