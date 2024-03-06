@@ -66,7 +66,6 @@ Recipient:   ${recipient}`);
   if (message) {
     console.log(`Message:     ${message}`);
   }
-  console.log("");
   await confirm(
     {
       message: `Please, confirm the transaction`,
