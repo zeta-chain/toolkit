@@ -1,5 +1,5 @@
 import { networks } from "@zetachain/networks";
-import type { Wallet, Signer } from "ethers";
+import type { Signer, Wallet } from "ethers";
 import merge from "lodash/merge";
 
 import {

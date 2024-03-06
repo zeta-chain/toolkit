@@ -89,9 +89,9 @@ export const deposit = async function (
       throw new Error(`No TSS contract found for ${chain} chain.`);
     }
     const tx: {
+      data?: string;
       to: string;
       value: ethers.BigNumberish;
-      data?: string;
     } = {
       to: tss,
       value: ethers.utils.parseUnits(amount, 18),

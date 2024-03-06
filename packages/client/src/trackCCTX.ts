@@ -150,7 +150,7 @@ export const trackCCTX = async function (
     hash,
     json = false,
     emitter = null,
-  }: { hash: string; json: Boolean; emitter: any }
+  }: { emitter: any; hash: string; json: Boolean }
 ): Promise<void> {
   const spinners: any = {};
 
