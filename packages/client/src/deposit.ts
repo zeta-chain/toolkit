@@ -1,5 +1,5 @@
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
-import { getAddress } from "@zetachain/protocol-contracts";
+import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ERC20Custody from "@zetachain/protocol-contracts/abi/evm/ERC20Custody.sol/ERC20Custody.json";
 import { ethers } from "ethers";
 
@@ -55,7 +55,10 @@ export const deposit = async function (
     throw new Error("No wallet or signer found.");
   }
   if (erc20) {
-    const custody = getAddress("erc20Custody", chain as any) as string;
+    const custody = getAddress(
+      "erc20Custody",
+      chain as ParamChainName
+    ) as string;
     if (!custody) {
       throw new Error(`No ERC-20 custody contract found for ${chain} chain.`);
     }
@@ -84,7 +87,7 @@ export const deposit = async function (
       : ethers.utils.hexlify([]);
     return await custodyContract.deposit(to, erc20, value, data);
   } else {
-    const tss = getAddress("tss", chain as any);
+    const tss = getAddress("tss", chain as ParamChainName);
     if (!tss) {
       throw new Error(`No TSS contract found for ${chain} chain.`);
     }

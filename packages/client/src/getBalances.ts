@@ -24,8 +24,8 @@ export interface TokenBalance {
  * Get token balances of all tokens on all chains connected to ZetaChain.
  *
  * @param this - ZetaChainClient instance.
- * @param options.evm EVM address
- * @param options.btc Bitcoin address
+ * @param options.evmAddress EVM address
+ * @param options.btcAddress Bitcoin address
  * @returns
  */
 export const getBalances = async function (

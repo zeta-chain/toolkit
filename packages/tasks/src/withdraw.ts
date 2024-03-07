@@ -15,7 +15,6 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const amount = args.amount;
   const zrc20 = args.zrc20;
 
-  console.log("");
   await confirm(
     {
       message: `Please, confirm the transaction`,
