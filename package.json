@@ -1,24 +1,28 @@
 {
   "name": "@zetachain/toolkit",
   "version": "0.0.0-set-on-publish",
-  "description": "",
-  "main": "A library of ZetaChain helper utilities, contracts, and Hardhat tasks for smart-contract development",
+  "description": "A library of ZetaChain helper utilities, contracts, and Hardhat tasks for smart-contract development",
+  "main": "",
   "exports": {
-    "./tasks": "./dist/tasks/index.js",
-    "./helpers": "./dist/helpers/index.js",
-    "./helpers/fees": "./dist/helpers/fees.js",
-    "./helpers/balances": "./dist/helpers/balances.js"
+    "./tasks": "./dist/tasks/src/index.js",
+    "./client": {
+      "import": "./dist/client/src/index.js",
+      "require": "./dist/client/src/index.js",
+      "types": "./dist/client/src/index.d.ts"
+    }
   },
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "npx cpx './templates/**/*' ./dist/templates && npx hardhat compile --force && tsc || exit 0",
+    "build": "npx cpx './packages/tasks/templates/**/*' ./dist/tasks/templates && npx hardhat compile --force && tsc",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "lint:js:fix": "eslint --ext .js,.ts . --fix",
     "lint:js": "eslint --ext .js,.ts .",
-    "test": "npx hardhat test",
     "lint:sol:fix": "prettier --write \"contracts/**/*.sol\"",
     "lint:sol": "solhint 'contracts/**/*.sol' && prettier -c 'contracts/**/*.sol'",
-    "lint": "npm run lint:js && npm run lint:sol"
+    "lint": "npm run lint:js && npm run lint:sol",
+    "docs:build": "typedoc ./packages/client/src/index.ts",
+    "docs:start": "http-server ./docs",
+    "docs": "yarn docs:build && yarn docs:start"
   },
   "keywords": [],
   "author": "ZetaChain",
@@ -34,8 +38,10 @@
     "@typechain/hardhat": "^6.1.2",
     "@types/chai": "^4.2.0",
     "@types/isomorphic-fetch": "^0.0.38",
+    "@types/lodash": "^4.14.202",
     "@types/mocha": ">=9.1.0",
     "@types/node": ">=12.0.0",
+    "@types/spinnies": "^0.5.3",
     "@types/ws": "^8.5.5",
     "@typescript-eslint/eslint-plugin": "^5.59.9",
     "@typescript-eslint/parser": "^5.59.9",
@@ -53,6 +59,7 @@
     "eslint-plugin-sort-keys-fix": "^1.1.2",
     "eslint-plugin-typescript-sort-keys": "^2.3.0",
     "hardhat-gas-reporter": "^1.0.8",
+    "http-server": "^14.1.1",
     "prettier": "^2.8.8",
     "prettier-plugin-solidity": "^1.1.3",
     "rimraf": "^5.0.1",
@@ -61,6 +68,7 @@
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
     "typechain": "^8.1.0",
+    "typedoc": "^0.25.9",
     "typescript": ">=4.5.0"
   },
   "files": [
@@ -75,8 +83,8 @@
     "@openzeppelin/contracts": "^4.9.2",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@zetachain/faucet-cli": "^4.0.1",
-    "@zetachain/networks": "^3.0.0",
-    "@zetachain/protocol-contracts": "^3.0.2",
+    "@zetachain/networks": "4.0.0-rc1",
+    "@zetachain/protocol-contracts": "5.0.0-rc7",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",
@@ -90,6 +98,7 @@
     "handlebars": "4.7.7",
     "hardhat": "^2.15.0",
     "isomorphic-fetch": "^3.0.0",
+    "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "ora": "5.4.1",
     "spinnies": "^0.5.1",
