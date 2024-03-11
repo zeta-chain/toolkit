@@ -1,0 +1,33 @@
+import { task } from "hardhat/config";
+import { ZetaChainClient } from "../../client/src/";
+
+const main = async (args: any, hre: any) => {
+  const client = new ZetaChainClient({
+    network: args.mainnet ? "mainnet" : "testnet",
+  });
+  const tokens = await client.getForeignCoins();
+  const chains = await client.getSupportedChains();
+
+  const tableData = tokens.map((token: any) => {
+    const name = chains.find(
+      (chain: any) => chain.chain_id === token.foreign_chain_id
+    )?.chain_name;
+    return {
+      Chain: name,
+      Symbol: token.symbol,
+      Type: token.coin_type,
+      "ZRC-20 on ZetaChain": token.zrc20_contract_address,
+      "ERC-20 on Connected Chain": token.asset || "",
+    };
+  });
+
+  tableData.sort((a: any, b: any) => a.Chain.localeCompare(b.Chain));
+
+  console.table(tableData);
+};
+
+export const tokensTask = task(
+  "tokens",
+  "Show ZRC-20 address of supported gas and ERC-20 tokens",
+  main
+).addFlag("mainnet", "Run the task on mainnet");
