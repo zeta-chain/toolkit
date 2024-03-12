@@ -1,4 +1,5 @@
 import { task } from "hardhat/config";
+
 import { ZetaChainClient } from "../../client/src/";
 
 const main = async (args: any, hre: any) => {
@@ -14,10 +15,10 @@ const main = async (args: any, hre: any) => {
     )?.chain_name;
     return {
       Chain: name,
+      "ERC-20 on Connected Chain": token.asset || "",
       Symbol: token.symbol,
       Type: token.coin_type,
       "ZRC-20 on ZetaChain": token.zrc20_contract_address,
-      "ERC-20 on Connected Chain": token.asset || "",
     };
   });
 

@@ -10,5 +10,5 @@ export { poolsTask } from "./pools";
 export { sendBTCTask } from "./sendBTC";
 export { sendZETATask } from "./sendZETA";
 // export { verifyTask } from "./verify";
-export { withdrawTask } from "./withdraw";
 export { tokensTask } from "./tokens";
+export { withdrawTask } from "./withdraw";
