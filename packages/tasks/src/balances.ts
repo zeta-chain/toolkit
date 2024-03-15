@@ -70,10 +70,12 @@ EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""}
     );
 
     balances = balances.map((balance: any) => ({
+      /* eslint-disable */
       Chain: balance.chain_name,
       Token: balance.symbol,
       Type: balance.coin_type,
       Amount: `${parseFloat(balance.balance).toFixed(2)}`,
+      /* eslint-enable */
     }));
     console.table(balances);
   }
