@@ -77,7 +77,14 @@ export const sendZeta = async function (
 
   const destinationChainId = this.getChains()[destination]?.chain_id;
   const destinationAddress = recipient ? recipient : signer.address;
-
+  console.log({
+    destinationAddress,
+    destinationChainId,
+    destinationGasLimit: gasLimit,
+    message: ethers.utils.toUtf8Bytes(""),
+    zetaParams: ethers.utils.toUtf8Bytes(""),
+    zetaValueAndGas: value,
+  });
   return await connectorContract.send({
     destinationAddress,
     destinationChainId,

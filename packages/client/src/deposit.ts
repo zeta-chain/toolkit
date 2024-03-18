@@ -22,8 +22,7 @@ import { prepareParams } from "./prepareData";
  * @param options.message - If a message is specified, ZetaChain will deposit
  * tokens into the `recipient` contract and call with with the message as an argument.
  * @param options.recipient - Recipient address for the deposit. If not provided,
- * the deposit is made to the signer's address. If the message is provided, the
- * recipient is assumed to be a contract address.
+ * the deposit is made to the signer's address.
  *
  * @returns A promise that resolves with the transaction details upon success.
  */
@@ -32,15 +31,15 @@ export const deposit = async function (
   {
     chain,
     amount,
+    recipient,
     erc20,
     message,
-    recipient,
   }: {
     amount: string;
     chain: string;
+    recipient?: string;
     erc20?: string;
     message?: [string[], string[]];
-    recipient?: string;
   }
 ) {
   let signer;
@@ -54,6 +53,14 @@ export const deposit = async function (
   } else {
     throw new Error("No wallet or signer found.");
   }
+  if (message && !recipient) {
+    throw new Error("Please, provide a valid contract address as recipient.");
+  }
+  const to = recipient || this.signer.address;
+  const abiCoder = ethers.utils.defaultAbiCoder;
+  const data = message
+    ? abiCoder.encode(message[0], message[1])
+    : ethers.utils.hexlify([]);
   if (erc20) {
     const custody = getAddress(
       "erc20Custody",
@@ -81,10 +88,6 @@ export const deposit = async function (
     }
     const approveTx = await contract.approve(custody, value);
     await approveTx.wait();
-    const to = recipient || signer.address;
-    const data = message
-      ? prepareParams(message[0], message[1])
-      : ethers.utils.hexlify([]);
     return await custodyContract.deposit(to, erc20, value, data);
   } else {
     const tss = getAddress("tss", chain as ParamChainName);
@@ -99,7 +102,9 @@ export const deposit = async function (
       to: tss,
       value: ethers.utils.parseUnits(amount, 18),
     };
-    if (recipient) tx.data = `${recipient}${message ?? ""}`;
+    tx.data = recipient
+      ? `${recipient}${data.slice(2) ?? ""}`
+      : ethers.utils.hexlify([]);
     return await signer.sendTransaction(tx);
   }
 };
