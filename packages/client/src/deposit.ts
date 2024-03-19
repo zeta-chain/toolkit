@@ -37,9 +37,9 @@ export const deposit = async function (
   }: {
     amount: string;
     chain: string;
-    recipient?: string;
     erc20?: string;
     message?: [string[], string[]];
+    recipient?: string;
   }
 ) {
   let signer;
