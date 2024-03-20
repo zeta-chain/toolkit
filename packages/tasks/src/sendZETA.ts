@@ -20,23 +20,28 @@ const main = async (args: any, hre: any) => {
       throw new Error(`Cannot fetch fees for chain ID ${chainID}`);
     }
     fee = chainFee.totalFee;
-    if (parseFloat(args.amount) < parseFloat(fee))
+    if (parseFloat(args.amount) < parseFloat(fee) && !args.ignoreChecks) {
       throw new Error(
         `Amount must be greater than ${fee} ZETA to cover the cross-chain fees`
       );
+    }
   }
 
   const { amount, destination } = args;
   const recipient = args.recipient || signer.address;
   const chain = hre.network.name;
 
+  const data: any = {
+    amount,
+    chain,
+    destination,
+    recipient,
+  };
+
+  if (args.gasLimit) data.gasLimit = args.gasLimit;
+
   if (args.json) {
-    const tx = await client.sendZeta({
-      amount,
-      chain,
-      destination,
-      recipient,
-    });
+    const tx = await client.sendZeta(data);
     console.log(JSON.stringify(tx, null, 2));
   } else {
     console.log(`
@@ -56,12 +61,7 @@ To address:      ${recipient}
       },
       { clearPromptOnDone: true }
     );
-    const tx = await client.sendZeta({
-      amount,
-      chain,
-      destination,
-      recipient,
-    });
+    const tx = await client.sendZeta(data);
     console.log(`Transaction successfully broadcasted!
 Hash: ${tx.hash}`);
   }
@@ -75,4 +75,6 @@ export const sendZETATask = task(
   .addParam("amount", "Amount of ZETA to send")
   .addParam("destination", "Destination chain")
   .addOptionalParam("recipient", "Recipient address")
-  .addFlag("json", "Output JSON");
+  .addFlag("json", "Output JSON")
+  .addOptionalParam("gasLimit", "Gas limit")
+  .addFlag("ignoreChecks", "Ignore fee check");

@@ -40,6 +40,7 @@ export const withdraw = async function (
   } else {
     throw new Error("No wallet or signer found.");
   }
+
   const targetContract = new ethers.Contract(zrc20, ZRC20.abi, signer);
   const targetDecimals = await targetContract.decimals();
 
