@@ -10,9 +10,10 @@ const main = async (args: any, hre: any) => {
   const chains = await client.getSupportedChains();
 
   const tableData = tokens.map((token: any) => {
-    const name = chains.find(
+    const chain = chains.find(
       (chain: any) => chain.chain_id === token.foreign_chain_id
-    )?.chain_name;
+    );
+    const name = chain ? chain.chain_name : "Unsupported Chain";
     return {
       Chain: name,
       "ERC-20 on Connected Chain": token.asset || "",
