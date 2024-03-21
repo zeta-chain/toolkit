@@ -20,6 +20,7 @@ const main = async (args: any, hre: any) => {
       Symbol: token.symbol,
       Type: token.coin_type,
       "ZRC-20 on ZetaChain": token.zrc20_contract_address,
+      "ZRC-20 decimals": token.decimals,
     };
   });
 
