@@ -20,16 +20,6 @@ export interface TokenBalance {
   zrc20?: string;
 }
 
-function getChainLabelById(chains: any, chainId: number): string | null {
-  const chainKeys = Object.keys(chains);
-  for (let key of chainKeys) {
-    if (chains[key].chain_id === chainId) {
-      return chains[key].chain_name;
-    }
-  }
-  return null;
-}
-
 /**
  * Get token balances of all tokens on all chains connected to ZetaChain.
  *

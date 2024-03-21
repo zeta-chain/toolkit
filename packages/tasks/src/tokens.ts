@@ -19,8 +19,8 @@ const main = async (args: any, hre: any) => {
       "ERC-20 on Connected Chain": token.asset || "",
       Symbol: token.symbol,
       Type: token.coin_type,
-      "ZRC-20 on ZetaChain": token.zrc20_contract_address,
       "ZRC-20 decimals": token.decimals,
+      "ZRC-20 on ZetaChain": token.zrc20_contract_address,
     };
   });
 
