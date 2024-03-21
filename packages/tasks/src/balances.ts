@@ -65,16 +65,20 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.log(`
 EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""}
     `);
-    balances = balances.sort((a: any, b: any) =>
-      a.chain_name.localeCompare(b.chain_name)
-    );
+    balances = balances.sort((a: any, b: any) => {
+      if (a?.chain_name === undefined && b?.chain_name === undefined) return 0;
+      if (a?.chain_name === undefined) return 1;
+      if (b?.chain_name === undefined) return -1;
+
+      return a.chain_name.localeCompare(b.chain_name);
+    });
 
     balances = balances.map((balance: any) => ({
       /* eslint-disable */
       Chain: balance.chain_name,
       Token: balance.symbol,
       Type: balance.coin_type,
-      Amount: `${parseFloat(balance.balance).toFixed(2)}`,
+      Amount: `${parseFloat(balance.balance).toFixed(6)}`,
       /* eslint-enable */
     }));
     console.table(balances);
