@@ -61,15 +61,6 @@ const fetchCCTXData = async function (
   const receiver_chainId = cctx?.outbound_tx_params[0]?.receiver_chainId;
   const outbound_tx_hash = cctx?.outbound_tx_params[0]?.outbound_tx_hash;
   let confirmed_on_destination = false;
-  if (outbound_tx_hash) {
-    const chainName = findByChainId(networks, parseInt(receiver_chainId));
-    if (chainName) {
-      const rpc = this.getEndpoint("evm", chainName as any);
-      const provider = new ethers.providers.JsonRpcProvider(rpc);
-      const confirmed = await provider.getTransaction(outbound_tx_hash);
-      confirmed_on_destination = confirmed !== null;
-    }
-  }
   const tx = {
     confirmed_on_destination,
     outbound_tx_hash,
