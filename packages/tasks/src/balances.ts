@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ora from "ora";
+import { ethers } from "ethers";
 
 import { ZetaChainClient } from "../../client/src/";
 import { bitcoinAddress } from "./bitcoinAddress";
@@ -38,7 +39,6 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   if (!args.json) {
     spinner.start();
   }
-  const { ethers, config } = hre as any;
   const pk = process.env.PRIVATE_KEY;
   let evmAddress: string;
   let btcAddress: any;
