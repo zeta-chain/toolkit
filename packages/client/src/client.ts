@@ -14,6 +14,7 @@ import {
   sendZeta,
   trackCCTX,
   withdraw,
+  getHardhatConfig,
 } from ".";
 
 export interface ZetaChainClientParamsBase {
@@ -116,4 +117,5 @@ export class ZetaChainClient {
   withdraw = withdraw;
   sendZeta = sendZeta;
   getChainId = getChainId;
+  getHardhatConfig = getHardhatConfig;
 }
