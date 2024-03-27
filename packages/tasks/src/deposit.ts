@@ -24,7 +24,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
         msg[0].every((item: string) => typeof item === "string") &&
         msg[1].every((item: string) => typeof item === "string")
       ) {
-        message = args.message;
+        message = JSON.parse(args.message);
       } else {
         throw new Error('must be an array like [["string"], ["hello"]]');
       }
@@ -33,14 +33,14 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     }
   }
 
-  const recipient = args.recipient || signer.address;
+  // const recipient = args.recipient || signer.address;
 
   const chain = hre.network.name;
   if (chain === "zeta_testnet" || chain === "zeta_mainnet") {
     throw new Error("Cannot from ZetaChain to ZetaChain.");
   }
 
-  const data = { amount, chain, erc20, message, recipient };
+  const data = { amount, chain, erc20, message, recipient: args.recipient };
 
   let symbol;
   if (erc20) {
@@ -62,9 +62,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 Networks:    ${chain} → zeta_testnet
 Amount sent: ${amount} ${symbol || ""}
 Sender:      ${signer.address}
-Recipient:   ${recipient}`);
+Recipient:   ${args.recipient || signer.address}`);
   if (message) {
-    console.log(`Message:     ${message}`);
+    console.log(`Message:     ${args.message}`);
   }
   await confirm(
     {

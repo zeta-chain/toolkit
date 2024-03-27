@@ -87,21 +87,23 @@ export const getBalances = async function (
     symbol: "ZETA",
   });
 
-  tokens = tokens.map((token: any) => {
-    const ticker = token.symbol.split("-")[0];
-    const { chain_name } = supportedChains.find(
-      (c: any) => c.chain_id === token.chain_id.toString()
-    );
-    return {
-      ...token,
-      chain_name,
-      id: `${token.chain_id.toString().toLowerCase()}__${token.symbol
-        .toLowerCase()
-        .split(" ")
-        .join("_")}`,
-      ticker,
-    };
-  });
+  tokens = tokens
+    .map((token: any) => {
+      const ticker = token.symbol.split("-")[0];
+      const chain_name = supportedChains.find(
+        (c: any) => c.chain_id === token.chain_id.toString()
+      )?.chain_name;
+      return {
+        ...token,
+        chain_name,
+        id: `${token.chain_id.toString().toLowerCase()}__${token.symbol
+          .toLowerCase()
+          .split(" ")
+          .join("_")}`,
+        ticker,
+      };
+    })
+    .filter((token: any) => token.chain_name);
 
   const balances = await Promise.all(
     tokens.map(async (token: any) => {
@@ -112,13 +114,23 @@ export const getBalances = async function (
       const isERC = token.coin_type === "ERC20";
       const isZRC = token.coin_type === "ZRC20";
       if (isGas && !isBitcoin) {
-        const rpc = await this.getEndpoint("evm", token.chain_name);
+        let rpc;
+        try {
+          rpc = await this.getEndpoint("evm", token.chain_name);
+        } catch (e) {
+          return token;
+        }
         const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
         return provider.getBalance(evmAddress).then((balance) => {
           return { ...token, balance: formatUnits(balance, token.decimals) };
         });
       } else if (isGas && isBitcoin && btcAddress) {
-        const API = this.getEndpoint("esplora", "btc_testnet");
+        let API;
+        try {
+          API = this.getEndpoint("esplora", token.chain_name);
+        } catch (e) {
+          return { ...token, balance: undefined };
+        }
         return fetch(`${API}/address/${btcAddress}`).then(async (response) => {
           const r = await response.json();
           const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
@@ -129,7 +141,12 @@ export const getBalances = async function (
           return { ...token, balance };
         });
       } else if (isERC) {
-        const rpc = await this.getEndpoint("evm", token.chain_name);
+        let rpc;
+        try {
+          rpc = await this.getEndpoint("evm", token.chain_name);
+        } catch (e) {
+          return token;
+        }
         const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
         const contract = new ethers.Contract(
           token.contract,
