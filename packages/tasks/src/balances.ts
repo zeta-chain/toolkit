@@ -30,42 +30,6 @@ const balancesError = `
   npx hardhat balances --address <wallet_address>
 `;
 
-const summarizeTokens = (tokens: any[]) => {
-  let table = {} as any;
-  tokens.forEach((token) => {
-    if (token && token.chain_name) {
-      if (!table[token.chain_name]) {
-        table[token.chain_name] = {};
-      }
-      const balance = parseFloat(token.balance).toFixed(2);
-      if (parseFloat(token.balance) > 0) {
-        if (token.coin_type === "Gas") {
-          table[token.chain_name].gas = balance;
-        } else if (token.symbol === "ZETA") {
-          table[token.chain_name].zeta = balance;
-        } else if (token.coin_type === "ERC20") {
-          table[token.chain_name].erc20 =
-            (table[token.chain_name].erc20
-              ? table[token.chain_name].erc20 + " "
-              : "") +
-            balance +
-            " " +
-            token.symbol;
-        } else if (token.coin_type === "ZRC20") {
-          table[token.chain_name].zrc20 =
-            (table[token.chain_name].zrc20
-              ? table[token.chain_name].zrc20 + " "
-              : "") +
-            balance +
-            " " +
-            token.symbol;
-        }
-      }
-    }
-  });
-  return table;
-};
-
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const client = new ZetaChainClient({
     network: args.mainnet ? "mainnet" : "testnet",
@@ -89,7 +53,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.error(walletError + balancesError);
     return process.exit(1);
   }
-  const balances = (await client.getBalances({
+  let balances = (await client.getBalances({
     btcAddress,
     evmAddress,
   })) as any;
@@ -101,7 +65,23 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.log(`
 EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""}
     `);
-    console.table(summarizeTokens(balances));
+    balances = balances.sort((a: any, b: any) => {
+      if (a?.chain_name === undefined && b?.chain_name === undefined) return 0;
+      if (a?.chain_name === undefined) return 1;
+      if (b?.chain_name === undefined) return -1;
+
+      return a.chain_name.localeCompare(b.chain_name);
+    });
+
+    balances = balances.map((balance: any) => ({
+      /* eslint-disable */
+      Chain: balance.chain_name,
+      Token: balance.symbol,
+      Type: balance.coin_type,
+      Amount: `${parseFloat(balance.balance).toFixed(6)}`,
+      /* eslint-enable */
+    }));
+    console.table(balances);
   }
 };
 

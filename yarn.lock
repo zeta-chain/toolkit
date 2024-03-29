@@ -1829,32 +1829,32 @@
     "typescript" "5.0.4"
     "zod" "3.19.1"
 
-"@zetachain/networks@4.0.0-rc1":
-  "integrity" "sha512-Zl8cZc5PdKI46KZqPeIu7DmpSqUkXN07L9Yxy/Lp233L9pZKWUVr7RnEq2HUaN9F6gqtxlofNtKBFopphm1pEQ=="
-  "resolved" "https://registry.npmjs.org/@zetachain/networks/-/networks-4.0.0-rc1.tgz"
-  "version" "4.0.0-rc1"
+"@zetachain/networks@6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-6.0.0.tgz#ae5d3cd1678b32510edfaa71f8f4a6f4cbc1d9ab"
+  integrity sha512-yKFVP/yJDp76Q5lBGfZSpY/KO3TZ9ldo0lhE4MpBW43EsBxOZWixg6sqb56mcU/gg1lbWG8sHHWtYFK51SByjQ==
   dependencies:
     "dotenv" "^16.1.4"
 
-"@zetachain/protocol-contracts@5.0.0-rc7":
-  "integrity" "sha512-UjIPWzNv4j6syUKItJA5tbVFaDKvZyJehPlLMlXdp9GjmMxNFhL2qo2zyrVhdUdED5yx98KjRUCSswwgOfJ3PA=="
-  "resolved" "https://registry.npmjs.org/@zetachain/protocol-contracts/-/protocol-contracts-5.0.0-rc7.tgz"
-  "version" "5.0.0-rc7"
+"@zetachain/protocol-contracts@7.0.0-rc1":
+  version "7.0.0-rc1"
+  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-7.0.0-rc1.tgz#588483d1ec70e572b7e40e84ef5b34282b0ab375"
+  integrity sha512-vgS+Pjh4MysOyw8WbqTQVBsHJYqKvMcdV7cNVqxaTJd/dl2ak7NNvsIeaeUnxQrp8XfQol2B8GXJpVLM6MK/dg==
 
-"abbrev@1.0.x":
-  "integrity" "sha512-LEyx4aLEC3x6T0UguF6YILf+ntvmOaWsVfENmIW0E9H09vKlLDGelMjjSm0jkDHALj8A8quZ/HapKNigzwge+Q=="
-  "resolved" "https://registry.npmjs.org/abbrev/-/abbrev-1.0.9.tgz"
-  "version" "1.0.9"
+abbrev@1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
+  integrity sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==
 
-"abbrev@1":
-  "integrity" "sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q=="
-  "resolved" "https://registry.npmjs.org/abbrev/-/abbrev-1.1.1.tgz"
-  "version" "1.1.1"
+abbrev@1.0.x:
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.0.9.tgz#91b4792588a7738c25f35dd6f63752a2f8776135"
+  integrity sha512-LEyx4aLEC3x6T0UguF6YILf+ntvmOaWsVfENmIW0E9H09vKlLDGelMjjSm0jkDHALj8A8quZ/HapKNigzwge+Q==
 
-"abstract-level@^1.0.0", "abstract-level@^1.0.2", "abstract-level@^1.0.3":
-  "integrity" "sha512-t6jv+xHy+VYwc4xqZMn2Pa9DjcdzvzZmQGRjTFc8spIbRGHgBrEKbPq+rYXc7CCo0lxgYvSgKVg9qZAhpVQSjA=="
-  "resolved" "https://registry.npmjs.org/abstract-level/-/abstract-level-1.0.3.tgz"
-  "version" "1.0.3"
+abstract-level@^1.0.0, abstract-level@^1.0.2, abstract-level@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/abstract-level/-/abstract-level-1.0.3.tgz#78a67d3d84da55ee15201486ab44c09560070741"
+  integrity sha512-t6jv+xHy+VYwc4xqZMn2Pa9DjcdzvzZmQGRjTFc8spIbRGHgBrEKbPq+rYXc7CCo0lxgYvSgKVg9qZAhpVQSjA==
   dependencies:
     "buffer" "^6.0.3"
     "catering" "^2.1.0"
@@ -3224,30 +3224,30 @@
   dependencies:
     "esutils" "^2.0.2"
 
-"dotenv@^16.1.4":
-  "integrity" "sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ=="
-  "resolved" "https://registry.npmjs.org/dotenv/-/dotenv-16.3.1.tgz"
-  "version" "16.3.1"
+dotenv@16.0.3:
+  version "16.0.3"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.0.3.tgz#115aec42bac5053db3c456db30cc243a5a836a07"
+  integrity sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==
 
-"dotenv@16.0.3":
-  "integrity" "sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ=="
-  "resolved" "https://registry.npmjs.org/dotenv/-/dotenv-16.0.3.tgz"
-  "version" "16.0.3"
+dotenv@^16.1.4:
+  version "16.4.5"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.4.5.tgz#cdd3b3b604cb327e286b4762e13502f717cb099f"
+  integrity sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==
 
-"duplexer@^0.1.1":
-  "integrity" "sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg=="
-  "resolved" "https://registry.npmjs.org/duplexer/-/duplexer-0.1.2.tgz"
-  "version" "0.1.2"
+duplexer@^0.1.1:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.2.tgz#3abe43aef3835f8ae077d136ddce0f276b0400e6"
+  integrity sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==
 
-"eastasianwidth@^0.2.0":
-  "integrity" "sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA=="
-  "resolved" "https://registry.npmjs.org/eastasianwidth/-/eastasianwidth-0.2.0.tgz"
-  "version" "0.2.0"
+eastasianwidth@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/eastasianwidth/-/eastasianwidth-0.2.0.tgz#696ce2ec0aa0e6ea93a397ffcf24aa7840c827cb"
+  integrity sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==
 
-"ecc-jsbn@~0.1.1":
-  "integrity" "sha512-eh9O+hwRHNbG4BLTjEl3nw044CkGm5X6LoaCf7LPp7UU8Qrt47JYNi6nPX8xjW97TKGKm1ouctg0QSpZe9qrnw=="
-  "resolved" "https://registry.npmjs.org/ecc-jsbn/-/ecc-jsbn-0.1.2.tgz"
-  "version" "0.1.2"
+ecc-jsbn@~0.1.1:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/ecc-jsbn/-/ecc-jsbn-0.1.2.tgz#3a83a904e54353287874c564b7549386849a98c9"
+  integrity sha512-eh9O+hwRHNbG4BLTjEl3nw044CkGm5X6LoaCf7LPp7UU8Qrt47JYNi6nPX8xjW97TKGKm1ouctg0QSpZe9qrnw==
   dependencies:
     "jsbn" "~0.1.0"
     "safer-buffer" "^2.1.0"
