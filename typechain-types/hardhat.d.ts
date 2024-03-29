@@ -121,6 +121,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IWETH__factory>;
     getContractFactory(
+      name: "Math",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Math__factory>;
+    getContractFactory(
+      name: "UniswapV2Library",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.UniswapV2Library__factory>;
+    getContractFactory(
       name: "MockSystemContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MockSystemContract__factory>;
@@ -292,6 +300,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IWETH>;
+    getContractAt(
+      name: "Math",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Math>;
+    getContractAt(
+      name: "UniswapV2Library",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.UniswapV2Library>;
     getContractAt(
       name: "MockSystemContract",
       address: string,

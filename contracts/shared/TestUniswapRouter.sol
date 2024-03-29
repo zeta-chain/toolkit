@@ -1,21 +1,26 @@
-pragma solidity =0.6.6;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.7;
 
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 
-import './libraries/UniswapV2Library.sol';
-import './libraries/SafeMath.sol';
-import './interfaces/IERC20.sol';
-import './interfaces/IWETH.sol';
+import "./libraries/UniswapV2Library.sol";
+import "./interfaces/IERC20.sol";
+import "./interfaces/IWETH.sol";
 
 contract TestUniswapRouter {
-    using SafeMath for uint;
+
+    error Expired();
+    error InsufficientBAmount();
+    error InsufficientAAmount();
+    error InsufficientOutputAmount();
+    error InsufficientInputAmount();
 
     address public immutable factory;
     address public immutable WETH;
 
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
+        if (deadline < block.timestamp) revert Expired();
         _;
     }
 
@@ -48,16 +53,17 @@ contract TestUniswapRouter {
         } else {
             uint amountBOptimal = UniswapV2Library.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
-                require(amountBOptimal >= amountBMin, 'UniswapV2Router: INSUFFICIENT_B_AMOUNT');
+                if (amountBOptimal < amountBMin) revert InsufficientBAmount();
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
                 uint amountAOptimal = UniswapV2Library.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
-                require(amountAOptimal >= amountAMin, 'UniswapV2Router: INSUFFICIENT_A_AMOUNT');
+                if (amountAOptimal < amountAMin) revert InsufficientAAmount();
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
     }
+
     function addLiquidity(
         address tokenA,
         address tokenB,
@@ -74,6 +80,7 @@ contract TestUniswapRouter {
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
         liquidity = IUniswapV2Pair(pair).mint(to);
     }
+
     function addLiquidityETH(
         address token,
         uint amountTokenDesired,
@@ -115,9 +122,10 @@ contract TestUniswapRouter {
         (uint amount0, uint amount1) = IUniswapV2Pair(pair).burn(to);
         (address token0,) = UniswapV2Library.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
-        require(amountA >= amountAMin, 'UniswapV2Router: INSUFFICIENT_A_AMOUNT');
-        require(amountB >= amountBMin, 'UniswapV2Router: INSUFFICIENT_B_AMOUNT');
+        if (amountA < amountAMin) revert InsufficientAAmount();
+        if (amountB < amountBMin) revert InsufficientBAmount();
     }
+
     function removeLiquidityETH(
         address token,
         uint liquidity,
@@ -154,6 +162,7 @@ contract TestUniswapRouter {
             );
         }
     }
+
     function swapExactTokensForTokens(
         uint amountIn,
         uint amountOutMin,
@@ -162,12 +171,13 @@ contract TestUniswapRouter {
         uint deadline
     ) external ensure(deadline) returns (uint[] memory amounts) {
         amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, 'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
+        if (amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, to);
     }
+
     function swapTokensForExactTokens(
         uint amountOut,
         uint amountInMax,
@@ -176,7 +186,7 @@ contract TestUniswapRouter {
         uint deadline
     ) external ensure(deadline) returns (uint[] memory amounts) {
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
+        if (amounts[0] > amountInMax) revert InsufficientInputAmount();
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );

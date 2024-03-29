@@ -56,6 +56,10 @@ export type { SystemContractErrors } from "./@zetachain/protocol-contracts/contr
 export { SystemContractErrors__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContractErrors__factory";
 export type { ZetaEthMock } from "./contracts/EthZetaMock.sol/ZetaEthMock";
 export { ZetaEthMock__factory } from "./factories/contracts/EthZetaMock.sol/ZetaEthMock__factory";
+export type { Math } from "./contracts/shared/libraries/SafeMath.sol/Math";
+export { Math__factory } from "./factories/contracts/shared/libraries/SafeMath.sol/Math__factory";
+export type { UniswapV2Library } from "./contracts/shared/libraries/UniswapV2Library";
+export { UniswapV2Library__factory } from "./factories/contracts/shared/libraries/UniswapV2Library__factory";
 export type { MockSystemContract } from "./contracts/shared/MockSystemContract.sol/MockSystemContract";
 export { MockSystemContract__factory } from "./factories/contracts/shared/MockSystemContract.sol/MockSystemContract__factory";
 export type { MockZRC20 } from "./contracts/shared/MockZRC20";
