@@ -8,6 +8,16 @@ import { getHardhatConfig } from "./packages/client/src";
 
 dotenv.config();
 
-export const config: HardhatUserConfig = {
+const config: HardhatUserConfig = {
   ...getHardhatConfig({ accounts: [process.env.PRIVATE_KEY] }),
+  solidity: {
+    compilers: [
+      { version: "0.6.6" /** For uniswap v2 */ },
+      { version: "0.8.7" },
+    ],
+  },
 };
+
+export default config;
+
+console.log(config);
