@@ -30,12 +30,13 @@ export const getHardhatConfig = function ({ accounts }: any) {
     }
 
     config[network] = {
-      accounts,
       chainId: (networks as any)[network].chain_id,
       gas: (networks as any)[network].fees.assets[0].gas,
       gasPrice: (networks as any)[network].fees.assets[0].gas_price,
       url: evmApi?.url || "",
     };
+
+    if (accounts.every((e: string) => e)) config[network].accounts = accounts;
   }
 
   return {
