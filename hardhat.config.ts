@@ -1,19 +1,11 @@
 import "@nomicfoundation/hardhat-toolbox";
 import "./packages/tasks/src";
-
-import { getHardhatConfigNetworks } from "@zetachain/networks";
 import { HardhatUserConfig } from "hardhat/config";
+import { getHardhatConfig } from "./packages/client/src";
+import * as dotenv from "dotenv";
 
-const config: HardhatUserConfig = {
-  networks: {
-    ...getHardhatConfigNetworks(),
-  },
-  solidity: {
-    compilers: [
-      { version: "0.6.6" /** For uniswap v2 */ },
-      { version: "0.8.7" },
-    ],
-  },
+dotenv.config();
+
+export const config: HardhatUserConfig = {
+  ...getHardhatConfig({ accounts: [process.env.PRIVATE_KEY] }),
 };
-
-export default config;

@@ -1,4 +1,4 @@
-import { ZetaChainClient } from "./client";
+import { networks } from "@zetachain/networks";
 
 interface Config {
   [key: string]: {
@@ -10,28 +10,27 @@ interface Config {
   };
 }
 
-export const getHardhatConfig = function (this: ZetaChainClient) {
+export const getHardhatConfig = function ({ accounts }: any) {
   const hardhat = {
     chainId: 1337,
     forking: { blockNumber: 14672712, url: "https://rpc.ankr.com/eth" },
   };
 
   const config: Config = {};
-  const networks = this.chains;
 
   for (const network in networks as any) {
     if (!(networks as any)[network].fees) continue;
     let apiUrls = (networks as any)[network].api;
     let evmApi = apiUrls?.find((api: any) => api.type === "evm");
 
-    if (!this.wallet?.privateKey) {
+    if (!accounts) {
       throw new Error(
         "Seems like the client has been initialized without a wallet."
       );
     }
 
     config[network] = {
-      accounts: [this.wallet?.privateKey],
+      accounts,
       chainId: (networks as any)[network].chain_id,
       gas: (networks as any)[network].fees.assets[0].gas,
       gasPrice: (networks as any)[network].fees.assets[0].gas_price,
