@@ -1,8 +1,10 @@
 import "@nomicfoundation/hardhat-toolbox";
 import "./packages/tasks/src";
-import { HardhatUserConfig } from "hardhat/config";
-import { getHardhatConfig } from "./packages/client/src";
+
 import * as dotenv from "dotenv";
+import { HardhatUserConfig } from "hardhat/config";
+
+import { getHardhatConfig } from "./packages/client/src";
 
 dotenv.config();
 

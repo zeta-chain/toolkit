@@ -1,8 +1,8 @@
 import * as dotenv from "dotenv";
+import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ora from "ora";
-import { ethers } from "ethers";
 
 import { ZetaChainClient } from "../../client/src/";
 import { bitcoinAddress } from "./bitcoinAddress";
