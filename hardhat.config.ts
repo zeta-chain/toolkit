@@ -19,5 +19,3 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
-
-console.log(config);
