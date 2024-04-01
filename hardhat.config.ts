@@ -2,7 +2,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "./packages/tasks/src";
 
 import * as dotenv from "dotenv";
-import { HardhatUserConfig } from "hardhat/config";
+import type { HardhatUserConfig } from "hardhat/config";
 
 import { getHardhatConfig } from "./packages/client/src";
 
