@@ -26,8 +26,8 @@ const fetchCCMFees = async function (
   chainID: string,
   gas: Number
 ) {
-  // Skip ZetaChain as we can't send messages from ZetaChain to ZetaChain
-  if (chainID === "7000" || chainID === "7001") return;
+  // Skip ZetaChain and Bitcoin
+  if (["7000", "7001", "18332", "8332"].includes(chainID)) return;
   const API = this.getEndpoint("cosmos-http", `zeta_${this.network}`);
   if (!API) {
     throw new Error("API endpoint not found");
