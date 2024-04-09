@@ -3,6 +3,7 @@
 /* eslint-disable */
 export * as ethZetaMockSol from "./EthZetaMock.sol";
 export * as zetaConnectorMockSol from "./ZetaConnectorMock.sol";
+export * as shared from "./shared";
 export { SwapHelperLib__factory } from "./SwapHelperLib__factory";
 export { TestSystemContract__factory } from "./TestSystemContract__factory";
 export { TestZRC20__factory } from "./TestZRC20__factory";
