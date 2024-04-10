@@ -5,6 +5,7 @@ export * from "./getChainId";
 export * from "./getEndpoint";
 export * from "./getFees";
 export * from "./getForeignCoins";
+export * from "./getHardhatConfig";
 export * from "./getPools";
 export * from "./getSupportedChains";
 export * from "./prepareData";
