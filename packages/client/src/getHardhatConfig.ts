@@ -41,8 +41,8 @@ export const getHardhatConfig = function ({ accounts }: any) {
 
   const etherscan = {
     apiKey: {
-      zeta_testnet: "YOUR_KEY_HERE",
       zeta_mainnet: "YOUR_KEY_HERE",
+      zeta_testnet: "YOUR_KEY_HERE",
     },
     customChains: [
       {
@@ -65,8 +65,8 @@ export const getHardhatConfig = function ({ accounts }: any) {
   };
 
   return {
+    etherscan,
     networks: { ...config, hardhat },
     solidity: "0.8.7",
-    etherscan,
   };
 };

@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 library Math {
     using SafeMath for uint256;
-    
+
     error AdditionsOverflow();
     error SubtractionsUnderflow();
     error MultiplicationsOverflow();
