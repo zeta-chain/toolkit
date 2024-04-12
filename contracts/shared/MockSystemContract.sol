@@ -31,7 +31,11 @@ contract MockSystemContract is SystemContractErrors {
     event SetGasZetaPool(uint256, address);
     event SetWZeta(address);
 
-    constructor(address wzeta_, address uniswapv2Factory_, address uniswapv2Router02_) {
+    constructor(
+        address wzeta_,
+        address uniswapv2Factory_,
+        address uniswapv2Router02_
+    ) {
         wZetaContractAddress = wzeta_;
         uniswapv2FactoryAddress = uniswapv2Factory_;
         uniswapv2Router02Address = uniswapv2Router02_;
@@ -55,13 +59,22 @@ contract MockSystemContract is SystemContractErrors {
     }
 
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
-    function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
+    function sortTokens(
+        address tokenA,
+        address tokenB
+    ) internal pure returns (address token0, address token1) {
         if (tokenA == tokenB) revert CantBeIdenticalAddresses();
-        (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        (token0, token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
         if (token0 == address(0)) revert CantBeZeroAddress();
     }
 
-    function uniswapv2PairFor(address factory, address tokenA, address tokenB) public pure returns (address pair) {
+    function uniswapv2PairFor(
+        address factory,
+        address tokenA,
+        address tokenB
+    ) public pure returns (address pair) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         pair = address(
             uint160(
@@ -79,8 +92,18 @@ contract MockSystemContract is SystemContractErrors {
         );
     }
 
-    function onCrossChainCall(uint256 chainID, address target, address zrc20, uint256 amount, bytes calldata message) external {
-        zContext memory context = zContext({sender: msg.sender, origin: "", chainID: chainID});
+    function onCrossChainCall(
+        uint256 chainID,
+        address target,
+        address zrc20,
+        uint256 amount,
+        bytes calldata message
+    ) external {
+        zContext memory context = zContext({
+            sender: msg.sender,
+            origin: "",
+            chainID: chainID
+        });
         bool transfer = IZRC20(zrc20).transfer(target, amount);
         if (!transfer) revert TransferFailed();
         zContract(target).onCrossChainCall(context, zrc20, amount, message);
