@@ -5,18 +5,27 @@ import fetch from "isomorphic-fetch";
 
 import { ZetaChainClient } from "./client";
 
-const fetchZEVMFees = async function (zrc20: any, rpcUrl: string) {
+const fetchZEVMFees = async function (
+  zrc20: any,
+  rpcUrl: string,
+  foreignCoins: any
+) {
   const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl);
   const contract = new ethers.Contract(zrc20.address, ZRC20.abi, provider);
   const [, withdrawGasFee] = await contract.withdrawGasFee();
   const gasFee = ethers.BigNumber.from(withdrawGasFee);
   const protocolFee = ethers.BigNumber.from(await contract.PROTOCOL_FLAT_FEE());
+  const gasToken = foreignCoins.find((c: any) => {
+    return (
+      c.foreign_chain_id === zrc20.foreign_chain_id && c.coin_type === "Gas"
+    );
+  });
   return {
     /* eslint-disable */
     ...zrc20,
-    totalFee: utils.formatUnits(gasFee, 18),
-    gasFee: utils.formatUnits(gasFee.sub(protocolFee), 18),
-    protocolFee: utils.formatUnits(protocolFee, 18),
+    totalFee: utils.formatUnits(gasFee, gasToken.decimals),
+    gasFee: utils.formatUnits(gasFee.sub(protocolFee), gasToken.decimals),
+    protocolFee: utils.formatUnits(protocolFee, gasToken.decimals),
     /* eslint-enable */
   };
 };
@@ -58,6 +67,7 @@ export const getFees = async function (this: ZetaChainClient, gas: Number) {
     omnichain: [],
   };
   const supportedChains = await this.getSupportedChains();
+  const foreignCoins = await this.getForeignCoins();
 
   const addresses = this.network === "mainnet" ? mainnet : testnet;
   const zrc20Addresses = addresses.filter((a: any) => a.type === "zrc20");
@@ -76,7 +86,7 @@ export const getFees = async function (this: ZetaChainClient, gas: Number) {
     zrc20Addresses.map(async (zrc20: any) => {
       try {
         const rpcUrl = this.getEndpoint("evm", `zeta_${this.network}`);
-        const fee = await fetchZEVMFees(zrc20, rpcUrl);
+        const fee = await fetchZEVMFees(zrc20, rpcUrl, foreignCoins);
         fees.omnichain.push(fee);
       } catch (err) {
         console.log(err);
