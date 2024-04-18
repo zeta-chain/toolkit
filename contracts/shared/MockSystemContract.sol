@@ -99,9 +99,10 @@ contract MockSystemContract is SystemContractErrors {
         uint256 amount,
         bytes calldata message
     ) external {
+        bytes memory originAddress = abi.encode(msg.sender);
         zContext memory context = zContext({
             sender: msg.sender,
-            origin: "",
+            origin: originAddress,
             chainID: chainID
         });
         bool transfer = IZRC20(zrc20).transfer(target, amount);
