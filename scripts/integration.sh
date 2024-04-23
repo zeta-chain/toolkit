@@ -73,8 +73,8 @@ CCM_CONTRACT=$(npx hardhat deploy --networks sepolia_testnet,bsc_testnet --json 
 
 echo "Deployed CCM contract address: $CCM_CONTRACT"
 
-PROTOCOL_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.bsc_testnet.protocolFee")
-GAS_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.bsc_testnet.gasFee")
+PROTOCOL_FEE=$(npx hardhat fees --json | jq '.messaging[] | select(.chainID == "97") | .protocolFee')
+GAS_FEE=$(npx hardhat fees --json | jq '.messaging[] | select(.chainID == "97") | .gasFee')
 
 # Multiply by 2 to be on the safe side
 CCM_FEE=$(echo "$PROTOCOL_FEE + $GAS_FEE * 2" | bc -l)
