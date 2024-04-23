@@ -41,7 +41,7 @@ echo "Deployed omnichain contract address: $OMNICHAIN_CONTRACT"
 
 echo "TESTING TRANSACTION THAT SHOULD SUCCEED"
 
-OMNICHAIN_TX_SHOULD_SUCCEED=$(npx hardhat interact --contract $OMNICHAIN_CONTRACT --network goerli_testnet --amount 0.000000000000000001 --target-z-r-c20 $OMNICHAIN_CONTRACT --recipient $OMNICHAIN_CONTRACT --min-amount-out 0 --json | jq -r '.hash')
+OMNICHAIN_TX_SHOULD_SUCCEED=$(npx hardhat interact --contract $OMNICHAIN_CONTRACT --network sepolia_testnet --amount 0.000000000000000001 --target-z-r-c20 $OMNICHAIN_CONTRACT --recipient $OMNICHAIN_CONTRACT --min-amount-out 0 --json | jq -r '.hash')
 
 echo "TX hash: $OMNICHAIN_TX_SHOULD_SUCCEED"
 
@@ -51,7 +51,7 @@ echo "CCTX: $OMNICHAIN_CCTX_SHOULD_SUCCEED"
 
 echo "TESTING TRANSACTION THAT SHOULD FAIL"
 
-OMNICHAIN_TX_SHOULD_FAIL=$(npx hardhat interact --contract 0x0000000000000000000000000000000000000000 --network goerli_testnet --amount 0.000000000000000001 --target-z-r-c20 $OMNICHAIN_CONTRACT --recipient $OMNICHAIN_CONTRACT --min-amount-out 0 --json | jq -r '.hash')
+OMNICHAIN_TX_SHOULD_FAIL=$(npx hardhat interact --contract 0x0000000000000000000000000000000000000000 --network sepolia_testnet --amount 0.000000000000000001 --target-z-r-c20 $OMNICHAIN_CONTRACT --recipient $OMNICHAIN_CONTRACT --min-amount-out 0 --json | jq -r '.hash')
 
 echo "TX hash: $OMNICHAIN_TX_SHOULD_FAIL"
 
@@ -69,19 +69,19 @@ git reset --hard HEAD
 npx hardhat messaging CrossChainMessage message:string --fees zeta
 npx hardhat compile --force --no-typechain
 
-CCM_CONTRACT=$(npx hardhat deploy --networks goerli_testnet,mumbai_testnet --json | jq -r '.goerli_testnet')
+CCM_CONTRACT=$(npx hardhat deploy --networks sepolia_testnet,bsc_testnet --json | jq -r '.sepolia_testnet')
 
 echo "Deployed CCM contract address: $CCM_CONTRACT"
 
-PROTOCOL_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.mumbai_testnet.protocolFee")
-GAS_FEE=$(npx hardhat fees --json | jq -r ".feesCCM.mumbai_testnet.gasFee")
+PROTOCOL_FEE=$(npx hardhat fees --json | jq '.messaging[] | select(.chainID == "97") | .protocolFee')
+GAS_FEE=$(npx hardhat fees --json | jq '.messaging[] | select(.chainID == "97") | .gasFee')
 
 # Multiply by 2 to be on the safe side
 CCM_FEE=$(echo "$PROTOCOL_FEE + $GAS_FEE * 2" | bc -l)
 
 echo "CCM fee: $CCM_FEE"
 
-CCM_TX_OUT=$(npx hardhat interact --network goerli_testnet --contract $CCM_CONTRACT --message "Hello World" --destination mumbai_testnet --amount $CCM_FEE --json)
+CCM_TX_OUT=$(npx hardhat interact --network sepolia_testnet --contract $CCM_CONTRACT --message "Hello World" --destination bsc_testnet --amount $CCM_FEE --json)
 
 echo "CCM TX out: $CCM_TX_OUT"
 
