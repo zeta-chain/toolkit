@@ -32,16 +32,11 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   addressToInfo[WZETA_ADDRESS] = { decimals: 18, symbol: "WZETA" };
 
   const poolsWithSymbolsAndDecimals = pools.map((pool: any) => {
-    pool.t0.reserve = formatUnits(pool.t0.reserve, pool.t0.decimals);
-    pool.t1.reserve = formatUnits(pool.t1.reserve, pool.t1.decimals);
-    const t0Info = addressToInfo[pool.t0.address.toLowerCase()] || {
-      decimals: 18,
-      symbol: "Unknown",
-    };
-    const t1Info = addressToInfo[pool.t1.address.toLowerCase()] || {
-      decimals: 18,
-      symbol: "Unknown",
-    };
+    const placeholder = { decimals: 18, symbol: "Unknown" };
+    const t0Info = addressToInfo[pool.t0.address.toLowerCase()] || placeholder;
+    const t1Info = addressToInfo[pool.t1.address.toLowerCase()] || placeholder;
+    pool.t0.reserve = formatUnits(pool.t0.reserve, t0Info.decimals);
+    pool.t1.reserve = formatUnits(pool.t1.reserve, t1Info.decimals);
 
     return {
       ...pool,
