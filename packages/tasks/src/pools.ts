@@ -1,4 +1,4 @@
-import { getAddress } from "@zetachain/protocol-contracts";
+import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import { formatUnits } from "ethers/lib/utils";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -21,7 +21,10 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     return acc;
   }, {});
 
-  const wzeta = getAddress("zetaToken", "zeta_testnet");
+  const wzeta = getAddress(
+    "zetaToken",
+    `zeta_${client.network}` as ParamChainName
+  );
   if (!wzeta) {
     throw new Error("Could not find the WZETA address");
   }
@@ -29,16 +32,11 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   addressToInfo[WZETA_ADDRESS] = { decimals: 18, symbol: "WZETA" };
 
   const poolsWithSymbolsAndDecimals = pools.map((pool: any) => {
-    pool.t0.reserve = formatUnits(pool.t0.reserve, pool.t0.decimals);
-    pool.t1.reserve = formatUnits(pool.t1.reserve, pool.t1.decimals);
-    const t0Info = addressToInfo[pool.t0.address.toLowerCase()] || {
-      decimals: 18,
-      symbol: "Unknown",
-    };
-    const t1Info = addressToInfo[pool.t1.address.toLowerCase()] || {
-      decimals: 18,
-      symbol: "Unknown",
-    };
+    const placeholder = { decimals: 18, symbol: "Unknown" };
+    const t0Info = addressToInfo[pool.t0.address.toLowerCase()] || placeholder;
+    const t1Info = addressToInfo[pool.t1.address.toLowerCase()] || placeholder;
+    pool.t0.reserve = formatUnits(pool.t0.reserve, t0Info.decimals);
+    pool.t1.reserve = formatUnits(pool.t1.reserve, t1Info.decimals);
 
     return {
       ...pool,
