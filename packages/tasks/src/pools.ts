@@ -1,4 +1,4 @@
-import { getAddress } from "@zetachain/protocol-contracts";
+import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import { formatUnits } from "ethers/lib/utils";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -21,7 +21,10 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     return acc;
   }, {});
 
-  const wzeta = getAddress("zetaToken", "zeta_testnet");
+  const wzeta = getAddress(
+    "zetaToken",
+    `zeta_${client.network}` as ParamChainName
+  );
   if (!wzeta) {
     throw new Error("Could not find the WZETA address");
   }
