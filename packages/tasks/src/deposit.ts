@@ -26,18 +26,35 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
       ) {
         message = JSON.parse(args.message);
       } else {
-        throw new Error('must be an array like [["string"], ["hello"]]');
+        throw new Error(`must be an array like '[["string"], ["hello"]]'`);
       }
     } catch (e) {
-      throw new Error(`Invalid message, ${e}`);
+      throw new Error(`invalid message, ${e}`);
     }
   }
 
-  // const recipient = args.recipient || signer.address;
-
   const chain = hre.network.name;
   if (chain === "zeta_testnet" || chain === "zeta_mainnet") {
-    throw new Error("Cannot from ZetaChain to ZetaChain.");
+    throw new Error(
+      "the --network defines the chain from which the deposit will be made. The --network value cannot be zeta_testnet or zeta_mainnet"
+    );
+  }
+
+  if (args.recipient) {
+    if (!ethers.utils.isAddress(args.recipient)) {
+      throw new Error("--recipient must be a valid address");
+    }
+  }
+
+  if (message) {
+    const rpc = client.getEndpoint("evm", "zeta_testnet");
+    const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+    const code = await provider.getCode(args.recipient);
+    if (code === "0x") {
+      throw new Error(
+        "seems like --recipient is an EOA and not a contract on ZetaChain. At the same time the --message is not empty, which indicates this is a 'deposit and call' operation. Please, provide a valid omnichain contract address as the --recipient value"
+      );
+    }
   }
 
   const data = { amount, chain, erc20, message, recipient: args.recipient };
@@ -48,7 +65,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
       const contract = new ethers.Contract(erc20, ERC20_ABI.abi, signer);
       symbol = await contract.symbol();
     } catch (e) {
-      throw new Error("Invalid ERC-20 address");
+      throw new Error("invalid ERC-20 address");
     }
   } else {
     const coins = await client.getForeignCoins();
@@ -58,23 +75,32 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     )?.symbol;
   }
 
-  console.log(`
+  if (args.json) {
+    const tx = await client.deposit(data);
+    console.log(JSON.stringify(tx, null, 2));
+  } else {
+    console.log(`
 Networks:    ${chain} → zeta_testnet
 Amount sent: ${amount} ${symbol || ""}
 Sender:      ${signer.address}
 Recipient:   ${args.recipient || signer.address}`);
-  if (message) {
-    console.log(`Message:     ${args.message}`);
+    if (message) {
+      console.log(`Message:     ${args.message}`);
+    }
+    try {
+      await confirm(
+        {
+          message: `Please, confirm the transaction`,
+        },
+        { clearPromptOnDone: true }
+      );
+    } catch (e) {
+      console.log("Transaction cancelled");
+    }
+    const tx = await client.deposit(data);
+    console.log(`Transaction successfully broadcasted!
+Hash: ${tx.hash}`);
   }
-  await confirm(
-    {
-      message: `Please, confirm the transaction`,
-    },
-    { clearPromptOnDone: true }
-  );
-  const tx = await client.deposit(data);
-  console.log(`Transaction successfully broadcasted!
-  Hash: ${tx.hash}`);
 };
 
 export const depositTask = task(
@@ -85,4 +111,5 @@ export const depositTask = task(
   .addParam("amount", "Amount tokens to send")
   .addOptionalParam("recipient", "Recipient address")
   .addOptionalParam("erc20", "ERC-20 token address")
-  .addOptionalParam("message", `Message, like '[["string"], ["hello"]]'`);
+  .addOptionalParam("message", `Message, like '[["string"], ["hello"]]'`)
+  .addFlag("json", "Output in JSON");
