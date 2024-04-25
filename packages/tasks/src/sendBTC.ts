@@ -103,6 +103,12 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const API = getEndpoints("blockcypher", "btc_testnet")[0].url;
 
   const pk = process.env.PRIVATE_KEY as any;
+  if (!pk) {
+    throw new Error(
+      "Cannot find a private key, please set the PRIVATE_KEY env variable"
+    );
+  }
+
   const ECPair = ECPairFactory(ecc);
   const key = ECPair.fromPrivateKey(Buffer.from(pk, "hex"), {
     network: TESTNET,
