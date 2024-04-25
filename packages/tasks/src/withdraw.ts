@@ -8,6 +8,11 @@ import { ZetaChainClient } from "../../client/src";
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers } = hre as any;
   const [signer] = await ethers.getSigners();
+  if (!signer) {
+    throw new Error(
+      "signer not found. Please, set the PRIVATE_KEY env variable."
+    );
+  }
 
   const client = new ZetaChainClient({ network: "testnet", signer });
 

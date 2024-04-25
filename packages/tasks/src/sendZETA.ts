@@ -5,6 +5,12 @@ import { ZetaChainClient } from "../../client/src/";
 
 const main = async (args: any, hre: any) => {
   const [signer] = await hre.ethers.getSigners();
+  if (!signer) {
+    throw new Error(
+      "signer not found. Please, set the PRIVATE_KEY env variable."
+    );
+  }
+
   const client = new ZetaChainClient({ network: "testnet", signer });
 
   const isDestinationZeta = ["zeta_testnet", "zeta_mainnet"].includes(
