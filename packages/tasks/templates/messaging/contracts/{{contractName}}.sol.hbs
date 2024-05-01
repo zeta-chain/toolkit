@@ -72,7 +72,7 @@ contract {{contractName}} is ZetaInteractor{{#if argsListNotEmpty}}, ZetaReceive
     function onZetaRevert(
         ZetaInterfaces.ZetaRevert calldata zetaRevert
     ) external override isValidRevertCall(zetaRevert) {
-        ({{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
+        ({{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
             zetaRevert.message,
             (bytes32{{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
         );
