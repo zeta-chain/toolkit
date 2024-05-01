@@ -50,7 +50,7 @@ contract {{contractName}} is ZetaInteractor{{#if argsListNotEmpty}}, ZetaReceive
                 destinationChainId: destinationChainId,
                 destinationAddress: interactorsByChainId[destinationChainId],
                 destinationGasLimit: 300000,
-                message: abi.encode({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}}{{/if}}),
+                message: abi.encode({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}}{{/if}}),
                 zetaValueAndGas: zetaValueAndGas,
                 zetaParams: abi.encode("")
             })
