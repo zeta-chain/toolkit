@@ -94,13 +94,13 @@ const prepareData = (args: any) => {
   return {
     args,
     arguments: {
+      argsListNotEmpty,
       casts,
       feesNative,
       names,
       pairs,
       pairsWithDataLocation,
       types,
-      argsListNotEmpty,
     },
     contractName,
     contractNameUnderscore: camelToUnderscoreUpper(contractName),
