@@ -9,7 +9,7 @@ import "@zetachain/protocol-contracts/contracts/evm/interfaces/ZetaInterfaces.so
 import "@zetachain/protocol-contracts/contracts/evm/Zeta.eth.sol";
 {{/unless}}
 
-contract {{contractName}} is ZetaInteractor, ZetaReceiver {
+contract {{contractName}} is ZetaInteractor{{#if argsListNotEmpty}}, ZetaReceiver{{/if}} {
     error InvalidMessageType();
     {{#unless arguments.feesNative}}
     error ErrorTransferringZeta();
@@ -60,6 +60,8 @@ contract {{contractName}} is ZetaInteractor, ZetaReceiver {
         );
     }
 
+    {{#if argsListNotEmpty}}
+
     function onZetaMessage(
         ZetaInterfaces.ZetaMessage calldata zetaMessage
     ) external override isValidMessageCall(zetaMessage) {
@@ -86,4 +88,6 @@ contract {{contractName}} is ZetaInteractor, ZetaReceiver {
 
         emit {{contractName}}RevertedEvent({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}});
     }
+
+    {{/if}}
 }

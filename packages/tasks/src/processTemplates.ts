@@ -89,6 +89,8 @@ const prepareData = (args: any) => {
 
   const feesNative = args.fees === "native";
 
+  const argsListNotEmpty = argsList.length > 0;
+
   return {
     args,
     arguments: {
@@ -98,6 +100,7 @@ const prepareData = (args: any) => {
       pairs,
       pairsWithDataLocation,
       types,
+      argsListNotEmpty,
     },
     contractName,
     contractNameUnderscore: camelToUnderscoreUpper(contractName),
