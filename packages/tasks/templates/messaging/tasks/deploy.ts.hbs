@@ -13,7 +13,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     networks.map(async (networkName: ParamChainName) => {
       contracts[networkName] = await deployContract(
         hre,
-        networkName,
+        networkName as ParamChainName,
         args.json,
         args.gasLimit
       );
