@@ -9,7 +9,7 @@ import "@zetachain/protocol-contracts/contracts/evm/interfaces/ZetaInterfaces.so
 import "@zetachain/protocol-contracts/contracts/evm/Zeta.eth.sol";
 {{/unless}}
 
-contract {{contractName}} is ZetaInteractor{{#if argsListNotEmpty}}, ZetaReceiver{{/if}} {
+contract {{contractName}} is ZetaInteractor{{#if arguments.argsListNotEmpty}}, ZetaReceiver{{/if}} {
     {{#unless arguments.feesNative}}
     error ErrorTransferringZeta();
     {{/unless}}
@@ -57,13 +57,13 @@ contract {{contractName}} is ZetaInteractor{{#if argsListNotEmpty}}, ZetaReceive
         );
     }
 
-    {{#if argsListNotEmpty}}
+    {{#if arguments.argsListNotEmpty}}
 
     function onZetaMessage(
         ZetaInterfaces.ZetaMessage calldata zetaMessage
     ) external override isValidMessageCall(zetaMessage) {
-        ({{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}) = abi.decode(
-            zetaMessage.message, ({{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
+        ({{#each arguments.pairsWithDataLocation}}{{#if @index}}{{/if}}{{this.[1]}}, {{this.[0]}}{{/each}}) = abi.decode(
+            zetaMessage.message, ({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
         );
 
         emit {{contractName}}Event({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}});
@@ -72,9 +72,9 @@ contract {{contractName}} is ZetaInteractor{{#if argsListNotEmpty}}, ZetaReceive
     function onZetaRevert(
         ZetaInterfaces.ZetaRevert calldata zetaRevert
     ) external override isValidRevertCall(zetaRevert) {
-        ({{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
+        ({{#if arguments.pairsWithDataLocation}}{{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
             zetaRevert.message,
-            ({{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
+            ({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
         );
 
         emit {{contractName}}RevertedEvent({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}});
