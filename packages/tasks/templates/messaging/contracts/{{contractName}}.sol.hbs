@@ -62,7 +62,7 @@ contract {{contractName}} is ZetaInteractor{{#if arguments.argsListNotEmpty}}, Z
     function onZetaMessage(
         ZetaInterfaces.ZetaMessage calldata zetaMessage
     ) external override isValidMessageCall(zetaMessage) {
-        ({{#each arguments.pairsWithDataLocation}}{{#if @index}}{{/if}}{{this.[1]}}, {{this.[0]}}{{/each}}) = abi.decode(
+        ({{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}} {{/each}}) = abi.decode(
             zetaMessage.message, ({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
         );
 
