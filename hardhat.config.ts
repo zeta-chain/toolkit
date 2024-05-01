@@ -1,5 +1,3 @@
-import "./tasks/interact";
-import "./tasks/deploy";
 import "@nomicfoundation/hardhat-toolbox";
 import "./packages/tasks/src";
 
