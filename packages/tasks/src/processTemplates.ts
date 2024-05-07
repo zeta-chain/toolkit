@@ -89,9 +89,12 @@ const prepareData = (args: any) => {
 
   const feesNative = args.fees === "native";
 
+  const argsListNotEmpty = argsList.length > 0;
+
   return {
     args,
     arguments: {
+      argsListNotEmpty,
       casts,
       feesNative,
       names,

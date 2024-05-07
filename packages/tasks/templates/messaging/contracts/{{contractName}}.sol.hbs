@@ -9,17 +9,16 @@ import "@zetachain/protocol-contracts/contracts/evm/interfaces/ZetaInterfaces.so
 import "@zetachain/protocol-contracts/contracts/evm/Zeta.eth.sol";
 {{/unless}}
 
-contract {{contractName}} is ZetaInteractor, ZetaReceiver {
-    error InvalidMessageType();
+contract {{contractName}} is ZetaInteractor{{#if arguments.argsListNotEmpty}}, ZetaReceiver{{/if}} {
     {{#unless arguments.feesNative}}
     error ErrorTransferringZeta();
     {{/unless}}
 
+    {{#if arguments.argsListNotEmpty}}
     event {{contractName}}Event({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}});
     event {{contractName}}RevertedEvent({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}});
-
-    bytes32 public constant {{contractNameUnderscore}}_MESSAGE_TYPE =
-        keccak256("CROSS_CHAIN_{{contractNameUnderscore}}");
+    {{/if}}
+    
     {{#if arguments.feesNative}}
     ZetaTokenConsumer private immutable _zetaConsumer;
     {{/if}}
@@ -53,22 +52,21 @@ contract {{contractName}} is ZetaInteractor, ZetaReceiver {
                 destinationChainId: destinationChainId,
                 destinationAddress: interactorsByChainId[destinationChainId],
                 destinationGasLimit: 300000,
-                message: abi.encode({{contractNameUnderscore}}_MESSAGE_TYPE{{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}}{{/if}}),
+                message: abi.encode({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}}{{/if}}),
                 zetaValueAndGas: zetaValueAndGas,
                 zetaParams: abi.encode("")
             })
         );
     }
 
+    {{#if arguments.argsListNotEmpty}}
+
     function onZetaMessage(
         ZetaInterfaces.ZetaMessage calldata zetaMessage
     ) external override isValidMessageCall(zetaMessage) {
-        (bytes32 messageType{{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
-            zetaMessage.message, (bytes32{{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
+        ({{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}} {{/each}}) = abi.decode(
+            zetaMessage.message, ({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
         );
-
-        if (messageType != {{contractNameUnderscore}}_MESSAGE_TYPE)
-            revert InvalidMessageType();
 
         emit {{contractName}}Event({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}});
     }
@@ -76,14 +74,13 @@ contract {{contractName}} is ZetaInteractor, ZetaReceiver {
     function onZetaRevert(
         ZetaInterfaces.ZetaRevert calldata zetaRevert
     ) external override isValidRevertCall(zetaRevert) {
-        (bytes32 messageType{{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
+        ({{#if arguments.pairsWithDataLocation}}{{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
             zetaRevert.message,
-            (bytes32{{#if arguments.pairs}}, {{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
+            ({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
         );
-
-        if (messageType != {{contractNameUnderscore}}_MESSAGE_TYPE)
-            revert InvalidMessageType();
 
         emit {{contractName}}RevertedEvent({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}});
     }
+
+    {{/if}}
 }
