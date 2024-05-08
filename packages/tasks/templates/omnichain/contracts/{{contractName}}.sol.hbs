@@ -5,7 +5,7 @@ import "@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol";
 import "@zetachain/protocol-contracts/contracts/zevm/interfaces/zContract.sol";
 
 contract {{contractName}} is zContract {
-    SystemContract public immutable systemContract;
+    SystemContract public systemContract;
 
     constructor(address systemContractAddress) {
         systemContract = SystemContract(systemContractAddress);
