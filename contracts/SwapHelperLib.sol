@@ -85,17 +85,15 @@ library SwapHelperLib {
             IZRC20(zrc20B).balanceOf(uniswapPool) > 0;
     }
 
-    function _doSwap(
-        address zetaToken,
-        address uniswapV2Factory,
-        address uniswapV2Router,
+    function swapExactTokensForTokens(
+        SystemContract systemContract,
         address zrc20,
         uint256 amount,
         address targetZRC20,
         uint256 minAmountOut
     ) internal returns (uint256) {
         bool existsPairPool = _existsPairPool(
-            uniswapV2Factory,
+            systemContract.uniswapv2FactoryAddress(),
             zrc20,
             targetZRC20
         );
@@ -108,13 +106,17 @@ library SwapHelperLib {
         } else {
             path = new address[](3);
             path[0] = zrc20;
-            path[1] = zetaToken;
+            path[1] = systemContract.wZetaContractAddress();
             path[2] = targetZRC20;
         }
 
-        IZRC20(zrc20).approve(address(uniswapV2Router), amount);
-        uint256[] memory amounts = IUniswapV2Router01(uniswapV2Router)
-            .swapExactTokensForTokens(
+        IZRC20(zrc20).approve(
+            address(systemContract.uniswapv2Router02Address()),
+            amount
+        );
+        uint256[] memory amounts = IUniswapV2Router01(
+            systemContract.uniswapv2Router02Address()
+        ).swapExactTokensForTokens(
                 amount,
                 minAmountOut,
                 path,
@@ -125,16 +127,14 @@ library SwapHelperLib {
     }
 
     function swapTokensForExactTokens(
-        address zetaToken,
-        address uniswapV2Factory,
-        address uniswapV2Router,
+        SystemContract systemContract,
         address zrc20,
         uint256 amount,
         address targetZRC20,
         uint256 amountInMax
     ) internal returns (uint256) {
         bool existsPairPool = _existsPairPool(
-            uniswapV2Factory,
+            systemContract.uniswapv2FactoryAddress(),
             zrc20,
             targetZRC20
         );
@@ -147,13 +147,17 @@ library SwapHelperLib {
         } else {
             path = new address[](3);
             path[0] = zrc20;
-            path[1] = zetaToken;
+            path[1] = systemContract.wZetaContractAddress();
             path[2] = targetZRC20;
         }
 
-        IZRC20(zrc20).approve(address(uniswapV2Router), amountInMax);
-        uint256[] memory amounts = IUniswapV2Router01(uniswapV2Router)
-            .swapTokensForExactTokens(
+        IZRC20(zrc20).approve(
+            address(systemContract.uniswapv2Router02Address()),
+            amountInMax
+        );
+        uint256[] memory amounts = IUniswapV2Router01(
+            systemContract.uniswapv2Router02Address()
+        ).swapTokensForExactTokens(
                 amount,
                 amountInMax,
                 path,
