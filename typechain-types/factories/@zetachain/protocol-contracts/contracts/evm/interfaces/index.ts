@@ -2,4 +2,3 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as zetaInterfacesSol from "./ZetaInterfaces.sol";
-export { ZetaInteractorErrors__factory } from "./ZetaInteractorErrors__factory";
