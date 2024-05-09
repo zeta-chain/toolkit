@@ -39,26 +39,34 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
 
   const chain = hre.network.name;
-  if (chain === "zeta_testnet" || chain === "zeta_mainnet") {
-    throw new Error(
-      "the --network defines the chain from which the deposit will be made. The --network value cannot be zeta_testnet or zeta_mainnet"
-    );
-  }
 
-  if (args.recipient) {
-    if (!ethers.utils.isAddress(args.recipient)) {
-      throw new Error("--recipient must be a valid address");
-    }
-  }
-
-  if (message) {
-    const rpc = client.getEndpoint("evm", "zeta_testnet");
-    const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-    const code = await provider.getCode(args.recipient);
-    if (code === "0x") {
+  if (!args.ignoreChecks) {
+    if (chain === "zeta_testnet" || chain === "zeta_mainnet") {
       throw new Error(
-        "seems like --recipient is an EOA and not a contract on ZetaChain. At the same time the --message is not empty, which indicates this is a 'deposit and call' operation. Please, provide a valid omnichain contract address as the --recipient value"
+        "the --network defines the chain from which the deposit will be made. The --network value cannot be zeta_testnet or zeta_mainnet"
       );
+    }
+
+    if (args.recipient) {
+      if (!ethers.utils.isAddress(args.recipient)) {
+        throw new Error("--recipient must be a valid address");
+      }
+    }
+
+    if (message) {
+      if (!args.recipient) {
+        throw new Error(
+          "--recipient is not specified. Please, provide a valid omnichain contract address on ZetaChain"
+        );
+      }
+      const rpc = client.getEndpoint("evm", "zeta_testnet");
+      const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+      const code = await provider.getCode(args.recipient);
+      if (code === "0x") {
+        throw new Error(
+          "seems like --recipient is an EOA and not a contract on ZetaChain. At the same time the --message is not empty, which indicates this is a 'deposit and call' operation. Please, provide a valid omnichain contract address as the --recipient value"
+        );
+      }
     }
   }
 
@@ -117,4 +125,5 @@ export const depositTask = task(
   .addOptionalParam("recipient", "Recipient address")
   .addOptionalParam("erc20", "ERC-20 token address")
   .addOptionalParam("message", `Message, like '[["string"], ["hello"]]'`)
-  .addFlag("json", "Output in JSON");
+  .addFlag("json", "Output in JSON")
+  .addFlag("ignoreChecks", "Ignore checks and send the tx");
