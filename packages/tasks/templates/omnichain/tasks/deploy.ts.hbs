@@ -20,7 +20,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   const systemContract = getAddress("systemContract", network);
 
-  const factory = await hre.ethers.getContractFactory("{{contractName}}");
+  const factory = await hre.ethers.getContractFactory(args.name);
   const contract = await factory.deploy(systemContract);
   await contract.deployed();
 
@@ -41,4 +41,6 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
 };
 
-task("deploy", "Deploy the contract", main).addFlag("json", "Output in JSON");
+task("deploy", "Deploy the contract", main)
+  .addFlag("json", "Output in JSON")
+  .addOptionalParam("name", "Contract to deploy", "{{contractName}}");
