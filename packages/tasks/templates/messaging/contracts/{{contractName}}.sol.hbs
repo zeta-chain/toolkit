@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@zetachain/protocol-contracts/contracts/evm/tools/ZetaInteractor.sol";
 import "@zetachain/protocol-contracts/contracts/evm/interfaces/ZetaInterfaces.sol";
+import "@zetachain/protocol-contracts/contracts/evm/ZetaConnector.base.sol";
 {{#unless arguments.feesNative}}
 import "@zetachain/protocol-contracts/contracts/evm/Zeta.eth.sol";
 {{/unless}}
@@ -24,8 +25,8 @@ contract {{contractName}} is ZetaInteractor{{#if arguments.argsListNotEmpty}}, Z
     {{/if}}
     IERC20 internal immutable _zetaToken;
 
-    constructor(address connectorAddress, address zetaTokenAddress{{#if arguments.feesNative}}, address zetaConsumerAddress{{/if}}) ZetaInteractor(connectorAddress) {
-        _zetaToken = IERC20(zetaTokenAddress);
+    constructor(address connectorAddress{{#if arguments.feesNative}}, address zetaConsumerAddress{{/if}}) ZetaInteractor(connectorAddress) {
+        _zetaToken = IERC20(ZetaConnectorBase(connectorAddress).zetaToken());
         {{#if arguments.feesNative}}
         _zetaConsumer = ZetaTokenConsumer(zetaConsumerAddress);
         {{/if}}
