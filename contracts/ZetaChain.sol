@@ -21,4 +21,59 @@ abstract contract ZetaChain is zContract, OnlySystem {
         systemContracts[7001] = 0xEdf1c3275d13489aCdC6cD6eD246E72458B8795B;
         return systemContracts[block.chainid];
     }
+
+    function omniChainSwap(
+        zContext calldata context,
+        address zrc20,
+        uint256 amount,
+        bytes calldata message
+    ) internal virtual {
+        address target;
+        bytes memory to;
+
+        if (context.chainID == 18332) {
+            target = BytesHelperLib.bytesToAddress(message, 0);
+            to = abi.encodePacked(BytesHelperLib.bytesToAddress(message, 20));
+        } else {
+            (address targetToken, bytes memory recipient) = abi.decode(
+                message,
+                (address, bytes)
+            );
+            target = targetToken;
+            to = recipient;
+        }
+
+        address wzeta = systemContract.wZetaContractAddress();
+        bool isTargetZeta = target == wzeta;
+        uint256 inputForGas;
+        address gasZRC20;
+        uint256 gasFee;
+
+        if (!isTargetZeta) {
+            (gasZRC20, gasFee) = IZRC20(target).withdrawGasFee();
+
+            inputForGas = SwapHelperLib.swapTokensForExactTokens(
+                systemContract,
+                zrc20,
+                gasFee,
+                gasZRC20,
+                amount
+            );
+        }
+
+        uint256 outputAmount = SwapHelperLib.swapExactTokensForTokens(
+            systemContract,
+            zrc20,
+            isTargetZeta ? amount : amount - inputForGas,
+            target,
+            0
+        );
+
+        if (isTargetZeta) {
+            IWETH9(wzeta).transfer(address(uint160(bytes20(to))), outputAmount);
+        } else {
+            IZRC20(gasZRC20).approve(target, gasFee);
+            IZRC20(target).withdraw(to, outputAmount);
+        }
+    }
 }
