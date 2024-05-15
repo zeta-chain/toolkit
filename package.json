@@ -107,5 +107,6 @@
     "spinnies": "^0.5.1",
     "tiny-secp256k1": "^2.2.3",
     "ws": "^8.13.0"
-  }
+  },
+  "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
 }
