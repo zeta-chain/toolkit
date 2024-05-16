@@ -10,6 +10,11 @@
       "require": "./dist/client/src/index.js",
       "types": "./dist/client/src/index.d.ts"
     },
+    "./test": {
+      "import": "./dist/test/src/index.js",
+      "require": "./dist/test/src/index.js",
+      "types": "./dist/test/src/index.d.ts"
+    },
     "./typechain-types": {
       "types": "./dist/typechain-types/index.ts"
     }
