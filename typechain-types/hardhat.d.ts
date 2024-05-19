@@ -113,6 +113,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZetaEthMock__factory>;
     getContractFactory(
+      name: "OnlySystem",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.OnlySystem__factory>;
+    getContractFactory(
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
@@ -290,6 +294,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ZetaEthMock>;
+    getContractAt(
+      name: "OnlySystem",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.OnlySystem>;
     getContractAt(
       name: "IERC20",
       address: string,

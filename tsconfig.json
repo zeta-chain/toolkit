@@ -17,9 +17,10 @@
       "@types",
       "./node_modules/@types",
       "./packages/tasks/src",
-      "./packages/client/src"
+      "./packages/client/src",
+      "./packages/test/src"
     ]
   },
-  "include": ["packages/client", "packages/tasks"],
+  "include": ["packages/client", "packages/tasks", "packages/test"],
   "exclude": ["./typechain-types"]
 }
