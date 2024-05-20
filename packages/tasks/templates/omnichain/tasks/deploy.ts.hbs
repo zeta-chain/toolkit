@@ -18,10 +18,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     );
   }
 
-  const systemContract = getAddress("systemContract", network);
-
   const factory = await hre.ethers.getContractFactory(args.name);
-  const contract = await factory.deploy(systemContract);
+  const contract = await factory.deploy();
   await contract.deployed();
 
   const isTestnet = network === "zeta_testnet";
