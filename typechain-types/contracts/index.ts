@@ -7,6 +7,7 @@ import type * as zetaConnectorMockSol from "./ZetaConnectorMock.sol";
 export type { zetaConnectorMockSol };
 import type * as shared from "./shared";
 export type { shared };
+export type { OnlySystem } from "./OnlySystem";
 export type { SwapHelperLib } from "./SwapHelperLib";
 export type { TestSystemContract } from "./TestSystemContract";
 export type { TestZRC20 } from "./TestZRC20";

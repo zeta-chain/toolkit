@@ -12,8 +12,6 @@ contract TestUniswapRouter {
     error Expired();
     error InsufficientBAmount();
     error InsufficientAAmount();
-    error InsufficientOutputAmount();
-    error InsufficientInputAmount();
 
     address public immutable factory;
     address public immutable WETH;
@@ -211,7 +209,7 @@ contract TestUniswapRouter {
     ) external ensure(deadline) returns (uint[] memory amounts) {
         amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path);
         if (amounts[amounts.length - 1] < amountOutMin)
-            revert InsufficientOutputAmount();
+            revert UniswapV2Library.InsufficientOutputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -229,7 +227,7 @@ contract TestUniswapRouter {
         uint deadline
     ) external ensure(deadline) returns (uint[] memory amounts) {
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
-        if (amounts[0] > amountInMax) revert InsufficientInputAmount();
+        if (amounts[0] > amountInMax) revert UniswapV2Library.InsufficientInputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
