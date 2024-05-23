@@ -63,19 +63,6 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-  {
-    inputs: [],
-    name: "systemContract",
-    outputs: [
-      {
-        internalType: "contract SystemContract",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
 ] as const;
 
 export class ZetaChain__factory {

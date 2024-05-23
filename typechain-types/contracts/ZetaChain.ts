@@ -38,12 +38,9 @@ export type ZContextStructOutput = [string, string, BigNumber] & {
 export interface ZetaChainInterface extends utils.Interface {
   functions: {
     "onCrossChainCall((bytes,address,uint256),address,uint256,bytes)": FunctionFragment;
-    "systemContract()": FunctionFragment;
   };
 
-  getFunction(
-    nameOrSignatureOrTopic: "onCrossChainCall" | "systemContract"
-  ): FunctionFragment;
+  getFunction(nameOrSignatureOrTopic: "onCrossChainCall"): FunctionFragment;
 
   encodeFunctionData(
     functionFragment: "onCrossChainCall",
@@ -54,17 +51,9 @@ export interface ZetaChainInterface extends utils.Interface {
       PromiseOrValue<BytesLike>
     ]
   ): string;
-  encodeFunctionData(
-    functionFragment: "systemContract",
-    values?: undefined
-  ): string;
 
   decodeFunctionResult(
     functionFragment: "onCrossChainCall",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "systemContract",
     data: BytesLike
   ): Result;
 
@@ -105,8 +94,6 @@ export interface ZetaChain extends BaseContract {
       message: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
-
-    systemContract(overrides?: CallOverrides): Promise<[string]>;
   };
 
   onCrossChainCall(
@@ -117,8 +104,6 @@ export interface ZetaChain extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  systemContract(overrides?: CallOverrides): Promise<string>;
-
   callStatic: {
     onCrossChainCall(
       context: ZContextStruct,
@@ -127,8 +112,6 @@ export interface ZetaChain extends BaseContract {
       message: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    systemContract(overrides?: CallOverrides): Promise<string>;
   };
 
   filters: {};
@@ -141,8 +124,6 @@ export interface ZetaChain extends BaseContract {
       message: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
-
-    systemContract(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -153,7 +134,5 @@ export interface ZetaChain extends BaseContract {
       message: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
-
-    systemContract(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }
