@@ -21,6 +21,7 @@
       "./packages/test/src"
     ]
   },
+  "files": ["./hardhat.config.ts"],
   "include": ["packages/client", "packages/tasks", "packages/test"],
   "exclude": ["./typechain-types"]
 }
