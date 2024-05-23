@@ -21,7 +21,7 @@
   },
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "npx cpx './packages/tasks/templates/**/*' ./dist/tasks/templates && npx hardhat compile --force && tsc || true && npx cpx './typechain-types/**/*' ./dist/typechain-types",
+    "build": "npx cpx './packages/tasks/templates/**/*' ./dist/tasks/templates && npx hardhat compile --force && tsc && npx cpx './typechain-types/**/*' ./dist/typechain-types",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "lint:js:fix": "eslint --ext .js,.ts . --fix",
     "lint:js": "eslint --ext .js,.ts .",
