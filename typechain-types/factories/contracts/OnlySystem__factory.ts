@@ -13,17 +13,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "_systemContractAddress",
-        type: "address",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "constructor",
-  },
-  {
-    inputs: [
-      {
         internalType: "string",
         name: "",
         type: "string",
@@ -35,7 +24,7 @@ const _abi = [
 ] as const;
 
 const _bytecode =
-  "0x608060405234801561001057600080fd5b506040516101553803806101558339818101604052810190610032919061008d565b806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050610108565b600081519050610087816100f1565b92915050565b6000602082840312156100a3576100a26100ec565b5b60006100b184828501610078565b91505092915050565b60006100c5826100cc565b9050919050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b600080fd5b6100fa816100ba565b811461010557600080fd5b50565b603f806101166000396000f3fe6080604052600080fdfea26469706673582212206a96c204136062952aef1b9d799057f079bab409bc73b1c69d5bd069adaddf2264736f6c63430008070033";
+  "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212201ab8eb4b85cea37bdebcfd76388ba1fb426a3b2974f95edcfb6b12919a1c76d564736f6c63430008070033";
 
 type OnlySystemConstructorParams =
   | [signer?: Signer]
@@ -55,19 +44,14 @@ export class OnlySystem__factory extends ContractFactory {
   }
 
   override deploy(
-    _systemContractAddress: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<OnlySystem> {
-    return super.deploy(
-      _systemContractAddress,
-      overrides || {}
-    ) as Promise<OnlySystem>;
+    return super.deploy(overrides || {}) as Promise<OnlySystem>;
   }
   override getDeployTransaction(
-    _systemContractAddress: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): TransactionRequest {
-    return super.getDeployTransaction(_systemContractAddress, overrides || {});
+    return super.getDeployTransaction(overrides || {});
   }
   override attach(address: string): OnlySystem {
     return super.attach(address) as OnlySystem;
