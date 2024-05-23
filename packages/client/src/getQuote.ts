@@ -1,8 +1,9 @@
 import { parseUnits } from "@ethersproject/units";
-import { getAddress } from "@zetachain/protocol-contracts";
-import { utils, ethers } from "ethers";
 import UniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
+import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
+import { ethers } from "ethers";
+
 import { ZetaChainClient } from "./client";
 
 /**

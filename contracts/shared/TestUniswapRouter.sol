@@ -227,7 +227,8 @@ contract TestUniswapRouter {
         uint deadline
     ) external ensure(deadline) returns (uint[] memory amounts) {
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
-        if (amounts[0] > amountInMax) revert UniswapV2Library.InsufficientInputAmount();
+        if (amounts[0] > amountInMax)
+            revert UniswapV2Library.InsufficientInputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
