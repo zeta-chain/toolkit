@@ -14,6 +14,11 @@ import {
   sendZeta,
   trackCCTX,
   withdraw,
+  getQuote,
+  getWithdrawFeeInInputToken,
+  getRefundFee,
+  getZRC20FromERC20,
+  getZRC20GasToken,
 } from ".";
 
 export interface ZetaChainClientParamsBase {
@@ -116,4 +121,9 @@ export class ZetaChainClient {
   withdraw = withdraw;
   sendZeta = sendZeta;
   getChainId = getChainId;
+  getQuote = getQuote;
+  getWithdrawFeeInInputToken = getWithdrawFeeInInputToken;
+  getRefundFee = getRefundFee;
+  getZRC20FromERC20 = getZRC20FromERC20;
+  getZRC20GasToken = getZRC20GasToken;
 }
