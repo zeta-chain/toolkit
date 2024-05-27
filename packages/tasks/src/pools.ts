@@ -47,8 +47,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   const tableData = {} as any;
   poolsWithSymbolsAndDecimals.forEach((pool: any) => {
-    const r0 = parseFloat(pool.t0.reserve).toFixed(2);
-    const r1 = parseFloat(pool.t1.reserve).toFixed(2);
+    const r0 = parseFloat(pool.t0.reserve);
+    const r1 = parseFloat(pool.t1.reserve);
 
     tableData[pool.pair] = {
       Pool: `${pool.t0.symbol} / ${pool.t1.symbol}`,
