@@ -4,16 +4,16 @@
   "description": "A library of ZetaChain helper utilities, contracts, and Hardhat tasks for smart-contract development",
   "main": "",
   "exports": {
-    "./tasks": "./dist/tasks/src/index.js",
+    "./tasks": "./dist/packages/tasks/src/index.js",
     "./client": {
-      "import": "./dist/client/src/index.js",
-      "require": "./dist/client/src/index.js",
-      "types": "./dist/client/src/index.d.ts"
+      "import": "./dist/packages/client/src/index.js",
+      "require": "./dist/packages/client/src/index.js",
+      "types": "./dist/packages/client/src/index.d.ts"
     },
     "./test": {
-      "import": "./dist/test/src/index.js",
-      "require": "./dist/test/src/index.js",
-      "types": "./dist/test/src/index.d.ts"
+      "import": "./dist/packages/test/src/index.js",
+      "require": "./dist/packages/test/src/index.js",
+      "types": "./dist/packages/test/src/index.d.ts"
     },
     "./typechain-types": {
       "types": "./dist/typechain-types/index.ts"
@@ -21,7 +21,7 @@
   },
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "npx cpx './packages/tasks/templates/**/*' ./dist/tasks/templates && npx hardhat compile --force && tsc || true && npx cpx './typechain-types/**/*' ./dist/typechain-types",
+    "build": "npx hardhat clean && npm run copy-templates && npx hardhat compile --force && tsc && npm run copy-types",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "lint:js:fix": "eslint --ext .js,.ts . --fix",
     "lint:js": "eslint --ext .js,.ts .",
@@ -30,7 +30,9 @@
     "lint": "npm run lint:js && npm run lint:sol",
     "docs:build": "typedoc ./packages/client/src/index.ts",
     "docs:start": "http-server ./docs",
-    "docs": "yarn docs:build && yarn docs:start"
+    "docs": "yarn docs:build && yarn docs:start",
+    "copy-templates": "npx cpx './packages/tasks/templates/**/*' ./dist/tasks/templates",
+    "copy-types": "npx cpx './typechain-types/**/*' ./dist/typechain-types"
   },
   "keywords": [],
   "author": "ZetaChain",
