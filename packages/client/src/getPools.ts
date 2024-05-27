@@ -16,12 +16,6 @@ export const getPools = async function (this: ZetaChainClient) {
     throw new Error("uniswapV2Factory is not defined");
   }
 
-  const UniswapV2FactoryContract = new ethers.Contract(
-    uniswapV2FactoryAddress,
-    UniswapV2Factory.abi,
-    provider
-  );
-
   const systemContractAddress = getAddress("systemContract", zetaNetwork);
   if (!systemContractAddress) {
     throw new Error("System contract is not defined");
@@ -39,56 +33,56 @@ export const getPools = async function (this: ZetaChainClient) {
   }
 
   const foreignCoins = await this.getForeignCoins();
+  const tokenAddresses = foreignCoins.map(
+    (coin: any) => coin.zrc20_contract_address
+  );
+  tokenAddresses.push(zetaTokenAddress);
 
-  const poolPromises = foreignCoins.map(async (c: any) => {
-    const pair = await systemContract.uniswapv2PairFor(
-      uniswapV2FactoryAddress,
-      c.zrc20_contract_address,
-      zetaTokenAddress
-    );
-    let pool = {
-      pair,
-      t0: {},
-      t1: {},
-    } as any;
-    const pairContract = new ethers.Contract(pair, UniswapV2Pair.abi, provider);
-    pool.t0.address = await pairContract.token0();
-    pool.t1.address = await pairContract.token1();
+  const poolPromises = [];
 
-    const reserves = await pairContract.getReserves();
-    pool.t0.reserve = reserves[0];
-    pool.t1.reserve = reserves[1];
+  for (let i = 0; i < tokenAddresses.length; i++) {
+    for (let j = i + 1; j < tokenAddresses.length; j++) {
+      const tokenA = tokenAddresses[i];
+      const tokenB = tokenAddresses[j];
 
-    return pool;
-  });
+      const poolPromise = (async () => {
+        const pair = await systemContract.uniswapv2PairFor(
+          uniswapV2FactoryAddress,
+          tokenA,
+          tokenB
+        );
 
-  const pools = await Promise.all(poolPromises);
+        if (pair === ethers.constants.AddressZero) {
+          return null;
+        }
+
+        try {
+          const pairContract = new ethers.Contract(
+            pair,
+            UniswapV2Pair.abi,
+            provider
+          );
+          const token0 = await pairContract.token0();
+          const token1 = await pairContract.token1();
+          const reserves = await pairContract.getReserves();
+
+          return {
+            pair,
+            t0: { address: token0, reserve: reserves[0] },
+            t1: { address: token1, reserve: reserves[1] },
+          };
+        } catch (error) {
+          return null;
+        }
+      })();
+
+      poolPromises.push(poolPromise);
+    }
+  }
+
+  const pools = (await Promise.all(poolPromises)).filter(
+    (pool) => pool !== null
+  );
+
   return pools;
-
-  // const totalPairs = await UniswapV2FactoryContract.allPairsLength();
-  // let pairs = [];
-  // for (let i = 0; i < totalPairs; i++) {
-  //   pairs.push(await UniswapV2FactoryContract.allPairs(i));
-  // }
-
-  // const poolPromises = pairs.map(async (pair: any) => {
-  //   let pool = {
-  //     pair,
-  //     t0: {},
-  //     t1: {},
-  //   } as any;
-  //   const pairContract = new ethers.Contract(pair, UniswapV2Pair.abi, provider);
-
-  //   pool.t0.address = await pairContract.token0();
-  //   pool.t1.address = await pairContract.token1();
-
-  //   const reserves = await pairContract.getReserves();
-  //   pool.t0.reserve = reserves[0];
-  //   pool.t1.reserve = reserves[1];
-
-  //   return pool;
-  // });
-
-  // const pools = await Promise.all(poolPromises);
-  // return pools;
 };
