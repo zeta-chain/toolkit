@@ -10,7 +10,12 @@ import {
   getFees,
   getForeignCoins,
   getPools,
+  getQuote,
+  getRefundFee,
   getSupportedChains,
+  getWithdrawFeeInInputToken,
+  getZRC20FromERC20,
+  getZRC20GasToken,
   sendZeta,
   trackCCTX,
   withdraw,
@@ -116,4 +121,9 @@ export class ZetaChainClient {
   withdraw = withdraw;
   sendZeta = sendZeta;
   getChainId = getChainId;
+  getQuote = getQuote;
+  getWithdrawFeeInInputToken = getWithdrawFeeInInputToken;
+  getRefundFee = getRefundFee;
+  getZRC20FromERC20 = getZRC20FromERC20;
+  getZRC20GasToken = getZRC20GasToken;
 }
