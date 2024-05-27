@@ -82,7 +82,7 @@ const addZetaEthLiquidity = async (
     block.timestamp + 360,
     {
       gasLimit: 10_000_000,
-      value: parseUnits("1000"),
+      value: parseUnits("10"),
     }
   );
   await tx2.wait();
