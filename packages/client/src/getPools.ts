@@ -43,7 +43,7 @@ export const getPools = async function (this: ZetaChainClient) {
       tokenAddresses.slice(i + 1).forEach((tokenB: any) => {
         const pairKey = [tokenA, tokenB].sort().join("-");
         if (!pairs.some((p: any) => p.key === pairKey)) {
-          pairs.push({ tokenA, tokenB, key: pairKey });
+          pairs.push({ key: pairKey, tokenA, tokenB });
         }
       });
       return pairs;
