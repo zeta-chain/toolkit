@@ -10,43 +10,24 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     network: args.mainnet ? "mainnet" : "testnet",
   });
 
-  const foreignCoins = await client.getForeignCoins();
   const pools = await client.getPools();
 
-  const addressToInfo = foreignCoins.reduce((acc: any, coin: any) => {
-    acc[coin.zrc20_contract_address.toLowerCase()] = {
-      decimals: coin.decimals,
-      symbol: coin.symbol,
-    };
-    return acc;
-  }, {});
-
-  const wzeta = getAddress(
-    "zetaToken",
-    `zeta_${client.network}` as ParamChainName
-  );
-  if (!wzeta) {
-    throw new Error("Could not find the WZETA address");
-  }
-  const WZETA_ADDRESS = wzeta.toLowerCase();
-  addressToInfo[WZETA_ADDRESS] = { decimals: 18, symbol: "WZETA" };
-
-  const poolsWithSymbolsAndDecimals = pools.map((pool: any) => {
-    const placeholder = { decimals: 18, symbol: "Unknown" };
-    const t0Info = addressToInfo[pool.t0.address.toLowerCase()] || placeholder;
-    const t1Info = addressToInfo[pool.t1.address.toLowerCase()] || placeholder;
-    pool.t0.reserve = formatUnits(pool.t0.reserve, t0Info.decimals);
-    pool.t1.reserve = formatUnits(pool.t1.reserve, t1Info.decimals);
-
+  const poolsDisplay = pools.map((pool: any) => {
     return {
       ...pool,
-      t0: { ...pool.t0, ...t0Info },
-      t1: { ...pool.t1, ...t1Info },
+      t0: {
+        ...pool.t0,
+        reserve: formatUnits(pool.t0.reserve, pool.t0.decimals),
+      },
+      t1: {
+        ...pool.t1,
+        reserve: formatUnits(pool.t1.reserve, pool.t1.decimals),
+      },
     };
   });
 
   const tableData = {} as any;
-  poolsWithSymbolsAndDecimals.forEach((pool: any) => {
+  poolsDisplay.forEach((pool: any) => {
     const r0 = parseFloat(pool.t0.reserve);
     const r1 = parseFloat(pool.t1.reserve);
 
@@ -57,7 +38,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   });
 
   if (args.json) {
-    console.log(poolsWithSymbolsAndDecimals);
+    console.log(pools);
   } else {
     console.table(tableData);
   }

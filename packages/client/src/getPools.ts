@@ -82,11 +82,34 @@ export const getPools = async function (this: ZetaChainClient) {
     }
   });
 
-  const pools = (await Promise.all(poolPromises)).filter(
-    (pool) => pool !== null
-  );
+  let pools = (await Promise.all(poolPromises)).filter((pool) => pool !== null);
 
-  console.log(pools);
+  const zrc20Details = foreignCoins.reduce((acc: any, coin: any) => {
+    acc[coin.zrc20_contract_address.toLowerCase()] = {
+      decimals: coin.decimals,
+      symbol: coin.symbol,
+    };
+    return acc;
+  }, {});
+
+  pools = pools.map((t: any) => {
+    const zeta = { decimals: 18, symbol: "WZETA" };
+    const t0 = t.t0.address.toLowerCase();
+    const t1 = t.t1.address.toLowerCase();
+    const t0ZETA = t0 === zetaTokenAddress.toLowerCase() && zeta;
+    const t1ZETA = t1 === zetaTokenAddress.toLowerCase() && zeta;
+    return {
+      ...t,
+      t0: {
+        ...t.t0,
+        ...(zrc20Details[t0] || t0ZETA),
+      },
+      t1: {
+        ...t.t1,
+        ...(zrc20Details[t1] || t1ZETA),
+      },
+    };
+  });
 
   return pools;
 };
