@@ -38,53 +38,55 @@ export const getPools = async function (this: ZetaChainClient) {
   );
   tokenAddresses.push(zetaTokenAddress);
 
-  const poolPromises = [];
-
-  for (let i = 0; i < tokenAddresses.length; i++) {
-    for (let j = i + 1; j < tokenAddresses.length; j++) {
-      const tokenA = tokenAddresses[i];
-      const tokenB = tokenAddresses[j];
-
-      const poolPromise = (async () => {
-        const pair = await systemContract.uniswapv2PairFor(
-          uniswapV2FactoryAddress,
-          tokenA,
-          tokenB
-        );
-
-        if (pair === ethers.constants.AddressZero) {
-          return null;
+  const uniquePairs = tokenAddresses.reduce(
+    (pairs: any, tokenA: string, i: any) => {
+      tokenAddresses.slice(i + 1).forEach((tokenB: any) => {
+        const pairKey = [tokenA, tokenB].sort().join("-");
+        if (!pairs.some((p: any) => p.key === pairKey)) {
+          pairs.push({ tokenA, tokenB, key: pairKey });
         }
+      });
+      return pairs;
+    },
+    []
+  );
 
-        try {
-          const pairContract = new ethers.Contract(
-            pair,
-            UniswapV2Pair.abi,
-            provider
-          );
-          const [token0, token1] = await Promise.all([
-            pairContract.token0(),
-            pairContract.token1(),
-          ]);
-          const reserves = await pairContract.getReserves();
+  const poolPromises = uniquePairs.map(async ({ tokenA, tokenB }: any) => {
+    const pair = await systemContract.uniswapv2PairFor(
+      uniswapV2FactoryAddress,
+      tokenA,
+      tokenB
+    );
 
-          return {
-            pair,
-            t0: { address: token0, reserve: reserves[0] },
-            t1: { address: token1, reserve: reserves[1] },
-          };
-        } catch (error) {
-          return null;
-        }
-      })();
+    if (pair === ethers.constants.AddressZero) return null;
 
-      poolPromises.push(poolPromise);
+    try {
+      const pairContract = new ethers.Contract(
+        pair,
+        UniswapV2Pair.abi,
+        provider
+      );
+      const [token0, token1] = await Promise.all([
+        pairContract.token0(),
+        pairContract.token1(),
+      ]);
+      const reserves = await pairContract.getReserves();
+
+      return {
+        pair,
+        t0: { address: token0, reserve: reserves[0] },
+        t1: { address: token1, reserve: reserves[1] },
+      };
+    } catch (error) {
+      return null;
     }
-  }
+  });
 
   const pools = (await Promise.all(poolPromises)).filter(
     (pool) => pool !== null
   );
+
+  console.log(pools);
 
   return pools;
 };
