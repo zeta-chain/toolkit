@@ -62,8 +62,10 @@ export const getPools = async function (this: ZetaChainClient) {
             UniswapV2Pair.abi,
             provider
           );
-          const token0 = await pairContract.token0();
-          const token1 = await pairContract.token1();
+          const [token0, token1] = await Promise.all([
+            pairContract.token0(),
+            pairContract.token1(),
+          ]);
           const reserves = await pairContract.getReserves();
 
           return {
