@@ -7,6 +7,7 @@ export * from "./getFees";
 export * from "./getForeignCoins";
 export * from "./getHardhatConfig";
 export * from "./getPools";
+export * from "./getQuote";
 export * from "./getSupportedChains";
 export * from "./prepareData";
 export * from "./sendZeta";
