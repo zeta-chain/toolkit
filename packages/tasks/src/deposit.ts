@@ -18,6 +18,25 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   const { amount, erc20 } = args;
 
+  let inputToken = args.erc20
+    ? await client.getZRC20FromERC20(erc20)
+    : await client.getZRC20GasToken(hre.network.name);
+
+  const refundFee = await client.getRefundFee(inputToken);
+  const refundFeeAmount = ethers.utils.formatUnits(
+    refundFee.amount,
+    refundFee.decimals
+  );
+
+  let decimals = 18;
+
+  if (erc20) {
+    const contract = new ethers.Contract(erc20, ERC20_ABI.abi, signer);
+    decimals = await contract.decimals();
+  }
+
+  const value = ethers.utils.parseUnits(amount, decimals);
+
   let message;
   if (args.message) {
     try {
@@ -99,6 +118,13 @@ Sender:      ${signer.address}
 Recipient:   ${args.recipient || signer.address}`);
     if (message) {
       console.log(`Message:     ${args.message}`);
+    }
+    if (value.lt(refundFee.amount)) {
+      console.log(`
+WARNING! Amount ${amount} is less than refund fee ${refundFeeAmount}.
+This means if this transaction fails, you will not be able to get
+the refund of deposited tokens. Consider increasing the amount.
+`);
     }
     try {
       await confirm(
