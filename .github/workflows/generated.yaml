@@ -1,0 +1,36 @@
+name: Generated Files are Updated
+on:
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq unzip
+          yarn install
+
+      - name: Generate docs
+        run: |
+          yarn docs
+
+      - name: Check for changes
+        run: |
+          if git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol -- pkg docs; then
+            echo "Generated files are up-to-date."
+          else
+            echo "::error::Generated files are not up-to-date. Please run 'yarn docs' locally and commit any changes."
+            exit 1
+          fi
