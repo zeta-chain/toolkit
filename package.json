@@ -28,7 +28,7 @@
     "lint:sol:fix": "prettier --write \"contracts/**/*.sol\"",
     "lint:sol": "solhint 'contracts/**/*.sol' && prettier -c 'contracts/**/*.sol'",
     "lint": "npm run lint:js && npm run lint:sol",
-    "docs:build": "typedoc ./packages/client/src/index.ts",
+    "docs:build": "typedoc ./packages/client/src/index.ts --gitRevision main",
     "docs:start": "http-server ./docs",
     "docs": "yarn docs:build && yarn docs:start",
     "copy-templates": "npx cpx './packages/tasks/templates/**/*' ./dist/packages/tasks/templates",
