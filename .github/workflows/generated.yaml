@@ -24,13 +24,13 @@ jobs:
 
       - name: Generate docs
         run: |
-          yarn docs
+          yarn docs:build
 
       - name: Check for changes
         run: |
           if git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol -- pkg docs; then
             echo "Generated files are up-to-date."
           else
-            echo "::error::Generated files are not up-to-date. Please run 'yarn docs' locally and commit any changes."
+            echo "::error::Generated files are not up-to-date. Please run 'yarn docs:build' locally and commit any changes."
             exit 1
           fi
