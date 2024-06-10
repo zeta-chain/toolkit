@@ -54,6 +54,8 @@ export type { SystemContract } from "./@zetachain/protocol-contracts/contracts/z
 export { SystemContract__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContract__factory";
 export type { SystemContractErrors } from "./@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContractErrors";
 export { SystemContractErrors__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContractErrors__factory";
+export type { BytesHelperLib } from "./contracts/BytesHelperLib";
+export { BytesHelperLib__factory } from "./factories/contracts/BytesHelperLib__factory";
 export type { ZetaEthMock } from "./contracts/EthZetaMock.sol/ZetaEthMock";
 export { ZetaEthMock__factory } from "./factories/contracts/EthZetaMock.sol/ZetaEthMock__factory";
 export type { OnlySystem } from "./contracts/OnlySystem";

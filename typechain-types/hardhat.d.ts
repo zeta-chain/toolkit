@@ -109,6 +109,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SystemContractErrors__factory>;
     getContractFactory(
+      name: "BytesHelperLib",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.BytesHelperLib__factory>;
+    getContractFactory(
       name: "ZetaEthMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZetaEthMock__factory>;
@@ -289,6 +293,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SystemContractErrors>;
+    getContractAt(
+      name: "BytesHelperLib",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.BytesHelperLib>;
     getContractAt(
       name: "ZetaEthMock",
       address: string,

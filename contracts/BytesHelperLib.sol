@@ -2,6 +2,8 @@
 pragma solidity =0.8.7;
 
 library BytesHelperLib {
+    error OffsetOutOfBounds();
+    
     function bytesToAddress(
         bytes calldata data,
         uint256 offset
@@ -47,5 +49,16 @@ library BytesHelperLib {
         }
 
         return bech32Bytes;
+    }
+
+    function bytesToBool(bytes calldata data, uint256 offset)
+        internal
+        pure
+        returns (bool)
+    {
+        if (offset >= data.length) {
+            revert OffsetOutOfBounds();
+        }
+        return uint8(data[offset]) != 0;
     }
 }
