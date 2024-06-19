@@ -3,3 +3,4 @@
 /* eslint-disable */
 import type * as zetaInterfacesSol from "./ZetaInterfaces.sol";
 export type { zetaInterfacesSol };
+export type { ZetaInteractorErrors } from "./ZetaInteractorErrors";
