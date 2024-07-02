@@ -43,6 +43,9 @@ const fetchCCMFees = async function (
   }
   const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
   const response = await fetch(url);
+  if (!response.ok) {
+    return;
+  }
   const data = await response.json();
   const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);
   const protocolFee = ethers.BigNumber.from(data.protocolFeeInZeta);
