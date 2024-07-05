@@ -115,7 +115,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 Networks:    ${chain} → zeta_testnet
 Amount sent: ${amount} ${symbol || ""}
 Sender:      ${signer.address}
-Recipient:   ${args.recipient || signer.address}`);
+Recipient:   ${args.recipient}`);
     if (message) {
       console.log(`Message:     ${args.message}`);
     }
@@ -148,7 +148,7 @@ export const depositTask = task(
   main
 )
   .addParam("amount", "Amount tokens to send")
-  .addOptionalParam("recipient", "Recipient address")
+  .addParam("recipient", "Recipient address")
   .addOptionalParam("erc20", "ERC-20 token address")
   .addOptionalParam("message", `Message, like '[["string"], ["hello"]]'`)
   .addFlag("json", "Output in JSON")

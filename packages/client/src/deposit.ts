@@ -12,7 +12,7 @@ import { prepareParams } from "./prepareData";
  *
  * @param this - ZetaChainClient instance.
  * @param options - Deposit options.
- * @param options.sourceChain - Label of the connected chain from which the deposit is
+ * @param options.chain - Label of the connected chain from which the deposit is
  * made.
  * @param options.amount - Amount to be deposited in human readable form. For
  * example, 1.5 ETH is "1.5".
@@ -35,11 +35,11 @@ export const deposit = async function (
     erc20,
     message,
   }: {
-    amount: string;
     chain: string;
+    amount: string;
+    recipient: string;
     erc20?: string;
     message?: [string[], string[]];
-    recipient?: string;
   }
 ) {
   let signer;
@@ -56,11 +56,14 @@ export const deposit = async function (
   if (message && !recipient) {
     throw new Error("Please, provide a valid contract address as recipient.");
   }
-  const to = recipient || this.signer.address;
+
   const abiCoder = ethers.utils.defaultAbiCoder;
-  const data = message
-    ? abiCoder.encode(message[0], message[1])
-    : ethers.utils.hexlify([]);
+  const recipientHex = ethers.utils.hexZeroPad(recipient, 20);
+  const encodedMessage = message
+    ? abiCoder.encode(message[0], message[1]).slice(2)
+    : "";
+  const data = recipientHex + encodedMessage;
+
   if (erc20) {
     const custody = getAddress(
       "erc20Custody",
@@ -83,28 +86,22 @@ export const deposit = async function (
       throw new Error("Amount cannot be parsed.");
     }
     const balance = await contract.balanceOf(signer.address);
-    if (balance.lt(amount)) {
+    if (balance.lt(value)) {
       throw new Error("Insufficient token balance.");
     }
     const approveTx = await contract.approve(custody, value);
     await approveTx.wait();
-    return await custodyContract.deposit(to, erc20, value, data);
+    return await custodyContract.deposit(recipient, erc20, value, data);
   } else {
     const tss = getAddress("tss", chain as ParamChainName);
     if (!tss) {
       throw new Error(`No TSS contract found for ${chain} chain.`);
     }
-    const tx: {
-      data?: string;
-      to: string;
-      value: ethers.BigNumberish;
-    } = {
+    const tx = {
       to: tss,
       value: ethers.utils.parseUnits(amount, 18),
+      data,
     };
-    tx.data = recipient
-      ? `${recipient}${data.slice(2) ?? ""}`
-      : ethers.utils.hexlify([]);
     return await signer.sendTransaction(tx);
   }
 };
