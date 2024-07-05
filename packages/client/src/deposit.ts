@@ -56,10 +56,10 @@ export const deposit = async function (
   if (message && !recipient) {
     throw new Error("Please, provide a valid contract address as recipient.");
   }
-  const abiCoder = ethers.utils.defaultAbiCoder;
+
   const recipientHex = ethers.utils.hexZeroPad(recipient, 20);
   const encodedMessage = message
-    ? abiCoder.encode(message[0], message[1]).slice(2)
+    ? ethers.utils.defaultAbiCoder.encode(message[0], message[1]).slice(2)
     : "";
   const data = recipientHex + encodedMessage;
 
