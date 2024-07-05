@@ -35,11 +35,11 @@ export const deposit = async function (
     erc20,
     message,
   }: {
-    chain: string;
     amount: string;
-    recipient: string;
+    chain: string;
     erc20?: string;
     message?: [string[], string[]];
+    recipient: string;
   }
 ) {
   let signer;
@@ -98,9 +98,9 @@ export const deposit = async function (
       throw new Error(`No TSS contract found for ${chain} chain.`);
     }
     const tx = {
+      data,
       to: tss,
       value: ethers.utils.parseUnits(amount, 18),
-      data,
     };
     return await signer.sendTransaction(tx);
   }
