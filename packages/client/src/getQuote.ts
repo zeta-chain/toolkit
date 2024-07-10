@@ -144,37 +144,43 @@ export const getWithdrawFeeInInputToken = async function (
 export const getQuote = async function (
   this: ZetaChainClient,
   inputAmount: string,
-  inputZRC20: string,
-  outputZRC20: string
+  inputToken: string,
+  outputToken: string
 ) {
   const rpc = this.getEndpoint("evm", "zeta_testnet");
   const provider = new ethers.providers.JsonRpcProvider(rpc);
   const zetaToken = getZetaToken();
 
-  const inputContract = new ethers.Contract(inputZRC20, ZRC20.abi, provider);
-  const outputContract = new ethers.Contract(outputZRC20, ZRC20.abi, provider);
+  const inputContract = new ethers.Contract(inputToken, ZRC20.abi, provider);
+  const outputContract = new ethers.Contract(outputToken, ZRC20.abi, provider);
 
   const inputDecimals = await inputContract.decimals();
   const amountIn = parseUnits(inputAmount, inputDecimals).toString();
   const outputDecimals = await outputContract.decimals();
 
-  const outputAmountInZETA = await getAmounts(
-    "out",
-    provider,
-    amountIn,
-    inputZRC20,
-    zetaToken
-  );
+  let out;
 
-  const outputAmount = await getAmounts(
-    "out",
-    provider,
-    outputAmountInZETA[1],
-    zetaToken,
-    outputZRC20
-  );
+  if (inputToken === zetaToken || outputToken === zetaToken) {
+    out = await getAmounts("out", provider, amountIn, inputToken, outputToken);
+  } else {
+    const outInZETA = await getAmounts(
+      "out",
+      provider,
+      amountIn,
+      inputToken,
+      zetaToken
+    );
 
-  return { amount: outputAmount[1], decimals: outputDecimals };
+    out = await getAmounts(
+      "out",
+      provider,
+      outInZETA[1],
+      zetaToken,
+      outputToken
+    );
+  }
+
+  return { amount: out[1], decimals: outputDecimals };
 };
 
 /**
