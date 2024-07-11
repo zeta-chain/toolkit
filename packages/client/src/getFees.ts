@@ -12,7 +12,12 @@ const fetchZEVMFees = async function (
 ) {
   const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl);
   const contract = new ethers.Contract(zrc20.address, ZRC20.abi, provider);
-  const [, withdrawGasFee] = await contract.withdrawGasFee();
+  let withdrawGasFee;
+  try {
+    [, withdrawGasFee] = await contract.withdrawGasFee();
+  } catch (e) {
+    return;
+  }
   const gasFee = ethers.BigNumber.from(withdrawGasFee);
   const protocolFee = ethers.BigNumber.from(await contract.PROTOCOL_FLAT_FEE());
   const gasToken = foreignCoins.find((c: any) => {
@@ -90,7 +95,7 @@ export const getFees = async function (this: ZetaChainClient, gas: Number) {
       try {
         const rpcUrl = this.getEndpoint("evm", `zeta_${this.network}`);
         const fee = await fetchZEVMFees(zrc20, rpcUrl, foreignCoins);
-        fees.omnichain.push(fee);
+        if (fee) fees.omnichain.push(fee);
       } catch (err) {
         console.log(err);
       }
