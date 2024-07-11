@@ -16,7 +16,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   const client = new ZetaChainClient({ network: "testnet", signer });
 
-  const recipient = args.recipient || signer.address;
+  const signerAddress = await signer.getAddress();
+
+  const recipient = args.recipient || signerAddress;
   const amount = args.amount;
   const zrc20 = args.zrc20;
 

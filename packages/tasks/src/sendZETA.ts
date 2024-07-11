@@ -34,7 +34,8 @@ const main = async (args: any, hre: any) => {
   }
 
   const { amount, destination } = args;
-  const recipient = args.recipient || signer.address;
+  const signerAddress = await signer.getrAddress();
+  const recipient = args.recipient || signerAddress;
   const chain = hre.network.name;
 
   const data: any = {
@@ -57,7 +58,7 @@ Cross-chain fee: ${fee} ZETA
 Amount received: ${(parseFloat(amount) - parseFloat(fee)).toFixed(
       18
     )} ZETA (estimated)
-From address:    ${signer.address}
+From address:    ${signerAddress}
 To address:      ${recipient}
 `);
 

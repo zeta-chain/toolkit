@@ -84,7 +84,8 @@ export const deposit = async function (
     } catch (e) {
       throw new Error("Amount cannot be parsed.");
     }
-    const balance = await contract.balanceOf(signer.address);
+    const signerAddress = await signer.getAddress();
+    const balance = await contract.balanceOf(signerAddress);
     if (balance.lt(value)) {
       throw new Error("Insufficient token balance.");
     }

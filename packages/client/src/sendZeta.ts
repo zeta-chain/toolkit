@@ -83,7 +83,7 @@ export const sendZeta = async function (
   await approveTx.wait();
 
   const destinationChainId = this.getChains()[destination]?.chain_id;
-  const destinationAddress = recipient ? recipient : signer.address;
+  const destinationAddress = recipient;
 
   return await connectorContract.send({
     destinationAddress,

@@ -106,6 +106,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     )?.symbol;
   }
 
+  const signerAddress = await signer.getAddress();
+
   if (args.json) {
     const tx = await client.deposit(data);
     console.log(JSON.stringify(tx, null, 2));
@@ -113,7 +115,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.log(`
 Networks:    ${chain} → zeta_testnet
 Amount sent: ${amount} ${symbol || ""}
-Sender:      ${signer.address}
+Sender:      ${signerAddress}
 Recipient:   ${args.recipient}`);
     if (message) {
       console.log(`Message:     ${args.message}`);
