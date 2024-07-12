@@ -24,7 +24,7 @@ export const withdraw = async function (
     recipient,
   }: {
     amount: string;
-    recipient?: string;
+    recipient: string;
     zrc20: string;
   }
 ) {
@@ -51,6 +51,6 @@ export const withdraw = async function (
 
   await (await gasContract.connect(signer).approve(zrc20, gasFee)).wait();
 
-  const to = recipient ? recipient : signer.address;
+  const to = recipient;
   return await targetContract.connect(signer).withdraw(to, value);
 };

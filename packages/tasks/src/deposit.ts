@@ -45,8 +45,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
         Array.isArray(msg) &&
         msg.length === 2 &&
         Array.isArray(msg[0]) &&
-        msg[0].every((item: string) => typeof item === "string") &&
-        msg[1].every((item: string) => typeof item === "string")
+        msg[0].every((item: string) => typeof item === "string")
       ) {
         message = JSON.parse(args.message);
       } else {
@@ -107,6 +106,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     )?.symbol;
   }
 
+  const signerAddress = await signer.getAddress();
+
   if (args.json) {
     const tx = await client.deposit(data);
     console.log(JSON.stringify(tx, null, 2));
@@ -114,7 +115,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     console.log(`
 Networks:    ${chain} → zeta_testnet
 Amount sent: ${amount} ${symbol || ""}
-Sender:      ${signer.address}
+Sender:      ${signerAddress}
 Recipient:   ${args.recipient}`);
     if (message) {
       console.log(`Message:     ${args.message}`);
