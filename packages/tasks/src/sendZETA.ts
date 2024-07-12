@@ -34,7 +34,7 @@ const main = async (args: any, hre: any) => {
   }
 
   const { amount, destination } = args;
-  const signerAddress = await signer.getrAddress();
+  const signerAddress = await signer.getAddress();
   const recipient = args.recipient || signerAddress;
   const chain = hre.network.name;
 
