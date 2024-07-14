@@ -2,7 +2,7 @@ import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
 import * as ecc from "tiny-secp256k1";
 
-export const bitcoinAddress = (pk: string, network: "testnet" | "mainnet") => {
+export const bitcoinAddress = (pk: string, network: "mainnet" | "testnet") => {
   const bitcoinNetwork =
     network === "testnet" ? bitcoin.networks.testnet : bitcoin.networks.bitcoin;
 
