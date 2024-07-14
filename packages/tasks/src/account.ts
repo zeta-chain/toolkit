@@ -70,7 +70,7 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 🔑 Private key: ${pk}`);
   mnemonic && console.log(`🔐 Mnemonic phrase: ${mnemonic.phrase}`);
   console.log(`😃 EVM address: ${address}
-😃 Bitcoin address: ${bitcoinAddress(pk)}
+😃 Bitcoin address: ${bitcoinAddress(pk, "testnet")}
 😃 Bech32 address: ${hexToBech32Address(address, "zeta")}
 `);
 

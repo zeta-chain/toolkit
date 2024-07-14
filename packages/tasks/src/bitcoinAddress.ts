@@ -2,15 +2,16 @@ import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
 import * as ecc from "tiny-secp256k1";
 
-export const bitcoinAddress = (pk: string) => {
-  const TESTNET = bitcoin.networks.testnet;
+export const bitcoinAddress = (pk: string, network: "testnet" | "mainnet") => {
+  const bitcoinNetwork =
+    network === "testnet" ? bitcoin.networks.testnet : bitcoin.networks.bitcoin;
 
   const ECPair = ECPairFactory(ecc);
   const key = ECPair.fromPrivateKey(Buffer.from(pk, "hex"), {
-    network: TESTNET,
+    network: bitcoinNetwork,
   });
   const { address } = bitcoin.payments.p2wpkh({
-    network: TESTNET,
+    network: bitcoinNetwork,
     pubkey: key.publicKey,
   });
   if (!address) throw new Error("Unable to generate bitcoin address");

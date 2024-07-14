@@ -47,7 +47,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     evmAddress = args.address;
   } else if (pk) {
     evmAddress = new ethers.Wallet(pk).address;
-    btcAddress = bitcoinAddress(pk);
+    btcAddress = bitcoinAddress(pk, args.mainnet ? "mainnet" : "testnet");
   } else {
     spinner.stop();
     console.error(walletError + balancesError);
