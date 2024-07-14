@@ -140,6 +140,7 @@ export const getBalances = async function (
       multicallContexts[token.chain_name].push({
         target: token.contract,
         callData: new ethers.utils.Interface(
+        target: token.contract,
           token.coin_type === "ERC20" ? ERC20_ABI.abi : ZRC20.abi
         ).encodeFunctionData("balanceOf", [evmAddress]),
       });
