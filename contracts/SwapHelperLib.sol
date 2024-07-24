@@ -94,7 +94,7 @@ library SwapHelperLib {
         uint256 minAmountOut,
         address[] memory path
     ) internal view returns (bool) {
-        if (path.length == 2) revert InvalidPathLength();
+        if (path.length != 2) revert InvalidPathLength();
         bool existsPairPool = _existsPairPool(
             uniswapV2Factory,
             path[0],
