@@ -5,6 +5,7 @@ import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
 import "@zetachain/protocol-contracts/contracts/zevm/interfaces/IZRC20.sol";
 import "@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol";
+import "./shared/libraries/UniswapV2Library.sol";
 
 library SwapHelperLib {
     uint16 internal constant MAX_DEADLINE = 200;
@@ -83,6 +84,65 @@ library SwapHelperLib {
         return
             IZRC20(zrc20A).balanceOf(uniswapPool) > 0 &&
             IZRC20(zrc20B).balanceOf(uniswapPool) > 0;
+    }
+
+    function _isSufficientLiquidity(
+        address uniswapV2Factory,
+        uint256 amountIn,
+        uint256 minAmountOut,
+        address[] memory path
+    ) internal view returns (bool) {
+        uint256[] memory amounts = UniswapV2Library.getAmountsOut(uniswapV2Factory, amountIn, path);
+        return amounts[amounts.length - 1] >= minAmountOut;
+    }
+
+    function swapExactTokensForTokensDirectly(
+        SystemContract systemContract,
+        address zrc20,
+        uint256 amount,
+        address targetZRC20,
+        uint256 minAmountOut
+    ) internal returns (uint256) {
+
+        address[] memory path;
+        path = new address[](2);
+        path[0] = zrc20;
+        path[1] = targetZRC20;
+
+        bool existsPairPool = _existsPairPool(
+            systemContract.uniswapv2FactoryAddress(),
+            zrc20,
+            targetZRC20
+        );
+
+        bool isSufficientLiquidity = _isSufficientLiquidity(
+            systemContract.uniswapv2FactoryAddress(),
+            amount,
+            minAmountOut,
+            path
+        );
+
+        if (!existsPairPool || !isSufficientLiquidity) {
+            path = new address[](3);
+            path[0] = zrc20;
+            path[1] = systemContract.wZetaContractAddress();
+            path[2] = targetZRC20;
+        }
+
+        IZRC20(zrc20).approve(
+            address(systemContract.uniswapv2Router02Address()),
+            amount
+        );
+        uint256[] memory amounts = IUniswapV2Router01(
+            systemContract.uniswapv2Router02Address()
+        ).swapExactTokensForTokens(
+                amount,
+                minAmountOut,
+                path,
+                address(this),
+                block.timestamp + MAX_DEADLINE
+            );
+        return amounts[path.length - 1];
     }
 
     function swapExactTokensForTokens(
