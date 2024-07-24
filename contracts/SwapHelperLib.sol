@@ -127,7 +127,9 @@ library SwapHelperLib {
             path
         );
 
-        if (!isSufficientLiquidity) {
+        bool isZETA = targetZRC20 == systemContract.wZetaContractAddress() || zrc20 == systemContract.wZetaContractAddress();
+
+        if (!isSufficientLiquidity && !isZETA) {
             path = new address[](3);
             path[0] = zrc20;
             path[1] = systemContract.wZetaContractAddress();
