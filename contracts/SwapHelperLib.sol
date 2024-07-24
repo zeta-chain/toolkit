@@ -96,7 +96,7 @@ library SwapHelperLib {
         return amounts[amounts.length - 1] >= minAmountOut;
     }
 
-    function swapExactTokensForTokensDirectly(
+    function swapExactTokensForTokens(
         SystemContract systemContract,
         address zrc20,
         uint256 amount,
@@ -145,7 +145,7 @@ library SwapHelperLib {
         return amounts[path.length - 1];
     }
 
-    function swapExactTokensForTokens(
+    function swapExactTokensForTokensDirectly(
         SystemContract systemContract,
         address zrc20,
         uint256 amount,
