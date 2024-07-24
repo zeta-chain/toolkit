@@ -18,6 +18,8 @@ library SwapHelperLib {
 
     error CantBeZeroAddress();
 
+    error InvalidPathLength();
+
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
     function sortTokens(
         address tokenA,
@@ -92,8 +94,17 @@ library SwapHelperLib {
         uint256 minAmountOut,
         address[] memory path
     ) internal view returns (bool) {
+        if (path.length == 2) revert InvalidPathLength();
+        bool existsPairPool = _existsPairPool(
+            uniswapV2Factory,
+            path[0],
+            path[1]
+        );
+        if (!existsPairPool) {
+            return false;
+        }
         uint256[] memory amounts = UniswapV2Library.getAmountsOut(uniswapV2Factory, amountIn, path);
-        return amounts[amounts.length - 1] >= minAmountOut;
+        return amounts[0] >= minAmountOut;
     }
 
     function swapExactTokensForTokens(
@@ -109,12 +120,6 @@ library SwapHelperLib {
         path[0] = zrc20;
         path[1] = targetZRC20;
 
-        bool existsPairPool = _existsPairPool(
-            systemContract.uniswapv2FactoryAddress(),
-            zrc20,
-            targetZRC20
-        );
-
         bool isSufficientLiquidity = _isSufficientLiquidity(
             systemContract.uniswapv2FactoryAddress(),
             amount,
@@ -122,7 +127,7 @@ library SwapHelperLib {
             path
         );
 
-        if (!existsPairPool || !isSufficientLiquidity) {
+        if (!isSufficientLiquidity) {
             path = new address[](3);
             path[0] = zrc20;
             path[1] = systemContract.wZetaContractAddress();
