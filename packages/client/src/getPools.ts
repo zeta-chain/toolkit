@@ -7,6 +7,12 @@ import { ethers } from "ethers";
 import { ZetaChainClient } from "./client";
 import MULTICALL3_ABI from "./multicall3.json";
 
+type Pair = {
+  key: string;
+  tokenA: string;
+  tokenB: string;
+};
+
 export const getPools = async function (this: ZetaChainClient) {
   const rpc = this.getEndpoint("evm", `zeta_${this.network}`);
   const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
@@ -39,11 +45,11 @@ export const getPools = async function (this: ZetaChainClient) {
   );
   tokenAddresses.push(zetaTokenAddress);
 
-  const uniquePairs = tokenAddresses.reduce(
-    (pairs: any, tokenA: string, i: any) => {
-      tokenAddresses.slice(i + 1).forEach((tokenB: any) => {
+  const uniquePairs: Pair[] = tokenAddresses.reduce(
+    (pairs: Pair[], tokenA: string, i: number) => {
+      tokenAddresses.slice(i + 1).forEach((tokenB: string) => {
         const pairKey = [tokenA, tokenB].sort().join("-");
-        if (!pairs.some((p: any) => p.key === pairKey)) {
+        if (!pairs.some((p: Pair) => p.key === pairKey)) {
           pairs.push({ key: pairKey, tokenA, tokenB });
         }
       });
@@ -82,10 +88,10 @@ export const getPools = async function (this: ZetaChainClient) {
         return null;
       }
     })
-    .filter((pair) => pair !== null);
+    .filter((pair: string | null) => pair !== null);
 
   const pairCalls = validPairs
-    .map((pair) => [
+    .map((pair: string) => [
       {
         target: pair,
         callData: new ethers.utils.Interface(
