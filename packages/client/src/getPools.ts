@@ -66,12 +66,12 @@ export const getPools = async function (this: ZetaChainClient) {
   );
 
   const calls = uniquePairs.map(({ tokenA, tokenB }) => ({
-    target: systemContractAddress,
     callData: systemContract.interface.encodeFunctionData("uniswapv2PairFor", [
       uniswapV2FactoryAddress,
       tokenA,
       tokenB,
     ]),
+    target: systemContractAddress,
   }));
 
   const { returnData } = await multicallContract.callStatic.aggregate(calls);
@@ -93,22 +93,22 @@ export const getPools = async function (this: ZetaChainClient) {
   const pairCalls = validPairs
     .map((pair: string) => [
       {
-        target: pair,
         callData: new ethers.utils.Interface(
           UniswapV2Pair.abi
         ).encodeFunctionData("token0"),
+        target: pair,
       },
       {
-        target: pair,
         callData: new ethers.utils.Interface(
           UniswapV2Pair.abi
         ).encodeFunctionData("token1"),
+        target: pair,
       },
       {
-        target: pair,
         callData: new ethers.utils.Interface(
           UniswapV2Pair.abi
         ).encodeFunctionData("getReserves"),
+        target: pair,
       },
     ])
     .flat();
