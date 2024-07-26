@@ -72,11 +72,15 @@ export const getPools = async function (this: ZetaChainClient) {
 
   const validPairs = returnData
     .map((data: any, index: number) => {
-      const pair = systemContract.interface.decodeFunctionResult(
-        "uniswapv2PairFor",
-        data
-      )[0];
-      return pair !== ethers.constants.AddressZero ? pair : null;
+      try {
+        const pair = systemContract.interface.decodeFunctionResult(
+          "uniswapv2PairFor",
+          data
+        )[0];
+        return pair !== ethers.constants.AddressZero ? pair : null;
+      } catch {
+        return null;
+      }
     })
     .filter((pair) => pair !== null);
 
@@ -108,31 +112,51 @@ export const getPools = async function (this: ZetaChainClient) {
   );
 
   const pools = [];
+  const uniswapInterface = new ethers.utils.Interface(UniswapV2Pair.abi);
+
   for (let i = 0; i < pairReturnData.returnData.length; i += 3) {
     const pairIndex = Math.floor(i / 3);
     const pair = validPairs[pairIndex];
 
-    try {
-      const token0 = new ethers.utils.Interface(
-        UniswapV2Pair.abi
-      ).decodeFunctionResult("token0", pairReturnData.returnData[i])[0];
-
-      const token1 = new ethers.utils.Interface(
-        UniswapV2Pair.abi
-      ).decodeFunctionResult("token1", pairReturnData.returnData[i + 1])[0];
-
-      const reserves = new ethers.utils.Interface(
-        UniswapV2Pair.abi
-      ).decodeFunctionResult("getReserves", pairReturnData.returnData[i + 2]);
-
-      pools.push({
-        pair,
-        t0: { address: token0, reserve: reserves._reserve0 },
-        t1: { address: token1, reserve: reserves._reserve1 },
-      });
-    } catch (error) {
-      console.error(`Error decoding data for pair ${pair}:`, error);
+    if (
+      !pairReturnData.returnData[i] ||
+      !pairReturnData.returnData[i + 1] ||
+      !pairReturnData.returnData[i + 2]
+    ) {
+      console.warn(`Missing data for pair ${pair} at index ${i}`);
+      continue;
     }
+
+    const token0Data = pairReturnData.returnData[i];
+    const token1Data = pairReturnData.returnData[i + 1];
+    const reservesData = pairReturnData.returnData[i + 2];
+
+    // Check if data can be decoded
+    let token0, token1, reserves;
+    try {
+      token0 = uniswapInterface.decodeFunctionResult("token0", token0Data)[0];
+    } catch {
+      continue;
+    }
+    try {
+      token1 = uniswapInterface.decodeFunctionResult("token1", token1Data)[0];
+    } catch {
+      continue;
+    }
+    try {
+      reserves = uniswapInterface.decodeFunctionResult(
+        "getReserves",
+        reservesData
+      );
+    } catch {
+      continue;
+    }
+
+    pools.push({
+      pair,
+      t0: { address: token0, reserve: reserves._reserve0 },
+      t1: { address: token1, reserve: reserves._reserve1 },
+    });
   }
 
   const zrc20Details = foreignCoins.reduce((acc: any, coin: any) => {
