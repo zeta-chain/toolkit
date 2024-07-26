@@ -5,6 +5,7 @@ import SystemContract from "@zetachain/protocol-contracts/abi/zevm/SystemContrac
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
+import MULTICALL3_ABI from "./multicall3.json";
 
 export const getPools = async function (this: ZetaChainClient) {
   const rpc = this.getEndpoint("evm", `zeta_${this.network}`);
@@ -51,38 +52,88 @@ export const getPools = async function (this: ZetaChainClient) {
     []
   );
 
-  const poolPromises = uniquePairs.map(async ({ tokenA, tokenB }: any) => {
-    const pair = await systemContract.uniswapv2PairFor(
+  const multicallAddress = "0xca11bde05977b3631167028862be2a173976ca11";
+  const multicallContract = new ethers.Contract(
+    multicallAddress,
+    MULTICALL3_ABI,
+    provider
+  );
+
+  const calls = uniquePairs.map(({ tokenA, tokenB }) => ({
+    target: systemContractAddress,
+    callData: systemContract.interface.encodeFunctionData("uniswapv2PairFor", [
       uniswapV2FactoryAddress,
       tokenA,
-      tokenB
-    );
+      tokenB,
+    ]),
+  }));
 
-    if (pair === ethers.constants.AddressZero) return null;
+  const { returnData } = await multicallContract.callStatic.aggregate(calls);
+
+  const validPairs = returnData
+    .map((data: any, index: number) => {
+      const pair = systemContract.interface.decodeFunctionResult(
+        "uniswapv2PairFor",
+        data
+      )[0];
+      return pair !== ethers.constants.AddressZero ? pair : null;
+    })
+    .filter((pair) => pair !== null);
+
+  const pairCalls = validPairs
+    .map((pair) => [
+      {
+        target: pair,
+        callData: new ethers.utils.Interface(
+          UniswapV2Pair.abi
+        ).encodeFunctionData("token0"),
+      },
+      {
+        target: pair,
+        callData: new ethers.utils.Interface(
+          UniswapV2Pair.abi
+        ).encodeFunctionData("token1"),
+      },
+      {
+        target: pair,
+        callData: new ethers.utils.Interface(
+          UniswapV2Pair.abi
+        ).encodeFunctionData("getReserves"),
+      },
+    ])
+    .flat();
+
+  const pairReturnData = await multicallContract.callStatic.aggregate(
+    pairCalls
+  );
+
+  const pools = [];
+  for (let i = 0; i < pairReturnData.returnData.length; i += 3) {
+    const pairIndex = Math.floor(i / 3);
+    const pair = validPairs[pairIndex];
 
     try {
-      const pairContract = new ethers.Contract(
-        pair,
-        UniswapV2Pair.abi,
-        provider
-      );
-      const [token0, token1] = await Promise.all([
-        pairContract.token0(),
-        pairContract.token1(),
-      ]);
-      const reserves = await pairContract.getReserves();
+      const token0 = new ethers.utils.Interface(
+        UniswapV2Pair.abi
+      ).decodeFunctionResult("token0", pairReturnData.returnData[i])[0];
 
-      return {
+      const token1 = new ethers.utils.Interface(
+        UniswapV2Pair.abi
+      ).decodeFunctionResult("token1", pairReturnData.returnData[i + 1])[0];
+
+      const reserves = new ethers.utils.Interface(
+        UniswapV2Pair.abi
+      ).decodeFunctionResult("getReserves", pairReturnData.returnData[i + 2]);
+
+      pools.push({
         pair,
-        t0: { address: token0, reserve: reserves[0] },
-        t1: { address: token1, reserve: reserves[1] },
-      };
+        t0: { address: token0, reserve: reserves._reserve0 },
+        t1: { address: token1, reserve: reserves._reserve1 },
+      });
     } catch (error) {
-      return null;
+      console.error(`Error decoding data for pair ${pair}:`, error);
     }
-  });
-
-  let pools = (await Promise.all(poolPromises)).filter((pool) => pool !== null);
+  }
 
   const zrc20Details = foreignCoins.reduce((acc: any, coin: any) => {
     acc[coin.zrc20_contract_address.toLowerCase()] = {
@@ -92,7 +143,7 @@ export const getPools = async function (this: ZetaChainClient) {
     return acc;
   }, {});
 
-  pools = pools.map((t: any) => {
+  const formattedPools = pools.map((t: any) => {
     const zeta = { decimals: 18, symbol: "WZETA" };
     const t0 = t.t0.address.toLowerCase();
     const t1 = t.t1.address.toLowerCase();
@@ -111,5 +162,5 @@ export const getPools = async function (this: ZetaChainClient) {
     };
   });
 
-  return pools;
+  return formattedPools;
 };
