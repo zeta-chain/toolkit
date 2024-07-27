@@ -104,7 +104,7 @@ library SwapHelperLib {
             return false;
         }
         uint256[] memory amounts = UniswapV2Library.getAmountsOut(uniswapV2Factory, amountIn, path);
-        return amounts[0] >= minAmountOut;
+        return amounts[amounts.length - 1] >= minAmountOut;
     }
 
     function swapExactTokensForTokens(
