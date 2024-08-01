@@ -4,6 +4,7 @@
 import type {
   BaseContract,
   BigNumber,
+  BigNumberish,
   BytesLike,
   CallOverrides,
   PopulatedTransaction,
@@ -22,11 +23,23 @@ import type {
 
 export interface SwapHelperLibInterface extends utils.Interface {
   functions: {
+    "getMinOutAmount(SystemContract,address,address,uint256)": FunctionFragment;
     "uniswapv2PairFor(address,address,address)": FunctionFragment;
   };
 
-  getFunction(nameOrSignatureOrTopic: "uniswapv2PairFor"): FunctionFragment;
+  getFunction(
+    nameOrSignatureOrTopic: "getMinOutAmount" | "uniswapv2PairFor"
+  ): FunctionFragment;
 
+  encodeFunctionData(
+    functionFragment: "getMinOutAmount",
+    values: [
+      PromiseOrValue<string>,
+      PromiseOrValue<string>,
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>
+    ]
+  ): string;
   encodeFunctionData(
     functionFragment: "uniswapv2PairFor",
     values: [
@@ -36,6 +49,10 @@ export interface SwapHelperLibInterface extends utils.Interface {
     ]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "getMinOutAmount",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "uniswapv2PairFor",
     data: BytesLike
@@ -71,6 +88,14 @@ export interface SwapHelperLib extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    getMinOutAmount(
+      systemContract: PromiseOrValue<string>,
+      zrc20: PromiseOrValue<string>,
+      target: PromiseOrValue<string>,
+      amountIn: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { minOutAmount: BigNumber }>;
+
     uniswapv2PairFor(
       factory: PromiseOrValue<string>,
       tokenA: PromiseOrValue<string>,
@@ -78,6 +103,14 @@ export interface SwapHelperLib extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string] & { pair: string }>;
   };
+
+  getMinOutAmount(
+    systemContract: PromiseOrValue<string>,
+    zrc20: PromiseOrValue<string>,
+    target: PromiseOrValue<string>,
+    amountIn: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   uniswapv2PairFor(
     factory: PromiseOrValue<string>,
@@ -87,6 +120,14 @@ export interface SwapHelperLib extends BaseContract {
   ): Promise<string>;
 
   callStatic: {
+    getMinOutAmount(
+      systemContract: PromiseOrValue<string>,
+      zrc20: PromiseOrValue<string>,
+      target: PromiseOrValue<string>,
+      amountIn: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     uniswapv2PairFor(
       factory: PromiseOrValue<string>,
       tokenA: PromiseOrValue<string>,
@@ -98,6 +139,14 @@ export interface SwapHelperLib extends BaseContract {
   filters: {};
 
   estimateGas: {
+    getMinOutAmount(
+      systemContract: PromiseOrValue<string>,
+      zrc20: PromiseOrValue<string>,
+      target: PromiseOrValue<string>,
+      amountIn: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     uniswapv2PairFor(
       factory: PromiseOrValue<string>,
       tokenA: PromiseOrValue<string>,
@@ -107,6 +156,14 @@ export interface SwapHelperLib extends BaseContract {
   };
 
   populateTransaction: {
+    getMinOutAmount(
+      systemContract: PromiseOrValue<string>,
+      zrc20: PromiseOrValue<string>,
+      target: PromiseOrValue<string>,
+      amountIn: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     uniswapv2PairFor(
       factory: PromiseOrValue<string>,
       tokenA: PromiseOrValue<string>,

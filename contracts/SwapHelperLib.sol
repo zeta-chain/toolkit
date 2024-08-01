@@ -233,4 +233,21 @@ library SwapHelperLib {
             );
         return amounts[0];
     }
+
+    function getMinOutAmount(SystemContract systemContract, address zrc20, address target, uint256 amountIn) public view returns (uint256 minOutAmount) {
+        address[] memory path;
+
+        path = new address[](2);
+        path[0] = zrc20;
+        path[1] = target;
+        uint[] memory amounts1 = UniswapV2Library.getAmountsOut(systemContract.uniswapv2FactoryAddress(), amountIn, path);
+
+        path = new address[](3);
+        path[0] = zrc20;
+        path[1] = systemContract.wZetaContractAddress();
+        path[2] = target;
+        uint[] memory amounts2 = UniswapV2Library.getAmountsOut(systemContract.uniswapv2FactoryAddress(), amountIn, path);
+
+        minOutAmount = amounts1[amounts1.length - 1] > amounts2[amounts2.length - 1] ? amounts1[amounts1.length - 1] : amounts2[amounts2.length - 1];
+    }
 }
