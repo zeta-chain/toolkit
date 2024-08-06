@@ -141,15 +141,7 @@ export const getPools = async function (this: ZetaChainClient) {
     let token0, token1, reserves;
     try {
       token0 = uniswapInterface.decodeFunctionResult("token0", token0Data)[0];
-    } catch {
-      continue;
-    }
-    try {
       token1 = uniswapInterface.decodeFunctionResult("token1", token1Data)[0];
-    } catch {
-      continue;
-    }
-    try {
       reserves = uniswapInterface.decodeFunctionResult(
         "getReserves",
         reservesData
@@ -157,7 +149,6 @@ export const getPools = async function (this: ZetaChainClient) {
     } catch {
       continue;
     }
-
     pools.push({
       pair,
       t0: { address: token0, reserve: reserves._reserve0 },
