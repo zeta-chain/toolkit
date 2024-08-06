@@ -233,8 +233,6 @@ export const getBalances = async function (
           const balance = await provider.getBalance(evmAddress);
           const formattedBalance = formatUnits(balance, token.decimals);
           balances.push({ ...token, balance: formattedBalance });
-        } else {
-          console.log(chainLabel, token, "doesn't exist");
         }
       })
   );
