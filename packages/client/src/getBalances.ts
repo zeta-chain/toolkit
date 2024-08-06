@@ -92,15 +92,21 @@ export const getBalances = async function (
     }
   });
   supportedChains.forEach((chain: any) => {
-    const contract = getAddress("zetaToken", chain.chain_name as any);
-    if (contract) {
-      tokens.push({
-        chain_id: chain.chain_id,
-        coin_type: "ERC20",
-        contract,
-        decimals: 18,
-        symbol: "WZETA",
-      });
+    const chainLabel = Object.keys(this.getChains()).find(
+      (key) => this.getChains()[key].chain_id === parseInt(chain.chain_id)
+    );
+
+    if (chainLabel) {
+      const contract = getAddress("zetaToken", chainLabel as any);
+      if (contract) {
+        tokens.push({
+          chain_id: chain.chain_id,
+          coin_type: "ERC20",
+          contract,
+          decimals: 18,
+          symbol: "WZETA",
+        });
+      }
     }
   });
   tokens.push({
@@ -217,11 +223,16 @@ export const getBalances = async function (
           !["btc_testnet", "btc_mainnet"].includes(token.chain_name)
       )
       .map(async (token) => {
-        const rpc = await this.getEndpoint("evm", token.chain_name);
-        const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-        const balance = await provider.getBalance(evmAddress);
-        const formattedBalance = formatUnits(balance, token.decimals);
-        balances.push({ ...token, balance: formattedBalance });
+        const chainLabel = Object.keys(this.getChains()).find(
+          (key) => this.getChains()[key].chain_id === parseInt(token.chain_id)
+        );
+        if (chainLabel) {
+          const rpc = await this.getEndpoint("evm", chainLabel);
+          const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+          const balance = await provider.getBalance(evmAddress);
+          const formattedBalance = formatUnits(balance, token.decimals);
+          balances.push({ ...token, balance: formattedBalance });
+        }
       })
   );
 
