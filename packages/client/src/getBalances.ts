@@ -95,7 +95,6 @@ export const getBalances = async function (
     const chainLabel = Object.keys(this.getChains()).find(
       (key) => this.getChains()[key].chain_id === parseInt(chain.chain_id)
     );
-    console.log(chainLabel);
 
     if (chainLabel) {
       const contract = getAddress("zetaToken", chainLabel as any);
