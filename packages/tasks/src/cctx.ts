@@ -35,4 +35,4 @@ export const cctxTask = task(
 )
   .addPositionalParam("tx", "Hash of an inbound or a cross-chain transaction")
   .addFlag("json", "Output as JSON")
-  .addOptionalParam("type", "Testnet or mainnet", "testnet");
+  .addFlag("mainnet", "Run the task on mainnet");
