@@ -1,0 +1,11 @@
+{
+  "flattenOutputFiles": true,
+  "mergeReadme": true,
+  "entryFileName": "index",
+  "publicPath": "toolkit",
+  "hidePageHeader": true,
+  "plugin": ["typedoc-plugin-markdown", "typedoc-plugin-frontmatter"],
+  "readmeFrontmatter": {
+    "title": "Toolkit"
+  }
+}
