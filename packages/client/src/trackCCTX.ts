@@ -61,7 +61,6 @@ const fetchCCTXData = async function (
   const receiver_chainId = cctx?.outbound_params[0]?.receiver_chainId;
   const outbound_tx_hash = cctx?.outbound_params[0]?.outbound_tx_hash;
   let confirmed_on_destination = false;
-  console.log(cctx?.outbound_params);
   const tx = {
     confirmed_on_destination,
     outbound_tx_hash,
