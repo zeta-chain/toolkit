@@ -34,7 +34,7 @@ const fetchCCTXByInbound = async (
   try {
     const url = `${API}/zeta-chain/crosschain/inTxHashToCctx/${hash}`;
     const apiResponseData = await apiFetch(url);
-    const res = apiResponseData?.inTxHashToCctx?.cctx_index;
+    const res = apiResponseData?.inboundHashToCctx?.cctx_index;
     res.forEach((hash: any) => {
       if (hash && !cctxs[hash] && !spinners[hash]) {
         cctxs[hash] = [];
@@ -58,15 +58,15 @@ const fetchCCTXData = async function (
   json: Boolean
 ) {
   const cctx = await getCCTX(hash, API);
-  const receiver_chainId = cctx?.outbound_tx_params[0]?.receiver_chainId;
-  const outbound_tx_hash = cctx?.outbound_tx_params[0]?.outbound_tx_hash;
+  const receiver_chainId = cctx?.outbound_params[0]?.receiver_chainId;
+  const outbound_tx_hash = cctx?.outbound_params[0]?.outbound_tx_hash;
   let confirmed_on_destination = false;
   const tx = {
     confirmed_on_destination,
     outbound_tx_hash,
-    outbound_tx_tss_nonce: cctx?.outbound_tx_params[0]?.outbound_tx_tss_nonce,
+    outbound_tx_tss_nonce: cctx?.outbound_params[0]?.outbound_tx_tss_nonce,
     receiver_chainId,
-    sender_chain_id: cctx?.inbound_tx_params?.sender_chain_id,
+    sender_chain_id: cctx?.outbound_params?.sender_chain_id,
     status: cctx?.cctx_status?.status,
     status_message: cctx?.cctx_status?.status_message,
   };
