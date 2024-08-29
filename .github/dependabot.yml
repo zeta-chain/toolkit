@@ -9,8 +9,7 @@ updates:
     labels:
       - "dependencies" 
     allow:
-      - dependency-name: "@zetachain/toolkit"
       - dependency-name: "@zetachain/networks"
       - dependency-name: "@zetachain/protocol-contracts"
-      - dependency-name: "@zetachain/universalkit"
-      - dependency-name: "@zetachain/localnet"
+      - dependency-name: "@zetachain/faucet-cli"
+      - dependency-name: "@zetachain/addresses"
