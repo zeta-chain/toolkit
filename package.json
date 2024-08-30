@@ -93,7 +93,7 @@
     "@openzeppelin/contracts": "^4.9.6",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@zetachain/faucet-cli": "^4.1.1",
-    "@zetachain/networks": "^9.0.0",
+    "@zetachain/networks": "^10.0.0",
     "@zetachain/protocol-contracts": "8.0.0-rc1",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
