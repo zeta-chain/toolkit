@@ -93,8 +93,8 @@
     "@openzeppelin/contracts": "^4.9.6",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@zetachain/faucet-cli": "^4.1.1",
-    "@zetachain/protocol-contracts": "9.0.0",
     "@zetachain/networks": "^10.0.0",
+    "@zetachain/protocol-contracts": "9.0.0",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",
@@ -113,7 +113,7 @@
     "ora": "5.4.1",
     "spinnies": "^0.5.1",
     "tiny-secp256k1": "^2.2.3",
-    "ws": "^8.13.0"
+    "ws": "^8.17.1"
   },
   "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
 }
