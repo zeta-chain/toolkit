@@ -6,13 +6,16 @@ import { ethers } from "ethers";
 
 const SEED = "meta";
 
-export const solanaDeposit = async (args: {
-  amount: number;
-  api: string;
-  recipient: string;
-  idPath: string;
-  params: any[];
-}) => {
+export const solanaDeposit = async function (
+  this: ZetaChainClient,
+  args: {
+    amount: number;
+    api: string;
+    recipient: string;
+    idPath: string;
+    params: any[];
+  }
+) {
   const keypair = await getKeypairFromFile(args.idPath);
   const wallet = new anchor.Wallet(keypair);
 

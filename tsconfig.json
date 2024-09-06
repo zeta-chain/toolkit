@@ -12,14 +12,7 @@
     "outDir": "./dist",
     "skipLibCheck": true,
     "sourceMap": false,
-    "strict": true,
-    "typeRoots": [
-      "@types",
-      "./node_modules/@types",
-      "./packages/tasks/src",
-      "./packages/client/src",
-      "./packages/test/src"
-    ]
+    "strict": true
   },
   "files": ["./hardhat.config.ts"],
   "include": ["packages/client", "packages/tasks", "packages/test"],
