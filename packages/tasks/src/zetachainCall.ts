@@ -1,73 +1,30 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
-
-import GatewayABI from "./abi/GatewayZEVM.sol/GatewayZEVM.json";
-import ZRC20ABI from "./abi/ZRC20.sol/ZRC20.json";
+import { ZetaChainClient } from "../../client/src/";
 
 export const zetachainCall = async (
   args: any,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const [signer] = await hre.ethers.getSigners();
-  const { utils } = hre.ethers;
-
-  const gateway = new hre.ethers.Contract(
-    args.gatewayZetaChain,
-    GatewayABI.abi,
-    signer
-  );
-
-  const revertOptions = {
-    abortAddress: "0x0000000000000000000000000000000000000000",
-    callOnRevert: args.callOnRevert,
-    onRevertGasLimit: args.onRevertGasLimit,
-    revertAddress: args.revertAddress,
-    // not used
-    revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
-  };
-
-  const txOptions = {
-    gasLimit: args.gasLimit,
-    gasPrice: args.gasPrice,
-  };
-
-  const functionSignature = utils.id(args.function).slice(0, 10);
-  const encodedParameters = utils.defaultAbiCoder.encode(
-    JSON.parse(args.types),
-    args.values
-  );
-
-  const message = utils.hexlify(
-    utils.concat([functionSignature, encodedParameters])
-  );
-
+  const { ethers } = hre as any;
+  const [signer] = await ethers.getSigners();
+  const client = new ZetaChainClient({ network: "testnet", signer });
   try {
-    const zrc20 = new hre.ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
-    const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
-      args.gasLimit
-    );
-    const gasZRC20Contract = new hre.ethers.Contract(
-      gasZRC20,
-      ZRC20ABI.abi,
-      signer
-    );
-    const approve = await gasZRC20Contract.approve(
-      args.gatewayZetaChain,
-      gasFee,
-      txOptions
-    );
-    await approve.wait();
-    const tx = await gateway[
-      "call(bytes,address,bytes,uint256,(address,bool,address,bytes,uint256))"
-    ](
-      utils.hexlify(args.receiver),
-      gasZRC20,
-      message,
-      args.callGasLimit,
-      revertOptions,
-      txOptions
-    );
-
+    const tx = await client.zetachainCall({
+      amount: args.amount,
+      zrc20: args.zrc20,
+      receiver: args.receiver,
+      function: args.function,
+      types: args.types,
+      values: args.values,
+      gasLimit: args.gasLimit,
+      gasPrice: args.gasPrice,
+      gatewayZetaChain: args.gatewayZetaChain,
+      callOnRevert: args.callOnRevert,
+      onRevertGasLimit: args.onRevertGasLimit,
+      revertAddress: args.revertAddress,
+      revertMessage: args.revertMessage,
+    });
     const receipt = await tx.wait();
     console.log("Transaction hash:", receipt.transactionHash);
   } catch (e) {

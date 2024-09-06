@@ -21,6 +21,9 @@ import {
   trackCCTX,
   withdraw,
   zetachainWithdrawAndCall,
+  zetachainWithdraw,
+  zetachainCall,
+  evmDepositAndCall,
 } from ".";
 
 export interface ZetaChainClientParamsBase {
@@ -130,4 +133,7 @@ export class ZetaChainClient {
   getZRC20GasToken = getZRC20GasToken;
   solanaDeposit = solanaDeposit;
   zetachainWithdrawAndCall = zetachainWithdrawAndCall;
+  zetachainWithdraw = zetachainWithdraw;
+  zetachainCall = zetachainCall;
+  evmDepositAndCall = evmDepositAndCall;
 }

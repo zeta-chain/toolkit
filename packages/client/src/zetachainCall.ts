@@ -4,7 +4,7 @@ import GatewayABI from "./abi/GatewayZEVM.sol/GatewayZEVM.json";
 import ZRC20ABI from "./abi/ZRC20.sol/ZRC20.json";
 import { ZetaChainClient } from "./client";
 
-export const zetachainWithdrawAndCall = async function (
+export const zetachainCall = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
@@ -36,6 +36,7 @@ export const zetachainWithdrawAndCall = async function (
     callOnRevert: args.callOnRevert,
     onRevertGasLimit: args.onRevertGasLimit,
     revertAddress: args.revertAddress,
+    // not used
     revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
   };
 
@@ -54,43 +55,21 @@ export const zetachainWithdrawAndCall = async function (
     utils.concat([functionSignature, encodedParameters])
   );
   const zrc20 = new ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
-  const decimals = await zrc20.decimals();
-  const value = utils.parseUnits(args.amount, decimals);
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
     args.gasLimit
   );
-  if (args.zrc20 === gasZRC20) {
-    const approveGasAndWithdraw = await zrc20.approve(
-      args.gatewayZetaChain,
-      value.add(gasFee),
-      txOptions
-    );
-    await approveGasAndWithdraw.wait();
-  } else {
-    const gasZRC20Contract = new ethers.Contract(
-      gasZRC20,
-      ZRC20ABI.abi,
-      signer
-    );
-    const approveGas = await gasZRC20Contract.approve(
-      args.gatewayZetaChain,
-      gasFee,
-      txOptions
-    );
-    await approveGas.wait();
-    const approveWithdraw = await zrc20.approve(
-      args.gatewayZetaChain,
-      value,
-      txOptions
-    );
-    await approveWithdraw.wait();
-  }
-  const method =
-    "withdrawAndCall(bytes,uint256,address,bytes,uint256,(address,bool,address,bytes,uint256))";
-  const tx = await gateway[method](
+  const gasZRC20Contract = new ethers.Contract(gasZRC20, ZRC20ABI.abi, signer);
+  const approve = await gasZRC20Contract.approve(
+    args.gatewayZetaChain,
+    gasFee,
+    txOptions
+  );
+  await approve.wait();
+  const tx = await gateway[
+    "call(bytes,address,bytes,uint256,(address,bool,address,bytes,uint256))"
+  ](
     utils.hexlify(args.receiver),
-    value,
-    args.zrc20,
+    gasZRC20,
     message,
     args.gasLimit,
     revertOptions,
