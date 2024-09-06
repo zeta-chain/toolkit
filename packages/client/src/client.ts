@@ -4,6 +4,9 @@ import merge from "lodash/merge";
 
 import {
   deposit,
+  evmCall,
+  evmDeposit,
+  evmDepositAndCall,
   getBalances,
   getChainId,
   getEndpoint,
@@ -20,12 +23,9 @@ import {
   solanaDeposit,
   trackCCTX,
   withdraw,
-  zetachainWithdrawAndCall,
-  zetachainWithdraw,
   zetachainCall,
-  evmDepositAndCall,
-  evmCall,
-  evmDeposit,
+  zetachainWithdraw,
+  zetachainWithdrawAndCall,
 } from ".";
 
 export interface ZetaChainClientParamsBase {

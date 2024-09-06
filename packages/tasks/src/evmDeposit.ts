@@ -1,5 +1,6 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { ZetaChainClient } from "../../client/src/";
 
 export const evmDeposit = async (args: any, hre: HardhatRuntimeEnvironment) => {
@@ -8,15 +9,15 @@ export const evmDeposit = async (args: any, hre: HardhatRuntimeEnvironment) => {
     const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.evmDeposit({
       amount: args.amount,
-      receiver: args.receiver,
-      gatewayEvm: args.gatewayEvm,
       callOnRevert: args.callOnRevert,
-      revertAddress: args.revertAddress,
-      gasPrice: args.gasPrice,
-      gasLimit: args.gasLimit,
-      onRevertGasLimit: args.onRevertGasLimit,
-      revertMessage: args.revertMessage,
       erc20: args.erc20,
+      gasLimit: args.gasLimit,
+      gasPrice: args.gasPrice,
+      gatewayEvm: args.gatewayEvm,
+      onRevertGasLimit: args.onRevertGasLimit,
+      receiver: args.receiver,
+      revertAddress: args.revertAddress,
+      revertMessage: args.revertMessage,
     });
     if (tx) {
       const receipt = await tx.wait();

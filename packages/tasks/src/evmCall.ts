@@ -1,5 +1,6 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { ZetaChainClient } from "../../client/src/";
 
 export const evmCall = async (args: any, hre: HardhatRuntimeEnvironment) => {
@@ -7,13 +8,13 @@ export const evmCall = async (args: any, hre: HardhatRuntimeEnvironment) => {
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.evmCall({
-      receiver: args.receiver,
-      gatewayEvm: args.gatewayEvm,
       callOnRevert: args.callOnRevert,
-      revertAddress: args.revertAddress,
-      gasPrice: args.gasPrice,
       gasLimit: args.gasLimit,
+      gasPrice: args.gasPrice,
+      gatewayEvm: args.gatewayEvm,
       onRevertGasLimit: args.onRevertGasLimit,
+      receiver: args.receiver,
+      revertAddress: args.revertAddress,
       revertMessage: args.revertMessage,
       types: args.types,
       values: args.values,

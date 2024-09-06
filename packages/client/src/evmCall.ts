@@ -6,13 +6,13 @@ import { ZetaChainClient } from "./client";
 export const evmCall = async function (
   this: ZetaChainClient,
   args: {
-    receiver: string;
-    gatewayEvm: string;
     callOnRevert: boolean;
-    revertAddress: string;
-    gasPrice: ethers.BigNumber;
     gasLimit: number;
+    gasPrice: ethers.BigNumber;
+    gatewayEvm: string;
     onRevertGasLimit: number;
+    receiver: string;
+    revertAddress: string;
     revertMessage: string;
     types: string;
     values: any[];

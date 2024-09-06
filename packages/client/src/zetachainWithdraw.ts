@@ -8,15 +8,15 @@ export const zetachainWithdraw = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    zrc20: string;
-    receiver: string;
+    callOnRevert: boolean;
     gasLimit: number;
     gasPrice: ethers.BigNumber;
     gatewayZetaChain: string;
-    callOnRevert: boolean;
     onRevertGasLimit: number;
+    receiver: string;
     revertAddress: string;
     revertMessage: string;
+    zrc20: string;
   }
 ) {
   const signer = this.signer;

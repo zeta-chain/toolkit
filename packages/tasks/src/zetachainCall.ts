@@ -1,5 +1,6 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { ZetaChainClient } from "../../client/src/";
 
 export const zetachainCall = async (
@@ -11,18 +12,18 @@ export const zetachainCall = async (
     const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.zetachainCall({
       amount: args.amount,
-      zrc20: args.zrc20,
-      receiver: args.receiver,
+      callOnRevert: args.callOnRevert,
       function: args.function,
-      types: args.types,
-      values: args.values,
       gasLimit: args.gasLimit,
       gasPrice: args.gasPrice,
       gatewayZetaChain: args.gatewayZetaChain,
-      callOnRevert: args.callOnRevert,
       onRevertGasLimit: args.onRevertGasLimit,
+      receiver: args.receiver,
       revertAddress: args.revertAddress,
       revertMessage: args.revertMessage,
+      types: args.types,
+      values: args.values,
+      zrc20: args.zrc20,
     });
     const receipt = await tx.wait();
     console.log("Transaction hash:", receipt.transactionHash);

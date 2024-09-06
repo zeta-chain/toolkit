@@ -1,22 +1,22 @@
+import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { ethers } from "ethers";
 
 import GatewayABI from "./abi/GatewayEVM.sol/GatewayEVM.json";
 import { ZetaChainClient } from "./client";
-import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 
 export const evmDeposit = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    receiver: string;
-    gatewayEvm: string;
     callOnRevert: boolean;
-    revertAddress: string;
-    gasPrice: ethers.BigNumber;
-    gasLimit: number;
-    onRevertGasLimit: number;
-    revertMessage: string;
     erc20: string;
+    gasLimit: number;
+    gasPrice: ethers.BigNumber;
+    gatewayEvm: string;
+    onRevertGasLimit: number;
+    receiver: string;
+    revertAddress: string;
+    revertMessage: string;
   }
 ) {
   const signer = this.signer;

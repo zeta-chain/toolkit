@@ -1,5 +1,6 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { ZetaChainClient } from "../../client/src/";
 
 export const zetachainWithdraw = async (
@@ -11,15 +12,15 @@ export const zetachainWithdraw = async (
     const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.zetachainWithdraw({
       amount: args.amount,
-      zrc20: args.zrc20,
-      receiver: args.receiver,
+      callOnRevert: args.callOnRevert,
       gasLimit: args.gasLimit,
       gasPrice: args.gasPrice,
       gatewayZetaChain: args.gatewayZetaChain,
-      callOnRevert: args.callOnRevert,
       onRevertGasLimit: args.onRevertGasLimit,
+      receiver: args.receiver,
       revertAddress: args.revertAddress,
       revertMessage: args.revertMessage,
+      zrc20: args.zrc20,
     });
 
     const receipt = await tx.wait();
