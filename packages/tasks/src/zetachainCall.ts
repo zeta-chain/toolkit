@@ -1,7 +1,7 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import GatewayABI from "./abi/GatewayZEVM.sol/GatewayZEVM.json";
-import ZRC20ABI from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
+import ZRC20ABI from "./abi/ZRC20.sol/ZRC20.json";
 
 export const zetachainCall = async (
   args: any,
@@ -108,7 +108,7 @@ task("zetachain-call", "Call a contract on a connected chain", zetachainCall)
     7000000,
     types.int
   )
+  .addParam("amount", "The amount of tokens to pay for gas")
   .addParam("function", "Function to call (example: 'hello(string)')")
   .addParam("types", "The types of the parameters (example: ['string'])")
-  .addParam("amount", "The amount of tokens to pay for gas")
   .addVariadicPositionalParam("values", "The values of the parameters");

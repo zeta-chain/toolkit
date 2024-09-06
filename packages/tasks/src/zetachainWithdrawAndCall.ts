@@ -3,7 +3,7 @@ import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import GatewayABI from "./abi/GatewayZEVM.sol/GatewayZEVM.json";
 import ZRC20ABI from "./abi/ZRC20.sol/ZRC20.json";
 
-export const zetachainWithdraw = async (
+export const zetachainWithdrawAndCall = async (
   args: any,
   hre: HardhatRuntimeEnvironment
 ) => {
@@ -29,6 +29,16 @@ export const zetachainWithdraw = async (
     gasLimit: args.gasLimit,
   };
 
+  const functionSignature = utils.id(args.function).slice(0, 10);
+  const encodedParameters = utils.defaultAbiCoder.encode(
+    JSON.parse(args.types),
+    args.values
+  );
+
+  const message = utils.hexlify(
+    utils.concat([functionSignature, encodedParameters])
+  );
+
   try {
     const zrc20 = new hre.ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
     const decimals = await zrc20.decimals();
@@ -49,7 +59,8 @@ export const zetachainWithdraw = async (
       );
       const approveGas = await gasZRC20Contract.approve(
         args.gatewayZetaChain,
-        gasFee,
+        utils.parseUnits("1000", 18),
+        // gasFee,
         txOptions
       );
       await approveGas.wait();
@@ -61,11 +72,13 @@ export const zetachainWithdraw = async (
       await approveWithdraw.wait();
     }
     const method =
-      "withdraw(bytes,uint256,address,(address,bool,address,bytes,uint256))";
+      "withdrawAndCall(bytes,uint256,address,bytes,uint256,(address,bool,address,bytes,uint256))";
     const tx = await gateway[method](
       utils.hexlify(args.receiver),
       value,
       args.zrc20,
+      message,
+      args.gasLimit,
       revertOptions,
       txOptions
     );
@@ -77,7 +90,11 @@ export const zetachainWithdraw = async (
   }
 };
 
-task("zetachain-withdraw", "Withdraw tokens from ZetaChain", zetachainWithdraw)
+task(
+  "zetachain-withdraw-and-call",
+  "Withdraw tokens from ZetaChain and call a contract",
+  zetachainWithdrawAndCall
+)
   .addOptionalParam(
     "gatewayZetaChain",
     "contract address of gateway on ZetaChain",
@@ -113,4 +130,7 @@ task("zetachain-withdraw", "Withdraw tokens from ZetaChain", zetachainWithdraw)
     7000000,
     types.int
   )
-  .addParam("amount", "The amount of tokens to send");
+  .addParam("amount", "The amount of tokens to send")
+  .addParam("function", "Function to call (example: 'hello(string)')")
+  .addParam("types", "The types of the parameters (example: ['string'])")
+  .addVariadicPositionalParam("values", "The values of the parameters");
