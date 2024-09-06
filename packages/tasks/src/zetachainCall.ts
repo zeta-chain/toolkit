@@ -9,7 +9,6 @@ export const zetachainCall = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   const [signer] = await hre.ethers.getSigners();
-  console.log("Signer address:", signer.address);
   const { utils } = hre.ethers;
 
   const gateway = new hre.ethers.Contract(
