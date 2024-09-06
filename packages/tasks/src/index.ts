@@ -12,3 +12,8 @@ export { sendZETATask } from "./sendZETA";
 // export { verifyTask } from "./verify";
 export { tokensTask } from "./tokens";
 export { withdrawTask } from "./withdraw";
+export { evmCall } from "./evmCall";
+export { evmDeposit } from "./evmDeposit";
+export { evmDepositAndCall } from "./evmDepositAndCall";
+export { zetachainCall } from "./zetachainCall";
+export { zetachainWithdraw } from "./zetachainWithdraw";
