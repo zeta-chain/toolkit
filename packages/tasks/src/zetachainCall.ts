@@ -42,10 +42,17 @@ export const zetachainCall = async (
 
   try {
     const zrc20 = new hre.ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
-    const decimals = await zrc20.decimals();
-    const approve = await zrc20.approve(
+    const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
+      args.gasLimit
+    );
+    const gasZRC20Contract = new hre.ethers.Contract(
+      gasZRC20,
+      ZRC20ABI.abi,
+      signer
+    );
+    const approve = await gasZRC20Contract.approve(
       args.gatewayZetaChain,
-      utils.parseUnits(args.amount, decimals),
+      gasFee,
       txOptions
     );
     await approve.wait();
@@ -53,7 +60,7 @@ export const zetachainCall = async (
       "call(bytes,address,bytes,uint256,(address,bool,address,bytes,uint256))"
     ](
       utils.hexlify(args.receiver),
-      args.zrc20,
+      gasZRC20,
       message,
       args.callGasLimit,
       revertOptions,
@@ -109,7 +116,6 @@ task("zetachain-call", "Call a contract on a connected chain", zetachainCall)
     7000000,
     types.int
   )
-  .addParam("amount", "The amount of tokens to pay for gas")
   .addParam("function", "Function to call (example: 'hello(string)')")
   .addParam("types", "The types of the parameters (example: ['string'])")
   .addVariadicPositionalParam("values", "The values of the parameters");
