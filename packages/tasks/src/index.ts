@@ -18,3 +18,4 @@ export { evmDepositAndCall } from "./evmDepositAndCall";
 export { zetachainCall } from "./zetachainCall";
 export { zetachainWithdraw } from "./zetachainWithdraw";
 export { zetachainWithdrawAndCall } from "./zetachainWithdrawAndCall";
+export { solanaDeposit } from "./solanaDeposit";

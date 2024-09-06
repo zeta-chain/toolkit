@@ -19,6 +19,7 @@ import {
   sendZeta,
   trackCCTX,
   withdraw,
+  solanaDeposit,
 } from ".";
 
 export interface ZetaChainClientParamsBase {
@@ -126,4 +127,5 @@ export class ZetaChainClient {
   getRefundFee = getRefundFee;
   getZRC20FromERC20 = getZRC20FromERC20;
   getZRC20GasToken = getZRC20GasToken;
+  solanaDeposit = solanaDeposit;
 }

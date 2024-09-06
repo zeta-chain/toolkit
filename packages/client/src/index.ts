@@ -13,3 +13,4 @@ export * from "./prepareData";
 export * from "./sendZeta";
 export * from "./trackCCTX";
 export * from "./withdraw";
+export * from "./solanaDeposit";
