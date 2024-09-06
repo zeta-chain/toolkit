@@ -1,42 +1,24 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
-
-import GatewayABI from "./abi/GatewayEVM.sol/GatewayEVM.json";
+import { ZetaChainClient } from "../../client/src/";
 
 export const evmCall = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const [signer] = await hre.ethers.getSigners();
-  const { utils } = hre.ethers;
-
-  const gateway = new hre.ethers.Contract(
-    args.gatewayEvm,
-    GatewayABI.abi,
-    signer
-  );
-
-  const encodedParameters = utils.defaultAbiCoder.encode(
-    JSON.parse(args.types),
-    args.values
-  );
+  const client = new ZetaChainClient({ network: "testnet", signer });
 
   try {
-    const tx = await gateway[
-      "call(address,bytes,(address,bool,address,bytes,uint256))"
-    ](
-      args.receiver,
-      encodedParameters,
-      {
-        abortAddress: "0x0000000000000000000000000000000000000000",
-        callOnRevert: args.callOnRevert,
-        onRevertGasLimit: args.onRevertGasLimit,
-        revertAddress: args.revertAddress,
-        // not used
-        revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
-      },
-      {
-        gasLimit: args.gasLimit,
-        gasPrice: args.gasPrice,
-      }
-    );
+    const tx = await client.evmCall({
+      receiver: args.receiver,
+      gatewayEvm: args.gatewayEvm,
+      callOnRevert: args.callOnRevert,
+      revertAddress: args.revertAddress,
+      gasPrice: args.gasPrice,
+      gasLimit: args.gasLimit,
+      onRevertGasLimit: args.onRevertGasLimit,
+      revertMessage: args.revertMessage,
+      types: args.types,
+      values: args.values,
+    });
     const receipt = await tx.wait();
     console.log("Transaction hash:", receipt.transactionHash);
   } catch (e) {
