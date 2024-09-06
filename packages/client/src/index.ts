@@ -19,3 +19,4 @@ export * from "./zetachainWithdraw";
 export * from "./zetachainCall";
 export * from "./evmDepositAndCall";
 export * from "./evmCall";
+export * from "./evmDeposit";

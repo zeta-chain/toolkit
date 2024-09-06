@@ -1,61 +1,23 @@
-import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
-
-import GatewayABI from "./abi/GatewayEVM.sol/GatewayEVM.json";
+import { ZetaChainClient } from "../../client/src/";
 
 export const evmDeposit = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const [signer] = await hre.ethers.getSigners();
-  const { utils } = hre.ethers;
-
-  const gateway = new hre.ethers.Contract(
-    args.gatewayEvm,
-    GatewayABI.abi,
-    signer
-  );
-
-  const revertOptions = {
-    abortAddress: "0x0000000000000000000000000000000000000000",
-    callOnRevert: args.callOnRevert,
-    onRevertGasLimit: args.onRevertGasLimit,
-    revertAddress: args.revertAddress,
-    // not used
-    revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
-  };
-
-  const txOptions = {
-    gasLimit: args.gasLimit,
-    gasPrice: args.gasPrice,
-  };
-
+  const client = new ZetaChainClient({ network: "testnet", signer });
   try {
-    let tx;
-    if (args.erc20) {
-      const erc20Contract = new hre.ethers.Contract(
-        args.erc20,
-        ERC20_ABI.abi,
-        signer
-      );
-      const decimals = await erc20Contract.decimals();
-      const value = utils.parseUnits(args.amount, decimals);
-      await erc20Contract.connect(signer).approve(args.gatewayEvm, value);
-      const method =
-        "deposit(address,uint256,address,(address,bool,address,bytes,uint256))";
-      tx = await gateway[method](
-        args.receiver,
-        value,
-        args.erc20,
-        revertOptions,
-        txOptions
-      );
-    } else {
-      const value = utils.parseEther(args.amount);
-      const method = "deposit(address,(address,bool,address,bytes,uint256))";
-      tx = await gateway[method](args.receiver, revertOptions, {
-        ...txOptions,
-        value,
-      });
-    }
+    const tx = await client.evmDeposit({
+      amount: args.amount,
+      receiver: args.receiver,
+      gatewayEvm: args.gatewayEvm,
+      callOnRevert: args.callOnRevert,
+      revertAddress: args.revertAddress,
+      gasPrice: args.gasPrice,
+      gasLimit: args.gasLimit,
+      onRevertGasLimit: args.onRevertGasLimit,
+      revertMessage: args.revertMessage,
+      erc20: args.erc20,
+    });
     if (tx) {
       const receipt = await tx.wait();
       console.log("Transaction hash:", receipt.transactionHash);
