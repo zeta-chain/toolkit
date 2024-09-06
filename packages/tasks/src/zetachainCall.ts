@@ -42,9 +42,10 @@ export const zetachainCall = async (
 
   try {
     const zrc20 = new hre.ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
+    const decimals = await zrc20.decimals();
     const approve = await zrc20.approve(
       args.gatewayZetaChain,
-      utils.parseUnits(args.amount, 18),
+      utils.parseUnits(args.amount, decimals),
       txOptions
     );
     await approve.wait();

@@ -43,7 +43,9 @@ export const zetachainWithdrawAndCall = async (
     const zrc20 = new hre.ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
     const decimals = await zrc20.decimals();
     const value = utils.parseUnits(args.amount, decimals);
-    const [gasZRC20, gasFee] = await zrc20.withdrawGasFee();
+    const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
+      args.gasLimit
+    );
     if (args.zrc20 === gasZRC20) {
       const approveGasAndWithdraw = await zrc20.approve(
         args.gatewayZetaChain,
@@ -59,8 +61,8 @@ export const zetachainWithdrawAndCall = async (
       );
       const approveGas = await gasZRC20Contract.approve(
         args.gatewayZetaChain,
-        utils.parseUnits("1000", 18),
-        // gasFee,
+        // utils.parseUnits("1000", 18),
+        gasFee,
         txOptions
       );
       await approveGas.wait();
