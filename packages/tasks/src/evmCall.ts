@@ -3,10 +3,9 @@ import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ZetaChainClient } from "../../client/src/";
 
 export const evmCall = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const [signer] = await hre.ethers.getSigners();
-  const client = new ZetaChainClient({ network: "testnet", signer });
-
   try {
+    const [signer] = await hre.ethers.getSigners();
+    const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.evmCall({
       receiver: args.receiver,
       gatewayEvm: args.gatewayEvm,

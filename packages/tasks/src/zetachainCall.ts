@@ -6,10 +6,9 @@ export const zetachainCall = async (
   args: any,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const { ethers } = hre as any;
-  const [signer] = await ethers.getSigners();
-  const client = new ZetaChainClient({ network: "testnet", signer });
   try {
+    const [signer] = await hre.ethers.getSigners();
+    const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.zetachainCall({
       amount: args.amount,
       zrc20: args.zrc20,

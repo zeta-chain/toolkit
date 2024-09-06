@@ -6,10 +6,9 @@ export const evmDepositAndCall = async (
   args: any,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const { ethers } = hre as any;
-  const [signer] = await ethers.getSigners();
-  const client = new ZetaChainClient({ network: "testnet", signer });
   try {
+    const [signer] = await hre.ethers.getSigners();
+    const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.evmDepositAndCall({
       amount: args.amount,
       receiver: args.receiver,
