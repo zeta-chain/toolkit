@@ -61,7 +61,6 @@ export const zetachainWithdrawAndCall = async (
       );
       const approveGas = await gasZRC20Contract.approve(
         args.gatewayZetaChain,
-        // utils.parseUnits("1000", 18),
         gasFee,
         txOptions
       );
