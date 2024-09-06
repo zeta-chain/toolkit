@@ -2,8 +2,77 @@ import * as anchor from "@coral-xyz/anchor";
 import Gateway_IDL from "./idl/gateway.json";
 import { ZetaChainClient } from "./client";
 import { Keypair } from "@solana/web3.js";
+import { ethers } from "ethers";
 
 const SEED = "meta";
+
+export const solanaDeposit = async (args: {
+  amount: number;
+  api: string;
+  recipient: string;
+  idPath: string;
+  params: any[];
+}) => {
+  const keypair = await getKeypairFromFile(args.idPath);
+  const wallet = new anchor.Wallet(keypair);
+
+  const connection = new anchor.web3.Connection(args.api);
+  const provider = new anchor.AnchorProvider(
+    connection,
+    wallet,
+    anchor.AnchorProvider.defaultOptions()
+  );
+  anchor.setProvider(provider);
+
+  const programId = new anchor.web3.PublicKey(Gateway_IDL.address);
+  const gatewayProgram = new anchor.Program(
+    Gateway_IDL as anchor.Idl,
+    provider
+  );
+
+  const seeds = [Buffer.from(SEED, "utf-8")];
+  const [pdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+    seeds,
+    programId
+  );
+
+  const depositAmount = new anchor.BN(
+    anchor.web3.LAMPORTS_PER_SOL * args.amount
+  );
+
+  try {
+    const tx = new anchor.web3.Transaction();
+    const m = Buffer.from(
+      ethers.utils.arrayify(
+        args.recipient +
+          ethers.utils.defaultAbiCoder
+            .encode(args.params[0], args.params[1])
+            .slice(2)
+      )
+    );
+    const depositInstruction = await gatewayProgram.methods
+      .deposit(depositAmount, m)
+      .accounts({
+        pda: pdaAccount,
+        signer: wallet.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .instruction();
+
+    tx.add(depositInstruction);
+
+    // Send the transaction
+    const txSignature = await anchor.web3.sendAndConfirmTransaction(
+      connection,
+      tx,
+      [keypair]
+    );
+
+    console.log("Transaction signature:", txSignature);
+  } catch (error) {
+    console.error("Transaction failed:", error);
+  }
+};
 
 const getKeypairFromFile = async (filepath: string) => {
   const path = await import("path");
@@ -34,64 +103,4 @@ const getKeypairFromFile = async (filepath: string) => {
     throw new Error(`Invalid secret key file at '${filepath}'!`);
   }
   return Keypair.fromSecretKey(parsedFileContents);
-};
-
-export const solanaDeposit = async function (
-  this: ZetaChainClient,
-  args: {
-    amount: number;
-    memo: string;
-    api: string;
-    idPath: string;
-  }
-) {
-  const keypair = await getKeypairFromFile(args.idPath);
-  const wallet = new anchor.Wallet(keypair);
-
-  const connection = new anchor.web3.Connection(args.api);
-  const provider = new anchor.AnchorProvider(
-    connection,
-    wallet,
-    anchor.AnchorProvider.defaultOptions()
-  );
-  anchor.setProvider(provider);
-
-  const programId = new anchor.web3.PublicKey(Gateway_IDL.address);
-  const gatewayProgram = new anchor.Program(
-    Gateway_IDL as anchor.Idl,
-    provider
-  );
-
-  const seeds = [Buffer.from(SEED, "utf-8")];
-  const [pdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
-    seeds,
-    programId
-  );
-
-  const depositAmount = new anchor.BN(
-    anchor.web3.LAMPORTS_PER_SOL * args.amount
-  );
-  const memo = Buffer.from(args.memo);
-
-  try {
-    const tx = await gatewayProgram.methods
-      .deposit(depositAmount, memo)
-      .accounts({
-        signer: wallet.publicKey,
-        pda: pdaAccount,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .rpc();
-
-    console.log("Deposit transaction signature:", tx);
-
-    const pdaBalance = await connection.getBalance(pdaAccount);
-    console.log(
-      "PDA account SOL balance:",
-      pdaBalance / anchor.web3.LAMPORTS_PER_SOL,
-      "SOL"
-    );
-  } catch (error) {
-    console.error("Transaction failed:", error);
-  }
 };
