@@ -1,5 +1,6 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import GatewayABI from "./abi/GatewayEVM.sol/GatewayEVM.json";
 
 export const evmCall = async (args: any, hre: HardhatRuntimeEnvironment) => {
@@ -24,15 +25,16 @@ export const evmCall = async (args: any, hre: HardhatRuntimeEnvironment) => {
       args.receiver,
       encodedParameters,
       {
-        revertAddress: args.revertAddress,
+        abortAddress: "0x0000000000000000000000000000000000000000",
         callOnRevert: args.callOnRevert,
-        abortAddress: "0x0000000000000000000000000000000000000000", // not used
-        revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
         onRevertGasLimit: args.onRevertGasLimit,
+        revertAddress: args.revertAddress,
+        // not used
+        revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
       },
       {
-        gasPrice: args.gasPrice,
         gasLimit: args.gasLimit,
+        gasPrice: args.gasPrice,
       }
     );
     const receipt = await tx.wait();

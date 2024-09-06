@@ -2,6 +2,7 @@ import bech32 from "bech32";
 import { utils } from "ethers";
 import { task } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { ZetaChainClient } from "../../client/src";
 
 export const solanaDeposit = async (
@@ -22,7 +23,7 @@ export const solanaDeposit = async (
   }
   const { amount, api, idPath } = args;
   const params = [JSON.parse(args.types), args.values];
-  await client.solanaDeposit({ amount, api, recipient, idPath, params });
+  await client.solanaDeposit({ amount, api, idPath, params, recipient });
 };
 
 task("solana-deposit", "Solana deposit", solanaDeposit)

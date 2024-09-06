@@ -1,8 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
-import Gateway_IDL from "./idl/gateway.json";
-import { ZetaChainClient } from "./client";
 import { Keypair } from "@solana/web3.js";
 import { ethers } from "ethers";
+
+import { ZetaChainClient } from "./client";
+import Gateway_IDL from "./idl/gateway.json";
 
 const SEED = "meta";
 
@@ -11,9 +12,9 @@ export const solanaDeposit = async function (
   args: {
     amount: number;
     api: string;
-    recipient: string;
     idPath: string;
     params: any[];
+    recipient: string;
   }
 ) {
   const keypair = await getKeypairFromFile(args.idPath);

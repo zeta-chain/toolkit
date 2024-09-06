@@ -1,7 +1,8 @@
+import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import GatewayABI from "./abi/GatewayEVM.sol/GatewayEVM.json";
-import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 
 export const evmDepositAndCall = async (
   args: any,
@@ -17,16 +18,17 @@ export const evmDepositAndCall = async (
   );
 
   const revertOptions = {
-    revertAddress: args.revertAddress,
+    abortAddress: "0x0000000000000000000000000000000000000000",
     callOnRevert: args.callOnRevert,
-    abortAddress: "0x0000000000000000000000000000000000000000", // not used
-    revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
     onRevertGasLimit: args.onRevertGasLimit,
+    revertAddress: args.revertAddress,
+    // not used
+    revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
   };
 
   const txOptions = {
-    gasPrice: args.gasPrice,
     gasLimit: args.gasLimit,
+    gasPrice: args.gasPrice,
   };
 
   const encodedParameters = utils.defaultAbiCoder.encode(
