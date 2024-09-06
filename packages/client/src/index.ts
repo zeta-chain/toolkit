@@ -14,3 +14,4 @@ export * from "./sendZeta";
 export * from "./solanaDeposit";
 export * from "./trackCCTX";
 export * from "./withdraw";
+export * from "./zetachainWithdrawAndCall";
