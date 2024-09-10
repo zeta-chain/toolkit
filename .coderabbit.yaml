@@ -1,0 +1,9 @@
+reviews:
+  path_filters:
+    - "!typechain-types/**"
+    - "!docs/**"
+  auto_review:
+    base_branches:
+      - main
+  poem: false
+  collapse_walkthrough: true
