@@ -4,6 +4,9 @@ import merge from "lodash/merge";
 
 import {
   deposit,
+  evmCall,
+  evmDeposit,
+  evmDepositAndCall,
   getBalances,
   getChainId,
   getEndpoint,
@@ -17,8 +20,12 @@ import {
   getZRC20FromERC20,
   getZRC20GasToken,
   sendZeta,
+  solanaDeposit,
   trackCCTX,
   withdraw,
+  zetachainCall,
+  zetachainWithdraw,
+  zetachainWithdrawAndCall,
 } from ".";
 
 export interface ZetaChainClientParamsBase {
@@ -126,4 +133,11 @@ export class ZetaChainClient {
   getRefundFee = getRefundFee;
   getZRC20FromERC20 = getZRC20FromERC20;
   getZRC20GasToken = getZRC20GasToken;
+  solanaDeposit = solanaDeposit;
+  zetachainWithdrawAndCall = zetachainWithdrawAndCall;
+  zetachainWithdraw = zetachainWithdraw;
+  zetachainCall = zetachainCall;
+  evmDepositAndCall = evmDepositAndCall;
+  evmCall = evmCall;
+  evmDeposit = evmDeposit;
 }

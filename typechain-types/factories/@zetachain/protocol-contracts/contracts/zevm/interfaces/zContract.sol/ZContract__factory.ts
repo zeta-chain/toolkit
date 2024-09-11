@@ -7,7 +7,7 @@ import type { Provider } from "@ethersproject/providers";
 import type {
   ZContract,
   ZContractInterface,
-} from "../../../../../../@zetachain/protocol-contracts/contracts/zevm/interfaces/ZContract";
+} from "../../../../../../../@zetachain/protocol-contracts/contracts/zevm/interfaces/zContract.sol/ZContract";
 
 const _abi = [
   {

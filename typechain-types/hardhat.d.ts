@@ -97,6 +97,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IZRC20__factory>;
     getContractFactory(
+      name: "IZRC20Metadata",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IZRC20Metadata__factory>;
+    getContractFactory(
+      name: "ZRC20Events",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ZRC20Events__factory>;
+    getContractFactory(
+      name: "UniversalContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.UniversalContract__factory>;
+    getContractFactory(
       name: "ZContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZContract__factory>;
@@ -278,6 +290,21 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IZRC20>;
+    getContractAt(
+      name: "IZRC20Metadata",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IZRC20Metadata>;
+    getContractAt(
+      name: "ZRC20Events",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ZRC20Events>;
+    getContractAt(
+      name: "UniversalContract",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.UniversalContract>;
     getContractAt(
       name: "ZContract",
       address: string,

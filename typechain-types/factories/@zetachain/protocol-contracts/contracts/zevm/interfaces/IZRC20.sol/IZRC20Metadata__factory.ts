@@ -5,165 +5,14 @@
 import { Contract, Signer, utils } from "ethers";
 import type { Provider } from "@ethersproject/providers";
 import type {
-  IZRC20,
-  IZRC20Interface,
-} from "../../../../../../@zetachain/protocol-contracts/contracts/zevm/interfaces/IZRC20";
+  IZRC20Metadata,
+  IZRC20MetadataInterface,
+} from "../../../../../../../@zetachain/protocol-contracts/contracts/zevm/interfaces/IZRC20.sol/IZRC20Metadata";
 
 const _abi = [
   {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "owner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "spender",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "Approval",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "bytes",
-        name: "from",
-        type: "bytes",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "Deposit",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "from",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "Transfer",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "gasLimit",
-        type: "uint256",
-      },
-    ],
-    name: "UpdatedGasLimit",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "protocolFlatFee",
-        type: "uint256",
-      },
-    ],
-    name: "UpdatedProtocolFlatFee",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "systemContract",
-        type: "address",
-      },
-    ],
-    name: "UpdatedSystemContract",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "from",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bytes",
-        name: "to",
-        type: "bytes",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "gasFee",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "protocolFlatFee",
-        type: "uint256",
-      },
-    ],
-    name: "Withdrawal",
-    type: "event",
-  },
-  {
     inputs: [],
-    name: "PROTOCOL_FEE",
+    name: "PROTOCOL_FLAT_FEE",
     outputs: [
       {
         internalType: "uint256",
@@ -244,11 +93,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-      {
         internalType: "uint256",
         name: "amount",
         type: "uint256",
@@ -266,27 +110,16 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "spender",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "decreaseAllowance",
+    inputs: [],
+    name: "decimals",
     outputs: [
       {
-        internalType: "bool",
+        internalType: "uint8",
         name: "",
-        type: "bool",
+        type: "uint8",
       },
     ],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -314,27 +147,29 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "spender",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "increaseAllowance",
+    inputs: [],
+    name: "name",
     outputs: [
       {
-        internalType: "bool",
+        internalType: "string",
         name: "",
-        type: "bool",
+        type: "string",
       },
     ],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "symbol",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -447,12 +282,15 @@ const _abi = [
   },
 ] as const;
 
-export class IZRC20__factory {
+export class IZRC20Metadata__factory {
   static readonly abi = _abi;
-  static createInterface(): IZRC20Interface {
-    return new utils.Interface(_abi) as IZRC20Interface;
+  static createInterface(): IZRC20MetadataInterface {
+    return new utils.Interface(_abi) as IZRC20MetadataInterface;
   }
-  static connect(address: string, signerOrProvider: Signer | Provider): IZRC20 {
-    return new Contract(address, _abi, signerOrProvider) as IZRC20;
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): IZRC20Metadata {
+    return new Contract(address, _abi, signerOrProvider) as IZRC20Metadata;
   }
 }
