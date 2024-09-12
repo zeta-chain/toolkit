@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.7;
+pragma solidity 0.8.26;
 
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
-import "@zetachain/protocol-contracts/contracts/zevm/interfaces/IZRC20.sol";
-import "@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol";
+import "./shared/interfaces/IZRC20.sol";
+import "./SystemContract.sol";
 import "./shared/libraries/UniswapV2Library.sol";
 
 library SwapHelperLib {

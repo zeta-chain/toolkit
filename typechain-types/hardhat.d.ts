@@ -133,6 +133,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OnlySystem__factory>;
     getContractFactory(
+      name: "Revertable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Revertable__factory>;
+    getContractFactory(
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
@@ -140,6 +144,18 @@ declare module "hardhat/types/runtime" {
       name: "IWETH",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IWETH__factory>;
+    getContractFactory(
+      name: "IZRC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IZRC20__factory>;
+    getContractFactory(
+      name: "IZRC20Metadata",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IZRC20Metadata__factory>;
+    getContractFactory(
+      name: "ZRC20Events",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ZRC20Events__factory>;
     getContractFactory(
       name: "Math",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -173,6 +189,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SwapHelperLib__factory>;
     getContractFactory(
+      name: "SystemContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SystemContract__factory>;
+    getContractFactory(
+      name: "SystemContractErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SystemContractErrors__factory>;
+    getContractFactory(
       name: "TestSystemContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TestSystemContract__factory>;
@@ -180,6 +204,14 @@ declare module "hardhat/types/runtime" {
       name: "TestZRC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TestZRC20__factory>;
+    getContractFactory(
+      name: "UniversalContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.UniversalContract__factory>;
+    getContractFactory(
+      name: "ZContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ZContract__factory>;
     getContractFactory(
       name: "ZetaConnectorMockValue",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -336,6 +368,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.OnlySystem>;
     getContractAt(
+      name: "Revertable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Revertable>;
+    getContractAt(
       name: "IERC20",
       address: string,
       signer?: ethers.Signer
@@ -345,6 +382,21 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IWETH>;
+    getContractAt(
+      name: "IZRC20",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IZRC20>;
+    getContractAt(
+      name: "IZRC20Metadata",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IZRC20Metadata>;
+    getContractAt(
+      name: "ZRC20Events",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ZRC20Events>;
     getContractAt(
       name: "Math",
       address: string,
@@ -386,6 +438,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.SwapHelperLib>;
     getContractAt(
+      name: "SystemContract",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SystemContract>;
+    getContractAt(
+      name: "SystemContractErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SystemContractErrors>;
+    getContractAt(
       name: "TestSystemContract",
       address: string,
       signer?: ethers.Signer
@@ -395,6 +457,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.TestZRC20>;
+    getContractAt(
+      name: "UniversalContract",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.UniversalContract>;
+    getContractAt(
+      name: "ZContract",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ZContract>;
     getContractAt(
       name: "ZetaConnectorMockValue",
       address: string,

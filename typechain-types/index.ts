@@ -66,6 +66,8 @@ export type { ZetaEthMock } from "./contracts/EthZetaMock.sol/ZetaEthMock";
 export { ZetaEthMock__factory } from "./factories/contracts/EthZetaMock.sol/ZetaEthMock__factory";
 export type { OnlySystem } from "./contracts/OnlySystem";
 export { OnlySystem__factory } from "./factories/contracts/OnlySystem__factory";
+export type { Revertable } from "./contracts/Revert.sol/Revertable";
+export { Revertable__factory } from "./factories/contracts/Revert.sol/Revertable__factory";
 export type { Math } from "./contracts/shared/libraries/SafeMath.sol/Math";
 export { Math__factory } from "./factories/contracts/shared/libraries/SafeMath.sol/Math__factory";
 export type { UniswapV2Library } from "./contracts/shared/libraries/UniswapV2Library";

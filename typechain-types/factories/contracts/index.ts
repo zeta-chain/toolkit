@@ -2,6 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as ethZetaMockSol from "./EthZetaMock.sol";
+export * as revertSol from "./Revert.sol";
+export * as systemContractSol from "./SystemContract.sol";
+export * as universalContractSol from "./UniversalContract.sol";
 export * as zetaConnectorMockSol from "./ZetaConnectorMock.sol";
 export * as shared from "./shared";
 export { BytesHelperLib__factory } from "./BytesHelperLib__factory";
