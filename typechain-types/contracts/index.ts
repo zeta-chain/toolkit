@@ -3,6 +3,12 @@
 /* eslint-disable */
 import type * as ethZetaMockSol from "./EthZetaMock.sol";
 export type { ethZetaMockSol };
+import type * as revertSol from "./Revert.sol";
+export type { revertSol };
+import type * as systemContractSol from "./SystemContract.sol";
+export type { systemContractSol };
+import type * as universalContractSol from "./UniversalContract.sol";
+export type { universalContractSol };
 import type * as zetaConnectorMockSol from "./ZetaConnectorMock.sol";
 export type { zetaConnectorMockSol };
 import type * as shared from "./shared";

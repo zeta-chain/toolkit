@@ -45,9 +45,27 @@ export const zetachainWithdrawAndCall = async function (
   };
 
   const functionSignature = utils.id(args.function).slice(0, 10);
+
+  const typesArray = JSON.parse(args.types);
+  const valuesArray = args.values.map((value, index) => {
+    const type = typesArray[index];
+
+    if (type === "bool") {
+      try {
+        return JSON.parse(value.toLowerCase());
+      } catch (e) {
+        throw new Error(`Invalid boolean value: ${value}`);
+      }
+    } else if (type.startsWith("uint") || type.startsWith("int")) {
+      return ethers.BigNumber.from(value);
+    } else {
+      return value;
+    }
+  });
+
   const encodedParameters = utils.defaultAbiCoder.encode(
-    JSON.parse(args.types),
-    args.values
+    typesArray,
+    valuesArray
   );
 
   const message = utils.hexlify(

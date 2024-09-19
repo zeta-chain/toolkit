@@ -1,30 +1,32 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
-
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+pragma solidity 0.8.26;
 
 library Math {
-    using SafeMath for uint256;
-
     error AdditionsOverflow();
     error SubtractionsUnderflow();
     error MultiplicationsOverflow();
 
     function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        bool success;
-        (success, z) = x.tryAdd(y);
-        if (!success) revert AdditionsOverflow();
+        unchecked {
+            z = x + y;
+            if (z < x) revert AdditionsOverflow();
+        }
     }
 
     function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        bool success;
-        (success, z) = x.trySub(y);
-        if (!success) revert SubtractionsUnderflow();
+        unchecked {
+            if (y > x) revert SubtractionsUnderflow();
+            z = x - y;
+        }
     }
 
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        bool success;
-        (success, z) = x.tryMul(y);
-        if (!success) revert MultiplicationsOverflow();
+        unchecked {
+            if (x == 0 || (z = x * y) / x == y) {
+                return z;
+            } else {
+                revert MultiplicationsOverflow();
+            }
+        }
     }
 }
