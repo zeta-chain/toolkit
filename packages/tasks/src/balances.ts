@@ -1,3 +1,4 @@
+import { Keypair } from "@solana/web3.js";
 import * as dotenv from "dotenv";
 import { ethers } from "ethers";
 import { task } from "hardhat/config";
@@ -42,12 +43,16 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const pk = process.env.PRIVATE_KEY;
   let evmAddress: string;
   let btcAddress: any;
+  let solanaAddress: any;
 
   if (args.address) {
     evmAddress = args.address;
   } else if (pk) {
     evmAddress = new ethers.Wallet(pk).address;
     btcAddress = bitcoinAddress(pk, args.mainnet ? "mainnet" : "testnet");
+    solanaAddress = Keypair.fromSeed(
+      Buffer.from(pk, "hex")
+    ).publicKey.toString();
   } else {
     spinner.stop();
     console.error(walletError + balancesError);
@@ -56,6 +61,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   let balances = (await client.getBalances({
     btcAddress,
     evmAddress,
+    solanaAddress,
   })) as any;
 
   if (args.json) {
@@ -63,7 +69,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   } else {
     spinner.stop();
     console.log(`
-EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""}
+      EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""} ${
+      solanaAddress ? `\nSolana: ${solanaAddress}` : ""
+    }
     `);
     balances = balances.sort((a: any, b: any) => {
       if (a?.chain_name === undefined && b?.chain_name === undefined) return 0;

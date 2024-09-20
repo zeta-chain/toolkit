@@ -53,7 +53,11 @@ const MULTICALL3_ABI = [
  */
 export const getBalances = async function (
   this: ZetaChainClient,
-  { evmAddress, btcAddress }: { btcAddress?: string; evmAddress: string }
+  {
+    evmAddress,
+    btcAddress,
+    solanaAddress,
+  }: { btcAddress?: string; evmAddress: string; solanaAddress?: string }
 ): Promise<TokenBalance[]> {
   let tokens = [];
   const supportedChains = await this.getSupportedChains();
@@ -220,7 +224,13 @@ export const getBalances = async function (
       .filter(
         (token) =>
           token.coin_type === "Gas" &&
-          !["btc_testnet", "btc_mainnet"].includes(token.chain_name)
+          ![
+            "btc_testnet",
+            "btc_mainnet",
+            "solana_mainnet",
+            "solana_testnet",
+            "solana_devnet",
+          ].includes(token.chain_name)
       )
       .map(async (token) => {
         const chainLabel = Object.keys(this.getChains()).find(
@@ -253,6 +263,36 @@ export const getBalances = async function (
           (funded_txo_sum - spent_txo_sum) /
           100000000
         ).toString();
+        balances.push({ ...token, balance });
+      })
+  );
+
+  await Promise.all(
+    tokens
+      .filter(
+        (token) =>
+          token.coin_type === "Gas" &&
+          ["solana_mainnet", "solana_testnet", "solana_devnet"].includes(
+            token.chain_name
+          ) &&
+          solanaAddress
+      )
+      .map(async (token) => {
+        const API = this.getEndpoint("solana", token.chain_name);
+        const response = await fetch(API, {
+          body: JSON.stringify({
+            id: 1,
+            jsonrpc: "2.0",
+            method: "getBalance",
+            params: [solanaAddress],
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        });
+        const r = await response.json();
+        const balance = r.result.value / 10 ** 9;
         balances.push({ ...token, balance });
       })
   );
