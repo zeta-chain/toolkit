@@ -57,7 +57,7 @@ export const getBalances = async function (
     evmAddress,
     btcAddress,
     solanaAddress,
-  }: { btcAddress?: string; evmAddress: string; solanaAddress?: string }
+  }: { btcAddress?: string; evmAddress?: string; solanaAddress?: string }
 ): Promise<TokenBalance[]> {
   let tokens = [];
   const supportedChains = await this.getSupportedChains();
@@ -142,109 +142,111 @@ export const getBalances = async function (
 
   const multicallContexts: Record<string, any[]> = {};
 
-  tokens.forEach((token: any) => {
-    if (token.coin_type === "ERC20" || token.coin_type === "ZRC20") {
-      if (!multicallContexts[token.chain_name]) {
-        multicallContexts[token.chain_name] = [];
-      }
-      multicallContexts[token.chain_name].push({
-        callData: new ethers.utils.Interface(
-          token.coin_type === "ERC20" ? ERC20_ABI.abi : ZRC20.abi
-        ).encodeFunctionData("balanceOf", [evmAddress]),
-        target: token.contract,
-      });
-    }
-  });
-
   const balances: TokenBalance[] = [];
 
-  await Promise.all(
-    Object.keys(multicallContexts).map(async (chainName) => {
-      const rpc = await this.getEndpoint("evm", chainName);
-      const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-      const multicallContract = new ethers.Contract(
-        multicallAddress,
-        MULTICALL3_ABI,
-        provider
-      );
+  if (evmAddress) {
+    tokens.forEach((token: any) => {
+      if (token.coin_type === "ERC20" || token.coin_type === "ZRC20") {
+        if (!multicallContexts[token.chain_name]) {
+          multicallContexts[token.chain_name] = [];
+        }
+        multicallContexts[token.chain_name].push({
+          callData: new ethers.utils.Interface(
+            token.coin_type === "ERC20" ? ERC20_ABI.abi : ZRC20.abi
+          ).encodeFunctionData("balanceOf", [evmAddress]),
+          target: token.contract,
+        });
+      }
+    });
 
-      const calls = multicallContexts[chainName];
-
-      try {
-        const { returnData } = await multicallContract.callStatic.aggregate(
-          calls
+    await Promise.all(
+      Object.keys(multicallContexts).map(async (chainName) => {
+        const rpc = await this.getEndpoint("evm", chainName);
+        const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+        const multicallContract = new ethers.Contract(
+          multicallAddress,
+          MULTICALL3_ABI,
+          provider
         );
 
-        returnData.forEach((data: any, index: number) => {
-          const token = tokens.find(
+        const calls = multicallContexts[chainName];
+
+        try {
+          const { returnData } = await multicallContract.callStatic.aggregate(
+            calls
+          );
+
+          returnData.forEach((data: any, index: number) => {
+            const token = tokens.find(
+              (t) =>
+                t.chain_name === chainName &&
+                (t.coin_type === "ERC20" || t.coin_type === "ZRC20") &&
+                t.contract === calls[index].target
+            );
+            if (token) {
+              const balance = ethers.utils.defaultAbiCoder.decode(
+                ["uint256"],
+                data
+              )[0];
+              const formattedBalance = formatUnits(balance, token.decimals);
+              balances.push({ ...token, balance: formattedBalance });
+            }
+          });
+        } catch (error) {
+          console.error(`Multicall failed for ${chainName}:`, error);
+          // Fallback to individual calls if multicall fails
+          for (const token of tokens.filter(
             (t) =>
               t.chain_name === chainName &&
-              (t.coin_type === "ERC20" || t.coin_type === "ZRC20") &&
-              t.contract === calls[index].target
-          );
-          if (token) {
-            const balance = ethers.utils.defaultAbiCoder.decode(
-              ["uint256"],
-              data
-            )[0];
-            const formattedBalance = formatUnits(balance, token.decimals);
-            balances.push({ ...token, balance: formattedBalance });
+              (t.coin_type === "ERC20" || t.coin_type === "ZRC20")
+          )) {
+            try {
+              const contract = new ethers.Contract(
+                token.contract,
+                token.coin_type === "ERC20" ? ERC20_ABI.abi : ZRC20.abi,
+                provider
+              );
+              const balance = await contract.balanceOf(evmAddress);
+              const formattedBalance = formatUnits(balance, token.decimals);
+              balances.push({ ...token, balance: formattedBalance });
+            } catch (err) {
+              console.error(
+                `Failed to get balance for ${token.symbol} on ${chainName}:`,
+                err
+              );
+            }
           }
-        });
-      } catch (error) {
-        console.error(`Multicall failed for ${chainName}:`, error);
-        // Fallback to individual calls if multicall fails
-        for (const token of tokens.filter(
-          (t) =>
-            t.chain_name === chainName &&
-            (t.coin_type === "ERC20" || t.coin_type === "ZRC20")
-        )) {
-          try {
-            const contract = new ethers.Contract(
-              token.contract,
-              token.coin_type === "ERC20" ? ERC20_ABI.abi : ZRC20.abi,
-              provider
-            );
-            const balance = await contract.balanceOf(evmAddress);
-            const formattedBalance = formatUnits(balance, token.decimals);
-            balances.push({ ...token, balance: formattedBalance });
-          } catch (err) {
-            console.error(
-              `Failed to get balance for ${token.symbol} on ${chainName}:`,
-              err
-            );
-          }
-        }
-      }
-    })
-  );
-
-  await Promise.all(
-    tokens
-      .filter(
-        (token) =>
-          token.coin_type === "Gas" &&
-          ![
-            "btc_testnet",
-            "btc_mainnet",
-            "solana_mainnet",
-            "solana_testnet",
-            "solana_devnet",
-          ].includes(token.chain_name)
-      )
-      .map(async (token) => {
-        const chainLabel = Object.keys(this.getChains()).find(
-          (key) => this.getChains()[key].chain_id === parseInt(token.chain_id)
-        );
-        if (chainLabel) {
-          const rpc = await this.getEndpoint("evm", chainLabel);
-          const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-          const balance = await provider.getBalance(evmAddress);
-          const formattedBalance = formatUnits(balance, token.decimals);
-          balances.push({ ...token, balance: formattedBalance });
         }
       })
-  );
+    );
+
+    await Promise.all(
+      tokens
+        .filter(
+          (token) =>
+            token.coin_type === "Gas" &&
+            ![
+              "btc_testnet",
+              "btc_mainnet",
+              "solana_mainnet",
+              "solana_testnet",
+              "solana_devnet",
+            ].includes(token.chain_name)
+        )
+        .map(async (token) => {
+          const chainLabel = Object.keys(this.getChains()).find(
+            (key) => this.getChains()[key].chain_id === parseInt(token.chain_id)
+          );
+          if (chainLabel) {
+            const rpc = await this.getEndpoint("evm", chainLabel);
+            const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+            const balance = await provider.getBalance(evmAddress);
+            const formattedBalance = formatUnits(balance, token.decimals);
+            balances.push({ ...token, balance: formattedBalance });
+          }
+        })
+    );
+  }
 
   await Promise.all(
     tokens
