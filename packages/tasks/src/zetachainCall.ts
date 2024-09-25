@@ -18,8 +18,8 @@ export const zetachainCall = async (
         revertMessage: args.revertMessage,
       },
       txOptions: {
-        gasLimit: args.gasLimit,
-        gasPrice: args.gasPrice,
+        gasLimit: args.txOptionsGasLimit,
+        gasPrice: args.txOptionsGasPrice,
       },
       function: args.function,
       gasLimit: args.gasLimit,
@@ -50,19 +50,19 @@ task("zetachain-call", "Call a contract on a connected chain", zetachainCall)
     "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(
-    "callGasLimit",
+    "gasLimit",
     "The gas limit for the transaction",
     7000000,
     types.int
   )
   .addOptionalParam(
-    "gasPrice",
+    "txOptionsGasPrice",
     "The gas price for the transaction",
     10000000000,
     types.int
   )
   .addOptionalParam(
-    "gasLimit",
+    "txOptionsGasLimit",
     "The gas limit for the transaction",
     7000000,
     types.int
