@@ -26,10 +26,10 @@ export const evmCall = async function (
   args: {
     gatewayEvm: string;
     receiver: string;
+    revertOptions: revertOptions;
+    txOptions: txOptions;
     types: string[];
     values: any[];
-    txOptions: txOptions;
-    revertOptions: revertOptions;
   }
 ) {
   const signer = this.signer;

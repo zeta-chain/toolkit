@@ -31,10 +31,10 @@ export const evmDepositAndCall = async function (
     erc20: string;
     gatewayEvm: string;
     receiver: string;
+    revertOptions: revertOptions;
+    txOptions: txOptions;
     types: string[];
     values: any[];
-    txOptions: txOptions;
-    revertOptions: revertOptions;
   }
 ) {
   const signer = this.signer;

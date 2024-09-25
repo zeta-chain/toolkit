@@ -1,10 +1,10 @@
 import { ethers } from "ethers";
 
 export type revertOptions = {
+  callOnRevert: boolean;
   onRevertGasLimit: number;
   revertAddress: string;
   revertMessage: string;
-  callOnRevert: boolean;
 };
 
 export type txOptions = {

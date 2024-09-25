@@ -11,6 +11,9 @@ export const zetachainWithdraw = async (
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
     const response = await client.zetachainWithdraw({
+      amount: args.amount,
+      gatewayZetaChain: args.gatewayZetaChain,
+      receiver: args.receiver,
       revertOptions: {
         callOnRevert: args.callOnRevert,
         onRevertGasLimit: args.onRevertGasLimit,
@@ -21,9 +24,6 @@ export const zetachainWithdraw = async (
         gasLimit: args.txOptionsGasLimit,
         gasPrice: args.txOptionsGasPrice,
       },
-      amount: args.amount,
-      gatewayZetaChain: args.gatewayZetaChain,
-      receiver: args.receiver,
       zrc20: args.zrc20,
     });
 

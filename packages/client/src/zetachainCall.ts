@@ -31,14 +31,14 @@ export const zetachainCall = async function (
   this: ZetaChainClient,
   args: {
     function: string;
+    gasLimit: number;
     gatewayZetaChain: string;
     receiver: string;
+    revertOptions: revertOptions;
+    txOptions: txOptions;
     types: string[];
     values: any[];
     zrc20: string;
-    gasLimit: number;
-    txOptions: txOptions;
-    revertOptions: revertOptions;
   }
 ) {
   const signer = this.signer;
@@ -107,5 +107,5 @@ export const zetachainCall = async function (
     revertOptions,
     args.txOptions
   );
-  return { tx, gasZRC20, gasFee };
+  return { gasFee, gasZRC20, tx };
 };

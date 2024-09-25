@@ -11,6 +11,10 @@ export const evmDepositAndCall = async (
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.evmDepositAndCall({
+      amount: args.amount,
+      erc20: args.erc20,
+      gatewayEvm: args.gatewayEvm,
+      receiver: args.receiver,
       revertOptions: {
         callOnRevert: args.callOnRevert,
         onRevertGasLimit: args.onRevertGasLimit,
@@ -21,10 +25,6 @@ export const evmDepositAndCall = async (
         gasLimit: args.gasLimit,
         gasPrice: args.gasPrice,
       },
-      amount: args.amount,
-      erc20: args.erc20,
-      gatewayEvm: args.gatewayEvm,
-      receiver: args.receiver,
       types: JSON.parse(args.types),
       values: args.values,
     });

@@ -30,9 +30,9 @@ export const zetachainWithdraw = async function (
     amount: string;
     gatewayZetaChain: string;
     receiver: string;
-    zrc20: string;
-    txOptions: txOptions;
     revertOptions: revertOptions;
+    txOptions: txOptions;
+    zrc20: string;
   }
 ) {
   const signer = this.signer;
@@ -93,5 +93,5 @@ export const zetachainWithdraw = async function (
     revertOptions,
     args.txOptions
   );
-  return { tx, gasZRC20, gasFee };
+  return { gasFee, gasZRC20, tx };
 };

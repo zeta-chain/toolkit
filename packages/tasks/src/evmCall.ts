@@ -8,6 +8,8 @@ export const evmCall = async (args: any, hre: HardhatRuntimeEnvironment) => {
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.evmCall({
+      gatewayEvm: args.gatewayEvm,
+      receiver: args.receiver,
       revertOptions: {
         callOnRevert: args.callOnRevert,
         onRevertGasLimit: args.onRevertGasLimit,
@@ -18,8 +20,6 @@ export const evmCall = async (args: any, hre: HardhatRuntimeEnvironment) => {
         gasLimit: args.gasLimit,
         gasPrice: args.gasPrice,
       },
-      gatewayEvm: args.gatewayEvm,
-      receiver: args.receiver,
       types: JSON.parse(args.types),
       values: args.values,
     });

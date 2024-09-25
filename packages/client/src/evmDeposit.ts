@@ -29,8 +29,8 @@ export const evmDeposit = async function (
     erc20: string;
     gatewayEvm: string;
     receiver: string;
-    txOptions: txOptions;
     revertOptions: revertOptions;
+    txOptions: txOptions;
   }
 ) {
   const signer = this.signer;
