@@ -64,7 +64,13 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   if (!evmAddress && !solanaAddress && !btcAddress) {
     if (evmKey) {
-      evmAddress = new ethers.Wallet(evmKey).address;
+      try {
+        evmAddress = new ethers.Wallet(evmKey).address;
+      } catch (error) {
+        spinner.stop();
+        console.error("Error parsing EVM private key", error);
+        return process.exit(1);
+      }
     }
     if (solanaKey) {
       try {
@@ -78,11 +84,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
           ).publicKey.toString();
         }
       } catch (error) {
-        {
-          spinner.stop();
-          console.error("Error parsing solanaKey", error);
-          return process.exit(1);
-        }
+        spinner.stop();
+        console.error("Error parsing Solana private key", error);
+        return process.exit(1);
       }
     }
     if (btcKey) {

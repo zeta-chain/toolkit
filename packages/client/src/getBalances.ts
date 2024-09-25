@@ -293,6 +293,10 @@ export const getBalances = async function (
           },
           method: "POST",
         });
+        if (!response.ok) {
+          console.error("Failed to get balance for Solana", response);
+          return;
+        }
         const r = await response.json();
         const balance = r.result.value / 10 ** 9;
         balances.push({ ...token, balance });
