@@ -3,23 +3,42 @@ import { ethers } from "ethers";
 import GatewayABI from "./abi/GatewayZEVM.sol/GatewayZEVM.json";
 import ZRC20ABI from "./abi/ZRC20.sol/ZRC20.json";
 import { ZetaChainClient } from "./client";
+import type { revertOptions, txOptions } from "./types";
+
+/**
+ * @function zetachainCall
+ * @description Calls a contract on a connected chain.
+ *
+ * @param {ZetaChainClient} this - The instance of the ZetaChain client that contains the signer information.
+ * @param {object} args - The function arguments.
+ * @param {string} args.function - The name of the function to be executed on the target contract.
+ * @param {string} args.gatewayZetaChain - The address of the ZetaChain gateway contract.
+ * @param {string} args.receiver - The address of the contract or account that will receive the call.
+ * @param {string} args.types - JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
+ * @param {Array} args.values - The values to be passed to the function (should match the types).
+ * @param {string} args.zrc20 - The address of the ZRC20 token contract used for paying gas fees.
+ * @param {number} args.gasLimit - The amount of gas to be used for the call.
+ * @param {txOptions} args.txOptions - Transaction options such as gasPrice, nonce, etc.
+ * @param {revertOptions} args.revertOptions - Options to handle call reversion, including revert address and message.
+ *
+ * @returns {object} - Returns an object containing the transaction, gas token, and gas fee.
+ * @property {object} tx - The transaction object for the cross-chain call.
+ * @property {string} gasZRC20 - The address of the ZRC20 gas token.
+ * @property {ethers.BigNumber} gasFee - The amount of gas fee paid for the transaction.
+ */
 
 export const zetachainCall = async function (
   this: ZetaChainClient,
   args: {
-    amount: string;
-    callOnRevert: boolean;
     function: string;
-    gasLimit: number;
-    gasPrice: ethers.BigNumber;
     gatewayZetaChain: string;
-    onRevertGasLimit: number;
     receiver: string;
-    revertAddress: string;
-    revertMessage: string;
-    types: string;
+    types: string[];
     values: any[];
     zrc20: string;
+    gasLimit: number;
+    txOptions: txOptions;
+    revertOptions: revertOptions;
   }
 ) {
   const signer = this.signer;
@@ -32,24 +51,19 @@ export const zetachainCall = async function (
   );
 
   const revertOptions = {
-    abortAddress: "0x0000000000000000000000000000000000000000",
-    callOnRevert: args.callOnRevert,
-    onRevertGasLimit: args.onRevertGasLimit,
-    revertAddress: args.revertAddress,
-    // not used
-    revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
-  };
-
-  const txOptions = {
-    gasLimit: args.gasLimit,
-    gasPrice: args.gasPrice,
+    abortAddress: "0x0000000000000000000000000000000000000000", // not used
+    callOnRevert: args.revertOptions.callOnRevert,
+    onRevertGasLimit: args.revertOptions.onRevertGasLimit,
+    revertAddress: args.revertOptions.revertAddress,
+    revertMessage: utils.hexlify(
+      utils.toUtf8Bytes(args.revertOptions.revertMessage)
+    ),
   };
 
   const functionSignature = utils.id(args.function).slice(0, 10);
 
-  const typesArray = JSON.parse(args.types);
   const valuesArray = args.values.map((value, index) => {
-    const type = typesArray[index];
+    const type = args.types[index];
 
     if (type === "bool") {
       try {
@@ -65,7 +79,7 @@ export const zetachainCall = async function (
   });
 
   const encodedParameters = utils.defaultAbiCoder.encode(
-    typesArray,
+    args.types,
     valuesArray
   );
 
@@ -80,7 +94,7 @@ export const zetachainCall = async function (
   const approve = await gasZRC20Contract.approve(
     args.gatewayZetaChain,
     gasFee,
-    txOptions
+    args.txOptions
   );
   await approve.wait();
   const tx = await gateway[
@@ -91,7 +105,7 @@ export const zetachainCall = async function (
     message,
     args.gasLimit,
     revertOptions,
-    txOptions
+    args.txOptions
   );
-  return tx;
+  return { tx, gasZRC20, gasFee };
 };

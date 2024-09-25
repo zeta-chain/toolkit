@@ -10,20 +10,24 @@ export const zetachainWithdraw = async (
   try {
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
-    const tx = await client.zetachainWithdraw({
+    const response = await client.zetachainWithdraw({
+      revertOptions: {
+        callOnRevert: args.callOnRevert,
+        onRevertGasLimit: args.onRevertGasLimit,
+        revertAddress: args.revertAddress,
+        revertMessage: args.revertMessage,
+      },
+      txOptions: {
+        gasLimit: args.gasLimit,
+        gasPrice: args.gasPrice,
+      },
       amount: args.amount,
-      callOnRevert: args.callOnRevert,
-      gasLimit: args.gasLimit,
-      gasPrice: args.gasPrice,
       gatewayZetaChain: args.gatewayZetaChain,
-      onRevertGasLimit: args.onRevertGasLimit,
       receiver: args.receiver,
-      revertAddress: args.revertAddress,
-      revertMessage: args.revertMessage,
       zrc20: args.zrc20,
     });
 
-    const receipt = await tx.wait();
+    const receipt = await response.tx.wait();
     console.log("Transaction hash:", receipt.transactionHash);
   } catch (e) {
     console.error("Transaction error:", e);

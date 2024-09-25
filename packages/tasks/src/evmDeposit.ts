@@ -8,16 +8,20 @@ export const evmDeposit = async (args: any, hre: HardhatRuntimeEnvironment) => {
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.evmDeposit({
+      revertOptions: {
+        callOnRevert: args.callOnRevert,
+        onRevertGasLimit: args.onRevertGasLimit,
+        revertAddress: args.revertAddress,
+        revertMessage: args.revertMessage,
+      },
+      txOptions: {
+        gasLimit: args.gasLimit,
+        gasPrice: args.gasPrice,
+      },
       amount: args.amount,
-      callOnRevert: args.callOnRevert,
       erc20: args.erc20,
-      gasLimit: args.gasLimit,
-      gasPrice: args.gasPrice,
       gatewayEvm: args.gatewayEvm,
-      onRevertGasLimit: args.onRevertGasLimit,
       receiver: args.receiver,
-      revertAddress: args.revertAddress,
-      revertMessage: args.revertMessage,
     });
     if (tx) {
       const receipt = await tx.wait();
