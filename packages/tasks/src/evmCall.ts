@@ -62,5 +62,5 @@ task("evm-call", "Call a universal app", evmCall)
     types.int
   )
   .addOptionalParam("revertMessage", "Revert message", "0x")
-  .addParam("types", "The types of the parameters (example: ['string'])")
+  .addParam("types", `The types of the parameters (example: '["string"]')`)
   .addVariadicPositionalParam("values", "The values of the parameters");

@@ -78,6 +78,6 @@ task("zetachain-call", "Call a contract on a connected chain", zetachainCall)
     7000000,
     types.int
   )
-  .addParam("function", "Function to call (example: 'hello(string)')")
-  .addParam("types", "The types of the parameters (example: ['string'])")
+  .addParam("function", `Function to call (example: "hello(string)")`)
+  .addParam("types", `The types of the parameters (example: '["string"]')`)
   .addVariadicPositionalParam("values", "The values of the parameters");

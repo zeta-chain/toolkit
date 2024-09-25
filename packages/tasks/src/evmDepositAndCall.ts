@@ -72,5 +72,5 @@ task("evm-deposit-and-call", "Deposit tokens", evmDepositAndCall)
   .addOptionalParam("revertMessage", "Revert message", "0x")
   .addParam("amount", "amount of ETH to send with the transaction")
   .addOptionalParam("erc20", "ERC-20 token address")
-  .addParam("types", "The types of the parameters (example: ['string'])")
+  .addParam("types", `The types of the parameters (example: '["string"]')`)
   .addVariadicPositionalParam("values", "The values of the parameters");
