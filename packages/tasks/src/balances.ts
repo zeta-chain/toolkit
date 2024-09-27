@@ -1,3 +1,5 @@
+import { Keypair } from "@solana/web3.js";
+import bs58 from "bs58";
 import * as dotenv from "dotenv";
 import { ethers } from "ethers";
 import { task } from "hardhat/config";
@@ -14,10 +16,12 @@ export const walletError = `
 
 To resolve this issue, please follow these steps:
 
-* Set your PRIVATE_KEY environment variable. You can write
-  it to a .env file in the root of your project like this:
+* Set your EVM_PRIVATE_KEY, SOLANA_PRIVATE_KEY, or BTC_PRIVATE_KEY environment variables. 
+You can write it to a .env file in the root of your project like this:
 
-  PRIVATE_KEY=123... (without the 0x prefix)
+  EVM_PRIVATE_KEY=123... (without the 0x prefix)
+  BTC_PRIVATE_KEY=123... (without the 0x prefix)
+  SOLANA_PRIVATE_KEY=123.. (base58 encoded or json array)
   
   Or you can generate a new private key by running:
 
@@ -26,9 +30,9 @@ To resolve this issue, please follow these steps:
 
 const balancesError = `
 * Alternatively, you can fetch the balance of any address
-  by using the --address flag:
+  by using the --evm, --solana, or --bitcoin flag:
   
-  npx hardhat balances --address <wallet_address>
+  npx hardhat balances --evm <evm_address> --solana <solana_address> --bitcoin <bitcoin_address>
 `;
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
@@ -39,23 +43,68 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   if (!args.json) {
     spinner.start();
   }
-  const pk = process.env.PRIVATE_KEY;
-  let evmAddress: string;
-  let btcAddress: any;
 
-  if (args.address) {
-    evmAddress = args.address;
-  } else if (pk) {
-    evmAddress = new ethers.Wallet(pk).address;
-    btcAddress = bitcoinAddress(pk, args.mainnet ? "mainnet" : "testnet");
-  } else {
-    spinner.stop();
-    console.error(walletError + balancesError);
-    return process.exit(1);
+  const evmKey = process.env.EVM_PRIVATE_KEY || process.env.PRIVATE_KEY;
+  const solanaKey = process.env.SOLANA_PRIVATE_KEY;
+  const btcKey = process.env.BTC_PRIVATE_KEY;
+
+  let evmAddress: string | undefined;
+  let btcAddress: string | undefined;
+  let solanaAddress: string | undefined;
+
+  if (args.evm) {
+    evmAddress = args.evm;
   }
+  if (args.solana) {
+    solanaAddress = args.solana;
+  }
+  if (args.bitcoin) {
+    btcAddress = args.bitcoin;
+  }
+
+  if (!evmAddress && !solanaAddress && !btcAddress) {
+    if (evmKey) {
+      try {
+        evmAddress = new ethers.Wallet(evmKey).address;
+      } catch (error) {
+        spinner.stop();
+        console.error("Error parsing EVM private key", error);
+        return process.exit(1);
+      }
+    }
+    if (solanaKey) {
+      try {
+        if (solanaKey.startsWith("[") && solanaKey.endsWith("]")) {
+          solanaAddress = Keypair.fromSecretKey(
+            Uint8Array.from(JSON.parse(solanaKey))
+          ).publicKey.toString();
+        } else {
+          solanaAddress = Keypair.fromSecretKey(
+            bs58.decode(solanaKey)
+          ).publicKey.toString();
+        }
+      } catch (error) {
+        spinner.stop();
+        console.error("Error parsing Solana private key", error);
+        return process.exit(1);
+      }
+    }
+    if (btcKey) {
+      btcAddress = bitcoinAddress(btcKey, args.mainnet ? "mainnet" : "testnet");
+    }
+    if (!solanaKey && !btcKey && !evmKey) {
+      {
+        spinner.stop();
+        console.error(walletError + balancesError);
+        return process.exit(1);
+      }
+    }
+  }
+
   let balances = (await client.getBalances({
     btcAddress,
     evmAddress,
+    solanaAddress,
   })) as any;
 
   if (args.json) {
@@ -63,7 +112,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   } else {
     spinner.stop();
     console.log(`
-EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""}
+      EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""} ${
+      solanaAddress ? `\nSolana: ${solanaAddress}` : ""
+    }
     `);
     balances = balances.sort((a: any, b: any) => {
       if (a?.chain_name === undefined && b?.chain_name === undefined) return 0;
@@ -90,6 +141,8 @@ export const balancesTask = task(
   `Fetch native and ZETA token balances`,
   main
 )
-  .addOptionalParam("address", `Fetch balances for a specific address`)
   .addFlag("json", "Output balances as JSON")
-  .addFlag("mainnet", "Run the task on mainnet");
+  .addFlag("mainnet", "Run the task on mainnet")
+  .addOptionalParam("evm", `Fetch balances for a specific EVM address`)
+  .addOptionalParam("solana", `Fetch balances for a specific Solana address`)
+  .addOptionalParam("bitcoin", `Fetch balances for a specific Bitcoin address`);
