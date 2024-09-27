@@ -44,7 +44,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     spinner.start();
   }
 
-  const evmKey = process.env.EVM_PRIVATE_KEY;
+  const evmKey = process.env.EVM_PRIVATE_KEY || process.env.PRIVATE_KEY;
   const solanaKey = process.env.SOLANA_PRIVATE_KEY;
   const btcKey = process.env.BTC_PRIVATE_KEY;
 
