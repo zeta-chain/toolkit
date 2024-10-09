@@ -19,3 +19,4 @@ export { withdrawTask } from "./withdraw";
 export { zetachainCall } from "./zetachainCall";
 export { zetachainWithdraw } from "./zetachainWithdraw";
 export { zetachainWithdrawAndCall } from "./zetachainWithdrawAndCall";
+export { zetachainWithdrawZETA } from "./zetachainWithdrawZETA";

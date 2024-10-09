@@ -26,6 +26,7 @@ import {
   zetachainCall,
   zetachainWithdraw,
   zetachainWithdrawAndCall,
+  zetachainWithdrawZETA,
 } from ".";
 
 export interface ZetaChainClientParamsBase {
@@ -140,4 +141,5 @@ export class ZetaChainClient {
   evmDepositAndCall = evmDepositAndCall;
   evmCall = evmCall;
   evmDeposit = evmDeposit;
+  zetachainWithdrawZETA = zetachainWithdrawZETA;
 }
