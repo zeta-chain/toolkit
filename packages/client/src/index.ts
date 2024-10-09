@@ -20,3 +20,4 @@ export * from "./withdraw";
 export * from "./zetachainCall";
 export * from "./zetachainWithdraw";
 export * from "./zetachainWithdrawAndCall";
+export * from "./zetachainWithdrawZETA";

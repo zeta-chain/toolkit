@@ -3,17 +3,18 @@ import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { ZetaChainClient } from "../../client/src/";
 
-export const zetachainWithdraw = async (
+export const zetachainWithdrawZETA = async (
   args: any,
   hre: HardhatRuntimeEnvironment
 ) => {
   try {
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
-    const response = await client.zetachainWithdraw({
+    const response = await client.zetachainWithdrawZETA({
       amount: args.amount,
       gatewayZetaChain: args.gatewayZetaChain,
       receiver: args.receiver,
+      chainId: args.chainId,
       revertOptions: {
         callOnRevert: args.callOnRevert,
         onRevertGasLimit: args.onRevertGasLimit,
@@ -24,7 +25,6 @@ export const zetachainWithdraw = async (
         gasLimit: args.txOptionsGasLimit,
         gasPrice: args.txOptionsGasPrice,
       },
-      zrc20: args.zrc20,
     });
 
     const receipt = await response.tx.wait();
@@ -35,16 +35,16 @@ export const zetachainWithdraw = async (
 };
 
 task(
-  "zetachain-withdraw",
-  "Withdraw ZRC-20 tokens from ZetaChain",
-  zetachainWithdraw
+  "zetachain-withdraw-zeta",
+  "Withdraw tokens from ZetaChain",
+  zetachainWithdrawZETA
 )
   .addOptionalParam(
     "gatewayZetaChain",
     "contract address of gateway on ZetaChain",
     "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0"
   )
-  .addOptionalParam("zrc20", "The address of the ZRC20 token")
+  .addOptionalParam("chainId", "The chain ID of the connected chain")
   .addFlag("callOnRevert", "Whether to call on revert")
   .addOptionalParam(
     "revertAddress",
