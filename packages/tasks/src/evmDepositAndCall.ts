@@ -12,16 +12,20 @@ export const evmDepositAndCall = async (
     const client = new ZetaChainClient({ network: "testnet", signer });
     const tx = await client.evmDepositAndCall({
       amount: args.amount,
-      callOnRevert: args.callOnRevert,
       erc20: args.erc20,
-      gasLimit: args.gasLimit,
-      gasPrice: args.gasPrice,
       gatewayEvm: args.gatewayEvm,
-      onRevertGasLimit: args.onRevertGasLimit,
       receiver: args.receiver,
-      revertAddress: args.revertAddress,
-      revertMessage: args.revertMessage,
-      types: args.types,
+      revertOptions: {
+        callOnRevert: args.callOnRevert,
+        onRevertGasLimit: args.onRevertGasLimit,
+        revertAddress: args.revertAddress,
+        revertMessage: args.revertMessage,
+      },
+      txOptions: {
+        gasLimit: args.gasLimit,
+        gasPrice: args.gasPrice,
+      },
+      types: JSON.parse(args.types),
       values: args.values,
     });
     if (tx) {
@@ -68,5 +72,5 @@ task("evm-deposit-and-call", "Deposit tokens", evmDepositAndCall)
   .addOptionalParam("revertMessage", "Revert message", "0x")
   .addParam("amount", "amount of ETH to send with the transaction")
   .addOptionalParam("erc20", "ERC-20 token address")
-  .addParam("types", "The types of the parameters (example: ['string'])")
+  .addParam("types", `The types of the parameters (example: '["string"]')`)
   .addVariadicPositionalParam("values", "The values of the parameters");

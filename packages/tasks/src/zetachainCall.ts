@@ -10,22 +10,26 @@ export const zetachainCall = async (
   try {
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
-    const tx = await client.zetachainCall({
-      amount: args.amount,
-      callOnRevert: args.callOnRevert,
+    const response = await client.zetachainCall({
       function: args.function,
       gasLimit: args.gasLimit,
-      gasPrice: args.gasPrice,
       gatewayZetaChain: args.gatewayZetaChain,
-      onRevertGasLimit: args.onRevertGasLimit,
       receiver: args.receiver,
-      revertAddress: args.revertAddress,
-      revertMessage: args.revertMessage,
-      types: args.types,
+      revertOptions: {
+        callOnRevert: args.callOnRevert,
+        onRevertGasLimit: args.onRevertGasLimit,
+        revertAddress: args.revertAddress,
+        revertMessage: args.revertMessage,
+      },
+      txOptions: {
+        gasLimit: args.txOptionsGasLimit,
+        gasPrice: args.txOptionsGasPrice,
+      },
+      types: JSON.parse(args.types),
       values: args.values,
       zrc20: args.zrc20,
     });
-    const receipt = await tx.wait();
+    const receipt = await response.tx.wait();
     console.log("Transaction hash:", receipt.transactionHash);
   } catch (e) {
     console.error("Transaction error:", e);
@@ -46,19 +50,19 @@ task("zetachain-call", "Call a contract on a connected chain", zetachainCall)
     "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(
-    "callGasLimit",
+    "gasLimit",
     "The gas limit for the transaction",
     7000000,
     types.int
   )
   .addOptionalParam(
-    "gasPrice",
+    "txOptionsGasPrice",
     "The gas price for the transaction",
     10000000000,
     types.int
   )
   .addOptionalParam(
-    "gasLimit",
+    "txOptionsGasLimit",
     "The gas limit for the transaction",
     7000000,
     types.int
@@ -74,6 +78,6 @@ task("zetachain-call", "Call a contract on a connected chain", zetachainCall)
     7000000,
     types.int
   )
-  .addParam("function", "Function to call (example: 'hello(string)')")
-  .addParam("types", "The types of the parameters (example: ['string'])")
+  .addParam("function", `Function to call (example: "hello(string)")`)
+  .addParam("types", `The types of the parameters (example: '["string"]')`)
   .addVariadicPositionalParam("values", "The values of the parameters");

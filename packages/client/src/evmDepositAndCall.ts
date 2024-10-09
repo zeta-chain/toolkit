@@ -3,21 +3,37 @@ import { ethers } from "ethers";
 
 import GatewayABI from "./abi/GatewayEVM.sol/GatewayEVM.json";
 import { ZetaChainClient } from "./client";
+import type { revertOptions, txOptions } from "./types";
+
+/**
+ * @function evmDepositAndCall
+ * @description Deposits a specified amount of ERC-20 or native gas tokens and calls a universal app contract on ZetaChain.
+ *
+ * @param {ZetaChainClient} this - The instance of the ZetaChain client that contains the signer information.
+ * @param {object} args - The function arguments.
+ * @param {string} args.amount - The amount of ERC20 tokens or native currency to deposit.
+ * @param {string} args.erc20 - The address of the ERC20 token contract. If depositing native currency (e.g., ETH), this can be left empty or undefined.
+ * @param {string} args.gatewayEvm - The address of the ZetaChain gateway contract on the EVM-compatible blockchain.
+ * @param {string} args.receiver - The address of the receiver contract or account where the function call will be executed.
+ * @param {string} args.types - JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
+ * @param {Array} args.values - The values to be passed to the function (should match the types).
+ * @param {txOptions} args.txOptions - Transaction options, including gasLimit, gasPrice, etc.
+ * @param {revertOptions} args.revertOptions - Options to handle call reversion, including revert address, message, and gas limit for the revert scenario.
+ *
+ * @returns {object} - Returns the transaction object.
+ * @property {object} tx - The transaction object representing the deposit and function call.
+ */
 
 export const evmDepositAndCall = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    callOnRevert: boolean;
     erc20: string;
-    gasLimit: number;
-    gasPrice: ethers.BigNumber;
     gatewayEvm: string;
-    onRevertGasLimit: number;
     receiver: string;
-    revertAddress: string;
-    revertMessage: string;
-    types: string;
+    revertOptions: revertOptions;
+    txOptions: txOptions;
+    types: string[];
     values: any[];
   }
 ) {
@@ -26,22 +42,23 @@ export const evmDepositAndCall = async function (
   const gateway = new ethers.Contract(args.gatewayEvm, GatewayABI.abi, signer);
 
   const revertOptions = {
-    abortAddress: "0x0000000000000000000000000000000000000000",
-    callOnRevert: args.callOnRevert,
-    onRevertGasLimit: args.onRevertGasLimit,
-    revertAddress: args.revertAddress,
+    abortAddress: "0x0000000000000000000000000000000000000000", // not used
+    callOnRevert: args.revertOptions.callOnRevert,
+    onRevertGasLimit: args.revertOptions.onRevertGasLimit,
+    revertAddress: args.revertOptions.revertAddress,
     // not used
-    revertMessage: utils.hexlify(utils.toUtf8Bytes(args.revertMessage)),
+    revertMessage: utils.hexlify(
+      utils.toUtf8Bytes(args.revertOptions.revertMessage)
+    ),
   };
 
   const txOptions = {
-    gasLimit: args.gasLimit,
-    gasPrice: args.gasPrice,
+    gasLimit: args.txOptions.gasLimit,
+    gasPrice: args.txOptions.gasPrice,
   };
 
-  const typesArray = JSON.parse(args.types);
   const valuesArray = args.values.map((value, index) => {
-    const type = typesArray[index];
+    const type = args.types[index];
 
     if (type === "bool") {
       try {
@@ -57,7 +74,7 @@ export const evmDepositAndCall = async function (
   });
 
   const encodedParameters = utils.defaultAbiCoder.encode(
-    typesArray,
+    args.types,
     valuesArray
   );
 

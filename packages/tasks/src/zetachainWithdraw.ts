@@ -10,20 +10,24 @@ export const zetachainWithdraw = async (
   try {
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
-    const tx = await client.zetachainWithdraw({
+    const response = await client.zetachainWithdraw({
       amount: args.amount,
-      callOnRevert: args.callOnRevert,
-      gasLimit: args.gasLimit,
-      gasPrice: args.gasPrice,
       gatewayZetaChain: args.gatewayZetaChain,
-      onRevertGasLimit: args.onRevertGasLimit,
       receiver: args.receiver,
-      revertAddress: args.revertAddress,
-      revertMessage: args.revertMessage,
+      revertOptions: {
+        callOnRevert: args.callOnRevert,
+        onRevertGasLimit: args.onRevertGasLimit,
+        revertAddress: args.revertAddress,
+        revertMessage: args.revertMessage,
+      },
+      txOptions: {
+        gasLimit: args.txOptionsGasLimit,
+        gasPrice: args.txOptionsGasPrice,
+      },
       zrc20: args.zrc20,
     });
 
-    const receipt = await tx.wait();
+    const receipt = await response.tx.wait();
     console.log("Transaction hash:", receipt.transactionHash);
   } catch (e) {
     console.error("Transaction error:", e);
@@ -44,13 +48,13 @@ task("zetachain-withdraw", "Withdraw tokens from ZetaChain", zetachainWithdraw)
     "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(
-    "gasPrice",
+    "txOptionsGasPrice",
     "The gas price for the transaction",
     10000000000,
     types.int
   )
   .addOptionalParam(
-    "gasLimit",
+    "txOptionsGasLimit",
     "The gas limit for the transaction",
     7000000,
     types.int
