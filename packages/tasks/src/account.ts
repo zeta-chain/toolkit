@@ -1,10 +1,13 @@
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { input } from "@inquirer/prompts";
+import { Keypair } from "@solana/web3.js";
 import { bech32 } from "bech32";
 import { validateMnemonic } from "bip39";
 import * as envfile from "envfile";
 import * as fs from "fs";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import * as os from "os";
 import * as path from "path";
 
 import { bitcoinAddress } from "./bitcoinAddress";
@@ -22,7 +25,7 @@ export const getWalletFromRecoveryInput = async (ethers: any) => {
   while (true) {
     let recovery = await input(
       {
-        message: "Mnemonic or private key:",
+        message: "EVM Mnemonic or private key:",
       },
       {
         clearPromptOnDone: true,
@@ -43,39 +46,105 @@ export const getWalletFromRecoveryInput = async (ethers: any) => {
   }
 };
 
-export const savePrivateKey = (privateKey: string) => {
+export const getSolanaWalletFromLocalFileOrInput =
+  async (): Promise<Keypair | null> => {
+    const solanaConfigPath = path.join(
+      os.homedir(),
+      ".config",
+      "solana",
+      "id.json"
+    );
+    if (fs.existsSync(solanaConfigPath)) {
+      try {
+        const fileContent = await fs.promises.readFile(
+          solanaConfigPath,
+          "utf-8"
+        );
+        const secretKey = JSON.parse(fileContent);
+        return Keypair.fromSecretKey(Uint8Array.from(secretKey));
+      } catch (error) {
+        console.error("Failed to load Solana private key:", error);
+        throw new Error(
+          `Failed to load Solana wallet from ${solanaConfigPath}`
+        );
+      }
+    }
+
+    while (true) {
+      let solanaPrivateKey = await input({
+        message: "Solana private key (press Enter to skip):",
+      });
+      if (solanaPrivateKey.trim() === "") {
+        console.log("Skipped Solana private key input.");
+        return null;
+      }
+      try {
+        return Keypair.fromSecretKey(bs58.decode(solanaPrivateKey));
+      } catch (e) {
+        console.error(`❌ Invalid Solana private key: ${e}`);
+        continue;
+      }
+    }
+  };
+
+export const savePrivateKey = (
+  privateKey: string,
+  solanaPrivateKey?: string
+) => {
   const filePath = path.join(process.cwd(), ".env");
   let env = envfile.parse(
     fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : ""
   );
   env.PRIVATE_KEY = privateKey.slice(2);
+  env.EVM_PRIVATE_KEY = privateKey.slice(2);
+  env.BTC_PRIVATE_KEY = privateKey.slice(2);
+  if (solanaPrivateKey) {
+    env.SOLANA_PRIVATE_KEY = solanaPrivateKey;
+  }
+
   fs.writeFileSync(filePath, envfile.stringify(env));
   console.log(`✅ Saved the private key to '${filePath}' file.\n`);
 };
 
 export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const { ethers } = hre as any;
-  let wallet;
+  let evmWallet;
+  let solanaWallet;
 
   if (args.recover) {
-    wallet = await getWalletFromRecoveryInput(ethers);
+    evmWallet = await getWalletFromRecoveryInput(ethers);
+    solanaWallet = await getSolanaWalletFromLocalFileOrInput();
   } else {
-    wallet = ethers.Wallet.createRandom();
+    evmWallet = ethers.Wallet.createRandom();
+    solanaWallet = Keypair.generate();
   }
 
-  const { privateKey, address, mnemonic } = wallet;
+  const { privateKey, address, mnemonic } = evmWallet;
   const pk = privateKey.slice(2);
 
   console.log(`
-🔑 Private key: ${pk}`);
-  mnemonic && console.log(`🔐 Mnemonic phrase: ${mnemonic.phrase}`);
-  console.log(`😃 EVM address: ${address}
-😃 Bitcoin address: ${bitcoinAddress(pk, "testnet")}
-😃 Bech32 address: ${hexToBech32Address(address, "zeta")}
-`);
+    🔑 EVM Private key: ${pk}`);
+  solanaWallet &&
+    console.log(`
+    🔑 Solana Private key: ${bs58.encode(solanaWallet.secretKey)}`);
+
+  mnemonic &&
+    console.log(`
+    🔐 EVM Mnemonic phrase: ${mnemonic.phrase}`);
+
+  console.log(`
+    😃 EVM address: ${address}
+    😃 Bitcoin address: ${bitcoinAddress(pk, "testnet")}
+    😃 Bech32 address: ${hexToBech32Address(address, "zeta")}`);
+  solanaWallet &&
+    console.log(`
+    😃 Solana address: ${solanaWallet.publicKey.toString()}`);
 
   if (args.save) {
-    savePrivateKey(privateKey);
+    savePrivateKey(
+      privateKey,
+      solanaWallet ? bs58.encode(solanaWallet.secretKey) : undefined
+    );
   }
 };
 
