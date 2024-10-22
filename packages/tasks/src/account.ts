@@ -133,7 +133,7 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     🔐 EVM Mnemonic phrase: ${mnemonic.phrase}`);
 
   console.log(`
-    😃 EVM address: ${address}
+  😃 EVM address: ${address}
     😃 Bitcoin address: ${bitcoinAddress(pk, "testnet")}
     😃 Bech32 address: ${hexToBech32Address(address, "zeta")}`);
   solanaWallet &&
