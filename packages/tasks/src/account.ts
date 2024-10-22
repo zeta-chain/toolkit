@@ -1,8 +1,8 @@
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { input } from "@inquirer/prompts";
 import { Keypair } from "@solana/web3.js";
 import { bech32 } from "bech32";
 import { validateMnemonic } from "bip39";
+import bs58 from "bs58";
 import * as envfile from "envfile";
 import * as fs from "fs";
 import { task } from "hardhat/config";
@@ -82,7 +82,6 @@ export const getSolanaWalletFromLocalFileOrInput =
         return Keypair.fromSecretKey(bs58.decode(solanaPrivateKey));
       } catch (e) {
         console.error(`❌ Invalid Solana private key: ${e}`);
-        continue;
       }
     }
   };
