@@ -51,18 +51,8 @@ task("evm-deposit-and-call", "Deposit tokens", evmDepositAndCall)
     "0x0000000000000000000000000000000000000000",
     types.string
   )
-  .addOptionalParam(
-    "gasPrice",
-    "The gas price for the transaction",
-    50000000000,
-    types.int
-  )
-  .addOptionalParam(
-    "gasLimit",
-    "The gas limit for the transaction",
-    7000000,
-    types.int
-  )
+  .addOptionalParam("gasPrice", "The gas price for the transaction")
+  .addOptionalParam("gasLimit", "The gas limit for the transaction")
   .addOptionalParam(
     "onRevertGasLimit",
     "The gas limit for the revert transaction",
