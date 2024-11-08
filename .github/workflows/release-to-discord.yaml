@@ -4,6 +4,7 @@ on:
 
 jobs:
   github-releases-to-discord:
+    if: "! contains(github.event.release.tag_name, '-')"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
