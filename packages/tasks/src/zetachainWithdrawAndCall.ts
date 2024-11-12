@@ -8,12 +8,17 @@ export const zetachainWithdrawAndCall = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   try {
+    const callOptions = {
+      isArbitraryCall: args.callOptionsIsArbitraryCall,
+      gasLimit: args.callOptionsGasLimit,
+    };
+
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
     const response = await client.zetachainWithdrawAndCall({
       amount: args.amount,
       function: args.function,
-      gasLimit: args.gasLimit,
+      callOptions,
       gatewayZetaChain: args.gatewayZetaChain,
       receiver: args.receiver,
       revertOptions: {
@@ -75,6 +80,13 @@ task(
   .addOptionalParam(
     "onRevertGasLimit",
     "The gas limit for the revert transaction",
+    7000000,
+    types.int
+  )
+  .addFlag("callOptionsIsArbitraryCall", "Call any function")
+  .addOptionalParam(
+    "callOptionsGasLimit",
+    "The gas limit for the call",
     7000000,
     types.int
   )

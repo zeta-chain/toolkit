@@ -18,7 +18,7 @@ import type { revertOptions, txOptions } from "./types";
  * @param {string} args.types - JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
  * @param {Array} args.values - The values to be passed to the function (should match the types).
  * @param {string} args.zrc20 - The address of the ZRC20 token contract used for the withdrawal and fee payment.
- * @param {number} args.gasLimit - The gas limit for the transaction.
+ * @param {any} args.callOptions - Call options.
  * @param {txOptions} args.txOptions - Transaction options such as gasPrice, nonce, etc.
  * @param {revertOptions} args.revertOptions - Options to handle call reversion, including revert address and message.
  *
@@ -33,7 +33,7 @@ export const zetachainWithdrawAndCall = async function (
   args: {
     amount: string;
     function: string;
-    gasLimit: number;
+    callOptions: any;
     gatewayZetaChain: string;
     receiver: string;
     revertOptions: revertOptions;
@@ -92,7 +92,7 @@ export const zetachainWithdrawAndCall = async function (
   const decimals = await zrc20.decimals();
   const value = utils.parseUnits(args.amount, decimals);
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
-    args.gasLimit
+    args.callOptions.gasLimit
   );
   if (args.zrc20 === gasZRC20) {
     const approveGasAndWithdraw = await zrc20.approve(
@@ -127,7 +127,7 @@ export const zetachainWithdrawAndCall = async function (
     value,
     args.zrc20,
     message,
-    args.gasLimit,
+    args.callOptions,
     revertOptions,
     args.txOptions
   );
