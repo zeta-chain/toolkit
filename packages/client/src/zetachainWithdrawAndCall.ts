@@ -33,7 +33,7 @@ export const zetachainWithdrawAndCall = async function (
   args: {
     amount: string;
     callOptions: any;
-    function: string;
+    function?: string;
     gatewayZetaChain: string;
     receiver: string;
     revertOptions: revertOptions;
@@ -62,8 +62,6 @@ export const zetachainWithdrawAndCall = async function (
     ),
   };
 
-  const functionSignature = utils.id(args.function).slice(0, 10);
-
   const valuesArray = args.values.map((value, index) => {
     const type = args.types[index];
 
@@ -85,9 +83,17 @@ export const zetachainWithdrawAndCall = async function (
     valuesArray
   );
 
-  const message = utils.hexlify(
-    utils.concat([functionSignature, encodedParameters])
-  );
+  let message;
+
+  if (args.callOptions.isArbitraryCall && args.function) {
+    let functionSignature = ethers.utils.id(args.function).slice(0, 10);
+    message = ethers.utils.hexlify(
+      ethers.utils.concat([functionSignature, encodedParameters])
+    );
+  } else {
+    message = encodedParameters;
+  }
+
   const zrc20 = new ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
   const decimals = await zrc20.decimals();
   const value = utils.parseUnits(args.amount, decimals);
@@ -120,6 +126,7 @@ export const zetachainWithdrawAndCall = async function (
     );
     await approveWithdraw.wait();
   }
+
   const method =
     "withdrawAndCall(bytes,uint256,address,bytes,uint256,(address,bool,address,bytes,uint256))";
   const tx = await gateway[method](

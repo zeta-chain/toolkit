@@ -25,6 +25,7 @@ import type {
 
 export interface IZRC20MetadataInterface extends utils.Interface {
   functions: {
+    "GAS_LIMIT()": FunctionFragment;
     "PROTOCOL_FLAT_FEE()": FunctionFragment;
     "allowance(address,address)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
@@ -33,16 +34,20 @@ export interface IZRC20MetadataInterface extends utils.Interface {
     "decimals()": FunctionFragment;
     "deposit(address,uint256)": FunctionFragment;
     "name()": FunctionFragment;
+    "setName(string)": FunctionFragment;
+    "setSymbol(string)": FunctionFragment;
     "symbol()": FunctionFragment;
     "totalSupply()": FunctionFragment;
     "transfer(address,uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
     "withdraw(bytes,uint256)": FunctionFragment;
     "withdrawGasFee()": FunctionFragment;
+    "withdrawGasFeeWithGasLimit(uint256)": FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
+      | "GAS_LIMIT"
       | "PROTOCOL_FLAT_FEE"
       | "allowance"
       | "approve"
@@ -51,14 +56,18 @@ export interface IZRC20MetadataInterface extends utils.Interface {
       | "decimals"
       | "deposit"
       | "name"
+      | "setName"
+      | "setSymbol"
       | "symbol"
       | "totalSupply"
       | "transfer"
       | "transferFrom"
       | "withdraw"
       | "withdrawGasFee"
+      | "withdrawGasFeeWithGasLimit"
   ): FunctionFragment;
 
+  encodeFunctionData(functionFragment: "GAS_LIMIT", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "PROTOCOL_FLAT_FEE",
     values?: undefined
@@ -85,6 +94,14 @@ export interface IZRC20MetadataInterface extends utils.Interface {
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "setName",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setSymbol",
+    values: [PromiseOrValue<string>]
+  ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "totalSupply",
@@ -110,7 +127,12 @@ export interface IZRC20MetadataInterface extends utils.Interface {
     functionFragment: "withdrawGasFee",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "withdrawGasFeeWithGasLimit",
+    values: [PromiseOrValue<BigNumberish>]
+  ): string;
 
+  decodeFunctionResult(functionFragment: "GAS_LIMIT", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "PROTOCOL_FLAT_FEE",
     data: BytesLike
@@ -122,6 +144,8 @@ export interface IZRC20MetadataInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "setName", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "setSymbol", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "totalSupply",
@@ -135,6 +159,10 @@ export interface IZRC20MetadataInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "withdrawGasFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "withdrawGasFeeWithGasLimit",
     data: BytesLike
   ): Result;
 
@@ -168,6 +196,8 @@ export interface IZRC20Metadata extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    GAS_LIMIT(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     PROTOCOL_FLAT_FEE(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     allowance(
@@ -202,6 +232,16 @@ export interface IZRC20Metadata extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<[string]>;
 
+    setName(
+      newName: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setSymbol(
+      newSymbol: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     symbol(overrides?: CallOverrides): Promise<[string]>;
 
     totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -226,7 +266,14 @@ export interface IZRC20Metadata extends BaseContract {
     ): Promise<ContractTransaction>;
 
     withdrawGasFee(overrides?: CallOverrides): Promise<[string, BigNumber]>;
+
+    withdrawGasFeeWithGasLimit(
+      gasLimit: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber]>;
   };
+
+  GAS_LIMIT(overrides?: CallOverrides): Promise<BigNumber>;
 
   PROTOCOL_FLAT_FEE(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -262,6 +309,16 @@ export interface IZRC20Metadata extends BaseContract {
 
   name(overrides?: CallOverrides): Promise<string>;
 
+  setName(
+    newName: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setSymbol(
+    newSymbol: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   symbol(overrides?: CallOverrides): Promise<string>;
 
   totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
@@ -287,7 +344,14 @@ export interface IZRC20Metadata extends BaseContract {
 
   withdrawGasFee(overrides?: CallOverrides): Promise<[string, BigNumber]>;
 
+  withdrawGasFeeWithGasLimit(
+    gasLimit: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<[string, BigNumber]>;
+
   callStatic: {
+    GAS_LIMIT(overrides?: CallOverrides): Promise<BigNumber>;
+
     PROTOCOL_FLAT_FEE(overrides?: CallOverrides): Promise<BigNumber>;
 
     allowance(
@@ -322,6 +386,16 @@ export interface IZRC20Metadata extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<string>;
 
+    setName(
+      newName: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setSymbol(
+      newSymbol: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     symbol(overrides?: CallOverrides): Promise<string>;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
@@ -346,11 +420,18 @@ export interface IZRC20Metadata extends BaseContract {
     ): Promise<boolean>;
 
     withdrawGasFee(overrides?: CallOverrides): Promise<[string, BigNumber]>;
+
+    withdrawGasFeeWithGasLimit(
+      gasLimit: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber]>;
   };
 
   filters: {};
 
   estimateGas: {
+    GAS_LIMIT(overrides?: CallOverrides): Promise<BigNumber>;
+
     PROTOCOL_FLAT_FEE(overrides?: CallOverrides): Promise<BigNumber>;
 
     allowance(
@@ -385,6 +466,16 @@ export interface IZRC20Metadata extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<BigNumber>;
 
+    setName(
+      newName: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setSymbol(
+      newSymbol: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
@@ -409,9 +500,16 @@ export interface IZRC20Metadata extends BaseContract {
     ): Promise<BigNumber>;
 
     withdrawGasFee(overrides?: CallOverrides): Promise<BigNumber>;
+
+    withdrawGasFeeWithGasLimit(
+      gasLimit: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
+    GAS_LIMIT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     PROTOCOL_FLAT_FEE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     allowance(
@@ -446,6 +544,16 @@ export interface IZRC20Metadata extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    setName(
+      newName: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setSymbol(
+      newSymbol: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -470,5 +578,10 @@ export interface IZRC20Metadata extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     withdrawGasFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    withdrawGasFeeWithGasLimit(
+      gasLimit: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
   };
 }

@@ -2,4 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as izrc20Sol from "./IZRC20.sol";
-export * as zContractSol from "./zContract.sol";
+export * as universalContractSol from "./UniversalContract.sol";

@@ -3,5 +3,5 @@
 /* eslint-disable */
 import type * as izrc20Sol from "./IZRC20.sol";
 export type { izrc20Sol };
-import type * as zContractSol from "./zContract.sol";
-export type { zContractSol };
+import type * as universalContractSol from "./UniversalContract.sol";
+export type { universalContractSol };

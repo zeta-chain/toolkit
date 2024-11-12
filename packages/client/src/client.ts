@@ -3,7 +3,6 @@ import type { Signer, Wallet } from "ethers";
 import merge from "lodash/merge";
 
 import {
-  deposit,
   evmCall,
   evmDeposit,
   evmDepositAndCall,
@@ -22,7 +21,6 @@ import {
   sendZeta,
   solanaDeposit,
   trackCCTX,
-  withdraw,
   zetachainCall,
   zetachainWithdraw,
   zetachainWithdrawAndCall,
@@ -124,8 +122,6 @@ export class ZetaChainClient {
   getFees = getFees;
   getPools = getPools;
   trackCCTX = trackCCTX;
-  deposit = deposit;
-  withdraw = withdraw;
   sendZeta = sendZeta;
   getChainId = getChainId;
   getQuote = getQuote;
