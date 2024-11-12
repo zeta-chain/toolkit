@@ -32,8 +32,8 @@ export const zetachainWithdrawAndCall = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    function: string;
     callOptions: any;
+    function: string;
     gatewayZetaChain: string;
     receiver: string;
     revertOptions: revertOptions;

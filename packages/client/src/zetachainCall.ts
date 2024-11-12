@@ -30,8 +30,8 @@ import type { revertOptions, txOptions } from "./types";
 export const zetachainCall = async function (
   this: ZetaChainClient,
   args: {
-    function: string;
     callOptions: any;
+    function: string;
     gatewayZetaChain: string;
     receiver: string;
     revertOptions: revertOptions;

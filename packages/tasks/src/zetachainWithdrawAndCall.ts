@@ -9,16 +9,16 @@ export const zetachainWithdrawAndCall = async (
 ) => {
   try {
     const callOptions = {
-      isArbitraryCall: args.callOptionsIsArbitraryCall,
       gasLimit: args.callOptionsGasLimit,
+      isArbitraryCall: args.callOptionsIsArbitraryCall,
     };
 
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
     const response = await client.zetachainWithdrawAndCall({
       amount: args.amount,
-      function: args.function,
       callOptions,
+      function: args.function,
       gatewayZetaChain: args.gatewayZetaChain,
       receiver: args.receiver,
       revertOptions: {

@@ -8,16 +8,16 @@ export const zetachainCall = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   const callOptions = {
-    isArbitraryCall: args.callOptionsIsArbitraryCall,
     gasLimit: args.callOptionsGasLimit,
+    isArbitraryCall: args.callOptionsIsArbitraryCall,
   };
 
   try {
     const [signer] = await hre.ethers.getSigners();
     const client = new ZetaChainClient({ network: "testnet", signer });
     const response = await client.zetachainCall({
-      function: args.function,
       callOptions,
+      function: args.function,
       gatewayZetaChain: args.gatewayZetaChain,
       receiver: args.receiver,
       revertOptions: {
