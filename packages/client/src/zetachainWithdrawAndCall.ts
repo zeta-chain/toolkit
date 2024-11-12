@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 
-import GatewayABI from "./abi/GatewayZEVM.sol/GatewayZEVM.json";
-import ZRC20ABI from "./abi/ZRC20.sol/ZRC20.json";
+import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayZEVM.sol/GatewayZEVM.json";
+import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ZetaChainClient } from "./client";
 import type { revertOptions, txOptions } from "./types";
 
@@ -128,7 +128,7 @@ export const zetachainWithdrawAndCall = async function (
   }
 
   const method =
-    "withdrawAndCall(bytes,uint256,address,bytes,uint256,(address,bool,address,bytes,uint256))";
+    "withdrawAndCall(bytes,uint256,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))";
   const tx = await gateway[method](
     utils.hexlify(args.receiver),
     value,
