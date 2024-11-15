@@ -105,7 +105,7 @@
     "dotenv": "16.0.3",
     "ecpair": "^2.1.0",
     "envfile": "^6.18.0",
-    "ethers": "5.4.7",
+    "ethers": "^5.4.7",
     "eventemitter3": "^5.0.1",
     "form-data": "^4.0.0",
     "handlebars": "4.7.7",
@@ -116,6 +116,7 @@
     "ora": "5.4.1",
     "spinnies": "^0.5.1",
     "tiny-secp256k1": "^2.2.3",
+    "web3": "^4.15.0",
     "ws": "^8.17.1"
   },
   "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
