@@ -1,11 +1,12 @@
-import {
-  Header,
-  FieldsV0,
-  EncodingFormat,
-  OpCode,
-  encodeToBytes,
-} from "../packages/client/src/encodeToBytes";
 import Web3 from "web3";
+
+import {
+  encodeToBytes,
+  EncodingFormat,
+  FieldsV0,
+  Header,
+  OpCode,
+} from "../packages/client/src/encodeToBytes";
 
 const web3 = new Web3();
 

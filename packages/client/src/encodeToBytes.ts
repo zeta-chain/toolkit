@@ -1,5 +1,5 @@
-import { Web3 } from "web3";
 import { ethers } from "ethers";
+import { Web3 } from "web3";
 import { isAddress } from "web3-validator";
 
 // Memo identifier byte
@@ -137,4 +137,4 @@ const encodeDataCompact = (
   return Buffer.concat([encodedLength, data]);
 };
 
-export { Header, FieldsV0, EncodingFormat, OpCode, encodeToBytes };
+export { encodeToBytes, EncodingFormat, FieldsV0, Header, OpCode };
