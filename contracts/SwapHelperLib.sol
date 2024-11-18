@@ -141,7 +141,7 @@ library SwapHelperLib {
             path[2] = targetZRC20;
         }
 
-        IZRC20(zrc20).approve(address(router), amount);
+        IZRC20(zrc20).approve(router, amount);
         uint256[] memory amounts = IUniswapV2Router01(router)
             .swapExactTokensForTokens(
                 amount,
@@ -177,7 +177,7 @@ library SwapHelperLib {
             path[2] = targetZRC20;
         }
 
-        IZRC20(zrc20).approve(wzeta, amount);
+        IZRC20(zrc20).approve(router, amount);
         uint256[] memory amounts = IUniswapV2Router01(router)
             .swapExactTokensForTokens(
                 amount,
