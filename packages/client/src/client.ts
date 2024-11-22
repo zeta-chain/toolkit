@@ -1,3 +1,6 @@
+import type { Wallet as SolanaWallet } from "@coral-xyz/anchor";
+import type { WalletContextState } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { networks } from "@zetachain/networks";
 import type { Signer, Wallet } from "ethers";
 import merge from "lodash/merge";
@@ -35,9 +38,36 @@ export interface ZetaChainClientParamsBase {
 
 export type ZetaChainClientParams = ZetaChainClientParamsBase &
   (
-    | { signer: Signer; wallet?: never }
-    | { signer?: never; wallet: Wallet }
-    | { signer?: undefined; wallet?: undefined }
+    | {
+        signer: Signer;
+        solanaAdapter?: never;
+        solanaWallet?: never;
+        wallet?: never;
+      }
+    | {
+        signer?: never;
+        solanaAdapter: WalletContextState;
+        solanaWallet?: never;
+        wallet?: never;
+      }
+    | {
+        signer?: never;
+        solanaAdapter?: never;
+        solanaWallet: SolanaWallet;
+        wallet?: never;
+      }
+    | {
+        signer?: never;
+        solanaAdapter?: never;
+        solanaWallet?: never;
+        wallet: Wallet;
+      }
+    | {
+        signer?: undefined;
+        solanaAdapter?: undefined;
+        solanaWallet?: undefined;
+        wallet?: undefined;
+      }
   );
 
 export class ZetaChainClient {
@@ -45,6 +75,8 @@ export class ZetaChainClient {
   public network: string;
   public wallet: Wallet | undefined;
   public signer: any | undefined;
+  public solanaWallet: SolanaWallet | undefined;
+  public solanaAdapter: WalletContextState | undefined;
 
   /**
    * Initializes ZetaChainClient instance.
@@ -98,6 +130,10 @@ export class ZetaChainClient {
       this.wallet = params.wallet;
     } else if (params.signer) {
       this.signer = params.signer;
+    } else if (params.solanaWallet) {
+      this.solanaWallet = params.solanaWallet;
+    } else if (params.solanaAdapter) {
+      this.solanaAdapter = params.solanaAdapter;
     }
     this.chains = { ...networks };
     this.network = params.network || "";
@@ -115,6 +151,16 @@ export class ZetaChainClient {
 
   public getChains(): { [key: string]: any } {
     return this.chains;
+  }
+
+  public isSolanaWalletConnected(): boolean {
+    return this.solanaAdapter?.connected || this.solanaWallet !== undefined;
+  }
+
+  public getSolanaPublicKey(): PublicKey | null {
+    return (
+      this.solanaAdapter?.publicKey || this.solanaWallet?.publicKey || null
+    );
   }
 
   getEndpoint = getEndpoint;
