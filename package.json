@@ -96,7 +96,7 @@
     "@solana/web3.js": "^1.95.3",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@zetachain/faucet-cli": "^4.1.1",
-    "@zetachain/networks": "10.0.0",
+    "@zetachain/networks": "v10.0.0-rc1",
     "@zetachain/protocol-contracts": "9.0.0",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",

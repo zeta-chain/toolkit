@@ -1,6 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { Transaction } from "@solana/web3.js";
+import { getEndpoints } from "@zetachain/networks";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
@@ -12,7 +13,6 @@ export const solanaDeposit = async function (
   this: ZetaChainClient,
   args: {
     amount: number;
-    api: string;
     params: any[];
     recipient: string;
   }
@@ -21,7 +21,10 @@ export const solanaDeposit = async function (
     throw new Error("Solana wallet not connected");
   }
 
-  const connection = new anchor.web3.Connection(args.api);
+  const network = "solana_" + this.network;
+  const api = getEndpoints("solana" as any, network);
+
+  const connection = new anchor.web3.Connection(api[0].url);
 
   let provider;
   if (this.solanaAdapter) {

@@ -15,6 +15,7 @@ export const solanaDeposit = async (
   const wallet = new Wallet(keypair);
 
   const client = new ZetaChainClient({
+    network: args.solanaNetwork,
     solanaWallet: wallet,
   });
   let recipient;
@@ -28,15 +29,15 @@ export const solanaDeposit = async (
   } catch (e) {
     recipient = args.recipient;
   }
-  const { amount, api, idPath } = args;
+  const { amount, idPath } = args;
   const params = [JSON.parse(args.types), args.values];
-  await client.solanaDeposit({ amount, api, params, recipient });
+  await client.solanaDeposit({ amount, params, recipient });
 };
 
 task("solana-deposit", "Solana deposit", solanaDeposit)
   .addParam("amount", "Amount of SOL to deposit")
   .addParam("recipient", "Universal contract address")
-  .addOptionalParam("api", "Solana API", "https://api.devnet.solana.com")
+  .addOptionalParam("solanaNetwork", "Solana Network", "devnet")
   .addOptionalParam("idPath", "Path to id.json", "~/.config/solana/id.json")
   .addParam("types", "The types of the parameters (example: ['string'])")
   .addVariadicPositionalParam("values", "The values of the parameters");
