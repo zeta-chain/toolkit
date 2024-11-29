@@ -5,9 +5,9 @@
 import { Contract, Signer, utils } from "ethers";
 import type { Provider } from "@ethersproject/providers";
 import type {
-  ZContract,
-  ZContractInterface,
-} from "../../../../../../../@zetachain/protocol-contracts/contracts/zevm/interfaces/zContract.sol/ZContract";
+  UniversalContract,
+  UniversalContractInterface,
+} from "../../../../../../../@zetachain/protocol-contracts/contracts/zevm/interfaces/UniversalContract.sol/UniversalContract";
 
 const _abi = [
   {
@@ -30,7 +30,7 @@ const _abi = [
             type: "uint256",
           },
         ],
-        internalType: "struct zContext",
+        internalType: "struct MessageContext",
         name: "context",
         type: "tuple",
       },
@@ -50,22 +50,22 @@ const _abi = [
         type: "bytes",
       },
     ],
-    name: "onCrossChainCall",
+    name: "onCall",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
 ] as const;
 
-export class ZContract__factory {
+export class UniversalContract__factory {
   static readonly abi = _abi;
-  static createInterface(): ZContractInterface {
-    return new utils.Interface(_abi) as ZContractInterface;
+  static createInterface(): UniversalContractInterface {
+    return new utils.Interface(_abi) as UniversalContractInterface;
   }
   static connect(
     address: string,
     signerOrProvider: Signer | Provider
-  ): ZContract {
-    return new Contract(address, _abi, signerOrProvider) as ZContract;
+  ): UniversalContract {
+    return new Contract(address, _abi, signerOrProvider) as UniversalContract;
   }
 }

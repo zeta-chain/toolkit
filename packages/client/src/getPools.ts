@@ -1,7 +1,7 @@
 import UniswapV2Factory from "@uniswap/v2-core/build/UniswapV2Factory.json";
 import UniswapV2Pair from "@uniswap/v2-core/build/UniswapV2Pair.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
-import SystemContract from "@zetachain/protocol-contracts/abi/zevm/SystemContract.sol/SystemContract.json";
+import SystemContract from "@zetachain/protocol-contracts/abi/SystemContract.sol/SystemContract.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";

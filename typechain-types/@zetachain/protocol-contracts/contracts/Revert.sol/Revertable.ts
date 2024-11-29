@@ -21,58 +21,45 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../../../../../../common";
+} from "../../../../common";
 
-export declare namespace ZetaInterfaces {
-  export type SendInputStruct = {
-    destinationChainId: PromiseOrValue<BigNumberish>;
-    destinationAddress: PromiseOrValue<BytesLike>;
-    destinationGasLimit: PromiseOrValue<BigNumberish>;
-    message: PromiseOrValue<BytesLike>;
-    zetaValueAndGas: PromiseOrValue<BigNumberish>;
-    zetaParams: PromiseOrValue<BytesLike>;
-  };
+export type RevertContextStruct = {
+  sender: PromiseOrValue<string>;
+  asset: PromiseOrValue<string>;
+  amount: PromiseOrValue<BigNumberish>;
+  revertMessage: PromiseOrValue<BytesLike>;
+};
 
-  export type SendInputStructOutput = [
-    BigNumber,
-    string,
-    BigNumber,
-    string,
-    BigNumber,
-    string
-  ] & {
-    destinationChainId: BigNumber;
-    destinationAddress: string;
-    destinationGasLimit: BigNumber;
-    message: string;
-    zetaValueAndGas: BigNumber;
-    zetaParams: string;
-  };
-}
+export type RevertContextStructOutput = [string, string, BigNumber, string] & {
+  sender: string;
+  asset: string;
+  amount: BigNumber;
+  revertMessage: string;
+};
 
-export interface ZetaConnectorInterface extends utils.Interface {
+export interface RevertableInterface extends utils.Interface {
   functions: {
-    "send((uint256,bytes,uint256,bytes,uint256,bytes))": FunctionFragment;
+    "onRevert((address,address,uint256,bytes))": FunctionFragment;
   };
 
-  getFunction(nameOrSignatureOrTopic: "send"): FunctionFragment;
+  getFunction(nameOrSignatureOrTopic: "onRevert"): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "send",
-    values: [ZetaInterfaces.SendInputStruct]
+    functionFragment: "onRevert",
+    values: [RevertContextStruct]
   ): string;
 
-  decodeFunctionResult(functionFragment: "send", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "onRevert", data: BytesLike): Result;
 
   events: {};
 }
 
-export interface ZetaConnector extends BaseContract {
+export interface Revertable extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: ZetaConnectorInterface;
+  interface: RevertableInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
@@ -94,20 +81,20 @@ export interface ZetaConnector extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    send(
-      input: ZetaInterfaces.SendInputStruct,
+    onRevert(
+      revertContext: RevertContextStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
   };
 
-  send(
-    input: ZetaInterfaces.SendInputStruct,
+  onRevert(
+    revertContext: RevertContextStruct,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    send(
-      input: ZetaInterfaces.SendInputStruct,
+    onRevert(
+      revertContext: RevertContextStruct,
       overrides?: CallOverrides
     ): Promise<void>;
   };
@@ -115,15 +102,15 @@ export interface ZetaConnector extends BaseContract {
   filters: {};
 
   estimateGas: {
-    send(
-      input: ZetaInterfaces.SendInputStruct,
+    onRevert(
+      revertContext: RevertContextStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    send(
-      input: ZetaInterfaces.SendInputStruct,
+    onRevert(
+      revertContext: RevertContextStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
   };

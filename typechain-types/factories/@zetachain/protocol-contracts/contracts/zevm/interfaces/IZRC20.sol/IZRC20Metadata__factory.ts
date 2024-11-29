@@ -12,6 +12,19 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "GAS_LIMIT",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "PROTOCOL_FLAT_FEE",
     outputs: [
       {
@@ -160,6 +173,32 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "string",
+        name: "newName",
+        type: "string",
+      },
+    ],
+    name: "setName",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "newSymbol",
+        type: "string",
+      },
+    ],
+    name: "setSymbol",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "symbol",
     outputs: [
@@ -265,6 +304,30 @@ const _abi = [
   {
     inputs: [],
     name: "withdrawGasFee",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "gasLimit",
+        type: "uint256",
+      },
+    ],
+    name: "withdrawGasFeeWithGasLimit",
     outputs: [
       {
         internalType: "address",

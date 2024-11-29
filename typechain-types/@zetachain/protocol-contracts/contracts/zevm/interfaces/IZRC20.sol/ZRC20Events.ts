@@ -20,6 +20,7 @@ export interface ZRC20EventsInterface extends utils.Interface {
     "Deposit(bytes,address,uint256)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
     "UpdatedGasLimit(uint256)": EventFragment;
+    "UpdatedGateway(address)": EventFragment;
     "UpdatedProtocolFlatFee(uint256)": EventFragment;
     "UpdatedSystemContract(address)": EventFragment;
     "Withdrawal(address,bytes,uint256,uint256,uint256)": EventFragment;
@@ -29,6 +30,7 @@ export interface ZRC20EventsInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdatedGasLimit"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdatedGateway"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdatedProtocolFlatFee"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdatedSystemContract"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Withdrawal"): EventFragment;
@@ -79,6 +81,16 @@ export type UpdatedGasLimitEvent = TypedEvent<
 >;
 
 export type UpdatedGasLimitEventFilter = TypedEventFilter<UpdatedGasLimitEvent>;
+
+export interface UpdatedGatewayEventObject {
+  gateway: string;
+}
+export type UpdatedGatewayEvent = TypedEvent<
+  [string],
+  UpdatedGatewayEventObject
+>;
+
+export type UpdatedGatewayEventFilter = TypedEventFilter<UpdatedGatewayEvent>;
 
 export interface UpdatedProtocolFlatFeeEventObject {
   protocolFlatFee: BigNumber;
@@ -182,6 +194,9 @@ export interface ZRC20Events extends BaseContract {
 
     "UpdatedGasLimit(uint256)"(gasLimit?: null): UpdatedGasLimitEventFilter;
     UpdatedGasLimit(gasLimit?: null): UpdatedGasLimitEventFilter;
+
+    "UpdatedGateway(address)"(gateway?: null): UpdatedGatewayEventFilter;
+    UpdatedGateway(gateway?: null): UpdatedGatewayEventFilter;
 
     "UpdatedProtocolFlatFee(uint256)"(
       protocolFlatFee?: null
