@@ -1,7 +1,7 @@
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
-import ZetaToken from "@zetachain/protocol-contracts/abi/evm/Zeta.eth.sol/ZetaEth.json";
-import ZetaConnectorEth from "@zetachain/protocol-contracts/abi/evm/ZetaConnector.eth.sol/ZetaConnectorEth.json";
-import ZetaConnectorZEVM from "@zetachain/protocol-contracts/abi/zevm/ZetaConnectorZEVM.sol/ZetaConnectorZEVM.json";
+import ZetaToken from "@zetachain/protocol-contracts/abi/Zeta.non-eth.sol/ZetaNonEth.json";
+import ZetaConnectorEth from "@zetachain/protocol-contracts/abi/ZetaConnectorNative.sol/ZetaConnectorNative.json";
+import ZetaConnectorZEVM from "@zetachain/protocol-contracts/abi/ZetaConnectorNonNative.sol/ZetaConnectorNonNative.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";

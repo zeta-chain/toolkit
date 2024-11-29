@@ -4,7 +4,6 @@ pragma solidity 0.8.26;
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
 import "./shared/interfaces/IZRC20.sol";
-import "./SystemContract.sol";
 import "./shared/libraries/UniswapV2Library.sol";
 
 library SwapHelperLib {
@@ -112,41 +111,39 @@ library SwapHelperLib {
     }
 
     function swapExactTokensForTokens(
-        SystemContract systemContract,
+        address router,
         address zrc20,
         uint256 amount,
         address targetZRC20,
         uint256 minAmountOut
     ) internal returns (uint256) {
+        address factory = IUniswapV2Router01(router).factory();
+        address wzeta = IUniswapV2Router01(router).WETH();
+
         address[] memory path;
         path = new address[](2);
         path[0] = zrc20;
         path[1] = targetZRC20;
 
         bool isSufficientLiquidity = _isSufficientLiquidity(
-            systemContract.uniswapv2FactoryAddress(),
+            factory,
             amount,
             minAmountOut,
             path
         );
 
-        bool isZETA = targetZRC20 == systemContract.wZetaContractAddress() ||
-            zrc20 == systemContract.wZetaContractAddress();
+        bool isZETA = targetZRC20 == wzeta || zrc20 == wzeta;
 
         if (!isSufficientLiquidity && !isZETA) {
             path = new address[](3);
             path[0] = zrc20;
-            path[1] = systemContract.wZetaContractAddress();
+            path[1] = wzeta;
             path[2] = targetZRC20;
         }
 
-        IZRC20(zrc20).approve(
-            address(systemContract.uniswapv2Router02Address()),
-            amount
-        );
-        uint256[] memory amounts = IUniswapV2Router01(
-            systemContract.uniswapv2Router02Address()
-        ).swapExactTokensForTokens(
+        IZRC20(zrc20).approve(router, amount);
+        uint256[] memory amounts = IUniswapV2Router01(router)
+            .swapExactTokensForTokens(
                 amount,
                 minAmountOut,
                 path,
@@ -157,17 +154,16 @@ library SwapHelperLib {
     }
 
     function swapExactTokensForTokensDirectly(
-        SystemContract systemContract,
+        address router,
         address zrc20,
         uint256 amount,
         address targetZRC20,
         uint256 minAmountOut
     ) internal returns (uint256) {
-        bool existsPairPool = _existsPairPool(
-            systemContract.uniswapv2FactoryAddress(),
-            zrc20,
-            targetZRC20
-        );
+        address factory = IUniswapV2Router01(router).factory();
+        address wzeta = IUniswapV2Router01(router).WETH();
+
+        bool existsPairPool = _existsPairPool(factory, zrc20, targetZRC20);
 
         address[] memory path;
         if (existsPairPool) {
@@ -177,17 +173,13 @@ library SwapHelperLib {
         } else {
             path = new address[](3);
             path[0] = zrc20;
-            path[1] = systemContract.wZetaContractAddress();
+            path[1] = wzeta;
             path[2] = targetZRC20;
         }
 
-        IZRC20(zrc20).approve(
-            address(systemContract.uniswapv2Router02Address()),
-            amount
-        );
-        uint256[] memory amounts = IUniswapV2Router01(
-            systemContract.uniswapv2Router02Address()
-        ).swapExactTokensForTokens(
+        IZRC20(zrc20).approve(router, amount);
+        uint256[] memory amounts = IUniswapV2Router01(router)
+            .swapExactTokensForTokens(
                 amount,
                 minAmountOut,
                 path,
@@ -198,17 +190,16 @@ library SwapHelperLib {
     }
 
     function swapTokensForExactTokens(
-        SystemContract systemContract,
+        address router,
         address zrc20,
         uint256 amount,
         address targetZRC20,
         uint256 amountInMax
     ) internal returns (uint256) {
-        bool existsPairPool = _existsPairPool(
-            systemContract.uniswapv2FactoryAddress(),
-            zrc20,
-            targetZRC20
-        );
+        address factory = IUniswapV2Router01(router).factory();
+        address wzeta = IUniswapV2Router01(router).WETH();
+
+        bool existsPairPool = _existsPairPool(factory, zrc20, targetZRC20);
 
         address[] memory path;
         if (existsPairPool) {
@@ -218,17 +209,13 @@ library SwapHelperLib {
         } else {
             path = new address[](3);
             path[0] = zrc20;
-            path[1] = systemContract.wZetaContractAddress();
+            path[1] = wzeta;
             path[2] = targetZRC20;
         }
 
-        IZRC20(zrc20).approve(
-            address(systemContract.uniswapv2Router02Address()),
-            amountInMax
-        );
-        uint256[] memory amounts = IUniswapV2Router01(
-            systemContract.uniswapv2Router02Address()
-        ).swapTokensForExactTokens(
+        IZRC20(zrc20).approve(router, amountInMax);
+        uint256[] memory amounts = IUniswapV2Router01(router)
+            .swapTokensForExactTokens(
                 amount,
                 amountInMax,
                 path,
@@ -239,28 +226,31 @@ library SwapHelperLib {
     }
 
     function getMinOutAmount(
-        SystemContract systemContract,
+        address router,
         address zrc20,
         address target,
         uint256 amountIn
     ) public view returns (uint256 minOutAmount) {
+        address factory = IUniswapV2Router01(router).factory();
+        address wzeta = IUniswapV2Router01(router).WETH();
+
         address[] memory path;
 
         path = new address[](2);
         path[0] = zrc20;
         path[1] = target;
         uint[] memory amounts1 = UniswapV2Library.getAmountsOut(
-            systemContract.uniswapv2FactoryAddress(),
+            factory,
             amountIn,
             path
         );
 
         path = new address[](3);
         path[0] = zrc20;
-        path[1] = systemContract.wZetaContractAddress();
+        path[1] = wzeta;
         path[2] = target;
         uint[] memory amounts2 = UniswapV2Library.getAmountsOut(
-            systemContract.uniswapv2FactoryAddress(),
+            factory,
             amountIn,
             path
         );
