@@ -18,3 +18,4 @@ export * from "./trackCCTX";
 export * from "./zetachainCall";
 export * from "./zetachainWithdraw";
 export * from "./zetachainWithdrawAndCall";
+export * from "./encodeToBytes";
