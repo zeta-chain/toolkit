@@ -13,6 +13,18 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
+      name: "IERC1155Errors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC1155Errors__factory>;
+    getContractFactory(
+      name: "IERC20Errors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC20Errors__factory>;
+    getContractFactory(
+      name: "IERC721Errors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721Errors__factory>;
+    getContractFactory(
       name: "ERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20__factory>;
@@ -77,21 +89,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.UniswapV2Router02__factory>;
     getContractFactory(
-      name: "ZetaCommonErrors",
+      name: "Revertable",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ZetaCommonErrors__factory>;
-    getContractFactory(
-      name: "ZetaConnector",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ZetaConnector__factory>;
-    getContractFactory(
-      name: "ZetaReceiver",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ZetaReceiver__factory>;
-    getContractFactory(
-      name: "ZetaTokenConsumer",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ZetaTokenConsumer__factory>;
+    ): Promise<Contracts.Revertable__factory>;
     getContractFactory(
       name: "IZRC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -165,14 +165,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.UniswapV2Library__factory>;
     getContractFactory(
-      name: "MockSystemContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MockSystemContract__factory>;
-    getContractFactory(
-      name: "SystemContractErrors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SystemContractErrors__factory>;
-    getContractFactory(
       name: "MockZRC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MockZRC20__factory>;
@@ -197,10 +189,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SystemContractErrors__factory>;
     getContractFactory(
-      name: "TestSystemContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TestSystemContract__factory>;
-    getContractFactory(
       name: "TestZRC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TestZRC20__factory>;
@@ -212,11 +200,22 @@ declare module "hardhat/types/runtime" {
       name: "ZContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZContract__factory>;
-    getContractFactory(
-      name: "ZetaConnectorMockValue",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ZetaConnectorMockValue__factory>;
 
+    getContractAt(
+      name: "IERC1155Errors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC1155Errors>;
+    getContractAt(
+      name: "IERC20Errors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC20Errors>;
+    getContractAt(
+      name: "IERC721Errors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721Errors>;
     getContractAt(
       name: "ERC20",
       address: string,
@@ -298,25 +297,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.UniswapV2Router02>;
     getContractAt(
-      name: "ZetaCommonErrors",
+      name: "Revertable",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.ZetaCommonErrors>;
-    getContractAt(
-      name: "ZetaConnector",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ZetaConnector>;
-    getContractAt(
-      name: "ZetaReceiver",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ZetaReceiver>;
-    getContractAt(
-      name: "ZetaTokenConsumer",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ZetaTokenConsumer>;
+    ): Promise<Contracts.Revertable>;
     getContractAt(
       name: "IZRC20",
       address: string,
@@ -408,16 +392,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.UniswapV2Library>;
     getContractAt(
-      name: "MockSystemContract",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MockSystemContract>;
-    getContractAt(
-      name: "SystemContractErrors",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.SystemContractErrors>;
-    getContractAt(
       name: "MockZRC20",
       address: string,
       signer?: ethers.Signer
@@ -448,11 +422,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.SystemContractErrors>;
     getContractAt(
-      name: "TestSystemContract",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TestSystemContract>;
-    getContractAt(
       name: "TestZRC20",
       address: string,
       signer?: ethers.Signer
@@ -467,11 +436,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ZContract>;
-    getContractAt(
-      name: "ZetaConnectorMockValue",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ZetaConnectorMockValue>;
 
     // default types
     getContractFactory(

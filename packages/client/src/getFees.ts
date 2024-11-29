@@ -1,5 +1,5 @@
 import { mainnet, testnet } from "@zetachain/protocol-contracts";
-import ZRC20 from "@zetachain/protocol-contracts/abi/zevm/ZRC20.sol/ZRC20.json";
+import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers, utils } from "ethers";
 import fetch from "isomorphic-fetch";
 

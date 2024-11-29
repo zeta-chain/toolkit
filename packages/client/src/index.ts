@@ -1,5 +1,4 @@
 export * from "./client";
-export * from "./deposit";
 export * from "./evmCall";
 export * from "./evmDeposit";
 export * from "./evmDepositAndCall";
@@ -16,7 +15,6 @@ export * from "./prepareData";
 export * from "./sendZeta";
 export * from "./solanaDeposit";
 export * from "./trackCCTX";
-export * from "./withdraw";
 export * from "./zetachainCall";
 export * from "./zetachainWithdraw";
 export * from "./zetachainWithdrawAndCall";

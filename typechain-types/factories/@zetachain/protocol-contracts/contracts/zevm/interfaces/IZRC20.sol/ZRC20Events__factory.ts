@@ -103,6 +103,19 @@ const _abi = [
     inputs: [
       {
         indexed: false,
+        internalType: "address",
+        name: "gateway",
+        type: "address",
+      },
+    ],
+    name: "UpdatedGateway",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
         internalType: "uint256",
         name: "protocolFlatFee",
         type: "uint256",

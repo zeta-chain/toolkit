@@ -1,7 +1,7 @@
+import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayZEVM.sol/GatewayZEVM.json";
+import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
-import GatewayABI from "./abi/GatewayZEVM.sol/GatewayZEVM.json";
-import ZRC20ABI from "./abi/ZRC20.sol/ZRC20.json";
 import { ZetaChainClient } from "./client";
 import type { revertOptions, txOptions } from "./types";
 
@@ -17,7 +17,7 @@ import type { revertOptions, txOptions } from "./types";
  * @param {string} args.types - JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
  * @param {Array} args.values - The values to be passed to the function (should match the types).
  * @param {string} args.zrc20 - The address of the ZRC20 token contract used for paying gas fees.
- * @param {number} args.gasLimit - The amount of gas to be used for the call.
+ * @param {object} args.callOptions - Call options.
  * @param {txOptions} args.txOptions - Transaction options such as gasPrice, nonce, etc.
  * @param {revertOptions} args.revertOptions - Options to handle call reversion, including revert address and message.
  *
@@ -30,8 +30,8 @@ import type { revertOptions, txOptions } from "./types";
 export const zetachainCall = async function (
   this: ZetaChainClient,
   args: {
+    callOptions: any;
     function: string;
-    gasLimit: number;
     gatewayZetaChain: string;
     receiver: string;
     revertOptions: revertOptions;
@@ -88,7 +88,7 @@ export const zetachainCall = async function (
   );
   const zrc20 = new ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
-    args.gasLimit
+    args.callOptions.gasLimit
   );
   const gasZRC20Contract = new ethers.Contract(gasZRC20, ZRC20ABI.abi, signer);
   const approve = await gasZRC20Contract.approve(
@@ -98,12 +98,12 @@ export const zetachainCall = async function (
   );
   await approve.wait();
   const tx = await gateway[
-    "call(bytes,address,bytes,uint256,(address,bool,address,bytes,uint256))"
+    "call(bytes,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))"
   ](
     utils.hexlify(args.receiver),
     gasZRC20,
     message,
-    args.gasLimit,
+    args.callOptions,
     revertOptions,
     args.txOptions
   );
