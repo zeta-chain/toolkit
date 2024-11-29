@@ -23,7 +23,7 @@ import type {
 
 export interface SwapHelperLibInterface extends utils.Interface {
   functions: {
-    "getMinOutAmount(SystemContract,address,address,uint256)": FunctionFragment;
+    "getMinOutAmount(address,address,address,uint256)": FunctionFragment;
     "uniswapv2PairFor(address,address,address)": FunctionFragment;
   };
 
@@ -89,7 +89,7 @@ export interface SwapHelperLib extends BaseContract {
 
   functions: {
     getMinOutAmount(
-      systemContract: PromiseOrValue<string>,
+      router: PromiseOrValue<string>,
       zrc20: PromiseOrValue<string>,
       target: PromiseOrValue<string>,
       amountIn: PromiseOrValue<BigNumberish>,
@@ -105,7 +105,7 @@ export interface SwapHelperLib extends BaseContract {
   };
 
   getMinOutAmount(
-    systemContract: PromiseOrValue<string>,
+    router: PromiseOrValue<string>,
     zrc20: PromiseOrValue<string>,
     target: PromiseOrValue<string>,
     amountIn: PromiseOrValue<BigNumberish>,
@@ -121,7 +121,7 @@ export interface SwapHelperLib extends BaseContract {
 
   callStatic: {
     getMinOutAmount(
-      systemContract: PromiseOrValue<string>,
+      router: PromiseOrValue<string>,
       zrc20: PromiseOrValue<string>,
       target: PromiseOrValue<string>,
       amountIn: PromiseOrValue<BigNumberish>,
@@ -140,7 +140,7 @@ export interface SwapHelperLib extends BaseContract {
 
   estimateGas: {
     getMinOutAmount(
-      systemContract: PromiseOrValue<string>,
+      router: PromiseOrValue<string>,
       zrc20: PromiseOrValue<string>,
       target: PromiseOrValue<string>,
       amountIn: PromiseOrValue<BigNumberish>,
@@ -157,7 +157,7 @@ export interface SwapHelperLib extends BaseContract {
 
   populateTransaction: {
     getMinOutAmount(
-      systemContract: PromiseOrValue<string>,
+      router: PromiseOrValue<string>,
       zrc20: PromiseOrValue<string>,
       target: PromiseOrValue<string>,
       amountIn: PromiseOrValue<BigNumberish>,
