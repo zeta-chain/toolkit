@@ -1,5 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Keypair } from "@solana/web3.js";
+import { TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { Transaction } from "@solana/web3.js";
+import { getEndpoints } from "@zetachain/networks";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
@@ -11,21 +13,53 @@ export const solanaDeposit = async function (
   this: ZetaChainClient,
   args: {
     amount: number;
-    api: string;
-    idPath: string;
     params: any[];
     recipient: string;
   }
 ) {
-  const keypair = await getKeypairFromFile(args.idPath);
-  const wallet = new anchor.Wallet(keypair);
+  if (!this.isSolanaWalletConnected()) {
+    throw new Error("Solana wallet not connected");
+  }
 
-  const connection = new anchor.web3.Connection(args.api);
-  const provider = new anchor.AnchorProvider(
-    connection,
-    wallet,
-    anchor.AnchorProvider.defaultOptions()
-  );
+  const network = "solana_" + this.network;
+  const api = getEndpoints("solana" as any, network);
+
+  const connection = new anchor.web3.Connection(api[0].url);
+
+  let provider;
+  if (this.solanaAdapter) {
+    const walletAdapter = {
+      publicKey: this.solanaAdapter.publicKey!,
+      signAllTransactions: async (txs: Transaction[]) => {
+        if (!this.solanaAdapter?.signAllTransactions) {
+          throw new Error(
+            "Wallet does not support signing multiple transactions"
+          );
+        }
+        return await this.solanaAdapter.signAllTransactions(txs);
+      },
+      signTransaction: async (tx: Transaction) => {
+        if (!this.solanaAdapter?.signTransaction) {
+          throw new Error("Wallet does not support transaction signing");
+        }
+        return await this.solanaAdapter.signTransaction(tx);
+      },
+    };
+
+    provider = new anchor.AnchorProvider(
+      connection,
+      walletAdapter as any,
+      anchor.AnchorProvider.defaultOptions()
+    );
+  } else if (this.solanaWallet) {
+    provider = new anchor.AnchorProvider(
+      connection,
+      this.solanaWallet,
+      anchor.AnchorProvider.defaultOptions()
+    );
+  } else {
+    throw new Error("No valid Solana wallet found");
+  }
   anchor.setProvider(provider);
 
   const programId = new anchor.web3.PublicKey(Gateway_IDL.address);
@@ -58,7 +92,9 @@ export const solanaDeposit = async function (
       .deposit(depositAmount, m)
       .accounts({
         pda: pdaAccount,
-        signer: wallet.publicKey,
+        signer: this.solanaAdapter
+          ? this.solanaAdapter.publicKey!
+          : this.solanaWallet!.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .instruction();
@@ -66,45 +102,34 @@ export const solanaDeposit = async function (
     tx.add(depositInstruction);
 
     // Send the transaction
-    const txSignature = await anchor.web3.sendAndConfirmTransaction(
-      connection,
-      tx,
-      [keypair]
-    );
+    let txSignature;
+    if (this.solanaAdapter) {
+      const { blockhash, lastValidBlockHeight } =
+        await connection.getLatestBlockhash();
+      const messageLegacy = new TransactionMessage({
+        instructions: tx.instructions,
+        payerKey: this.solanaAdapter.publicKey!,
+        recentBlockhash: blockhash,
+      }).compileToV0Message();
+
+      const versionedTransaction = new VersionedTransaction(messageLegacy);
+
+      txSignature = await this.solanaAdapter.sendTransaction(
+        versionedTransaction,
+        connection
+      );
+    } else {
+      txSignature = await anchor.web3.sendAndConfirmTransaction(
+        connection,
+        tx,
+        [this.solanaWallet!.payer]
+      );
+    }
 
     console.log("Transaction signature:", txSignature);
+
+    return txSignature;
   } catch (error) {
     console.error("Transaction failed:", error);
   }
-};
-
-const getKeypairFromFile = async (filepath: string) => {
-  const path = await import("path");
-  if (filepath[0] === "~") {
-    const home = process.env.HOME || null;
-    if (home) {
-      filepath = path.join(home, filepath.slice(1));
-    }
-  }
-  // Get contents of file
-  let fileContents;
-  try {
-    const { readFile } = await import("fs/promises");
-    const fileContentsBuffer = await readFile(filepath);
-    fileContents = fileContentsBuffer.toString();
-  } catch (error) {
-    throw new Error(`Could not read keypair from file at '${filepath}'`);
-  }
-  // Parse contents of file
-  let parsedFileContents;
-  try {
-    parsedFileContents = Uint8Array.from(JSON.parse(fileContents));
-  } catch (thrownObject) {
-    const error: any = thrownObject;
-    if (!error.message.includes("Unexpected token")) {
-      throw error;
-    }
-    throw new Error(`Invalid secret key file at '${filepath}'!`);
-  }
-  return Keypair.fromSecretKey(parsedFileContents);
 };
