@@ -7,7 +7,10 @@ import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { ZetaChainClient } from "../../client/src";
 
-export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+export const solanaDepositAndCall = async (
+  args: any,
+  hre: HardhatRuntimeEnvironment
+) => {
   const keypair = await getKeypairFromFile(args.idPath);
   const wallet = new Wallet(keypair);
 
@@ -28,16 +31,8 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
   const { amount, idPath } = args;
   const params = [JSON.parse(args.types), args.values];
-  await client.solanaDeposit({ amount, recipient });
+  await client.solanaDepositAndCall({ amount, params, recipient });
 };
-
-task("solana-deposit-and-call", "Solana deposit and call", main)
-  .addParam("amount", "Amount of SOL to deposit")
-  .addParam("recipient", "Universal contract address")
-  .addOptionalParam("solanaNetwork", "Solana Network", "devnet")
-  .addOptionalParam("idPath", "Path to id.json", "~/.config/solana/id.json")
-  .addParam("types", "The types of the parameters (example: ['string'])")
-  .addVariadicPositionalParam("values", "The values of the parameters");
 
 export const getKeypairFromFile = async (filepath: string) => {
   const path = await import("path");
@@ -69,3 +64,11 @@ export const getKeypairFromFile = async (filepath: string) => {
   }
   return Keypair.fromSecretKey(parsedFileContents);
 };
+
+task("solana-deposit-and-call", "Solana deposit and call", solanaDepositAndCall)
+  .addParam("amount", "Amount of SOL to deposit")
+  .addParam("recipient", "Universal contract address")
+  .addOptionalParam("solanaNetwork", "Solana Network", "devnet")
+  .addOptionalParam("idPath", "Path to id.json", "~/.config/solana/id.json")
+  .addParam("types", "The types of the parameters (example: ['string'])")
+  .addVariadicPositionalParam("values", "The values of the parameters");

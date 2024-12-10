@@ -80,16 +80,16 @@ export const solanaDepositAndCall = async function (
 
   try {
     const tx = new anchor.web3.Transaction();
-    const m = Buffer.from(
+    const recipient = Buffer.from(ethers.utils.arrayify(args.recipient));
+
+    const message = Buffer.from(
       ethers.utils.arrayify(
-        args.recipient +
-          ethers.utils.defaultAbiCoder
-            .encode(args.params[0], args.params[1])
-            .slice(2)
+        ethers.utils.defaultAbiCoder.encode(args.params[0], args.params[1])
       )
     );
+
     const depositInstruction = await gatewayProgram.methods
-      .deposit(depositAmount, m)
+      .depositAndCall(depositAmount, recipient, message)
       .accounts({
         pda: pdaAccount,
         signer: this.solanaAdapter
