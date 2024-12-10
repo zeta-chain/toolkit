@@ -7,7 +7,7 @@ import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { ZetaChainClient } from "../../client/src";
 
-export const solanaDeposit = async (
+export const solanaDepositAndCall = async (
   args: any,
   hre: HardhatRuntimeEnvironment
 ) => {
@@ -30,7 +30,8 @@ export const solanaDeposit = async (
     recipient = args.recipient;
   }
   const { amount, idPath } = args;
-  await client.solanaDeposit({ amount, recipient });
+  const params = [JSON.parse(args.types), args.values];
+  await client.solanaDepositAndCall({ amount, params, recipient });
 };
 
 export const getKeypairFromFile = async (filepath: string) => {
@@ -64,8 +65,10 @@ export const getKeypairFromFile = async (filepath: string) => {
   return Keypair.fromSecretKey(parsedFileContents);
 };
 
-task("solana-deposit", "Solana deposit", solanaDeposit)
+task("solana-deposit-and-call", "Solana deposit and call", solanaDepositAndCall)
   .addParam("amount", "Amount of SOL to deposit")
   .addParam("recipient", "Universal contract address")
   .addOptionalParam("solanaNetwork", "Solana Network", "devnet")
-  .addOptionalParam("idPath", "Path to id.json", "~/.config/solana/id.json");
+  .addOptionalParam("idPath", "Path to id.json", "~/.config/solana/id.json")
+  .addParam("types", "The types of the parameters (example: ['string'])")
+  .addVariadicPositionalParam("values", "The values of the parameters");
