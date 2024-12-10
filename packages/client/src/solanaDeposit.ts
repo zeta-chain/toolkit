@@ -79,16 +79,9 @@ export const solanaDeposit = async function (
 
   try {
     const tx = new anchor.web3.Transaction();
-    // const m = Buffer.from(
-    //   ethers.utils.arrayify(
-    //     args.recipient +
-    //       ethers.utils.defaultAbiCoder
-    //         .encode(args.params[0], args.params[1])
-    //         .slice(2)
-    //   )
-    // );
+    const recipient = Buffer.from(ethers.utils.arrayify(args.recipient));
     const depositInstruction = await gatewayProgram.methods
-      .deposit(depositAmount, args.recipient)
+      .deposit(depositAmount, recipient)
       .accounts({
         pda: pdaAccount,
         signer: this.solanaAdapter
@@ -98,36 +91,36 @@ export const solanaDeposit = async function (
       })
       .instruction();
 
-    // tx.add(depositInstruction);
+    tx.add(depositInstruction);
 
-    // // Send the transaction
-    // let txSignature;
-    // if (this.solanaAdapter) {
-    //   const { blockhash, lastValidBlockHeight } =
-    //     await connection.getLatestBlockhash();
-    //   const messageLegacy = new TransactionMessage({
-    //     instructions: tx.instructions,
-    //     payerKey: this.solanaAdapter.publicKey!,
-    //     recentBlockhash: blockhash,
-    //   }).compileToV0Message();
+    // Send the transaction
+    let txSignature;
+    if (this.solanaAdapter) {
+      const { blockhash, lastValidBlockHeight } =
+        await connection.getLatestBlockhash();
+      const messageLegacy = new TransactionMessage({
+        instructions: tx.instructions,
+        payerKey: this.solanaAdapter.publicKey!,
+        recentBlockhash: blockhash,
+      }).compileToV0Message();
 
-    //   const versionedTransaction = new VersionedTransaction(messageLegacy);
+      const versionedTransaction = new VersionedTransaction(messageLegacy);
 
-    //   txSignature = await this.solanaAdapter.sendTransaction(
-    //     versionedTransaction,
-    //     connection
-    //   );
-    // } else {
-    //   txSignature = await anchor.web3.sendAndConfirmTransaction(
-    //     connection,
-    //     tx,
-    //     [this.solanaWallet!.payer]
-    //   );
-    // }
+      txSignature = await this.solanaAdapter.sendTransaction(
+        versionedTransaction,
+        connection
+      );
+    } else {
+      txSignature = await anchor.web3.sendAndConfirmTransaction(
+        connection,
+        tx,
+        [this.solanaWallet!.payer]
+      );
+    }
 
-    // console.log("Transaction signature:", txSignature);
+    console.log("Transaction signature:", txSignature);
 
-    // return txSignature;
+    return txSignature;
   } catch (error) {
     console.error("Transaction failed:", error);
   }
