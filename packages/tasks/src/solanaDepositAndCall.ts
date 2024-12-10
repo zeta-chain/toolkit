@@ -27,14 +27,17 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     recipient = args.recipient;
   }
   const { amount, idPath } = args;
+  const params = [JSON.parse(args.types), args.values];
   await client.solanaDeposit({ amount, recipient });
 };
 
-task("solana-deposit", "Solana deposit", main)
+task("solana-deposit-and-call", "Solana deposit and call", main)
   .addParam("amount", "Amount of SOL to deposit")
   .addParam("recipient", "Universal contract address")
   .addOptionalParam("solanaNetwork", "Solana Network", "devnet")
-  .addOptionalParam("idPath", "Path to id.json", "~/.config/solana/id.json");
+  .addOptionalParam("idPath", "Path to id.json", "~/.config/solana/id.json")
+  .addParam("types", "The types of the parameters (example: ['string'])")
+  .addVariadicPositionalParam("values", "The values of the parameters");
 
 export const getKeypairFromFile = async (filepath: string) => {
   const path = await import("path");
