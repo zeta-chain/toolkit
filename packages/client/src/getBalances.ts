@@ -79,13 +79,18 @@ export const getBalances = async function (
         symbol: token.symbol,
       });
     } else if (token.coin_type === "ERC20") {
-      tokens.push({
-        chain_id: token.foreign_chain_id,
-        coin_type: "ERC20",
-        contract: token.asset,
-        symbol: token.symbol,
-        zrc20: token.zrc20_contract_address,
-      });
+      const supportedChain = supportedChains.find(
+        (c: any) => c.chain_id === token.foreign_chain_id
+      );
+      if (supportedChain.vm === "evm") {
+        tokens.push({
+          chain_id: token.foreign_chain_id,
+          coin_type: "ERC20",
+          contract: token.asset,
+          symbol: token.symbol,
+          zrc20: token.zrc20_contract_address,
+        });
+      }
       tokens.push({
         chain_id: this.getChainId(`zeta_${this.network}`),
         coin_type: "ZRC20",
@@ -193,7 +198,6 @@ export const getBalances = async function (
             }
           });
         } catch (error) {
-          console.error(`Multicall failed for ${chainName}:`, error);
           // Fallback to individual calls if multicall fails
           for (const token of tokens.filter(
             (t) =>
