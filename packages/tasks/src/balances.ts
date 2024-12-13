@@ -112,7 +112,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   } else {
     spinner.stop();
     console.log(`
-      EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""} ${
+EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""} ${
       solanaAddress ? `\nSolana: ${solanaAddress}` : ""
     }
     `);
