@@ -315,65 +315,68 @@ export const getBalances = async function (
       })
   );
 
-  // Solana SPL token balances
-  if (solanaAddress) {
-    const splTokens = tokens.filter((token) => token.coin_type === "SPL");
+  const splTokens = tokens.filter(
+    (token) =>
+      token.coin_type === "SPL" &&
+      ["solana_mainnet", "solana_testnet", "solana_devnet"].includes(
+        token.chain_name
+      )
+  );
 
-    await Promise.all(
-      splTokens.map(async (token) => {
-        try {
-          const API = this.getEndpoint("solana", token.chain_name);
-          // Use getTokenAccountsByOwner to find token accounts for this mint
-          const response = await fetch(API, {
-            body: JSON.stringify({
-              id: 1,
-              jsonrpc: "2.0",
-              method: "getTokenAccountsByOwner",
-              params: [
-                solanaAddress,
-                { mint: token.contract },
-                {
-                  encoding: "jsonParsed",
-                },
-              ],
-            }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-            method: "POST",
-          });
+  await Promise.all(
+    splTokens.map(async (token) => {
+      try {
+        const API = this.getEndpoint("solana", token.chain_name);
+        const response = await fetch(API, {
+          body: JSON.stringify({
+            id: 1,
+            jsonrpc: "2.0",
+            method: "getTokenAccountsByOwner",
+            params: [
+              solanaAddress,
+              { mint: token.contract },
+              {
+                encoding: "jsonParsed",
+              },
+            ],
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        });
 
-          if (!response.ok) {
-            console.error(
-              `Failed to fetch SPL token accounts for ${token.symbol}`,
-              response
-            );
-            return;
-          }
-
-          const r = await response.json();
-          if (r.result && r.result.value && r.result.value.length > 0) {
-            let totalBalance = 0;
-            for (const acc of r.result.value) {
-              const amount = acc.account.data.parsed.info.tokenAmount.amount;
-              const decimals =
-                acc.account.data.parsed.info.tokenAmount.decimals;
-              totalBalance += parseFloat(amount) / Math.pow(10, decimals);
-            }
-            balances.push({ ...token, balance: totalBalance.toString() });
-          } else {
-            // No token accounts found, balance is 0
-            balances.push({ ...token, balance: "0" });
-          }
-        } catch (err) {
+        if (!response.ok) {
           console.error(
-            `Failed to get SPL balance for ${token.symbol} on ${token.chain_name}:`,
-            err
+            `Failed to fetch SPL token accounts for ${token.symbol}`,
+            response
           );
+          balances.push({ ...token, balance: "0" });
+          return;
         }
-      })
-    );
-  }
+
+        const r = await response.json();
+
+        if (r.result && r.result.value && r.result.value.length > 0) {
+          let totalBalance = 0;
+          for (const acc of r.result.value) {
+            const amount = acc.account.data.parsed.info.tokenAmount.amount;
+            const decimals = acc.account.data.parsed.info.tokenAmount.decimals;
+            totalBalance += parseFloat(amount) / Math.pow(10, decimals);
+          }
+          balances.push({ ...token, balance: totalBalance.toString() });
+        } else {
+          balances.push({ ...token, balance: "0" });
+        }
+      } catch (err) {
+        console.error(
+          `Failed to get SPL balance for ${token.symbol} on ${token.chain_name}:`,
+          err
+        );
+        balances.push({ ...token, balance: "0" });
+      }
+    })
+  );
 
   return balances;
 };
