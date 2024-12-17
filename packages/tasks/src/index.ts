@@ -12,6 +12,7 @@ export { poolsTask } from "./pools";
 export { sendBTCTask } from "./sendBTC";
 export { sendZETATask } from "./sendZETA";
 export { solanaDeposit } from "./solanaDeposit";
+export { solanaDepositAndCall } from "./solanaDepositAndCall";
 export { tokensTask } from "./tokens";
 export { zetachainCall } from "./zetachainCall";
 export { zetachainWithdraw } from "./zetachainWithdraw";
