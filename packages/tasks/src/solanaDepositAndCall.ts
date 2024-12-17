@@ -30,7 +30,13 @@ export const solanaDepositAndCall = async (
     recipient = args.recipient;
   }
   const { amount, idPath } = args;
-  const params = [JSON.parse(args.types), args.values];
+  let paramTypes;
+  try {
+    paramTypes = JSON.parse(args.types);
+  } catch (error: any) {
+    throw new Error(`Invalid JSON in 'types' parameter: ${error.message}`);
+  }
+  const params = [paramTypes, args.values];
   await client.solanaDepositAndCall({ amount, params, recipient });
 };
 
