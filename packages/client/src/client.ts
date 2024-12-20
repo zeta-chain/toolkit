@@ -156,7 +156,7 @@ export class ZetaChainClient {
 
     if (params.contracts) {
       this.contracts = params.contracts;
-    } else if (this.network === "localnet") {
+    } else if (this.network === "localnet" || this.network === "localhost") {
       throw new Error("Localnet contracts are required");
     } else {
       this.contracts = this.network.includes("test")
@@ -176,7 +176,7 @@ export class ZetaChainClient {
   }
 
   public getGatewayAddress(): string {
-    if (this.network === "localnet") {
+    if (this.network === "localnet" || this.network === "localhost") {
       const gateway = (this.contracts as LocalnetAddress[]).find(
         (item) => item.type === "gatewayZEVM"
       );
