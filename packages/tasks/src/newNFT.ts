@@ -10,13 +10,9 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const configPath = path.resolve(process.cwd(), "hardhat.config.ts");
   let hardhatConfigContents = fs.readFileSync(configPath, "utf8");
 
-  // Add the omnichain tasks to the hardhat.config.ts file
-  // ["deploy", "interact"].forEach((task) => {
-  //   const content = `import "./tasks/${task}";\n`;
-  //   if (!hardhatConfigContents.includes(content)) {
-  //     hardhatConfigContents = content + hardhatConfigContents;
-  //   }
-  // });
+  hardhatConfigContents =
+    `import "@zetachain/standard-contracts/contracts/nft/tasks"\n` +
+    hardhatConfigContents;
 
   fs.writeFileSync(configPath, hardhatConfigContents);
 };
