@@ -7,7 +7,6 @@ import { processTemplates } from "./processTemplates";
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   processTemplates("nft", args);
-
   const configPath = path.resolve(process.cwd(), "hardhat.config.ts");
   let hardhatConfigContents = fs.readFileSync(configPath, "utf8");
 
@@ -22,8 +21,4 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   fs.writeFileSync(configPath, hardhatConfigContents);
 };
 
-export const newNFTTask = task(
-  "new:nft",
-  "Create a new Universal NFT",
-  main
-).addPositionalParam("name", "Name of the contract");
+export const newNFTTask = task("new:nft", "Create a new Universal NFT", main);
