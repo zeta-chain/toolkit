@@ -29,7 +29,7 @@ export const evmDepositAndCall = async function (
   args: {
     amount: string;
     erc20: string;
-    gatewayEvm: string;
+    gatewayEvm?: string;
     receiver: string;
     revertOptions: revertOptions;
     txOptions: txOptions;
@@ -39,7 +39,12 @@ export const evmDepositAndCall = async function (
 ) {
   const signer = this.signer;
   const { utils } = ethers;
-  const gateway = new ethers.Contract(args.gatewayEvm, GatewayABI.abi, signer);
+  const gatewayEvmAddress = args.gatewayEvm || this.getGatewayAddress();
+  const gateway = new ethers.Contract(
+    gatewayEvmAddress,
+    GatewayABI.abi,
+    signer
+  );
 
   const revertOptions = {
     abortAddress: "0x0000000000000000000000000000000000000000", // not used

@@ -9,7 +9,8 @@ export const evmDepositAndCall = async (
 ) => {
   try {
     const [signer] = await hre.ethers.getSigners();
-    const client = new ZetaChainClient({ network: "testnet", signer });
+    const network = hre.network.name;
+    const client = new ZetaChainClient({ network, signer });
     const tx = await client.evmDepositAndCall({
       amount: args.amount,
       erc20: args.erc20,
@@ -39,11 +40,7 @@ export const evmDepositAndCall = async (
 
 task("evm-deposit-and-call", "Deposit tokens", evmDepositAndCall)
   .addParam("receiver", "Receiver address on ZetaChain")
-  .addOptionalParam(
-    "gatewayEvm",
-    "contract address of gateway on EVM",
-    "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
-  )
+  .addOptionalParam("gatewayEvm", "contract address of gateway on EVM")
   .addFlag("callOnRevert", "Whether to call on revert")
   .addOptionalParam(
     "revertAddress",

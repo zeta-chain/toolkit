@@ -24,7 +24,7 @@ import type { revertOptions, txOptions } from "./types";
 export const evmCall = async function (
   this: ZetaChainClient,
   args: {
-    gatewayEvm: string;
+    gatewayEvm?: string;
     receiver: string;
     revertOptions: revertOptions;
     txOptions: txOptions;
@@ -34,7 +34,12 @@ export const evmCall = async function (
 ) {
   const signer = this.signer;
   const { utils } = ethers;
-  const gateway = new ethers.Contract(args.gatewayEvm, GatewayABI.abi, signer);
+  const gatewayEvmAddress = args.gatewayEvm || this.getGatewayAddress();
+  const gateway = new ethers.Contract(
+    gatewayEvmAddress,
+    GatewayABI.abi,
+    signer
+  );
 
   const valuesArray = args.values.map((value, index) => {
     const type = args.types[index];

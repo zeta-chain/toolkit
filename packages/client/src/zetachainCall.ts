@@ -32,7 +32,7 @@ export const zetachainCall = async function (
   args: {
     callOptions: any;
     function: string;
-    gatewayZetaChain: string;
+    gatewayZetaChain?: string;
     receiver: string;
     revertOptions: revertOptions;
     txOptions: txOptions;
@@ -43,9 +43,10 @@ export const zetachainCall = async function (
 ) {
   const signer = this.signer;
   const { utils } = ethers;
-
+  const gatewayZetaChainAddress =
+    args.gatewayZetaChain || this.getGatewayAddress();
   const gateway = new ethers.Contract(
-    args.gatewayZetaChain,
+    gatewayZetaChainAddress,
     GatewayABI.abi,
     signer
   );

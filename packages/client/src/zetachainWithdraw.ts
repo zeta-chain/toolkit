@@ -28,7 +28,7 @@ export const zetachainWithdraw = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    gatewayZetaChain: string;
+    gatewayZetaChain?: string;
     receiver: string;
     revertOptions: revertOptions;
     txOptions: txOptions;
@@ -38,8 +38,10 @@ export const zetachainWithdraw = async function (
   const signer = this.signer;
   const { utils } = ethers;
 
+  const gatewayZetaChainAddress =
+    args.gatewayZetaChain || this.getGatewayAddress();
   const gateway = new ethers.Contract(
-    args.gatewayZetaChain,
+    gatewayZetaChainAddress,
     GatewayABI.abi,
     signer
   );

@@ -6,7 +6,8 @@ import { ZetaChainClient } from "../../client/src/";
 export const evmDeposit = async (args: any, hre: HardhatRuntimeEnvironment) => {
   try {
     const [signer] = await hre.ethers.getSigners();
-    const client = new ZetaChainClient({ network: "testnet", signer });
+    const network = hre.network.name;
+    const client = new ZetaChainClient({ network, signer });
     const tx = await client.evmDeposit({
       amount: args.amount,
       erc20: args.erc20,
@@ -34,11 +35,7 @@ export const evmDeposit = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
 task("evm-deposit", "Deposit tokens", evmDeposit)
   .addParam("receiver", "Receiver address on ZetaChain")
-  .addOptionalParam(
-    "gatewayEvm",
-    "contract address of gateway on EVM",
-    "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
-  )
+  .addOptionalParam("gatewayEvm", "contract address of gateway on EVM")
   .addFlag("callOnRevert", "Whether to call on revert")
   .addOptionalParam(
     "revertAddress",
