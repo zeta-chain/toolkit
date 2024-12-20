@@ -16,3 +16,4 @@ export { tokensTask } from "./tokens";
 export { zetachainCall } from "./zetachainCall";
 export { zetachainWithdraw } from "./zetachainWithdraw";
 export { zetachainWithdrawAndCall } from "./zetachainWithdrawAndCall";
+export { newNFTTask } from "./newNFT";
