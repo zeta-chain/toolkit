@@ -1,3 +1,4 @@
+import "@zetachain/standard-contracts/contracts/nft/tasks"
 import "@nomicfoundation/hardhat-toolbox";
 import "./packages/tasks/src";
 
