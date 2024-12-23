@@ -7,6 +7,8 @@ export { evmDepositAndCall } from "./evmDepositAndCall";
 export { faucetTask } from "./faucet";
 export { feesTask } from "./fees";
 export { messagingTask } from "./messaging";
+export { newNFTTask } from "./newNFT";
+export { newTokenTask } from "./newToken";
 export { omnichainTask } from "./omnichain";
 export { poolsTask } from "./pools";
 export { sendBTCTask } from "./sendBTC";

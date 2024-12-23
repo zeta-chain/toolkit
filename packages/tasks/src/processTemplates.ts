@@ -62,7 +62,7 @@ const prepareData = (args: any) => {
       return pair;
     }
   });
-  const contractName = sanitizeSolidityFunctionName(args.name);
+  const contractName = sanitizeSolidityFunctionName(args.name || "Contract");
   const casts = pairs.map((p: any) => {
     const n = capitalizeFirstChar(p[0]);
     const type = p[1];
