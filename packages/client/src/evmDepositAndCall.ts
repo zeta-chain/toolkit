@@ -92,7 +92,7 @@ export const evmDepositAndCall = async function (
     );
     const decimals = await erc20Contract.decimals();
     const value = utils.parseUnits(args.amount, decimals);
-    await erc20Contract.connect(signer).approve(args.gatewayEvm, value);
+    await erc20Contract.connect(signer).approve(gatewayEvmAddress, value);
     const method =
       "depositAndCall(address,uint256,address,bytes,(address,bool,address,bytes,uint256))";
     tx = await gateway[method](

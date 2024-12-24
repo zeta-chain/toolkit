@@ -93,7 +93,7 @@ export const zetachainCall = async function (
   );
   const gasZRC20Contract = new ethers.Contract(gasZRC20, ZRC20ABI.abi, signer);
   const approve = await gasZRC20Contract.approve(
-    args.gatewayZetaChain,
+    gatewayZetaChainAddress,
     gasFee,
     args.txOptions
   );
