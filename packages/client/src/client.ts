@@ -25,6 +25,7 @@ import {
   getZRC20GasToken,
   sendZeta,
   solanaDeposit,
+  solanaDepositAndCall,
   trackCCTX,
   zetachainCall,
   zetachainWithdraw,
@@ -247,6 +248,7 @@ export class ZetaChainClient {
   getZRC20FromERC20 = getZRC20FromERC20;
   getZRC20GasToken = getZRC20GasToken;
   solanaDeposit = solanaDeposit;
+  solanaDepositAndCall = solanaDepositAndCall;
   zetachainWithdrawAndCall = zetachainWithdrawAndCall;
   zetachainWithdraw = zetachainWithdraw;
   zetachainCall = zetachainCall;
