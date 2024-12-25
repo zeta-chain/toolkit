@@ -197,11 +197,12 @@ export const getBalances = async function (
                 t.contract === calls[index].target
             );
             if (token) {
-              const balance = ethers.utils.defaultAbiCoder.decode(
-                ["uint256"],
-                data
-              )[0];
-              const formattedBalance = formatUnits(balance, token.decimals);
+              const balance = BigInt(
+                ethers.utils.defaultAbiCoder.decode(["uint256"], data)[0]
+              );
+              const formattedBalance = (
+                balance / BigInt(10 ** token.decimals)
+              ).toString();
               balances.push({ ...token, balance: formattedBalance });
             }
           });
@@ -274,9 +275,10 @@ export const getBalances = async function (
         const r = await response.json();
         const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
         const balance = (
-          (funded_txo_sum - spent_txo_sum) /
-          100000000
+          (BigInt(funded_txo_sum) - BigInt(spent_txo_sum)) /
+          BigInt(100000000)
         ).toString();
+
         balances.push({ ...token, balance });
       })
   );
@@ -358,11 +360,11 @@ export const getBalances = async function (
         const r = await response.json();
 
         if (r.result && r.result.value && r.result.value.length > 0) {
-          let totalBalance = 0;
+          let totalBalance = BigInt(0);
           for (const acc of r.result.value) {
             const amount = acc.account.data.parsed.info.tokenAmount.amount;
             const decimals = acc.account.data.parsed.info.tokenAmount.decimals;
-            totalBalance += parseFloat(amount) / Math.pow(10, decimals);
+            totalBalance += BigInt(amount) / BigInt(10 ** decimals);
           }
           balances.push({ ...token, balance: totalBalance.toString() });
         } else {
