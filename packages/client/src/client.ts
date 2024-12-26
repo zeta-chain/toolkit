@@ -2,6 +2,8 @@ import type { Wallet as SolanaWallet } from "@coral-xyz/anchor";
 import type { WalletContextState } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { networks } from "@zetachain/networks";
+import mainnetAddresses from "@zetachain/protocol-contracts/dist/data/addresses.mainnet.json";
+import testnetAddresses from "@zetachain/protocol-contracts/dist/data/addresses.testnet.json";
 import type { Signer, Wallet } from "ethers";
 import merge from "lodash/merge";
 
@@ -32,6 +34,7 @@ import {
 
 export interface ZetaChainClientParamsBase {
   chains?: { [key: string]: any };
+  contracts?: LocalnetAddress[] | MainnetTestnetAddress[];
   network?: string;
 }
 
@@ -69,6 +72,20 @@ export type ZetaChainClientParams = ZetaChainClientParamsBase &
       }
   );
 
+interface MainnetTestnetAddress {
+  address: string;
+  category: string;
+  chain_id: number;
+  chain_name: string;
+  type: string;
+}
+
+interface LocalnetAddress {
+  address: string;
+  chain: string;
+  type: string;
+}
+
 export class ZetaChainClient {
   public chains: { [key: string]: any };
   public network: string;
@@ -76,6 +93,7 @@ export class ZetaChainClient {
   public signer: any | undefined;
   public solanaWallet: SolanaWallet | undefined;
   public solanaAdapter: WalletContextState | undefined;
+  private contracts: LocalnetAddress[] | MainnetTestnetAddress[];
 
   /**
    * Initializes ZetaChainClient instance.
@@ -137,6 +155,16 @@ export class ZetaChainClient {
     this.chains = { ...networks };
     this.network = params.network || "";
 
+    if (params.contracts) {
+      this.contracts = params.contracts;
+    } else if (this.network === "localnet" || this.network === "localhost") {
+      throw new Error("Localnet contracts are required");
+    } else {
+      this.contracts = this.network.includes("test")
+        ? testnetAddresses
+        : mainnetAddresses;
+    }
+
     this.mergeChains(params.chains);
   }
 
@@ -146,6 +174,49 @@ export class ZetaChainClient {
         this.chains[key] = merge({}, this.chains[key], value);
       }
     });
+  }
+
+  public getGatewayAddress(): string {
+    if (this.network === "localnet" || this.network === "localhost") {
+      const gateway = (this.contracts as LocalnetAddress[]).find(
+        (item) => item.type === "gatewayZEVM"
+      );
+
+      if (!gateway) {
+        throw new Error("Gateway address not found in localnet configuration");
+      }
+
+      return gateway.address;
+    } else {
+      let gateway;
+      if (this.wallet) {
+        try {
+          gateway = (this.contracts as MainnetTestnetAddress[]).find(
+            async (item) =>
+              (await this.wallet!.getChainId()) === item.chain_id &&
+              item.type === "gateway"
+          );
+        } catch (error) {
+          throw new Error("Failed to get gateway address: " + error);
+        }
+      } else {
+        try {
+          gateway = (this.contracts as MainnetTestnetAddress[]).find(
+            async (item) =>
+              (await this.signer!.getChainId()) === item.chain_id &&
+              item.type === "gateway"
+          );
+        } catch (error) {
+          throw new Error("Failed to get gateway address: " + error);
+        }
+      }
+
+      if (!gateway) {
+        throw new Error(`Gateway address not found in signer or wallet`);
+      }
+
+      return gateway.address;
+    }
   }
 
   public getChains(): { [key: string]: any } {

@@ -14,7 +14,8 @@ export const zetachainCall = async (
 
   try {
     const [signer] = await hre.ethers.getSigners();
-    const client = new ZetaChainClient({ network: "testnet", signer });
+    const network = hre.network.name;
+    const client = new ZetaChainClient({ network, signer });
     const response = await client.zetachainCall({
       callOptions,
       function: args.function,
@@ -44,8 +45,7 @@ export const zetachainCall = async (
 task("zetachain-call", "Call a contract on a connected chain", zetachainCall)
   .addOptionalParam(
     "gatewayZetaChain",
-    "contract address of gateway on ZetaChain",
-    "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0"
+    "contract address of gateway on ZetaChain"
   )
   .addParam("zrc20", "The address of ZRC-20 to pay fees")
   .addFlag("callOnRevert", "Whether to call on revert")
