@@ -44,7 +44,7 @@ export const zetachainCall = async function (
   const signer = this.signer;
   const { utils } = ethers;
   const gatewayZetaChainAddress =
-    args.gatewayZetaChain || this.getGatewayAddress();
+    args.gatewayZetaChain || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
     gatewayZetaChainAddress,
     GatewayABI.abi,
