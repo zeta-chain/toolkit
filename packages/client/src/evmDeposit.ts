@@ -35,7 +35,7 @@ export const evmDeposit = async function (
 ) {
   const signer = this.signer;
   const { utils } = ethers;
-  const gatewayEvmAddress = args.gatewayEvm || this.getGatewayAddress();
+  const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
     gatewayEvmAddress,
     GatewayABI.abi,

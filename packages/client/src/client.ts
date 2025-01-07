@@ -176,7 +176,7 @@ export class ZetaChainClient {
     });
   }
 
-  public getGatewayAddress(): string {
+  public async getGatewayAddress(): Promise<string> {
     if (this.network === "localnet" || this.network === "localhost") {
       const gateway = (this.contracts as LocalnetAddress[]).find(
         (item) => item.type === "gatewayZEVM"
@@ -191,20 +191,18 @@ export class ZetaChainClient {
       let gateway;
       if (this.wallet) {
         try {
+          const chainId = await this.wallet!.getChainId();
           gateway = (this.contracts as MainnetTestnetAddress[]).find(
-            async (item) =>
-              (await this.wallet!.getChainId()) === item.chain_id &&
-              item.type === "gateway"
+            (item) => chainId === item.chain_id && item.type === "gateway"
           );
         } catch (error) {
           throw new Error("Failed to get gateway address: " + error);
         }
       } else {
         try {
+          const chainId = await this.signer!.getChainId();
           gateway = (this.contracts as MainnetTestnetAddress[]).find(
-            async (item) =>
-              (await this.signer!.getChainId()) === item.chain_id &&
-              item.type === "gateway"
+            (item) => chainId === item.chain_id && item.type === "gateway"
           );
         } catch (error) {
           throw new Error("Failed to get gateway address: " + error);
