@@ -28,7 +28,7 @@ export const zetachainWithdraw = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    gatewayZetaChain: string;
+    gatewayZetaChain?: string;
     receiver: string;
     revertOptions: revertOptions;
     txOptions: txOptions;
@@ -38,8 +38,10 @@ export const zetachainWithdraw = async function (
   const signer = this.signer;
   const { utils } = ethers;
 
+  const gatewayZetaChainAddress =
+    args.gatewayZetaChain || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
-    args.gatewayZetaChain,
+    gatewayZetaChainAddress,
     GatewayABI.abi,
     signer
   );
@@ -60,7 +62,7 @@ export const zetachainWithdraw = async function (
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFee();
   if (args.zrc20 === gasZRC20) {
     const approveGasAndWithdraw = await zrc20.approve(
-      args.gatewayZetaChain,
+      gatewayZetaChainAddress,
       value.add(gasFee),
       args.txOptions
     );
@@ -72,13 +74,13 @@ export const zetachainWithdraw = async function (
       signer
     );
     const approveGas = await gasZRC20Contract.approve(
-      args.gatewayZetaChain,
+      gatewayZetaChainAddress,
       gasFee,
       args.txOptions
     );
     await approveGas.wait();
     const approveWithdraw = await zrc20.approve(
-      args.gatewayZetaChain,
+      gatewayZetaChainAddress,
       value,
       args.txOptions
     );

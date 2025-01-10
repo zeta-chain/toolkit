@@ -9,7 +9,8 @@ export const zetachainWithdraw = async (
 ) => {
   try {
     const [signer] = await hre.ethers.getSigners();
-    const client = new ZetaChainClient({ network: "testnet", signer });
+    const network = hre.network.name;
+    const client = new ZetaChainClient({ network, signer });
     const response = await client.zetachainWithdraw({
       amount: args.amount,
       gatewayZetaChain: args.gatewayZetaChain,
@@ -37,8 +38,7 @@ export const zetachainWithdraw = async (
 task("zetachain-withdraw", "Withdraw tokens from ZetaChain", zetachainWithdraw)
   .addOptionalParam(
     "gatewayZetaChain",
-    "contract address of gateway on ZetaChain",
-    "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0"
+    "contract address of gateway on ZetaChain"
   )
   .addOptionalParam("zrc20", "The address of the ZRC20 token")
   .addFlag("callOnRevert", "Whether to call on revert")
