@@ -67,6 +67,6 @@ export const getHardhatConfig = function ({ accounts }: any) {
   return {
     etherscan,
     networks: { ...config, hardhat },
-    solidity: "0.8.7",
+    solidity: "0.8.26",
   };
 };
