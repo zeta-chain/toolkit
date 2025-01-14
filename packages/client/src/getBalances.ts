@@ -79,13 +79,26 @@ export const getBalances = async function (
         symbol: token.symbol,
       });
     } else if (token.coin_type === "ERC20") {
-      tokens.push({
-        chain_id: token.foreign_chain_id,
-        coin_type: "ERC20",
-        contract: token.asset,
-        symbol: token.symbol,
-        zrc20: token.zrc20_contract_address,
-      });
+      const supportedChain = supportedChains.find(
+        (c: any) => c.chain_id === token.foreign_chain_id
+      );
+      if (supportedChain.vm === "evm") {
+        tokens.push({
+          chain_id: token.foreign_chain_id,
+          coin_type: "ERC20",
+          contract: token.asset,
+          symbol: token.symbol,
+          zrc20: token.zrc20_contract_address,
+        });
+      } else if (supportedChain.vm === "svm") {
+        tokens.push({
+          chain_id: token.foreign_chain_id,
+          coin_type: "SPL",
+          contract: token.asset,
+          symbol: token.symbol,
+          zrc20: token.zrc20_contract_address,
+        });
+      }
       tokens.push({
         chain_id: this.getChainId(`zeta_${this.network}`),
         coin_type: "ZRC20",
@@ -184,16 +197,16 @@ export const getBalances = async function (
                 t.contract === calls[index].target
             );
             if (token) {
-              const balance = ethers.utils.defaultAbiCoder.decode(
-                ["uint256"],
-                data
-              )[0];
-              const formattedBalance = formatUnits(balance, token.decimals);
+              const balance = BigInt(
+                ethers.utils.defaultAbiCoder.decode(["uint256"], data)[0]
+              );
+              const formattedBalance = (
+                balance / BigInt(10 ** token.decimals)
+              ).toString();
               balances.push({ ...token, balance: formattedBalance });
             }
           });
         } catch (error) {
-          console.error(`Multicall failed for ${chainName}:`, error);
           // Fallback to individual calls if multicall fails
           for (const token of tokens.filter(
             (t) =>
@@ -262,9 +275,10 @@ export const getBalances = async function (
         const r = await response.json();
         const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
         const balance = (
-          (funded_txo_sum - spent_txo_sum) /
-          100000000
+          (BigInt(funded_txo_sum) - BigInt(spent_txo_sum)) /
+          BigInt(100000000)
         ).toString();
+
         balances.push({ ...token, balance });
       })
   );
@@ -301,6 +315,69 @@ export const getBalances = async function (
         const balance = r.result.value / 10 ** 9;
         balances.push({ ...token, balance });
       })
+  );
+
+  const splTokens = tokens.filter(
+    (token) =>
+      token.coin_type === "SPL" &&
+      ["solana_mainnet", "solana_testnet", "solana_devnet"].includes(
+        token.chain_name
+      )
+  );
+
+  await Promise.all(
+    splTokens.map(async (token) => {
+      try {
+        const API = this.getEndpoint("solana", token.chain_name);
+        const response = await fetch(API, {
+          body: JSON.stringify({
+            id: 1,
+            jsonrpc: "2.0",
+            method: "getTokenAccountsByOwner",
+            params: [
+              solanaAddress,
+              { mint: token.contract },
+              {
+                encoding: "jsonParsed",
+              },
+            ],
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        });
+
+        if (!response.ok) {
+          console.error(
+            `Failed to fetch SPL token accounts for ${token.symbol}`,
+            response
+          );
+          balances.push({ ...token, balance: "0" });
+          return;
+        }
+
+        const r = await response.json();
+
+        if (r.result && r.result.value && r.result.value.length > 0) {
+          let totalBalance = BigInt(0);
+          for (const acc of r.result.value) {
+            const amount = acc.account.data.parsed.info.tokenAmount.amount;
+            const decimals = acc.account.data.parsed.info.tokenAmount.decimals;
+            totalBalance += BigInt(amount) / BigInt(10 ** decimals);
+          }
+          balances.push({ ...token, balance: totalBalance.toString() });
+        } else {
+          balances.push({ ...token, balance: "0" });
+        }
+      } catch (err) {
+        console.error(
+          `Failed to get SPL balance for ${token.symbol} on ${token.chain_name}:`,
+          err
+        );
+        balances.push({ ...token, balance: "0" });
+      }
+    })
   );
 
   return balances;

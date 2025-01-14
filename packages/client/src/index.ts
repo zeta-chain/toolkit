@@ -15,6 +15,7 @@ export * from "./getSupportedChains";
 export * from "./prepareData";
 export * from "./sendZeta";
 export * from "./solanaDeposit";
+export * from "./solanaDepositAndCall";
 export * from "./trackCCTX";
 export * from "./zetachainCall";
 export * from "./zetachainWithdraw";
