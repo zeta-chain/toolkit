@@ -49,8 +49,8 @@ export const getHardhatConfig = function ({ accounts }: any) {
         chainId: 7001,
         network: "zeta_testnet",
         urls: {
-          apiURL: "https://zetachain-athens-3.blockscout.com/api",
-          browserURL: "https://zetachain-athens-3.blockscout.com",
+          apiURL: "https://zetachain-testnet.blockscout.com/api",
+          browserURL: "https://zetachain-testnet.blockscout.com",
         },
       },
       {
