@@ -157,8 +157,6 @@ export class ZetaChainClient {
 
     if (params.contracts) {
       this.contracts = params.contracts;
-    } else if (this.network === "localnet" || this.network === "localhost") {
-      throw new Error("Localnet contracts are required");
     } else {
       this.contracts = this.network.includes("test")
         ? testnetAddresses
