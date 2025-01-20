@@ -49,8 +49,8 @@ export const getHardhatConfig = function ({ accounts }: any) {
         chainId: 7001,
         network: "zeta_testnet",
         urls: {
-          apiURL: "https://zetachain-athens-3.blockscout.com/api",
-          browserURL: "https://zetachain-athens-3.blockscout.com",
+          apiURL: "https://zetachain-testnet.blockscout.com/api",
+          browserURL: "https://zetachain-testnet.blockscout.com",
         },
       },
       {
@@ -67,6 +67,6 @@ export const getHardhatConfig = function ({ accounts }: any) {
   return {
     etherscan,
     networks: { ...config, hardhat },
-    solidity: "0.8.7",
+    solidity: "0.8.26",
   };
 };
