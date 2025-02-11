@@ -2807,10 +2807,10 @@
     ethereumjs-util "^7.1.5"
     secp256k1 "^5.0.0"
 
-"@zetachain/protocol-contracts@11.0.0-rc4":
-  version "11.0.0-rc4"
-  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-11.0.0-rc4.tgz#2e2df98734793873e9c50629f6ec9f5eec6f9f54"
-  integrity sha512-7MJzEyUad7JgHucveIhtU8aaPkoMMzsfhKkh9MDMdxUzlaOmmxrQw2hi5B2b7UPxw2K9vFffkmIox6gd6c1+Yw==
+"@zetachain/protocol-contracts@11.0.0-rc5":
+  version "11.0.0-rc5"
+  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-11.0.0-rc5.tgz#b55119e6cade29c4f266eb029d8879b968f87f63"
+  integrity sha512-+bjeTvSzuchWEIxrZ7IbOb8ERhZ+PtgmyOSSFcwhhyAOonYxNlM+1M/mSNAk5i3cdZyJTINzhk7H603/RQSeqA==
   dependencies:
     "@openzeppelin/contracts" "^5.0.2"
     "@openzeppelin/contracts-upgradeable" "^5.0.2"
