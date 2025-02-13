@@ -88,10 +88,30 @@ export const solanaDepositAndCall = async function (
       );
     }
 
+    const valuesArray = args.params[1].map((value: any, index: any) => {
+      const type = args.params[0][index];
+
+      if (type === "bool") {
+        try {
+          return JSON.parse(value.toLowerCase());
+        } catch (e) {
+          throw new Error(`Invalid boolean value: ${value}`);
+        }
+      } else if (type.startsWith("uint") || type.startsWith("int")) {
+        return BigInt(value);
+      } else {
+        return value;
+      }
+    });
+
     const message = Buffer.from(
       ethers.utils.arrayify(
-        ethers.utils.defaultAbiCoder.encode(args.params[0], args.params[1])
+        ethers.utils.defaultAbiCoder.encode(args.params[0], valuesArray)
       )
+    );
+
+    console.log(
+      ethers.utils.defaultAbiCoder.encode(args.params[0], valuesArray)
     );
 
     const depositInstruction = await gatewayProgram.methods
