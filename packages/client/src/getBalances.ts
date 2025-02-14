@@ -132,13 +132,13 @@ export const getBalances = async function (
     decimals: 18,
     symbol: "ZETA",
   });
-
+  console.log(supportedChains);
   tokens = tokens
     .map((token: any) => {
       const ticker = token.symbol.split("-")[0];
       const chain_name = supportedChains.find(
         (c: any) => c.chain_id === token.chain_id.toString()
-      )?.chain_name;
+      )?.name;
       return {
         ...token,
         chain_name,
