@@ -3,6 +3,7 @@ import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
+import { encodeValues } from "./encodeValues";
 import type { revertOptions, txOptions } from "./types";
 
 /**
@@ -64,21 +65,7 @@ export const zetachainWithdrawAndCall = async function (
     ),
   };
 
-  const valuesArray = args.values.map((value, index) => {
-    const type = args.types[index];
-
-    if (type === "bool") {
-      try {
-        return JSON.parse(value.toLowerCase());
-      } catch (e) {
-        throw new Error(`Invalid boolean value: ${value}`);
-      }
-    } else if (type.startsWith("uint") || type.startsWith("int")) {
-      return ethers.BigNumber.from(value);
-    } else {
-      return value;
-    }
-  });
+  const valuesArray = encodeValues(args.types, args.values);
 
   const encodedParameters = utils.defaultAbiCoder.encode(
     args.types,

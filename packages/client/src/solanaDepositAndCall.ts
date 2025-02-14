@@ -6,6 +6,7 @@ import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
+import { encodeValues } from "./encodeValues";
 
 const SEED = "meta";
 
