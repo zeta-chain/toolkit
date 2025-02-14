@@ -2,10 +2,10 @@ import confirm from "@inquirer/confirm";
 import * as bitcoin from "bitcoinjs-lib";
 import * as dotenv from "dotenv";
 import ECPairFactory from "ecpair";
+import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as ecc from "tiny-secp256k1";
-import { ethers } from "ethers";
 
 dotenv.config();
 
@@ -127,8 +127,8 @@ Memo:            ${args.memo}
   const broadcastTx = async (tx: string) => {
     const response = await fetch(`${args.api}/tx`, {
       body: tx,
-      method: "POST",
       headers: { "Content-Type": "text/plain" },
+      method: "POST",
     });
 
     if (!response.ok) {
