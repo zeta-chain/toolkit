@@ -86,10 +86,14 @@ export const zetachainWithdraw = async function (
     );
     await approveWithdraw.wait();
   }
+  const receiver = args.receiver.startsWith("0x")
+    ? args.receiver
+    : ethers.utils.toUtf8Bytes(args.receiver);
+
   const method =
     "withdraw(bytes,uint256,address,(address,bool,address,bytes,uint256))";
   const tx = await gateway[method](
-    utils.toUtf8Bytes(args.receiver),
+    receiver,
     value,
     args.zrc20,
     revertOptions,

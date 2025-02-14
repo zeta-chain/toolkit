@@ -116,10 +116,14 @@ export const zetachainWithdrawAndCall = async function (
     await approveWithdraw.wait();
   }
 
+  const receiver = args.receiver.startsWith("0x")
+    ? args.receiver
+    : ethers.utils.toUtf8Bytes(args.receiver);
+
   const method =
     "withdrawAndCall(bytes,uint256,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))";
   const tx = await gateway[method](
-    utils.hexlify(args.receiver),
+    receiver,
     value,
     args.zrc20,
     message,

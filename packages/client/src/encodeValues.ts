@@ -11,7 +11,9 @@ export const encodeValues = (types: string[], values: any[]) => {
         throw new Error(`Invalid boolean value: ${value}`);
       }
     } else if (type.startsWith("uint") || type.startsWith("int")) {
-      return ethers.BigNumber.from(value);
+      return BigInt(value);
+    } else if (type === "bytes") {
+      return value.startsWith("0x") ? value : ethers.utils.toUtf8Bytes(value);
     } else {
       return value;
     }
