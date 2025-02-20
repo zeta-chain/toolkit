@@ -1,5 +1,6 @@
 export { accountTask } from "./account";
 export { balancesTask } from "./balances";
+export { bitcoinDepositAndCallTask } from "./bitcoinDepositAndCall";
 export { cctxTask } from "./cctx";
 export { evmCall } from "./evmCall";
 export { evmDeposit } from "./evmDeposit";
@@ -9,7 +10,6 @@ export { feesTask } from "./fees";
 export { messagingTask } from "./messaging";
 export { omnichainTask } from "./omnichain";
 export { poolsTask } from "./pools";
-export { sendBTCTask } from "./sendBTC";
 export { sendZETATask } from "./sendZETA";
 export { solanaDeposit } from "./solanaDeposit";
 export { solanaDepositAndCall } from "./solanaDepositAndCall";

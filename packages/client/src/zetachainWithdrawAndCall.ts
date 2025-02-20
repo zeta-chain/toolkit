@@ -3,6 +3,7 @@ import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
+import { encodeValues } from "./encodeValues";
 import type { revertOptions, txOptions } from "./types";
 
 /**
@@ -64,21 +65,7 @@ export const zetachainWithdrawAndCall = async function (
     ),
   };
 
-  const valuesArray = args.values.map((value, index) => {
-    const type = args.types[index];
-
-    if (type === "bool") {
-      try {
-        return JSON.parse(value.toLowerCase());
-      } catch (e) {
-        throw new Error(`Invalid boolean value: ${value}`);
-      }
-    } else if (type.startsWith("uint") || type.startsWith("int")) {
-      return ethers.BigNumber.from(value);
-    } else {
-      return value;
-    }
-  });
+  const valuesArray = encodeValues(args.types, args.values);
 
   const encodedParameters = utils.defaultAbiCoder.encode(
     args.types,
@@ -129,10 +116,14 @@ export const zetachainWithdrawAndCall = async function (
     await approveWithdraw.wait();
   }
 
+  const receiver = args.receiver.startsWith("0x")
+    ? args.receiver
+    : ethers.utils.toUtf8Bytes(args.receiver);
+
   const method =
     "withdrawAndCall(bytes,uint256,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))";
   const tx = await gateway[method](
-    utils.hexlify(args.receiver),
+    receiver,
     value,
     args.zrc20,
     message,

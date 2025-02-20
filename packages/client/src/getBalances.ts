@@ -138,7 +138,7 @@ export const getBalances = async function (
       const ticker = token.symbol.split("-")[0];
       const chain_name = supportedChains.find(
         (c: any) => c.chain_id === token.chain_id.toString()
-      )?.chain_name;
+      )?.name;
       return {
         ...token,
         chain_name,

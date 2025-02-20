@@ -3,6 +3,7 @@ import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/Gateway
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
+import { encodeValues } from "./encodeValues";
 import type { revertOptions, txOptions } from "./types";
 
 /**
@@ -62,21 +63,7 @@ export const evmDepositAndCall = async function (
     gasPrice: args.txOptions.gasPrice,
   };
 
-  const valuesArray = args.values.map((value, index) => {
-    const type = args.types[index];
-
-    if (type === "bool") {
-      try {
-        return JSON.parse(value.toLowerCase());
-      } catch (e) {
-        throw new Error(`Invalid boolean value: ${value}`);
-      }
-    } else if (type.startsWith("uint") || type.startsWith("int")) {
-      return ethers.BigNumber.from(value);
-    } else {
-      return value;
-    }
-  });
+  const valuesArray = encodeValues(args.types, args.values);
 
   const encodedParameters = utils.defaultAbiCoder.encode(
     args.types,
