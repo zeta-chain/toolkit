@@ -37,7 +37,8 @@ export const solanaDepositAndCall = async (
     throw new Error(`Invalid JSON in 'types' parameter: ${error.message}`);
   }
   const params = [paramTypes, args.values];
-  await client.solanaDepositAndCall({ amount, params, recipient });
+  const res = await client.solanaDepositAndCall({ amount, params, recipient });
+  console.log(res);
 };
 
 export const getKeypairFromFile = async (filepath: string) => {

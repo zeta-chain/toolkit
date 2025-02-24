@@ -30,7 +30,8 @@ export const solanaDeposit = async (
     recipient = args.recipient;
   }
   const { amount, idPath } = args;
-  await client.solanaDeposit({ amount, recipient });
+  const res = await client.solanaDeposit({ amount, recipient });
+  console.log(res);
 };
 
 export const getKeypairFromFile = async (filepath: string) => {
