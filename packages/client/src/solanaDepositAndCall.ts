@@ -111,10 +111,6 @@ export const solanaDepositAndCall = async function (
       )
     );
 
-    console.log(
-      ethers.utils.defaultAbiCoder.encode(args.params[0], valuesArray)
-    );
-
     const depositInstruction = await gatewayProgram.methods
       .depositAndCall(depositAmount, recipient, message)
       .accounts({
@@ -152,11 +148,8 @@ export const solanaDepositAndCall = async function (
         [this.solanaWallet!.payer]
       );
     }
-
-    console.log("Transaction signature:", txSignature);
-
     return txSignature;
   } catch (error) {
-    console.error("Transaction failed:", error);
+    throw new Error(`Transaction failed:, ${error}`);
   }
 };
