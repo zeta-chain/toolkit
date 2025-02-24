@@ -102,10 +102,10 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const TESTNET = bitcoin.networks.testnet;
   const API = getEndpoints("blockcypher", "btc_testnet")[0].url;
 
-  const pk = process.env.PRIVATE_KEY as any;
+  const pk = process.env.BTC_PRIVATE_KEY as any;
   if (!pk) {
     throw new Error(
-      "Cannot find a private key, please set the PRIVATE_KEY env variable"
+      "Cannot find a private key, please set the BTC_PRIVATE_KEY env variable"
     );
   }
 
@@ -168,7 +168,7 @@ Memo:            ${args.memo}
 };
 
 export const sendBTCTask = task(
-  "send-btc",
+  "btc-deposit-and-call",
   "Deposit Bitcoin to and call contracts on ZetaChain",
   main
 )
