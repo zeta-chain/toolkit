@@ -2,7 +2,6 @@ import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/Gateway
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
-import { encodeValues } from "./encodeValues";
 import type { revertOptions, txOptions } from "./types";
 
 /**
@@ -42,11 +41,9 @@ export const evmCall = async function (
     signer
   );
 
-  const valuesArray = encodeValues(args.types, args.values);
-
   const encodedParameters = utils.defaultAbiCoder.encode(
     args.types,
-    valuesArray
+    args.values
   );
 
   const tx = await gateway[

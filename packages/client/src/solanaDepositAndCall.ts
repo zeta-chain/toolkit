@@ -6,7 +6,6 @@ import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
-import { encodeValues } from "./encodeValues";
 
 const SEED = "meta";
 
@@ -14,8 +13,9 @@ export const solanaDepositAndCall = async function (
   this: ZetaChainClient,
   args: {
     amount: number;
-    params: any[];
     recipient: string;
+    types: string[];
+    values: any[];
   }
 ) {
   if (!this.isSolanaWalletConnected()) {
@@ -83,31 +83,15 @@ export const solanaDepositAndCall = async function (
     const tx = new anchor.web3.Transaction();
     const recipient = Buffer.from(ethers.utils.arrayify(args.recipient));
 
-    if (!Array.isArray(args.params[0]) || !Array.isArray(args.params[1])) {
+    if (!Array.isArray(args.types) || !Array.isArray(args.values)) {
       throw new Error(
         "Invalid 'params' format. Expected arrays of types and values."
       );
     }
 
-    const valuesArray = args.params[1].map((value: any, index: any) => {
-      const type = args.params[0][index];
-
-      if (type === "bool") {
-        try {
-          return JSON.parse(value.toLowerCase());
-        } catch (e) {
-          throw new Error(`Invalid boolean value: ${value}`);
-        }
-      } else if (type.startsWith("uint") || type.startsWith("int")) {
-        return BigInt(value);
-      } else {
-        return value;
-      }
-    });
-
     const message = Buffer.from(
       ethers.utils.arrayify(
-        ethers.utils.defaultAbiCoder.encode(args.params[0], valuesArray)
+        ethers.utils.defaultAbiCoder.encode(args.types, args.values)
       )
     );
 

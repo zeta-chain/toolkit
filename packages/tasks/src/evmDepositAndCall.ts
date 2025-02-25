@@ -2,11 +2,14 @@ import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { ZetaChainClient } from "../../client/src/";
+import { parseAbiValues } from "../../client/src/parseAbiValues";
 
 export const evmDepositAndCall = async (
   args: any,
   hre: HardhatRuntimeEnvironment
 ) => {
+  const values = parseAbiValues(args.types, args.values);
+
   try {
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
@@ -27,7 +30,7 @@ export const evmDepositAndCall = async (
         gasPrice: args.gasPrice,
       },
       types: JSON.parse(args.types),
-      values: args.values,
+      values,
     });
     if (tx) {
       const receipt = await tx.wait();

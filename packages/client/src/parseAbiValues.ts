@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-export const encodeValues = (types: string[], values: any[]) => {
+export const parseAbiValues = (types: string[], values: string[]) => {
   return values.map((value: any, index: number) => {
     const type = types[index];
 

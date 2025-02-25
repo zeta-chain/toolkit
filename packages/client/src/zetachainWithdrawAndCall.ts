@@ -3,7 +3,6 @@ import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
-import { encodeValues } from "./encodeValues";
 import type { revertOptions, txOptions } from "./types";
 
 /**
@@ -65,11 +64,9 @@ export const zetachainWithdrawAndCall = async function (
     ),
   };
 
-  const valuesArray = encodeValues(args.types, args.values);
-
   const encodedParameters = utils.defaultAbiCoder.encode(
     args.types,
-    valuesArray
+    args.values
   );
 
   let message;
