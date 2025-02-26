@@ -41,9 +41,9 @@ export const solanaDepositAndCall = async (
   const params = [paramTypes, args.values];
   const res = await client.solanaDepositAndCall({
     amount: args.amount,
-    values,
-    types: JSON.parse(args.types),
     recipient,
+    types: JSON.parse(args.types),
+    values,
   });
   console.log(res);
 };
