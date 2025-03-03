@@ -41,25 +41,9 @@ export const evmCall = async function (
     signer
   );
 
-  const valuesArray = args.values.map((value, index) => {
-    const type = args.types[index];
-
-    if (type === "bool") {
-      try {
-        return JSON.parse(value.toLowerCase());
-      } catch (e) {
-        throw new Error(`Invalid boolean value: ${value}`);
-      }
-    } else if (type.startsWith("uint") || type.startsWith("int")) {
-      return ethers.BigNumber.from(value);
-    } else {
-      return value;
-    }
-  });
-
   const encodedParameters = utils.defaultAbiCoder.encode(
     args.types,
-    valuesArray
+    args.values
   );
 
   const tx = await gateway[

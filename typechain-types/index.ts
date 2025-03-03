@@ -44,6 +44,8 @@ export type { IWETH } from "./@uniswap/v2-periphery/contracts/interfaces/IWETH";
 export { IWETH__factory } from "./factories/@uniswap/v2-periphery/contracts/interfaces/IWETH__factory";
 export type { UniswapV2Router02 } from "./@uniswap/v2-periphery/contracts/UniswapV2Router02";
 export { UniswapV2Router02__factory } from "./factories/@uniswap/v2-periphery/contracts/UniswapV2Router02__factory";
+export type { Abortable } from "./@zetachain/protocol-contracts/contracts/Revert.sol/Abortable";
+export { Abortable__factory } from "./factories/@zetachain/protocol-contracts/contracts/Revert.sol/Abortable__factory";
 export type { Revertable } from "./@zetachain/protocol-contracts/contracts/Revert.sol/Revertable";
 export { Revertable__factory } from "./factories/@zetachain/protocol-contracts/contracts/Revert.sol/Revertable__factory";
 export type { IZRC20 } from "./@zetachain/protocol-contracts/contracts/zevm/interfaces/IZRC20.sol/IZRC20";

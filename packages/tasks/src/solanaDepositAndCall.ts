@@ -6,11 +6,14 @@ import { task } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { ZetaChainClient } from "../../client/src";
+import { parseAbiValues } from "../../client/src/parseAbiValues";
 
 export const solanaDepositAndCall = async (
   args: any,
   hre: HardhatRuntimeEnvironment
 ) => {
+  const values = parseAbiValues(args.types, args.values);
+
   const keypair = await getKeypairFromFile(args.idPath);
   const wallet = new Wallet(keypair);
 
@@ -29,15 +32,19 @@ export const solanaDepositAndCall = async (
   } catch (e) {
     recipient = args.recipient;
   }
-  const { amount, idPath } = args;
   let paramTypes;
   try {
     paramTypes = JSON.parse(args.types);
   } catch (error: any) {
     throw new Error(`Invalid JSON in 'types' parameter: ${error.message}`);
   }
-  const params = [paramTypes, args.values];
-  await client.solanaDepositAndCall({ amount, params, recipient });
+  const res = await client.solanaDepositAndCall({
+    amount: args.amount,
+    recipient,
+    types: JSON.parse(args.types),
+    values,
+  });
+  console.log(`Transaction hash: ${res}`);
 };
 
 export const getKeypairFromFile = async (filepath: string) => {

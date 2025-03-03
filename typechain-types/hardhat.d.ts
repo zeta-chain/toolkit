@@ -89,6 +89,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.UniswapV2Router02__factory>;
     getContractFactory(
+      name: "Abortable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Abortable__factory>;
+    getContractFactory(
       name: "Revertable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Revertable__factory>;
@@ -296,6 +300,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.UniswapV2Router02>;
+    getContractAt(
+      name: "Abortable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Abortable>;
     getContractAt(
       name: "Revertable",
       address: string,

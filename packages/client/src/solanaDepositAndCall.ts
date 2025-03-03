@@ -13,8 +13,9 @@ export const solanaDepositAndCall = async function (
   this: ZetaChainClient,
   args: {
     amount: number;
-    params: any[];
     recipient: string;
+    types: string[];
+    values: any[];
   }
 ) {
   if (!this.isSolanaWalletConnected()) {
@@ -82,7 +83,7 @@ export const solanaDepositAndCall = async function (
     const tx = new anchor.web3.Transaction();
     const recipient = Buffer.from(ethers.utils.arrayify(args.recipient));
 
-    if (!Array.isArray(args.params[0]) || !Array.isArray(args.params[1])) {
+    if (!Array.isArray(args.types) || !Array.isArray(args.values)) {
       throw new Error(
         "Invalid 'params' format. Expected arrays of types and values."
       );
@@ -90,7 +91,7 @@ export const solanaDepositAndCall = async function (
 
     const message = Buffer.from(
       ethers.utils.arrayify(
-        ethers.utils.defaultAbiCoder.encode(args.params[0], args.params[1])
+        ethers.utils.defaultAbiCoder.encode(args.types, args.values)
       )
     );
 
@@ -131,11 +132,8 @@ export const solanaDepositAndCall = async function (
         [this.solanaWallet!.payer]
       );
     }
-
-    console.log("Transaction signature:", txSignature);
-
     return txSignature;
   } catch (error) {
-    console.error("Transaction failed:", error);
+    throw new Error(`Transaction failed:, ${error}`);
   }
 };

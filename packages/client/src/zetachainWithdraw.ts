@@ -3,6 +3,7 @@ import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
+import { toHexString } from "./toHexString";
 import type { revertOptions, txOptions } from "./types";
 
 /**
@@ -55,11 +56,11 @@ export const zetachainWithdraw = async function (
       utils.toUtf8Bytes(args.revertOptions.revertMessage)
     ),
   };
-
   const zrc20 = new ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
   const decimals = await zrc20.decimals();
   const value = utils.parseUnits(args.amount, decimals);
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFee();
+
   if (args.zrc20 === gasZRC20) {
     const approveGasAndWithdraw = await zrc20.approve(
       gatewayZetaChainAddress,
@@ -86,10 +87,12 @@ export const zetachainWithdraw = async function (
     );
     await approveWithdraw.wait();
   }
+  const receiver = toHexString(args.receiver);
+
   const method =
     "withdraw(bytes,uint256,address,(address,bool,address,bytes,uint256))";
   const tx = await gateway[method](
-    utils.hexlify(args.receiver),
+    receiver,
     value,
     args.zrc20,
     revertOptions,

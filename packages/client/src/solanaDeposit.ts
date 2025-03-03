@@ -117,11 +117,8 @@ export const solanaDeposit = async function (
         [this.solanaWallet!.payer]
       );
     }
-
-    console.log("Transaction signature:", txSignature);
-
     return txSignature;
   } catch (error) {
-    console.error("Transaction failed:", error);
+    throw new Error(`Transaction failed:, ${error}`);
   }
 };

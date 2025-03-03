@@ -2,17 +2,19 @@ import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { ZetaChainClient } from "../../client/src/";
+import { parseAbiValues } from "../../client/src/parseAbiValues";
 
 export const zetachainWithdrawAndCall = async (
   args: any,
   hre: HardhatRuntimeEnvironment
 ) => {
-  try {
-    const callOptions = {
-      gasLimit: args.callOptionsGasLimit,
-      isArbitraryCall: args.callOptionsIsArbitraryCall,
-    };
+  const callOptions = {
+    gasLimit: args.callOptionsGasLimit,
+    isArbitraryCall: args.callOptionsIsArbitraryCall,
+  };
 
+  try {
+    const values = parseAbiValues(args.types, args.values);
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
     const client = new ZetaChainClient({ network, signer });
@@ -33,7 +35,7 @@ export const zetachainWithdrawAndCall = async (
         gasPrice: args.txOptionsGasPrice,
       },
       types: JSON.parse(args.types),
-      values: args.values,
+      values,
       zrc20: args.zrc20,
     });
 

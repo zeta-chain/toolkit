@@ -1,36 +1,13 @@
 import confirm from "@inquirer/confirm";
-import { getEndpoints } from "@zetachain/networks";
 import * as bitcoin from "bitcoinjs-lib";
 import * as dotenv from "dotenv";
 import ECPairFactory from "ecpair";
+import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as ecc from "tiny-secp256k1";
 
 dotenv.config();
-
-type UTXO = {
-  txid: string;
-  value: number;
-  vout: number;
-};
-
-const decodeTransaction = async (tx: any) => {
-  const API = getEndpoints("blockcypher", "btc_testnet")[0].url;
-
-  const p1 = await fetch(`${API}/txs/decode`, {
-    body: JSON.stringify({ tx }),
-    method: "POST",
-  });
-  return await p1.json();
-};
-
-const fetchUtxos = async (address: string): Promise<UTXO[]> => {
-  const API = getEndpoints("esplora", "btc_testnet")[0].url;
-
-  const response = await fetch(`${API}/address/${address}/utxo`);
-  return response.json();
-};
 
 const makeTransaction = async (
   to: string,
@@ -38,9 +15,9 @@ const makeTransaction = async (
   amount: any,
   utxos: any,
   address: string,
+  api: string,
   m: string = ""
 ) => {
-  const API = getEndpoints("esplora", "btc_testnet")[0].url;
   const TESTNET = bitcoin.networks.testnet;
   const memo = Buffer.from(m, "hex");
 
@@ -61,7 +38,7 @@ const makeTransaction = async (
   const txs = []; // txs corresponding to the utxos
   for (let i = 0; i < pickUtxos.length; i++) {
     const utxo = pickUtxos[i];
-    const p1 = await fetch(`${API}/tx/${utxo.txid}`);
+    const p1 = await fetch(`${api}/tx/${utxo.txid}`);
     const data = await p1.json();
     txs.push(data);
   }
@@ -100,12 +77,11 @@ const makeTransaction = async (
 
 const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const TESTNET = bitcoin.networks.testnet;
-  const API = getEndpoints("blockcypher", "btc_testnet")[0].url;
 
-  const pk = process.env.PRIVATE_KEY as any;
+  const pk = args.privateKey || (process.env.BTC_PRIVATE_KEY as any);
   if (!pk) {
     throw new Error(
-      "Cannot find a private key, please set the PRIVATE_KEY env variable"
+      "Cannot find a private key, please pass --private-key or set the BTC_PRIVATE_KEY env variable"
     );
   }
 
@@ -119,28 +95,18 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   });
   if (address === undefined) throw new Error("Address is undefined");
 
-  const utxos = await fetchUtxos(address);
+  const utxoResponse = await fetch(`${args.api}/address/${address}/utxo`);
+  const utxos = await utxoResponse.json();
 
   const tx = await makeTransaction(
     args.recipient,
     key,
-    parseFloat(args.amount) * 100000000,
+    ethers.utils.parseUnits(args.amount, 8).toNumber(),
     utxos,
     address,
+    args.api,
     args.memo
   );
-  const decoded = JSON.stringify(await decodeTransaction(tx), null, 2);
-
-  if (args.verboseOutput) {
-    console.log(`Transaction:
-
-${decoded}
-
-Encoded transaction:
-
-${tx}
-`);
-  }
 
   console.log(`
 Networks:        btc_testnet → zeta_testnet
@@ -158,21 +124,32 @@ Memo:            ${args.memo}
     { clearPromptOnDone: true }
   );
 
-  const p1 = await fetch(`${API}/txs/push`, {
-    body: JSON.stringify({ tx }),
-    method: "POST",
-  });
-  const data = await p1.json();
-  const txhash = data?.tx?.hash;
+  const broadcastTx = async (tx: string) => {
+    const response = await fetch(`${args.api}/tx`, {
+      body: tx,
+      headers: { "Content-Type": "text/plain" },
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Transaction broadcast failed: ${errorText}`);
+    }
+
+    return await response.text();
+  };
+
+  const txhash = await broadcastTx(tx);
   console.log(`Transaction hash: ${txhash}`);
 };
 
-export const sendBTCTask = task(
-  "send-btc",
-  "Deposit Bitcoin to and call contracts on ZetaChain",
+export const bitcoinDepositAndCallTask = task(
+  "bitcoin-deposit-and-call",
+  "Deposit Bitcoin and call contracts on ZetaChain (testnet 4 only)",
   main
 )
   .addParam("recipient", "Address to send to")
   .addParam("amount", "Amount to send")
   .addOptionalParam("memo", "Memo to embed in transaction")
-  .addFlag("verboseOutput", "Verbose output");
+  .addOptionalParam("api", "Bitcoin API", "https://mempool.space/testnet4/api")
+  .addOptionalParam("privateKey", "Private key");
