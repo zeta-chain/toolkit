@@ -2781,17 +2781,17 @@
     typescript "5.5.4"
     zod "3.22.4"
 
-"@zetachain/networks@13.0.0-rc1":
-  version "13.0.0-rc1"
-  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-13.0.0-rc1.tgz#c43acb879a966102cd570cb80a2f60e5166c9f3c"
-  integrity sha512-3P7+tMfwtL9+yPnqa/juxHM48H67rnu2c0ZCpmn18jkpJCTw9OBta+g5jqsTe01RpxqYrGk/1OkmkfPkileEMA==
-  dependencies:
-    dotenv "^16.1.4"
-
 "@zetachain/networks@^10.0.0":
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-10.0.0.tgz#dd5d14a0870f6b658644aded8c96859f15531089"
   integrity sha512-FPolaO19oVkSLSPDUA/Hu+8AhG3lDEslRDpLnMzbMbnNSC669Fkah0/TEf+6egrQbAifBRfFLzwWidAGs8oxtA==
+  dependencies:
+    dotenv "^16.1.4"
+
+"@zetachain/networks@^13.0.0":
+  version "13.0.0"
+  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-13.0.0.tgz#eb6d3e8fe311801dfe7eea8b96f0c4d1edb21668"
+  integrity sha512-Uq4zM17gNw+fRri56wl8KlyAYEjUo8x6bmX2d2ctCrCfZBjvSv6KykRxSqUccQYCBymGOWTnw2OiMocR2gVAsw==
   dependencies:
     dotenv "^16.1.4"
 
@@ -2807,10 +2807,10 @@
     ethereumjs-util "^7.1.5"
     secp256k1 "^5.0.0"
 
-"@zetachain/protocol-contracts@11.0.0-rc4":
-  version "11.0.0-rc4"
-  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-11.0.0-rc4.tgz#2e2df98734793873e9c50629f6ec9f5eec6f9f54"
-  integrity sha512-7MJzEyUad7JgHucveIhtU8aaPkoMMzsfhKkh9MDMdxUzlaOmmxrQw2hi5B2b7UPxw2K9vFffkmIox6gd6c1+Yw==
+"@zetachain/protocol-contracts@^11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-11.0.0.tgz#4889044ae2f5db3f38d052a869775d17798f273e"
+  integrity sha512-BKkLLru4ZJzOh0G2kBYqzjzvb6nvH8c/FlT0Py4f5TAMnrw4h5PnhKMJbWjznv+e2LJ/I9PPpCeqB9zPfGoJPA==
   dependencies:
     "@openzeppelin/contracts" "^5.0.2"
     "@openzeppelin/contracts-upgradeable" "^5.0.2"
