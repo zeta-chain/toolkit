@@ -5,9 +5,8 @@ utility functions that make it easier to build with ZetaChain.
 
 ## Building a dApp on ZetaChain
 
-If you're looking to build a dapp on ZetaChain, we recommend using the Hardhat
-[template](https://github.com/zeta-chain/template). This template has all the
-toolkit featured imported, so you don't need to install this package manually.
+If you're looking to build a dapp on ZetaChain, we recommend checking out
+[the tutorials section](https://www.zetachain.com/docs/developers/tutorials/hello/) in ZetaChain docs.
 
 ## Prerequisites
 
