@@ -1,4 +1,4 @@
-import { toHexBytes } from "./toHexBytes";
+import { toHexString } from "./toHexString";
 
 export const parseAbiValues = (types: string[], values: string[]) => {
   return values.map((value: string, index: number) => {
@@ -13,7 +13,7 @@ export const parseAbiValues = (types: string[], values: string[]) => {
     } else if (type.startsWith("uint") || type.startsWith("int")) {
       return BigInt(value);
     } else if (type === "bytes") {
-      return toHexBytes(value);
+      return toHexString(value);
     } else {
       return value;
     }
