@@ -138,7 +138,7 @@ export const getBalances = async function (
       const ticker = token.symbol.split("-")[0];
       const chain_name = supportedChains.find(
         (c: any) => c.chain_id === token.chain_id.toString()
-      )?.chain_name;
+      )?.name;
       return {
         ...token,
         chain_name,
@@ -200,9 +200,7 @@ export const getBalances = async function (
               const balance = BigInt(
                 ethers.utils.defaultAbiCoder.decode(["uint256"], data)[0]
               );
-              const formattedBalance = (
-                balance / BigInt(10 ** token.decimals)
-              ).toString();
+              const formattedBalance = formatUnits(balance, token.decimals);
               balances.push({ ...token, balance: formattedBalance });
             }
           });
