@@ -1,7 +1,7 @@
 import { toHexBytes } from "./toHexBytes";
 
 export const parseAbiValues = (types: string[], values: string[]) => {
-  return values.map((value: any, index: number) => {
+  return values.map((value: string, index: number) => {
     const type = types[index];
 
     if (type === "bool") {
