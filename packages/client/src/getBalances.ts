@@ -200,9 +200,6 @@ export const getBalances = async function (
               const balance = BigInt(
                 ethers.utils.defaultAbiCoder.decode(["uint256"], data)[0]
               );
-              // const formattedBalance = (
-              //   balance / BigInt(10 ** token.decimals)
-              // ).toString();
               const formattedBalance = formatUnits(balance, token.decimals);
               balances.push({ ...token, balance: formattedBalance });
             }
