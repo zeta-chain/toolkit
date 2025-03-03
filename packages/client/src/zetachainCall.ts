@@ -3,6 +3,7 @@ import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
+import { toHexBytes } from "./toHexBytes";
 import type { revertOptions, txOptions } from "./types";
 
 /**
@@ -83,9 +84,7 @@ export const zetachainCall = async function (
   );
   await approve.wait();
 
-  const receiver = args.receiver.startsWith("0x")
-    ? args.receiver
-    : ethers.utils.toUtf8Bytes(args.receiver);
+  const receiver = toHexBytes(args.receiver);
 
   const tx = await gateway[
     "call(bytes,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))"

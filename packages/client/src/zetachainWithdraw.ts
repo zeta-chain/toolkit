@@ -3,6 +3,7 @@ import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
+import { toHexBytes } from "./toHexBytes";
 import type { revertOptions, txOptions } from "./types";
 
 /**
@@ -86,9 +87,7 @@ export const zetachainWithdraw = async function (
     );
     await approveWithdraw.wait();
   }
-  const receiver = args.receiver.startsWith("0x")
-    ? args.receiver
-    : ethers.utils.toUtf8Bytes(args.receiver);
+  const receiver = toHexBytes(args.receiver);
 
   const method =
     "withdraw(bytes,uint256,address,(address,bool,address,bytes,uint256))";

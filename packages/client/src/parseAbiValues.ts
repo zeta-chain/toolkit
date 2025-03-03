@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { toHexBytes } from "./toHexBytes";
 
 export const parseAbiValues = (types: string[], values: string[]) => {
   return values.map((value: any, index: number) => {
@@ -13,7 +13,7 @@ export const parseAbiValues = (types: string[], values: string[]) => {
     } else if (type.startsWith("uint") || type.startsWith("int")) {
       return BigInt(value);
     } else if (type === "bytes") {
-      return value.startsWith("0x") ? value : ethers.utils.toUtf8Bytes(value);
+      return toHexBytes(value);
     } else {
       return value;
     }
