@@ -5,8 +5,7 @@ import { utils } from "ethers";
 import { task } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { parseAbiValues } from "@/utils/parseAbiValues";
-
+import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src";
 
 export const solanaDepositAndCall = async (
@@ -14,38 +13,43 @@ export const solanaDepositAndCall = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   const values = parseAbiValues(args.types, args.values);
-
-  const keypair = await getKeypairFromFile(args.idPath);
-  const wallet = new Wallet(keypair);
-
-  const client = new ZetaChainClient({
-    network: args.solanaNetwork,
-    solanaWallet: wallet,
-  });
-  let recipient;
-  try {
-    if ((bech32 as any).decode(args.recipient)) {
-      recipient = utils.solidityPack(
-        ["bytes"],
-        [utils.toUtf8Bytes(args.recipient)]
-      );
-    }
-  } catch (e) {
-    recipient = args.recipient;
-  }
-  let paramTypes;
-  try {
-    paramTypes = JSON.parse(args.types);
-  } catch (error: any) {
-    throw new Error(`Invalid JSON in 'types' parameter: ${error.message}`);
-  }
-  const res = await client.solanaDepositAndCall({
-    amount: args.amount,
-    recipient,
-    types: JSON.parse(args.types),
+  console.debug("ARG_STUFF", {
+    argTypes: args.types,
+    argValues: args.values,
     values,
   });
-  console.log(`Transaction hash: ${res}`);
+
+  // const keypair = await getKeypairFromFile(args.idPath);
+  // const wallet = new Wallet(keypair);
+
+  // const client = new ZetaChainClient({
+  //   network: args.solanaNetwork,
+  //   solanaWallet: wallet,
+  // });
+  // let recipient;
+  // try {
+  //   if ((bech32 as any).decode(args.recipient)) {
+  //     recipient = utils.solidityPack(
+  //       ["bytes"],
+  //       [utils.toUtf8Bytes(args.recipient)]
+  //     );
+  //   }
+  // } catch (e) {
+  //   recipient = args.recipient;
+  // }
+  // let paramTypes;
+  // try {
+  //   paramTypes = JSON.parse(args.types);
+  // } catch (error: any) {
+  //   throw new Error(`Invalid JSON in 'types' parameter: ${error.message}`);
+  // }
+  // const res = await client.solanaDepositAndCall({
+  //   amount: args.amount,
+  //   recipient,
+  //   types: JSON.parse(args.types),
+  //   values,
+  // });
+  // console.log(`Transaction hash: ${res}`);
 };
 
 export const getKeypairFromFile = async (filepath: string) => {

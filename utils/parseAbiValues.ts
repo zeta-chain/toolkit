@@ -5,15 +5,16 @@ import { SolidityType } from "./parseAbiValues.types";
 import { toHexString } from "./toHexString";
 
 export const parseAbiValues = (types: SolidityType[], values: string[]) => {
-  if (types.length !== values.length) {
-    throw new Error("Mismatch between types and values array lengths");
-  }
+  // if (types.length !== values.length) {
+  //   throw new Error("Mismatch between types and values array lengths");
+  // }
 
   // Regex to validate integer strings (optional '-' followed by digits)
   const INTEGER_PATTERN = /^-?\d+$/;
 
   return values.map((value: string, index: number) => {
     const type = types[index];
+    console.debug("parseAbiValues", { type, types, value, values });
 
     if (type === "bool") {
       const lowerCaseValue = value.toLowerCase();
