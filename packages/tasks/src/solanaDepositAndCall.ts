@@ -13,43 +13,38 @@ export const solanaDepositAndCall = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   const values = parseAbiValues(args.types, args.values);
-  console.debug("ARG_STUFF", {
-    argTypes: args.types,
-    argValues: args.values,
+
+  const keypair = await getKeypairFromFile(args.idPath);
+  const wallet = new Wallet(keypair);
+
+  const client = new ZetaChainClient({
+    network: args.solanaNetwork,
+    solanaWallet: wallet,
+  });
+  let recipient;
+  try {
+    if ((bech32 as any).decode(args.recipient)) {
+      recipient = utils.solidityPack(
+        ["bytes"],
+        [utils.toUtf8Bytes(args.recipient)]
+      );
+    }
+  } catch (e) {
+    recipient = args.recipient;
+  }
+  let paramTypes;
+  try {
+    paramTypes = JSON.parse(args.types);
+  } catch (error: any) {
+    throw new Error(`Invalid JSON in 'types' parameter: ${error.message}`);
+  }
+  const res = await client.solanaDepositAndCall({
+    amount: args.amount,
+    recipient,
+    types: JSON.parse(args.types),
     values,
   });
-
-  // const keypair = await getKeypairFromFile(args.idPath);
-  // const wallet = new Wallet(keypair);
-
-  // const client = new ZetaChainClient({
-  //   network: args.solanaNetwork,
-  //   solanaWallet: wallet,
-  // });
-  // let recipient;
-  // try {
-  //   if ((bech32 as any).decode(args.recipient)) {
-  //     recipient = utils.solidityPack(
-  //       ["bytes"],
-  //       [utils.toUtf8Bytes(args.recipient)]
-  //     );
-  //   }
-  // } catch (e) {
-  //   recipient = args.recipient;
-  // }
-  // let paramTypes;
-  // try {
-  //   paramTypes = JSON.parse(args.types);
-  // } catch (error: any) {
-  //   throw new Error(`Invalid JSON in 'types' parameter: ${error.message}`);
-  // }
-  // const res = await client.solanaDepositAndCall({
-  //   amount: args.amount,
-  //   recipient,
-  //   types: JSON.parse(args.types),
-  //   values,
-  // });
-  // console.log(`Transaction hash: ${res}`);
+  console.log(`Transaction hash: ${res}`);
 };
 
 export const getKeypairFromFile = async (filepath: string) => {
