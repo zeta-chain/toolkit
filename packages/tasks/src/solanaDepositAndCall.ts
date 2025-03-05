@@ -5,8 +5,9 @@ import { utils } from "ethers";
 import { task } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
+import { parseAbiValues } from "@/utils/parseAbiValues";
+
 import { ZetaChainClient } from "../../client/src";
-import { parseAbiValues } from "../../client/src/parseAbiValues";
 
 export const solanaDepositAndCall = async (
   args: any,

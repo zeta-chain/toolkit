@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "paths": {
+      "@/utils/*": ["./utils/*"]
+    },
     "baseUrl": ".",
     "declaration": true,
     "esModuleInterop": true,
@@ -15,6 +18,6 @@
     "strict": true
   },
   "files": ["./hardhat.config.ts"],
-  "include": ["packages/client", "packages/tasks", "packages/test"],
+  "include": ["packages/client", "packages/tasks", "packages/test", "utils"],
   "exclude": ["./typechain-types"]
 }
