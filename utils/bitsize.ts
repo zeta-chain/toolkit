@@ -7,8 +7,10 @@ export const isValidBitSize = (bitSize: number): boolean => {
   return VALID_BIT_SIZES.includes(bitSize);
 };
 
+const INT_TYPE_PATTERN = /^(u?int)(\d+)$/;
+
 export const getBitSize = (type: string): number | null => {
-  const match = type.match(/^(u?int)(\d+)$/);
+  const match = type.match(INT_TYPE_PATTERN);
   if (match) {
     return parseInt(match[2], 10); // Extract the number suffix
   }
