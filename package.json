@@ -31,7 +31,7 @@
     "docs": "rimraf docs && typedoc ./packages/client/src/index.ts",
     "copy-templates": "npx cpx './packages/tasks/templates/**/*' ./dist/packages/tasks/templates",
     "copy-types": "npx cpx './typechain-types/**/*' ./dist/typechain-types",
-    "test": "yarn run jest",
+    "test": "jest",
     "test:watch": "jest --watch"
   },
   "keywords": [],
