@@ -28,27 +28,25 @@ describe("toHexString", () => {
     expect(toHexString("  ")).toBe("0x2020"); // Two spaces in hex
   });
 
-  it("should throw for non-string inputs", () => {
-    expect(() => toHexString(null as any)).toThrow(
-      "Input must be a string, got: object"
-    );
-    expect(() => toHexString(undefined as any)).toThrow(
-      "Input must be a string, got: undefined"
-    );
-    expect(() => toHexString(123 as any)).toThrow(
-      "Input must be a string, got: number"
-    );
-    expect(() => toHexString({} as any)).toThrow(
-      "Input must be a string, got: object"
+  it.each([
+    { input: null, type: "object" },
+    { input: undefined, type: "undefined" },
+    { input: 123, type: "number" },
+    { input: {}, type: "object" },
+  ])("should throw for non-string input: $input", ({ input, type }) => {
+    expect(() => toHexString(input as any)).toThrow(
+      `Input must be a string, got: ${type}`
     );
   });
 
-  it("should throw for invalid hex strings", () => {
-    expect(() => toHexString("0xInvalid")).toThrow(
-      "Invalid hex string: 0xInvalid"
-    );
-    expect(() => toHexString("0x123z")).toThrow("Invalid hex string: 0x123z");
-  });
+  it.each(["0xInvalid", "0x123z"])(
+    "should throw for invalid hex string: %s",
+    (invalidHex) => {
+      expect(() => toHexString(invalidHex)).toThrow(
+        `Invalid hex string: ${invalidHex}`
+      );
+    }
+  );
 
   it("should handle very long strings", () => {
     const longString = "a".repeat(100000); // 100,000 characters
