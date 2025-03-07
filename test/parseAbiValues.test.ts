@@ -47,6 +47,14 @@ describe("parseAbiValues", () => {
     expect(result).toEqual(["0x68656c6c6f"]); // "hello" in hex
   });
 
+  it("should throw for negative uint values", () => {
+    const types = '["uint256"]';
+    const values = ["-123"];
+    expect(() => parseAbiValues(types, values)).toThrow(
+      "Invalid integer value for type uint256: -123"
+    );
+  });
+
   it("should not modify bytes values that are already hex strings", () => {
     const types = '["bytes"]';
     const values = ["0x1234"];
@@ -59,6 +67,13 @@ describe("parseAbiValues", () => {
     const values = ["hello"];
     const result = parseAbiValues(types, values);
     expect(result).toEqual(["0x68656c6c6f"]); // "hello" in hex
+  });
+
+  it("should handle empty strings for bytes", () => {
+    const types = '["bytes"]';
+    const values = [""];
+    const result = parseAbiValues(types, values);
+    expect(result).toEqual(["0x"]);
   });
 
   it("should return string and address values as-is", () => {
@@ -135,5 +150,12 @@ describe("parseAbiValues", () => {
     expect(() => parseAbiValues(types, values)).toThrow(
       'Expected types to be an array, got: "address"'
     );
+  });
+
+  it("should handle empty strings for string and address", () => {
+    const types = '["string", "address"]';
+    const values = ["", ""];
+    const result = parseAbiValues(types, values);
+    expect(result).toEqual(["", ""]);
   });
 });

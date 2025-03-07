@@ -47,6 +47,10 @@ export const parseAbiValues = (types: string, values: string[]) => {
         throw new Error(`Invalid integer value for type ${type}: ${value}`);
       }
 
+      if (type.startsWith("uint") && value.startsWith("-")) {
+        throw new Error(`Invalid integer value for type ${type}: ${value}`);
+      }
+
       return BigInt(value);
     } else if (type.startsWith("bytes")) {
       return toHexString(value);
