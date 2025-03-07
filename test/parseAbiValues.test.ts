@@ -133,7 +133,7 @@ describe("parseAbiValues", () => {
     const types = '"address"'; // Not an array
     const values = ["0x236b0DE675cC8F46AE186897fCCeFe3370C9eDeD"];
     expect(() => parseAbiValues(types, values)).toThrow(
-      "Expected types to be an array"
+      'Expected types to be an array, got: "address"'
     );
   });
 });
