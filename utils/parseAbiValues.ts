@@ -1,3 +1,4 @@
+import { utils } from "ethers";
 import { isNull } from "lodash";
 
 import { getBitSize, isValidBitSize } from "./bitsize";
@@ -54,7 +55,13 @@ export const parseAbiValues = (types: string, values: string[]) => {
       return BigInt(value);
     } else if (type.startsWith("bytes")) {
       return toHexString(value);
-    } else if (["address", "string"].includes(type)) {
+    } else if (type === "address") {
+      if (!utils.isAddress(value)) {
+        throw new Error(`Invalid evm address for type ${type}: ${value}`);
+      }
+
+      return value;
+    } else if (type === "string") {
       return value;
     } else {
       throw new Error(`Unsupported type: ${type}`);

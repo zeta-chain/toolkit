@@ -76,11 +76,11 @@ describe("parseAbiValues", () => {
     expect(result).toEqual(["0x"]);
   });
 
-  it("should return string and address values as-is", () => {
-    const types = '["string", "address"]';
-    const values = ["hello", "0x1234567890abcdef"];
+  it("should return string values as-is", () => {
+    const types = '["string"]';
+    const values = ["hello"];
     const result = parseAbiValues(types, values);
-    expect(result).toEqual(["hello", "0x1234567890abcdef"]);
+    expect(result).toEqual(["hello"]);
   });
 
   it("should handle mixed types correctly", () => {
@@ -134,6 +134,29 @@ describe("parseAbiValues", () => {
     );
   });
 
+  it("should return valid evm address values as-is", () => {
+    const types = '["address", "address"]';
+    const values: string[] = [
+      "0x236b0DE675cC8F46AE186897fCCeFe3370C9eDeD",
+      "0x4955a3F38ff86ae92A914445099caa8eA2B9bA32",
+    ];
+    const result = parseAbiValues(types, values);
+    expect(result).toEqual([
+      "0x236b0DE675cC8F46AE186897fCCeFe3370C9eDeD",
+      "0x4955a3F38ff86ae92A914445099caa8eA2B9bA32",
+    ]);
+  });
+
+  it.each(["0xInvalid", "hello", "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y"])(
+    "should throw for invalid evm address: %s",
+    (invalidAddress) => {
+      const types = '["address"]';
+      expect(() => parseAbiValues(types, [invalidAddress])).toThrow(
+        `Invalid evm address for type address: ${invalidAddress}`
+      );
+    }
+  );
+
   it("should throw an error for invalid JSON in types", () => {
     const types = '["address", "bytes", "bool"'; // Invalid JSON
     const values = [
@@ -152,10 +175,10 @@ describe("parseAbiValues", () => {
     );
   });
 
-  it("should handle empty strings for string and address", () => {
-    const types = '["string", "address"]';
-    const values = ["", ""];
+  it("should handle empty strings", () => {
+    const types = '["string"]';
+    const values = [""];
     const result = parseAbiValues(types, values);
-    expect(result).toEqual(["", ""]);
+    expect(result).toEqual([""]);
   });
 });
