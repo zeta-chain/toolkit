@@ -47,6 +47,7 @@ const fetchCCTXByInbound = async (
   } catch (error) {}
 };
 
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 const fetchCCTXData = async function (
   this: ZetaChainClient,
   hash: string,
@@ -223,7 +224,7 @@ export const trackCCTX = async function (
           emitter.emit("mined-fail", {
             cctxs,
           });
-          reject("CCTX aborted or reverted");
+          reject(new Error("CCTX aborted or reverted"));
         } else {
           emitter.emit("mined-success", {
             cctxs,

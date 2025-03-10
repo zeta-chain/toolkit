@@ -1,6 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
-import { TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { Transaction } from "@solana/web3.js";
+import {
+  Transaction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { getEndpoints } from "@zetachain/networks";
 import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
 import { ethers } from "ethers";

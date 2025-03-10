@@ -5,6 +5,7 @@ import fetch from "isomorphic-fetch";
 
 import { ZetaChainClient } from "./client";
 
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 const fetchZEVMFees = async function (
   zrc20: any,
   rpcUrl: string,

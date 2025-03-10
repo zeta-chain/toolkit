@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error @description Could not find a declaration file for drip module
 import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
 import * as dotenv from "dotenv";
 import { ethers } from "ethers";

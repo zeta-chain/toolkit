@@ -33,7 +33,7 @@ export const getZRC20GasToken = async function (
   this: ZetaChainClient,
   network: string
 ) {
-  const chainID = await this.getChainId(network)?.toString();
+  const chainID = this.getChainId(network)?.toString();
   const foreignCoins = await this.getForeignCoins();
   const token = foreignCoins.find((t: any) => {
     return t.foreign_chain_id === chainID && t.coin_type === "Gas";

@@ -10,6 +10,7 @@ interface Config {
   };
 }
 
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export const getHardhatConfig = function ({ accounts }: any) {
   const hardhat = {
     chainId: 1337,
