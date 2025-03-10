@@ -5,7 +5,9 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import {
+  // @ts-expect-error @description '"../typechain-types"' has no exported member named 'MockSystemContract__factory'
   MockSystemContract,
+  // @ts-expect-error @description '"../typechain-types"' has no exported member named 'MockSystemContract__factory'
   MockSystemContract__factory,
   MockZRC20,
   MockZRC20__factory,
