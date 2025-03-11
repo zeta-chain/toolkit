@@ -2,21 +2,24 @@ import { utils } from "ethers";
 import { isNull } from "lodash";
 
 import { getBitSize, isValidBitSize } from "./bitsize";
-import { SolidityType } from "./parseAbiValues.types";
+import { solidityTypeArraySchema } from "./parseAbiValues.types";
 import { toHexString } from "./toHexString";
 
 export const parseAbiValues = (types: string, values: string[]) => {
-  let typesArray: SolidityType[];
+  let typesArray: string[] = [];
 
   try {
-    typesArray = JSON.parse(types);
-  } catch (e) {
-    throw new Error(`Invalid types array: ${types}`);
-  }
+    const validationResult = solidityTypeArraySchema.safeParse(
+      JSON.parse(types)
+    );
 
-  // Validate that typesArray is an array
-  if (!Array.isArray(typesArray)) {
-    throw new Error(`Expected types to be an array, got: ${types}`);
+    if (!validationResult.success) {
+      throw new Error(validationResult.error.errors[0].message);
+    }
+
+    typesArray = validationResult.data;
+  } catch {
+    throw new Error(`Invalid types array: (${types})`);
   }
 
   // Validate that typesArray and values have the same length
