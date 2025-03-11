@@ -33,10 +33,10 @@ import {
   zetachainWithdraw,
   zetachainWithdrawAndCall,
 } from ".";
-import { ChainData } from "./client.types";
+import { Chains } from "./client.types";
 
 export interface ZetaChainClientParamsBase {
-  chains?: { [key: string]: ChainData };
+  chains?: Chains;
   contracts?: LocalnetAddress[] | MainnetTestnetAddress[];
   network?: string;
 }
@@ -90,7 +90,7 @@ interface LocalnetAddress {
 }
 
 export class ZetaChainClient {
-  public chains: { [key: string]: ChainData };
+  public chains: Chains;
   public network: string;
   public wallet: Wallet | undefined;
   public signer: Signer | undefined;
@@ -169,7 +169,7 @@ export class ZetaChainClient {
     this.mergeChains(params.chains);
   }
 
-  private mergeChains(customChains: { [key: string]: ChainData } = {}): void {
+  private mergeChains(customChains: Chains = {}): void {
     Object.entries(customChains).forEach(([key, value]) => {
       if (has(customChains, key)) {
         this.chains[key] = merge({}, this.chains[key], value);
@@ -224,7 +224,7 @@ export class ZetaChainClient {
     }
   }
 
-  public getChains(): { [key: string]: ChainData } {
+  public getChains(): Chains {
     return this.chains;
   }
 

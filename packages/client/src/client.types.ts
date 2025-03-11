@@ -35,7 +35,7 @@ type ChainStaking = {
   denom: string;
 };
 
-export type ChainData = {
+type ChainData = {
   api?: ChainAPI[];
   apps?: ChainApp[];
   assets?: ChainAsset[];
@@ -46,3 +46,5 @@ export type ChainData = {
   fees?: ChainFees;
   staking?: ChainStaking;
 };
+
+export type Chains = { [key: string]: ChainData };
