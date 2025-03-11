@@ -6,7 +6,7 @@ import { networks } from "@zetachain/networks";
 import mainnetAddresses from "@zetachain/protocol-contracts/dist/data/addresses.mainnet.json";
 import testnetAddresses from "@zetachain/protocol-contracts/dist/data/addresses.testnet.json";
 import type { Signer, Wallet } from "ethers";
-import { has } from "lodash";
+import has from "lodash/has";
 import merge from "lodash/merge";
 
 import {
