@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import type { Wallet as SolanaWallet } from "@coral-xyz/anchor";
 import type { WalletContextState } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
@@ -5,6 +6,7 @@ import { networks } from "@zetachain/networks";
 import mainnetAddresses from "@zetachain/protocol-contracts/dist/data/addresses.mainnet.json";
 import testnetAddresses from "@zetachain/protocol-contracts/dist/data/addresses.testnet.json";
 import type { Signer, Wallet } from "ethers";
+import { has } from "lodash";
 import merge from "lodash/merge";
 
 import {
@@ -31,9 +33,10 @@ import {
   zetachainWithdraw,
   zetachainWithdrawAndCall,
 } from ".";
+import { ChainData } from "./client.types";
 
 export interface ZetaChainClientParamsBase {
-  chains?: { [key: string]: any };
+  chains?: { [key: string]: ChainData };
   contracts?: LocalnetAddress[] | MainnetTestnetAddress[];
   network?: string;
 }
@@ -41,35 +44,35 @@ export interface ZetaChainClientParamsBase {
 export type ZetaChainClientParams = ZetaChainClientParamsBase &
   (
     | {
-        signer: Signer;
-        solanaAdapter?: never;
-        solanaWallet?: never;
-        wallet?: never;
-      }
+      signer: Signer;
+      solanaAdapter?: never;
+      solanaWallet?: never;
+      wallet?: never;
+    }
     | {
-        signer?: never;
-        solanaAdapter: WalletContextState;
-        solanaWallet?: never;
-        wallet?: never;
-      }
+      signer?: never;
+      solanaAdapter: WalletContextState;
+      solanaWallet?: never;
+      wallet?: never;
+    }
     | {
-        signer?: never;
-        solanaAdapter?: never;
-        solanaWallet: SolanaWallet;
-        wallet?: never;
-      }
+      signer?: never;
+      solanaAdapter?: never;
+      solanaWallet: SolanaWallet;
+      wallet?: never;
+    }
     | {
-        signer?: never;
-        solanaAdapter?: never;
-        solanaWallet?: never;
-        wallet: Wallet;
-      }
+      signer?: never;
+      solanaAdapter?: never;
+      solanaWallet?: never;
+      wallet: Wallet;
+    }
     | {
-        signer?: undefined;
-        solanaAdapter?: undefined;
-        solanaWallet?: undefined;
-        wallet?: undefined;
-      }
+      signer?: undefined;
+      solanaAdapter?: undefined;
+      solanaWallet?: undefined;
+      wallet?: undefined;
+    }
   );
 
 interface MainnetTestnetAddress {
@@ -87,10 +90,10 @@ interface LocalnetAddress {
 }
 
 export class ZetaChainClient {
-  public chains: { [key: string]: any };
+  public chains: { [key: string]: ChainData };
   public network: string;
   public wallet: Wallet | undefined;
-  public signer: any | undefined;
+  public signer: Signer | undefined;
   public solanaWallet: SolanaWallet | undefined;
   public solanaAdapter: WalletContextState | undefined;
   private contracts: LocalnetAddress[] | MainnetTestnetAddress[];
@@ -166,9 +169,9 @@ export class ZetaChainClient {
     this.mergeChains(params.chains);
   }
 
-  private mergeChains(customChains: { [key: string]: any } = {}): void {
+  private mergeChains(customChains: { [key: string]: ChainData } = {}): void {
     Object.entries(customChains).forEach(([key, value]) => {
-      if (customChains.hasOwnProperty(key)) {
+      if (has(customChains, key)) {
         this.chains[key] = merge({}, this.chains[key], value);
       }
     });
@@ -189,12 +192,15 @@ export class ZetaChainClient {
       let gateway;
       if (this.wallet) {
         try {
-          const chainId = await this.wallet!.getChainId();
+          const chainId = await this.wallet.getChainId();
           gateway = (this.contracts as MainnetTestnetAddress[]).find(
             (item) => chainId === item.chain_id && item.type === "gateway"
           );
-        } catch (error) {
-          throw new Error("Failed to get gateway address: " + error);
+        } catch (error: unknown) {
+          throw new Error(
+            `Failed to get gateway address. ${typeof error === "string" ? error : ""
+            }`
+          );
         }
       } else {
         try {
@@ -202,8 +208,11 @@ export class ZetaChainClient {
           gateway = (this.contracts as MainnetTestnetAddress[]).find(
             (item) => chainId === item.chain_id && item.type === "gateway"
           );
-        } catch (error) {
-          throw new Error("Failed to get gateway address: " + error);
+        } catch (error: unknown) {
+          throw new Error(
+            `Failed to get gateway address. ${typeof error === "string" ? error : ""
+            }`
+          );
         }
       }
 
@@ -215,7 +224,7 @@ export class ZetaChainClient {
     }
   }
 
-  public getChains(): { [key: string]: any } {
+  public getChains(): { [key: string]: ChainData } {
     return this.chains;
   }
 
