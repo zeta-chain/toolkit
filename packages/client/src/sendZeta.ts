@@ -1,18 +1,13 @@
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZetaToken from "@zetachain/protocol-contracts/abi/Zeta.non-eth.sol/ZetaNonEth.json";
-import ZetaConnectorEth from "@zetachain/protocol-contracts/abi/ZetaConnectorNative.sol/ZetaConnectorNative.json";
-import ZetaConnectorZEVM from "@zetachain/protocol-contracts/abi/ZetaConnectorNonNative.sol/ZetaConnectorNonNative.json";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
-
-// Define the contract type
-type ZetaTokenContract = ethers.Contract & {
-  approve: (
-    spender: string,
-    value: ethers.BigNumber
-  ) => Promise<ethers.ContractTransaction>;
-};
+import type {
+  ZetaConnectorContract,
+  ZetaTokenContract,
+} from "./sendZeta.types";
+import { sendFunctionAbi } from "./sendZeta.types";
 
 /**
  *
@@ -71,9 +66,14 @@ export const sendZeta = async function (
 
   const connectorContract = new ethers.Contract(
     connector,
-    fromZetaChain ? ZetaConnectorZEVM.abi : ZetaConnectorEth.abi,
+    // fromZetaChain ? ZetaConnectorZEVM.abi : ZetaConnectorEth.abi,
+    /**
+     * @todo (Hernan): Restore the above commented line once the new connector is enabled to be used
+     * on testnet/mainnet through the Gateway and remove the sendFunctionAbi hardcoded abi.
+     */
+    sendFunctionAbi,
     signer
-  );
+  ) as ZetaConnectorContract;
 
   const zetaTokenContract = new ethers.Contract(
     zetaToken,
@@ -93,8 +93,7 @@ export const sendZeta = async function (
   const destinationChainId = this.getChains()[destination]?.chain_id;
   const destinationAddress = recipient;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-  return await connectorContract.send({
+  const sendTx = await connectorContract.send({
     destinationAddress,
     destinationChainId,
     destinationGasLimit: gasLimit,
@@ -102,4 +101,6 @@ export const sendZeta = async function (
     zetaParams: ethers.utils.toUtf8Bytes(""),
     zetaValueAndGas: value,
   });
+
+  return sendTx;
 };
