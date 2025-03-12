@@ -6,6 +6,14 @@ import { ethers } from "ethers";
 
 import { ZetaChainClient } from "./client";
 
+// Define the contract type
+type ZetaTokenContract = ethers.Contract & {
+  approve: (
+    spender: string,
+    value: ethers.BigNumber
+  ) => Promise<ethers.ContractTransaction>;
+};
+
 /**
  *
  * Initiates a cross-chain transfer of ZETA tokens from the source chain to the
@@ -34,7 +42,7 @@ export const sendZeta = async function (
     amount: string;
     chain: string;
     destination: string;
-    gasLimit?: Number;
+    gasLimit?: number;
     recipient: string;
   }
 ) {
@@ -71,7 +79,7 @@ export const sendZeta = async function (
     zetaToken,
     ZetaToken.abi,
     signer
-  );
+  ) as ZetaTokenContract;
 
   const value = ethers.utils.parseEther(amount);
 
@@ -85,6 +93,7 @@ export const sendZeta = async function (
   const destinationChainId = this.getChains()[destination]?.chain_id;
   const destinationAddress = recipient;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
   return await connectorContract.send({
     destinationAddress,
     destinationChainId,
