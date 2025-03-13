@@ -1,32 +1,83 @@
+import { BigNumber, utils } from "ethers";
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
-export const evmCall = async (args: any, hre: HardhatRuntimeEnvironment) => {
+const evmAddressSchema = z
+  .string()
+  .refine((val) => utils.isAddress(val), "Must be a valid EVM address");
+
+const evmCallArgsSchema = z.object({
+  callOnRevert: z.boolean().optional(),
+  gasLimit: z.number().int().min(0),
+  gasPrice: z.number().int().min(0),
+  gatewayEvm: evmAddressSchema.optional(),
+  onRevertGasLimit: z.number().int().min(0),
+  receiver: evmAddressSchema,
+  revertAddress: evmAddressSchema,
+  revertMessage: z.string(),
+  types: z.string().refine(
+    (val) => {
+      try {
+        JSON.parse(val);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: "Types must be a valid JSON array of strings" }
+  ),
+  values: z.array(z.string()).min(1, "At least one value is required"),
+});
+
+// Infer the type from the schema
+type EvmCallArgs = z.infer<typeof evmCallArgsSchema>;
+
+export const evmCall = async (
+  args: EvmCallArgs,
+  hre: HardhatRuntimeEnvironment
+) => {
   try {
-    const values = parseAbiValues(args.types, args.values);
+    // Validate the args
+    const {
+      success,
+      error,
+      data: parsedArgs,
+    } = evmCallArgsSchema.safeParse(args);
+
+    if (!success) {
+      console.error("Invalid arguments:", error?.message);
+      return;
+    }
+
+    // Parse the ABI values
+    const values = parseAbiValues(parsedArgs.types, parsedArgs.values);
 
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
     const client = new ZetaChainClient({ network, signer });
+
+    // Make the EVM call
     const tx = await client.evmCall({
-      gatewayEvm: args.gatewayEvm,
-      receiver: args.receiver,
+      gatewayEvm: parsedArgs.gatewayEvm,
+      receiver: parsedArgs.receiver,
       revertOptions: {
-        callOnRevert: args.callOnRevert,
-        onRevertGasLimit: args.onRevertGasLimit,
-        revertAddress: args.revertAddress,
-        revertMessage: args.revertMessage,
+        callOnRevert: parsedArgs.callOnRevert || false,
+        onRevertGasLimit: parsedArgs.onRevertGasLimit,
+        revertAddress: parsedArgs.revertAddress,
+        revertMessage: parsedArgs.revertMessage,
       },
       txOptions: {
-        gasLimit: args.gasLimit,
-        gasPrice: args.gasPrice,
+        gasLimit: parsedArgs.gasLimit,
+        gasPrice: BigNumber.from(parsedArgs.gasPrice),
       },
-      types: JSON.parse(args.types),
+      types: JSON.parse(parsedArgs.types) as string[],
       values,
     });
+
     const receipt = await tx.wait();
     console.log("Transaction hash:", receipt.transactionHash);
   } catch (e) {

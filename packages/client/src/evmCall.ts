@@ -1,6 +1,8 @@
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
 import { ethers } from "ethers";
 
+import { GatewayContract } from "../../../types/evmCall.types";
+import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import { ZetaChainClient } from "./client";
 import type { revertOptions, txOptions } from "./types";
 
@@ -29,7 +31,7 @@ export const evmCall = async function (
     revertOptions: revertOptions;
     txOptions: txOptions;
     types: string[];
-    values: any[];
+    values: ParseAbiValuesReturnType;
   }
 ) {
   const signer = this.signer;
@@ -39,16 +41,14 @@ export const evmCall = async function (
     gatewayEvmAddress,
     GatewayABI.abi,
     signer
-  );
+  ) as GatewayContract;
 
   const encodedParameters = utils.defaultAbiCoder.encode(
     args.types,
     args.values
   );
 
-  const tx = await gateway[
-    "call(address,bytes,(address,bool,address,bytes,uint256))"
-  ](
+  const tx = await gateway.call(
     args.receiver,
     encodedParameters,
     {

@@ -13,3 +13,5 @@ const solidityTypeSchema = z.union([
 ]);
 
 export const solidityTypeArraySchema = z.array(solidityTypeSchema);
+
+export type ParseAbiValuesReturnType = (string | bigint | boolean)[];

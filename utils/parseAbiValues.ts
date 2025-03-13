@@ -1,11 +1,17 @@
 import { utils } from "ethers";
 import { isNull } from "lodash";
 
+import {
+  ParseAbiValuesReturnType,
+  solidityTypeArraySchema,
+} from "../types/parseAbiValues.types";
 import { getBitSize, isValidBitSize } from "./bitsize";
-import { solidityTypeArraySchema } from "./parseAbiValues.types";
 import { toHexString } from "./toHexString";
 
-export const parseAbiValues = (types: string, values: string[]) => {
+export const parseAbiValues = (
+  types: string,
+  values: string[]
+): ParseAbiValuesReturnType => {
   let typesArray: string[] = [];
 
   try {
