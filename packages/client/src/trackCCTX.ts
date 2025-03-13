@@ -1,97 +1,152 @@
-import networks from "@zetachain/networks/dist/src/networks";
-import { ethers } from "ethers";
-import fetch from "isomorphic-fetch";
+import axios from "axios";
 
+import {
+  CCTXs,
+  CrossChainTxResponse,
+  Emitter,
+  InboundHashToCctxResponseReturnType,
+  PendingNonce,
+  PendingNoncesResponse,
+  Spinners,
+  TssResponse,
+} from "../../../types/trackCCTX.types";
 import type { ZetaChainClient } from "./client";
 
-const apiFetch = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
+const apiFetch = async <T>(url: string) => {
+  const response = await axios.get<T>(url);
+  const isResponseOk = response.status >= 200 && response.status < 300;
+  if (!isResponseOk) {
     throw new Error(`Fetch failed with status: ${response.status}`);
   }
-  return await response.json();
-};
-
-const findByChainId = (config: any, targetChainId: Number): Object | null => {
-  for (const key in config) {
-    if (config.hasOwnProperty(key) && config[key].hasOwnProperty("chain_id")) {
-      if (config[key].chain_id === targetChainId) {
-        return key;
-      }
-    }
-  }
-  return null;
+  return response.data;
 };
 
 const fetchCCTXByInbound = async (
   hash: string,
-  emitter: any,
-  spinners: any,
+  emitter: Emitter | null,
+  spinners: Spinners,
   API: string,
-  cctxs: any,
-  json: Boolean
+  cctxs: CCTXs,
+  json: boolean
 ) => {
   try {
     const url = `${API}/zeta-chain/crosschain/inTxHashToCctx/${hash}`;
-    const apiResponseData = await apiFetch(url);
-    const res = apiResponseData?.inboundHashToCctx?.cctx_index;
-    res.forEach((hash: any) => {
+    const apiResponseData = await apiFetch<InboundHashToCctxResponseReturnType>(
+      url
+    );
+    const cctxIndex = apiResponseData?.inboundHashToCctx?.cctx_index;
+
+    cctxIndex.forEach((hash) => {
       if (hash && !cctxs[hash] && !spinners[hash]) {
         cctxs[hash] = [];
         if (!json && emitter) {
-          emitter.emit("add", { hash, text: hash });
+          emitter?.emit("add", { hash, text: hash });
           spinners[hash] = true;
         }
       }
     });
-  } catch (error) {}
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    console.error(
+      `Something failed fetching CCTX By Inbound hash: ${errorMessage}`
+    );
+  }
+};
+
+const getCCTX = async (hash: string, API: string) => {
+  try {
+    const url = `${API}/zeta-chain/crosschain/cctx/${hash}`;
+    const apiResponseData = await apiFetch<CrossChainTxResponse>(url);
+    return apiResponseData?.CrossChainTx;
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    console.error(`Something failed fetching CCTX: ${errorMessage}`);
+  }
+};
+
+const fetchNonces = async (API: string, TSS: string) => {
+  try {
+    const url = `${API}/zeta-chain/observer/pendingNonces`;
+    const apiResponseData = await apiFetch<PendingNoncesResponse>(url);
+    const nonces = apiResponseData?.pending_nonces;
+    return nonces.filter((n) => n.tss === TSS);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    console.error(`Something failed fetching Nonces: ${errorMessage}`);
+  }
+};
+
+const fetchTSS = async (API: string) => {
+  try {
+    const url = `${API}/zeta-chain/observer/TSS`;
+    const apiResponseData = await apiFetch<TssResponse>(url);
+    return apiResponseData?.TSS.tss_pubkey;
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    console.error(`Something failed fetching TSS: ${errorMessage}`);
+  }
 };
 
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 const fetchCCTXData = async function (
   this: ZetaChainClient,
   hash: string,
-  emitter: any,
-  spinners: any,
+  emitter: Emitter | null,
+  spinners: Spinners,
   API: string,
-  cctxs: any,
-  pendingNonces: any,
-  json: Boolean
+  cctxs: CCTXs,
+  pendingNonces: PendingNonce[],
+  json: boolean
 ) {
   const cctx = await getCCTX(hash, API);
-  const receiver_chainId = cctx?.outbound_params[0]?.receiver_chainId;
-  const outbound_tx_hash = cctx?.outbound_params[0]?.outbound_tx_hash;
-  let confirmed_on_destination = false;
+
+  if (!cctx) {
+    throw new Error(`CCTX not found for hash: ${hash}`);
+  }
+
+  const receiver_chainId = cctx.outbound_params[0].receiver_chainId;
+  const outbound_tx_hash = cctx.outbound_params[0].outbound_tx_hash;
+  const confirmed_on_destination = false;
+
   const tx = {
     confirmed_on_destination,
     outbound_tx_hash,
-    outbound_tx_tss_nonce: cctx?.outbound_params[0]?.outbound_tx_tss_nonce,
+    outbound_tx_tss_nonce: cctx.outbound_params[0].outbound_tx_tss_nonce,
     receiver_chainId,
-    sender_chain_id: cctx?.outbound_params?.sender_chain_id,
-    status: cctx?.cctx_status?.status,
-    status_message: cctx?.cctx_status?.status_message,
+    sender_chain_id: cctx.inbound_params.sender_chain_id,
+    status: cctx.cctx_status.status,
+    status_message: cctx.cctx_status.status_message,
   };
+
   const lastCCTX = cctxs[hash][cctxs[hash].length - 1];
   const isEmpty = cctxs[hash].length === 0;
   const statusDefined =
     tx.status !== undefined && tx.status_message !== undefined;
+
   if (isEmpty || (statusDefined && lastCCTX.status !== tx.status)) {
     cctxs[hash].push(tx);
     const sender = cctxs[hash]?.[0].sender_chain_id;
     const receiver = cctxs[hash]?.[0].receiver_chainId;
     let queue;
     if (pendingNonces) {
-      const pending = pendingNonces.find(
-        (n: any) => n.chain_id === tx.receiver_chainId
-      )?.nonce_low;
+      const pending =
+        pendingNonces.find((n) => n.chain_id === tx.receiver_chainId)
+          ?.nonce_low || "0";
       const current = tx.outbound_tx_tss_nonce;
-      const diff = current - pending;
+      const diff = current - Number(pending);
       queue = diff > 0 ? ` (${diff} in queue)` : "";
     }
     const path = cctxs[hash]
       .map(
-        (x: any) =>
-          `${x.status} ${x.status_message && "(" + x.status_message + ")"}`
+        (x) => `${x.status} ${x.status_message && "(" + x.status_message + ")"}`
       )
       .join(" → ");
     const text = `${hash}: ${sender} → ${receiver}${queue}: ${path}`;
@@ -111,128 +166,131 @@ const fetchCCTXData = async function (
   }
 };
 
-const getCCTX = async (hash: string, API: string) => {
-  try {
-    const url = `${API}/zeta-chain/crosschain/cctx/${hash}`;
-    const apiResponseData = await apiFetch(url);
-    return apiResponseData?.CrossChainTx;
-  } catch (e) {}
-};
-
-const fetchNonces = async (API: string, TSS: string) => {
-  try {
-    const url = `${API}/zeta-chain/observer/pendingNonces`;
-    const apiResponseData = await apiFetch(url);
-    const nonces = apiResponseData?.pending_nonces;
-    return nonces.filter((n: any) => n.tss === TSS);
-  } catch (e) {}
-};
-
-const fetchTSS = async (API: string) => {
-  try {
-    const url = `${API}/zeta-chain/observer/TSS`;
-    const apiResponseData = await apiFetch(url);
-    return apiResponseData?.TSS.tss_pubkey;
-  } catch (e) {}
-};
-
 export const trackCCTX = async function (
   this: ZetaChainClient,
   {
     hash,
     json = false,
     emitter = null,
-  }: { emitter: any; hash: string; json: Boolean }
-): Promise<void> {
-  const spinners: any = {};
+  }: { emitter: Emitter | null; hash: string; json: boolean }
+): Promise<CCTXs> {
+  const spinners: Spinners = {};
 
   const API = this.getEndpoint("cosmos-http", `zeta_${this.network}`);
   const TSS = await fetchTSS(API);
 
-  return new Promise((resolve, reject) => {
-    let cctxs: any = {};
-    let pendingNonces: any = [];
+  if (!TSS) {
+    throw new Error("TSS not found");
+  }
 
-    const intervalID = setInterval(async () => {
-      pendingNonces = await fetchNonces(API, TSS);
-      if (Object.keys(cctxs).length === 0) {
-        if (!json && emitter) {
-          const text = `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`;
-          emitter.emit("search-add", { text });
-          spinners["search"] = true;
-        }
-        await fetchCCTXByInbound(hash, emitter, spinners, API, cctxs, json);
-      }
-      if (
-        Object.keys(cctxs).length === 0 &&
-        !cctxs[hash] &&
-        (await getCCTX(hash, API)) &&
-        !cctxs[hash]
-      ) {
-        cctxs[hash] = [];
-        if (!spinners[hash] && !json && emitter) {
-          spinners[hash] = true;
-          emitter.emit("add", { hash, text: hash });
-          spinners[hash] = true;
-        }
-      }
-      for (const txHash in cctxs) {
-        await fetchCCTXByInbound(txHash, emitter, spinners, API, cctxs, json);
-      }
-      if (Object.keys(cctxs).length > 0) {
-        if (spinners["search"] && !json && emitter) {
-          emitter.emit("search-end", {
-            text: `CCTXs on ZetaChain found.\n`,
-          });
-          spinners["search"] = false;
-        }
-        for (const hash in cctxs) {
-          try {
-            fetchCCTXData.call(
-              this,
-              hash,
+  return new Promise((resolve, reject) => {
+    const cctxs: CCTXs = {};
+    let pendingNonces: PendingNonce[] | undefined = [];
+
+    const intervalID = setInterval(() => {
+      void (async () => {
+        try {
+          pendingNonces = await fetchNonces(API, TSS);
+          if (Object.keys(cctxs).length === 0) {
+            if (!json && emitter) {
+              const text = `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`;
+              emitter.emit("search-add", { text });
+              spinners["search"] = true;
+            }
+            await fetchCCTXByInbound(hash, emitter, spinners, API, cctxs, json);
+          }
+          if (
+            Object.keys(cctxs).length === 0 &&
+            !cctxs[hash] &&
+            (await getCCTX(hash, API)) &&
+            !cctxs[hash]
+          ) {
+            cctxs[hash] = [];
+            if (!spinners[hash] && !json && emitter) {
+              spinners[hash] = true;
+              emitter.emit("add", { hash, text: hash });
+              spinners[hash] = true;
+            }
+          }
+          for (const txHash in cctxs) {
+            await fetchCCTXByInbound(
+              txHash,
               emitter,
               spinners,
               API,
               cctxs,
-              pendingNonces,
               json
             );
-          } catch (error) {}
-        }
-      }
-      if (
-        Object.keys(cctxs).length > 0 &&
-        Object.keys(cctxs)
-          .map((c: any) => {
-            const last = cctxs[c][cctxs[c].length - 1];
-            return last?.status;
-          })
-          .filter((s) => !["OutboundMined", "Aborted", "Reverted"].includes(s))
-          .length === 0
-      ) {
-        const allOutboundMined = Object.keys(cctxs)
-          .map((c: any) => {
-            const last = cctxs[c][cctxs[c].length - 1];
-            return last?.status;
-          })
-          .every((s) => s === "OutboundMined");
+          }
+          if (Object.keys(cctxs).length > 0 && pendingNonces) {
+            if (spinners["search"] && !json && emitter) {
+              emitter.emit("search-end", {
+                text: `CCTXs on ZetaChain found.\n`,
+              });
+              spinners["search"] = false;
+            }
 
-        clearInterval(intervalID);
+            for (const hash in cctxs) {
+              try {
+                await fetchCCTXData.call(
+                  this,
+                  hash,
+                  emitter,
+                  spinners,
+                  API,
+                  cctxs,
+                  pendingNonces,
+                  json
+                );
+              } catch (error: unknown) {
+                const errorMessage =
+                  error instanceof Error ? error.message : "Unknown error";
 
-        if (!allOutboundMined) {
-          emitter.emit("mined-fail", {
-            cctxs,
-          });
-          reject(new Error("CCTX aborted or reverted"));
-        } else {
-          emitter.emit("mined-success", {
-            cctxs,
-          });
-          if (json) console.log(JSON.stringify(cctxs, null, 2));
-          resolve(cctxs);
+                console.error(
+                  `Something failed on Fetch CCTX call: ${errorMessage}`
+                );
+              }
+            }
+          }
+          if (
+            Object.keys(cctxs).length > 0 &&
+            Object.keys(cctxs)
+              .map((c) => {
+                const last = cctxs[c][cctxs[c].length - 1];
+                return last?.status;
+              })
+              .filter(
+                (s) => !["OutboundMined", "Aborted", "Reverted"].includes(s)
+              ).length === 0
+          ) {
+            const allOutboundMined = Object.keys(cctxs)
+              .map((c) => {
+                const last = cctxs[c][cctxs[c].length - 1];
+                return last?.status;
+              })
+              .every((s) => s === "OutboundMined");
+
+            clearInterval(intervalID);
+
+            if (!allOutboundMined) {
+              emitter?.emit("mined-fail", {
+                cctxs,
+              });
+              reject(new Error("CCTX aborted or reverted"));
+            } else {
+              emitter?.emit("mined-success", {
+                cctxs,
+              });
+              if (json) console.log(JSON.stringify(cctxs, null, 2));
+              resolve(cctxs);
+            }
+          }
+        } catch (error: unknown) {
+          console.error("Error in interval:", error);
+          clearInterval(intervalID);
+          reject(new Error("Error in interval"));
         }
-      }
+      })();
     }, 3000);
   });
 };
