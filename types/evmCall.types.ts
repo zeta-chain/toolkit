@@ -13,7 +13,7 @@ interface TxOptions {
   gasPrice?: ethers.BigNumberish;
 }
 
-export type GatewayContract = ethers.Contract & {
+export type GatewayCallContract = ethers.Contract & {
   call: (
     receiver: string,
     encodedParameters: ethers.BytesLike,

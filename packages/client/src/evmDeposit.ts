@@ -2,6 +2,10 @@ import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
 import { ethers } from "ethers";
 
+import {
+  ERC20Contract,
+  GatewayDepositContract,
+} from "../../../types/evmDeposit.types";
 import { ZetaChainClient } from "./client";
 import type { revertOptions, txOptions } from "./types";
 
@@ -26,7 +30,7 @@ export const evmDeposit = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    erc20: string;
+    erc20?: string;
     gatewayEvm?: string;
     receiver: string;
     revertOptions: revertOptions;
@@ -34,13 +38,18 @@ export const evmDeposit = async function (
   }
 ) {
   const signer = this.signer;
+
+  if (!signer) {
+    throw new Error("Signer is undefined. Please provide a valid signer.");
+  }
+
   const { utils } = ethers;
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
     gatewayEvmAddress,
     GatewayABI.abi,
     signer
-  );
+  ) as GatewayDepositContract;
 
   const revertOptions = {
     abortAddress: "0x0000000000000000000000000000000000000000", // not used
@@ -63,13 +72,16 @@ export const evmDeposit = async function (
       args.erc20,
       ERC20_ABI.abi,
       signer
-    );
+    ) as ERC20Contract;
+
     const decimals = await erc20Contract.decimals();
     const value = utils.parseUnits(args.amount, decimals);
-    await erc20Contract.connect(signer).approve(gatewayEvmAddress, value);
-    const method =
-      "deposit(address,uint256,address,(address,bool,address,bytes,uint256))";
-    tx = await gateway[method](
+
+    const connectedContract = erc20Contract.connect(signer) as ERC20Contract;
+
+    await connectedContract.approve(gatewayEvmAddress, value);
+
+    tx = await gateway.deposit(
       args.receiver,
       value,
       args.erc20,
@@ -78,8 +90,8 @@ export const evmDeposit = async function (
     );
   } else {
     const value = utils.parseEther(args.amount);
-    const method = "deposit(address,(address,bool,address,bytes,uint256))";
-    tx = await gateway[method](args.receiver, revertOptions, {
+
+    tx = await gateway.deposit(args.receiver, revertOptions, {
       ...txOptions,
       value,
     });

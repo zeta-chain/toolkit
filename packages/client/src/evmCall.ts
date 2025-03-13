@@ -1,7 +1,7 @@
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
 import { ethers } from "ethers";
 
-import { GatewayContract } from "../../../types/evmCall.types";
+import { GatewayCallContract } from "../../../types/evmCall.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import { ZetaChainClient } from "./client";
 import type { revertOptions, txOptions } from "./types";
@@ -41,7 +41,7 @@ export const evmCall = async function (
     gatewayEvmAddress,
     GatewayABI.abi,
     signer
-  ) as GatewayContract;
+  ) as GatewayCallContract;
 
   const encodedParameters = utils.defaultAbiCoder.encode(
     args.types,
