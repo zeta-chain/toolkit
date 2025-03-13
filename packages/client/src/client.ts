@@ -9,6 +9,7 @@ import type { Signer, Wallet } from "ethers";
 import has from "lodash/has";
 import merge from "lodash/merge";
 
+import { Chains } from "../../../types/client.types";
 import {
   evmCall,
   evmDeposit,
@@ -33,7 +34,6 @@ import {
   zetachainWithdraw,
   zetachainWithdrawAndCall,
 } from ".";
-import { Chains } from "./client.types";
 
 export interface ZetaChainClientParamsBase {
   chains?: Chains;

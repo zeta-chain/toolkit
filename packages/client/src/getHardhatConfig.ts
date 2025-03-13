@@ -1,6 +1,6 @@
 import { networks } from "@zetachain/networks";
 
-import { Chains } from "./client.types";
+import { Chains } from "../../../types/client.types";
 
 interface Config {
   [key: string]: {

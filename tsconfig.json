@@ -20,7 +20,9 @@
     "packages/tasks",
     "packages/test",
     "utils",
-    "test"
+    "types",
+    "test",
+    "types/client.types.ts"
   ],
   "exclude": ["./typechain-types", "./memo.test.js"]
 }
