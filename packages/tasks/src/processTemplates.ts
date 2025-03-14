@@ -39,7 +39,7 @@ const capitalizeFirstChar = (input: string): string => {
   return firstChar + restOfTheString;
 };
 
-interface PrepareDataArgs {
+export interface PrepareDataArgs {
   arguments: string[];
   fees: string;
   name: string;
