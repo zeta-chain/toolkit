@@ -39,11 +39,17 @@ const capitalizeFirstChar = (input: string): string => {
   return firstChar + restOfTheString;
 };
 
-const prepareData = (args: any) => {
+interface PrepareDataArgs {
+  arguments: string[];
+  fees: string;
+  name: string;
+}
+
+const prepareData = (args: PrepareDataArgs) => {
   const argsList = args.arguments || [];
   const names = argsList.map((i: string) => i.split(":")[0]);
   const types = argsList.map((i: string) => {
-    let t = i.split(":")[1];
+    const t = i.split(":")[1];
     if (t === undefined) {
       return "string";
     }
@@ -54,8 +60,11 @@ const prepareData = (args: any) => {
     }
     return t;
   });
-  const pairs = names.map((v: string, i: string) => [v, types[i]]);
-  const pairsWithDataLocation = pairs.map((pair: any) => {
+  const pairs: [string, string][] = names.map((v: string, i: number) => [
+    v,
+    types[i],
+  ]);
+  const pairsWithDataLocation = pairs.map((pair) => {
     if (pair[1] === "string") {
       return [pair[0], "string memory"];
     } else {
@@ -63,28 +72,28 @@ const prepareData = (args: any) => {
     }
   });
   const contractName = sanitizeSolidityFunctionName(args.name);
-  const casts = pairs.map((p: any) => {
-    const n = capitalizeFirstChar(p[0]);
-    const type = p[1];
+  const casts = pairs.map((pair) => {
+    const n = capitalizeFirstChar(pair[0]);
+    const type = pair[1];
 
     if (numberTypes.includes(type)) {
-      return [n, `hre.ethers.BigNumber.from(args.${p[0]})`];
+      return [n, `hre.ethers.BigNumber.from(args.${pair[0]})`];
     }
 
     if (addressTypes.includes(type)) {
-      return [n, `hre.ethers.utils.getAddress(args.${p[0]})`];
+      return [n, `hre.ethers.utils.getAddress(args.${pair[0]})`];
     }
 
     if (boolTypes.includes(type)) {
-      return [n, `JSON.parse(args.${p[0]})`];
+      return [n, `JSON.parse(args.${pair[0]})`];
     }
 
     if (bytesTypes.includes(type)) {
-      return [n, `hre.ethers.utils.toUtf8Bytes(args.${p[0]})`];
+      return [n, `hre.ethers.utils.toUtf8Bytes(args.${pair[0]})`];
     }
 
     // Default case is "string" and other unexpected cases.
-    return [n, `args.${p[0]}`];
+    return [n, `args.${pair[0]}`];
   });
 
   const feesNative = args.fees === "native";
@@ -144,13 +153,19 @@ const processTemplatesRecursive = async (
         fs.copyFileSync(templatePath, outputPath);
       }
     }
-  } catch (error) {
-    console.error(`Error processing templates: ${error}`);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    console.error(`Error processing templates: ${errorMessage}`);
   }
 };
 
-export const processTemplates = async (templateName: string, args: any) => {
-  processTemplatesRecursive(
+export const processTemplates = async (
+  templateName: string,
+  args: PrepareDataArgs
+) => {
+  await processTemplatesRecursive(
     templateName,
     path.resolve(process.cwd()),
     prepareData(args)
