@@ -17,8 +17,7 @@ interface TxOptions {
   value?: ethers.BigNumberish; // For native token deposits
 }
 
-// Define the GatewayDepositContract type
-export type GatewayDepositContract = ethers.Contract & {
+export type GatewayContract = ethers.Contract & {
   /**
    * Deposits ERC-20 tokens or native tokens to a receiver on ZetaChain.
    *
@@ -38,6 +37,19 @@ export type GatewayDepositContract = ethers.Contract & {
     revertOptions: RevertOptions,
     txOptions?: TxOptions
   ) => Promise<ethers.ContractTransaction>);
+  depositAndCall: ((
+    receiver: string,
+    value: ethers.BigNumberish,
+    erc20: string,
+    encodedParameters: ethers.BytesLike,
+    revertOptions: RevertOptions,
+    txOptions?: TxOptions
+  ) => Promise<ethers.ContractTransaction>) & ((
+    receiver: string,
+    encodedParameters: ethers.BytesLike,
+    revertOptions: RevertOptions,
+    txOptions?: TxOptions
+  ) => Promise<ethers.ContractTransaction>)
 };
 
 export type ERC20Contract = ethers.Contract & {

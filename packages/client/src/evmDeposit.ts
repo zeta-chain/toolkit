@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 
 import {
   ERC20Contract,
-  GatewayDepositContract,
+  GatewayContract,
 } from "../../../types/evmDeposit.types";
 import { ZetaChainClient } from "./client";
 import type { revertOptions, txOptions } from "./types";
@@ -49,7 +49,7 @@ export const evmDeposit = async function (
     gatewayEvmAddress,
     GatewayABI.abi,
     signer
-  ) as GatewayDepositContract;
+  ) as GatewayContract;
 
   const revertOptions = {
     abortAddress: "0x0000000000000000000000000000000000000000", // not used

@@ -20,21 +20,8 @@ const evmDepositArgsSchema = z.object({
   receiver: evmAddressSchema,
   revertAddress: evmAddressSchema,
   revertMessage: z.string(),
-  types: z.string().refine(
-    (val) => {
-      try {
-        JSON.parse(val);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    { message: "Types must be a valid JSON array of strings" }
-  ),
-  values: z.array(z.string()).min(1, "At least one value is required"),
 });
 
-// Infer the type from the schema
 type EvmDepositArgs = z.infer<typeof evmDepositArgsSchema>;
 
 export const evmDeposit = async (
@@ -72,6 +59,7 @@ export const evmDeposit = async (
         gasPrice: BigNumber.from(parsedArgs.gasPrice),
       },
     });
+
     if (tx) {
       const receipt = await tx.wait();
       console.log("Transaction hash:", receipt.transactionHash);
