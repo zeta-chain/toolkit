@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.7;
+
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@zetachain/protocol-contracts/contracts/evm/tools/ZetaInteractor.sol";
+import "@zetachain/protocol-contracts/contracts/evm/interfaces/ZetaInterfaces.sol";
+{{#unless arguments.feesNative}}
+import "@zetachain/protocol-contracts/contracts/evm/Zeta.eth.sol";
+{{/unless}}
+
+contract {{contractName}} is ZetaInteractor{{#if arguments.argsListNotEmpty}}, ZetaReceiver{{/if}} {
+    {{#unless arguments.feesNative}}
+    error ErrorTransferringZeta();
+    {{/unless}}
+
+    {{#if arguments.argsListNotEmpty}}
+    event {{contractName}}Event({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}});
+    event {{contractName}}RevertedEvent({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}});
+    {{/if}}
+    
+    {{#if arguments.feesNative}}
+    ZetaTokenConsumer private immutable _zetaConsumer;
+    {{/if}}
+    IERC20 internal immutable _zetaToken;
+
+    constructor(address connectorAddress, address zetaTokenAddress{{#if arguments.feesNative}}, address zetaConsumerAddress{{/if}}) ZetaInteractor(connectorAddress) {
+        _zetaToken = IERC20(zetaTokenAddress);
+        {{#if arguments.feesNative}}
+        _zetaConsumer = ZetaTokenConsumer(zetaConsumerAddress);
+        {{/if}}
+    }
+
+    function sendMessage(uint256 destinationChainId{{#if arguments.pairsWithDataLocation}}, {{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}{{#unless arguments.feesNative}}, uint256 zetaValueAndGas{{/unless}}) external payable {
+        if (!_isValidChainId(destinationChainId))
+            revert InvalidDestinationChainId();
+
+        {{#if arguments.feesNative}}
+        uint256 crossChainGas = 2 * (10 ** 18);
+        uint256 zetaValueAndGas = _zetaConsumer.getZetaFromEth{
+            value: msg.value
+        }(address(this), crossChainGas);
+        _zetaToken.approve(address(connector), zetaValueAndGas);
+        {{else}}
+        bool success1 = _zetaToken.approve(address(connector), zetaValueAndGas);
+        bool success2 = _zetaToken.transferFrom(msg.sender, address(this), zetaValueAndGas);
+        if (!(success1 && success2)) revert ErrorTransferringZeta();
+        {{/if}}
+
+        connector.send(
+            ZetaInterfaces.SendInput({
+                destinationChainId: destinationChainId,
+                destinationAddress: interactorsByChainId[destinationChainId],
+                destinationGasLimit: 300000,
+                message: abi.encode({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}}{{/if}}),
+                zetaValueAndGas: zetaValueAndGas,
+                zetaParams: abi.encode("")
+            })
+        );
+    }
+
+    {{#if arguments.argsListNotEmpty}}
+
+    function onZetaMessage(
+        ZetaInterfaces.ZetaMessage calldata zetaMessage
+    ) external override isValidMessageCall(zetaMessage) {
+        ({{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}} {{/each}}) = abi.decode(
+            zetaMessage.message, ({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
+        );
+
+        emit {{contractName}}Event({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}});
+    }
+
+    function onZetaRevert(
+        ZetaInterfaces.ZetaRevert calldata zetaRevert
+    ) external override isValidRevertCall(zetaRevert) {
+        ({{#if arguments.pairsWithDataLocation}}{{#each arguments.pairsWithDataLocation}}{{#if @index}}, {{/if}}{{this.[1]}} {{this.[0]}}{{/each}}{{/if}}) = abi.decode(
+            zetaRevert.message,
+            ({{#if arguments.pairs}}{{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[1]}}{{/each}}{{/if}})
+        );
+
+        emit {{contractName}}RevertedEvent({{#each arguments.pairs}}{{#if @index}}, {{/if}}{{this.[0]}}{{/each}});
+    }
+
+    {{/if}}
+}
