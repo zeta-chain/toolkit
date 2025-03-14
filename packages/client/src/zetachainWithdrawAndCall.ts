@@ -2,6 +2,11 @@ import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayZEVM.sol/Gatewa
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
+import {
+  CallOptions,
+  GatewayContract,
+  ZRC20Contract,
+} from "../../../types/contracts.types";
 import { toHexString } from "../../../utils/toHexString";
 import { ZetaChainClient } from "./client";
 import type { revertOptions, txOptions } from "./types";
@@ -33,14 +38,14 @@ export const zetachainWithdrawAndCall = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    callOptions: any;
+    callOptions: CallOptions;
     function?: string;
     gatewayZetaChain?: string;
     receiver: string;
     revertOptions: revertOptions;
     txOptions: txOptions;
     types: string[];
-    values: any[];
+    values: string[];
     zrc20: string;
   }
 ) {
@@ -53,7 +58,7 @@ export const zetachainWithdrawAndCall = async function (
     gatewayZetaChainAddress,
     GatewayABI.abi,
     signer
-  );
+  ) as GatewayContract;
 
   const revertOptions = {
     abortAddress: "0x0000000000000000000000000000000000000000",
@@ -70,10 +75,10 @@ export const zetachainWithdrawAndCall = async function (
     args.values
   );
 
-  let message;
+  let message: string;
 
   if (args.callOptions.isArbitraryCall && args.function) {
-    let functionSignature = ethers.utils.id(args.function).slice(0, 10);
+    const functionSignature = ethers.utils.id(args.function).slice(0, 10);
     message = ethers.utils.hexlify(
       ethers.utils.concat([functionSignature, encodedParameters])
     );
@@ -81,12 +86,17 @@ export const zetachainWithdrawAndCall = async function (
     message = encodedParameters;
   }
 
-  const zrc20 = new ethers.Contract(args.zrc20, ZRC20ABI.abi, signer);
+  const zrc20 = new ethers.Contract(
+    args.zrc20,
+    ZRC20ABI.abi,
+    signer
+  ) as ZRC20Contract;
   const decimals = await zrc20.decimals();
   const value = utils.parseUnits(args.amount, decimals);
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
     args.callOptions.gasLimit
   );
+
   if (args.zrc20 === gasZRC20) {
     const approveGasAndWithdraw = await zrc20.approve(
       gatewayZetaChainAddress,
@@ -99,7 +109,7 @@ export const zetachainWithdrawAndCall = async function (
       gasZRC20,
       ZRC20ABI.abi,
       signer
-    );
+    ) as ZRC20Contract;
     const approveGas = await gasZRC20Contract.approve(
       gatewayZetaChainAddress,
       gasFee,
@@ -116,9 +126,7 @@ export const zetachainWithdrawAndCall = async function (
 
   const receiver = toHexString(args.receiver);
 
-  const method =
-    "withdrawAndCall(bytes,uint256,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))";
-  const tx = await gateway[method](
+  const tx = await gateway.withdrawAndCall(
     receiver,
     value,
     args.zrc20,
@@ -127,5 +135,10 @@ export const zetachainWithdrawAndCall = async function (
     revertOptions,
     args.txOptions
   );
-  return { gasFee, gasZRC20, tx };
+
+  return {
+    gasFee,
+    gasZRC20,
+    tx,
+  };
 };

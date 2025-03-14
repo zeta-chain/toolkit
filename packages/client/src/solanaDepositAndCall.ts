@@ -18,7 +18,7 @@ export const solanaDepositAndCall = async function (
     amount: number;
     recipient: string;
     types: string[];
-    values: any[];
+    values: string[];
   }
 ) {
   if (!this.isSolanaWalletConnected()) {
@@ -26,7 +26,7 @@ export const solanaDepositAndCall = async function (
   }
 
   const network = "solana_" + this.network;
-  const api = getEndpoints("solana" as any, network);
+  const api = getEndpoints("solana", network);
 
   const connection = new anchor.web3.Connection(api[0].url);
 
@@ -52,7 +52,7 @@ export const solanaDepositAndCall = async function (
 
     provider = new anchor.AnchorProvider(
       connection,
-      walletAdapter as any,
+      walletAdapter as anchor.Wallet,
       anchor.AnchorProvider.defaultOptions()
     );
   } else if (this.solanaWallet) {
@@ -114,8 +114,7 @@ export const solanaDepositAndCall = async function (
     // Send the transaction
     let txSignature;
     if (this.solanaAdapter) {
-      const { blockhash, lastValidBlockHeight } =
-        await connection.getLatestBlockhash();
+      const { blockhash } = await connection.getLatestBlockhash();
       const messageLegacy = new TransactionMessage({
         instructions: tx.instructions,
         payerKey: this.solanaAdapter.publicKey!,
@@ -136,7 +135,10 @@ export const solanaDepositAndCall = async function (
       );
     }
     return txSignature;
-  } catch (error) {
-    throw new Error(`Transaction failed:, ${error}`);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    throw new Error(`Transaction failed:, ${errorMessage}`);
   }
 };

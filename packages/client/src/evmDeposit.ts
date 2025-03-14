@@ -2,10 +2,7 @@ import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
 import { ethers } from "ethers";
 
-import {
-  ERC20Contract,
-  GatewayContract,
-} from "../../../types/evmDeposit.types";
+import { ERC20Contract, GatewayContract } from "../../../types/contracts.types";
 import { ZetaChainClient } from "./client";
 import type { revertOptions, txOptions } from "./types";
 
