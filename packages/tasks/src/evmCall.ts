@@ -33,7 +33,6 @@ const evmCallArgsSchema = z.object({
   values: z.array(z.string()).min(1, "At least one value is required"),
 });
 
-// Infer the type from the schema
 type EvmCallArgs = z.infer<typeof evmCallArgsSchema>;
 
 export const evmCall = async (
@@ -41,7 +40,6 @@ export const evmCall = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   try {
-    // Validate the args
     const {
       success,
       error,
