@@ -3,12 +3,12 @@ import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import axios from "axios";
 import { ethers, utils } from "ethers";
 
+import { ZRC20Contract } from "../../../types/contracts.types";
 import { ForeignCoin } from "../../../types/foreignCoins.types";
 import {
   ConvertGasToZetaResponse,
   FeeItem,
 } from "../../../types/getFees.types";
-import { ZRC20Contract } from "../../../types/zrc20.types";
 import { ZetaChainClient } from "./client";
 
 const fetchZEVMFees = async (
@@ -28,6 +28,7 @@ const fetchZEVMFees = async (
   } catch {
     return;
   }
+
   const gasFee = ethers.BigNumber.from(withdrawGasFee);
   const rawProtocolFlatFee = await contract.PROTOCOL_FLAT_FEE();
   const protocolFee = ethers.BigNumber.from(rawProtocolFlatFee);
