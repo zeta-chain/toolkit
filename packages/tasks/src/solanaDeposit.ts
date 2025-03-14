@@ -1,36 +1,55 @@
 import { Wallet } from "@coral-xyz/anchor";
 import { Keypair } from "@solana/web3.js";
-import bech32 from "bech32";
+import { bech32 } from "bech32";
 import { utils } from "ethers";
 import { task } from "hardhat/config";
-import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
 import { ZetaChainClient } from "../../client/src";
 
-export const solanaDeposit = async (
-  args: any,
-  hre: HardhatRuntimeEnvironment
-) => {
-  const keypair = await getKeypairFromFile(args.idPath);
+const solanaDepositArgsSchema = z.object({
+  amount: z.string(),
+  idPath: z.string(),
+  recipient: z.string(),
+  solanaNetwork: z.string(),
+});
+
+type SolanaDepositArgs = z.infer<typeof solanaDepositArgsSchema>;
+
+export const solanaDeposit = async (args: SolanaDepositArgs) => {
+  const {
+    success,
+    error,
+    data: parsedArgs,
+  } = solanaDepositArgsSchema.safeParse(args);
+
+  if (!success) {
+    console.error("Invalid arguments:", error?.message);
+    return;
+  }
+
+  const keypair = await getKeypairFromFile(parsedArgs.idPath);
   const wallet = new Wallet(keypair);
 
   const client = new ZetaChainClient({
-    network: args.solanaNetwork,
+    network: parsedArgs.solanaNetwork,
     solanaWallet: wallet,
   });
-  let recipient;
+  let recipient: string;
   try {
-    if ((bech32 as any).decode(args.recipient)) {
+    if (bech32.decode(parsedArgs.recipient)) {
       recipient = utils.solidityPack(
         ["bytes"],
-        [utils.toUtf8Bytes(args.recipient)]
+        [utils.toUtf8Bytes(parsedArgs.recipient)]
       );
+    } else {
+      recipient = parsedArgs.recipient;
     }
-  } catch (e) {
-    recipient = args.recipient;
+  } catch {
+    recipient = parsedArgs.recipient;
   }
   const { amount } = args;
-  const res = await client.solanaDeposit({ amount, recipient });
+  const res = await client.solanaDeposit({ amount: Number(amount), recipient });
   console.log(`Transaction hash: ${res}`);
 };
 
@@ -43,23 +62,26 @@ export const getKeypairFromFile = async (filepath: string) => {
     }
   }
   // Get contents of file
-  let fileContents;
+  let fileContents: string;
   try {
     const { readFile } = await import("fs/promises");
     const fileContentsBuffer = await readFile(filepath);
     fileContents = fileContentsBuffer.toString();
-  } catch (error) {
+  } catch {
     throw new Error(`Could not read keypair from file at '${filepath}'`);
   }
   // Parse contents of file
   let parsedFileContents;
   try {
-    parsedFileContents = Uint8Array.from(JSON.parse(fileContents));
-  } catch (thrownObject) {
-    const error: any = thrownObject;
-    if (!error.message.includes("Unexpected token")) {
-      throw error;
+    parsedFileContents = Uint8Array.from(JSON.parse(fileContents) as string);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    if (!errorMessage.includes("Unexpected token")) {
+      throw new Error(errorMessage);
     }
+
     throw new Error(`Invalid secret key file at '${filepath}'!`);
   }
   return Keypair.fromSecretKey(parsedFileContents);
