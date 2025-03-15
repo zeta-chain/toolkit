@@ -103,7 +103,14 @@ export const zetachainCall = async function (
   await approve.wait();
 
   const receiver = toHexString(args.receiver);
-  const tx = await gateway.call(
+
+  const callAbiSignature =
+    "call(bytes,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))";
+  const gatewayCallFunction = gateway[
+    callAbiSignature
+  ] as GatewayContract["call"];
+
+  const tx = await gatewayCallFunction(
     receiver,
     gasZRC20,
     message,

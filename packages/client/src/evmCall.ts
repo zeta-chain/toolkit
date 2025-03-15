@@ -51,7 +51,13 @@ export const evmCall = async function (
     args.values
   );
 
-  const tx = await gateway.call(
+  const callAbiSignature =
+    "call(address,bytes,(address,bool,address,bytes,uint256))";
+  const gatewayCallFunction = gateway[
+    callAbiSignature
+  ] as GatewayContract["call"];
+
+  const tx = await gatewayCallFunction(
     args.receiver,
     encodedParameters,
     {

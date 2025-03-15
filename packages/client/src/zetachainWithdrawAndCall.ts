@@ -128,7 +128,13 @@ export const zetachainWithdrawAndCall = async function (
 
   const receiver = toHexString(args.receiver);
 
-  const tx = await gateway.withdrawAndCall(
+  const withdrawAndCallAbiSignature =
+    "withdrawAndCall(bytes,uint256,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))";
+  const gatewayWithdrawAndCallFunction = gateway[
+    withdrawAndCallAbiSignature
+  ] as GatewayContract["withdrawAndCall"];
+
+  const tx = await gatewayWithdrawAndCallFunction(
     receiver,
     value,
     args.zrc20,

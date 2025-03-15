@@ -93,7 +93,13 @@ export const evmDepositAndCall = async function (
 
     await connectedContract.approve(gatewayEvmAddress, value);
 
-    tx = await gateway.depositAndCall(
+    const depositAndCallAbiSignature =
+      "depositAndCall(address,uint256,address,bytes,(address,bool,address,bytes,uint256))";
+    const gatewayDepositAndCallFunction = gateway[
+      depositAndCallAbiSignature
+    ] as GatewayContract["depositAndCall"];
+
+    tx = await gatewayDepositAndCallFunction(
       args.receiver,
       value,
       args.erc20,
@@ -102,8 +108,14 @@ export const evmDepositAndCall = async function (
       txOptions
     );
   } else {
+    const depositAndCallAbiSignature =
+      "depositAndCall(address,bytes,(address,bool,address,bytes,uint256))";
+    const depositAndCallFunction = gateway[
+      depositAndCallAbiSignature
+    ] as GatewayContract["depositAndCall"];
     const value = utils.parseEther(args.amount);
-    tx = await gateway.depositAndCall(
+
+    tx = await depositAndCallFunction(
       args.receiver,
       encodedParameters,
       revertOptions,
