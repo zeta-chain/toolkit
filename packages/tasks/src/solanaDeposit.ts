@@ -73,7 +73,10 @@ export const getKeypairFromFile = async (filepath: string) => {
   // Parse contents of file
   let parsedFileContents;
   try {
-    parsedFileContents = Uint8Array.from(JSON.parse(fileContents) as string);
+    const parsedFileContentsResult = z
+      .array(z.number())
+      .parse(JSON.parse(fileContents));
+    parsedFileContents = Uint8Array.from(parsedFileContentsResult);
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";

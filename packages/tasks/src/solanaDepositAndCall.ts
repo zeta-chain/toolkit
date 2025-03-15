@@ -113,7 +113,9 @@ export const getKeypairFromFile = async (filepath: string) => {
   let parsedFileContents;
 
   try {
-    const parsedFileContentsResult = z.string().parse(JSON.parse(fileContents));
+    const parsedFileContentsResult = z
+      .array(z.number())
+      .parse(JSON.parse(fileContents));
     parsedFileContents = Uint8Array.from(parsedFileContentsResult);
   } catch (error: unknown) {
     const errorMessage =
