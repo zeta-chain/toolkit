@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 import * as dotenv from "dotenv";
@@ -49,11 +48,7 @@ const balancesArgsSchema = z.object({
 type BalancesArgs = z.infer<typeof balancesArgsSchema>;
 
 const main = async (args: BalancesArgs) => {
-  const {
-    data: parsedArgs,
-    success,
-    error,
-  } = balancesArgsSchema.safeParse(args);
+  const { data: parsedArgs, success, error } = balancesArgsSchema.safeParse(args);
 
   if (!success) {
     console.error("Invalid arguments:", error?.message);
@@ -101,13 +96,9 @@ const main = async (args: BalancesArgs) => {
         const parsedKey = solanaKeySchema.parse(JSON.parse(solanaKey));
 
         if (solanaKey.startsWith("[") && solanaKey.endsWith("]")) {
-          solanaAddress = Keypair.fromSecretKey(
-            Uint8Array.from(parsedKey)
-          ).publicKey.toString();
+          solanaAddress = Keypair.fromSecretKey(Uint8Array.from(parsedKey)).publicKey.toString();
         } else {
-          solanaAddress = Keypair.fromSecretKey(
-            bs58.decode(solanaKey)
-          ).publicKey.toString();
+          solanaAddress = Keypair.fromSecretKey(bs58.decode(solanaKey)).publicKey.toString();
         }
       } catch (error) {
         spinner.stop();
@@ -116,10 +107,7 @@ const main = async (args: BalancesArgs) => {
       }
     }
     if (btcKey) {
-      btcAddress = bitcoinAddress(
-        btcKey,
-        parsedArgs.mainnet ? "mainnet" : "testnet"
-      );
+      btcAddress = bitcoinAddress(btcKey, parsedArgs.mainnet ? "mainnet" : "testnet");
     }
     if (!solanaKey && !btcKey && !evmKey) {
       {
@@ -142,7 +130,9 @@ const main = async (args: BalancesArgs) => {
     spinner.stop();
 
     console.log(`
-EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""} ${solanaAddress ? `\nSolana: ${solanaAddress}` : ""}
+EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""} ${
+      solanaAddress ? `\nSolana: ${solanaAddress}` : ""
+    }
     `);
     balances = balances.sort((a, b) => {
       if (a?.chain_name === undefined && b?.chain_name === undefined) return 0;
@@ -162,11 +152,7 @@ EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""} ${solanaAddre
   }
 };
 
-export const balancesTask = task(
-  "balances",
-  `Fetch native and ZETA token balances`,
-  main
-)
+export const balancesTask = task("balances", `Fetch native and ZETA token balances`, main)
   .addFlag("json", "Output balances as JSON")
   .addFlag("mainnet", "Run the task on mainnet")
   .addOptionalParam("evm", `Fetch balances for a specific EVM address`)

@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { ethers } from "ethers";
 
 export interface RevertOptions {
@@ -21,14 +20,8 @@ export type CallOptions = {
 };
 
 export type UniswapV2Router02Contract = ethers.Contract & {
-  getAmountsIn: (
-    amountOut: ethers.BigNumberish,
-    path: string[]
-  ) => Promise<ethers.BigNumber[]>;
-  getAmountsOut: (
-    amountIn: ethers.BigNumberish,
-    path: string[]
-  ) => Promise<ethers.BigNumber[]>;
+  getAmountsIn: (amountOut: ethers.BigNumberish, path: string[]) => Promise<ethers.BigNumber[]>;
+  getAmountsOut: (amountIn: ethers.BigNumberish, path: string[]) => Promise<ethers.BigNumber[]>;
 };
 
 export type ZRC20Contract = ethers.Contract & {
@@ -37,12 +30,12 @@ export type ZRC20Contract = ethers.Contract & {
   approve: (
     spender: string,
     value: ethers.BigNumberish,
-    txOptions: TxOptions
+    txOptions: TxOptions,
   ) => Promise<ethers.ContractTransaction>;
   decimals: () => Promise<number>;
   withdrawGasFee: () => Promise<[string, ethers.BigNumber]>;
   withdrawGasFeeWithGasLimit: (
-    gasLimit: ethers.BigNumberish
+    gasLimit: ethers.BigNumberish,
   ) => Promise<[string, ethers.BigNumber]>;
 };
 
@@ -51,16 +44,16 @@ export type GatewayContract = ethers.Contract & {
     receiver: string,
     encodedParameters: ethers.BytesLike,
     revertOptions: RevertOptions,
-    txOptions?: TxOptions
+    txOptions?: TxOptions,
   ) => Promise<ethers.ContractTransaction>) &
-  ((
-    receiver: string,
-    gasZrc20: string,
-    message: string,
-    callOptions: CallOptions,
-    revertOptions: RevertOptions,
-    txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>);
+    ((
+      receiver: string,
+      gasZrc20: string,
+      message: string,
+      callOptions: CallOptions,
+      revertOptions: RevertOptions,
+      txOptions?: TxOptions,
+    ) => Promise<ethers.ContractTransaction>);
   /**
    * Deposits ERC-20 tokens or native tokens to a receiver on ZetaChain.
    *
@@ -73,34 +66,34 @@ export type GatewayContract = ethers.Contract & {
     value: ethers.BigNumberish,
     erc20: string,
     revertOptions: RevertOptions,
-    txOptions?: TxOptions
+    txOptions?: TxOptions,
   ) => Promise<ethers.ContractTransaction>) &
-  ((
-    receiver: string,
-    revertOptions: RevertOptions,
-    txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>);
+    ((
+      receiver: string,
+      revertOptions: RevertOptions,
+      txOptions?: TxOptions,
+    ) => Promise<ethers.ContractTransaction>);
   depositAndCall: ((
     receiver: string,
     value: ethers.BigNumberish,
     erc20: string,
     encodedParameters: ethers.BytesLike,
     revertOptions: RevertOptions,
-    txOptions?: TxOptions
+    txOptions?: TxOptions,
   ) => Promise<ethers.ContractTransaction>) &
-  ((
-    receiver: string,
-    encodedParameters: ethers.BytesLike,
-    revertOptions: RevertOptions,
-    txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>);
+    ((
+      receiver: string,
+      encodedParameters: ethers.BytesLike,
+      revertOptions: RevertOptions,
+      txOptions?: TxOptions,
+    ) => Promise<ethers.ContractTransaction>);
   withdraw: (
     receiver: string,
     value: ethers.BigNumberish,
     erc20: string,
     revertOptions: RevertOptions,
-    txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>
+    txOptions?: TxOptions,
+  ) => Promise<ethers.ContractTransaction>;
   withdrawAndCall: (
     receiver: string,
     value: ethers.BigNumberish,
@@ -108,8 +101,8 @@ export type GatewayContract = ethers.Contract & {
     message: string,
     callOptions: CallOptions,
     revertOptions: RevertOptions,
-    txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>
+    txOptions?: TxOptions,
+  ) => Promise<ethers.ContractTransaction>;
 };
 
 export type ERC20Contract = ethers.Contract & {
@@ -120,10 +113,7 @@ export type ERC20Contract = ethers.Contract & {
    * @param value - The amount of tokens to approve.
    * @returns A promise that resolves to a boolean indicating whether the approval was successful.
    */
-  approve: (
-    spender: string,
-    value: ethers.BigNumberish
-  ) => Promise<ethers.ContractTransaction>;
+  approve: (spender: string, value: ethers.BigNumberish) => Promise<ethers.ContractTransaction>;
 
   /**
    * Returns the number of decimals used by the token.
