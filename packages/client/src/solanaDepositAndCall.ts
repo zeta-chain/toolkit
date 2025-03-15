@@ -8,6 +8,7 @@ import { getEndpoints } from "@zetachain/networks";
 import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
 import { ethers } from "ethers";
 
+import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import { ZetaChainClient } from "./client";
 
 const SEED = "meta";
@@ -18,7 +19,7 @@ export const solanaDepositAndCall = async function (
     amount: number;
     recipient: string;
     types: string[];
-    values: string[];
+    values: ParseAbiValuesReturnType;
   }
 ) {
   if (!this.isSolanaWalletConnected()) {

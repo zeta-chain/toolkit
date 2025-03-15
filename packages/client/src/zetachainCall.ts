@@ -5,11 +5,13 @@ import { ethers } from "ethers";
 import {
   CallOptions,
   GatewayContract,
+  RevertOptions,
+  TxOptions,
   ZRC20Contract,
 } from "../../../types/contracts.types";
+import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import { toHexString } from "../../../utils/toHexString";
 import { ZetaChainClient } from "./client";
-import type { revertOptions, txOptions } from "./types";
 
 /**
  * @function zetachainCall
@@ -40,10 +42,10 @@ export const zetachainCall = async function (
     function: string;
     gatewayZetaChain?: string;
     receiver: string;
-    revertOptions: revertOptions;
-    txOptions: txOptions;
+    revertOptions: RevertOptions;
+    txOptions: TxOptions;
     types: string[];
-    values: string[];
+    values: ParseAbiValuesReturnType;
     zrc20: string;
   }
 ) {

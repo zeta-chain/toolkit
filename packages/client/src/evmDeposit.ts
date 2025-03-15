@@ -2,9 +2,13 @@ import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
 import { ethers } from "ethers";
 
-import { ERC20Contract, GatewayContract } from "../../../types/contracts.types";
+import {
+  ERC20Contract,
+  GatewayContract,
+  RevertOptions,
+  TxOptions,
+} from "../../../types/contracts.types";
 import { ZetaChainClient } from "./client";
-import type { revertOptions, txOptions } from "./types";
 
 /**
  * @function evmDeposit
@@ -30,8 +34,8 @@ export const evmDeposit = async function (
     erc20?: string;
     gatewayEvm?: string;
     receiver: string;
-    revertOptions: revertOptions;
-    txOptions: txOptions;
+    revertOptions: RevertOptions;
+    txOptions: TxOptions;
   }
 ) {
   const signer = this.signer;

@@ -1,31 +1,63 @@
+import { BigNumber, utils } from "ethers";
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
 import { ZetaChainClient } from "../../client/src/";
 
+const evmAddressSchema = z
+  .string()
+  .refine((val) => utils.isAddress(val), "Must be a valid EVM address");
+
+const zetachainWithdrawArgsSchema = z.object({
+  amount: z.string(),
+  callOnRevert: z.boolean().optional(),
+  gatewayZetaChain: evmAddressSchema.optional(),
+  onRevertGasLimit: z.number().int().min(0),
+  receiver: evmAddressSchema,
+  revertAddress: z.string(),
+  revertMessage: z.string(),
+  txOptionsGasLimit: z.number().int().min(0),
+  txOptionsGasPrice: z.number().int().min(0),
+  zrc20: z.string(),
+});
+
+type ZetachainWithdrawArgs = z.infer<typeof zetachainWithdrawArgsSchema>;
+
 export const zetachainWithdraw = async (
-  args: any,
+  args: ZetachainWithdrawArgs,
   hre: HardhatRuntimeEnvironment
 ) => {
+  const {
+    success,
+    error,
+    data: parsedArgs,
+  } = zetachainWithdrawArgsSchema.safeParse(args);
+
+  if (!success) {
+    console.error("Invalid arguments:", error?.message);
+    return;
+  }
+
   try {
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
     const client = new ZetaChainClient({ network, signer });
     const response = await client.zetachainWithdraw({
-      amount: args.amount,
-      gatewayZetaChain: args.gatewayZetaChain,
-      receiver: args.receiver,
+      amount: parsedArgs.amount,
+      gatewayZetaChain: parsedArgs.gatewayZetaChain,
+      receiver: parsedArgs.receiver,
       revertOptions: {
-        callOnRevert: args.callOnRevert,
-        onRevertGasLimit: args.onRevertGasLimit,
-        revertAddress: args.revertAddress,
-        revertMessage: args.revertMessage,
+        callOnRevert: parsedArgs.callOnRevert || false,
+        onRevertGasLimit: parsedArgs.onRevertGasLimit,
+        revertAddress: parsedArgs.revertAddress,
+        revertMessage: parsedArgs.revertMessage,
       },
       txOptions: {
-        gasLimit: args.txOptionsGasLimit,
-        gasPrice: args.txOptionsGasPrice,
+        gasLimit: parsedArgs.txOptionsGasLimit,
+        gasPrice: BigNumber.from(parsedArgs.txOptionsGasPrice),
       },
-      zrc20: args.zrc20,
+      zrc20: parsedArgs.zrc20,
     });
 
     const receipt = await response.tx.wait();

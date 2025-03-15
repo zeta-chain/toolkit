@@ -2,10 +2,14 @@ import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayZEVM.sol/Gatewa
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers } from "ethers";
 
-import { GatewayContract, ZRC20Contract } from "../../../types/contracts.types";
+import {
+  GatewayContract,
+  RevertOptions,
+  TxOptions,
+  ZRC20Contract,
+} from "../../../types/contracts.types";
 import { toHexString } from "../../../utils/toHexString";
 import { ZetaChainClient } from "./client";
-import type { revertOptions, txOptions } from "./types";
 
 /**
  * @function zetachainWithdraw
@@ -32,8 +36,8 @@ export const zetachainWithdraw = async function (
     amount: string;
     gatewayZetaChain?: string;
     receiver: string;
-    revertOptions: revertOptions;
-    txOptions: txOptions;
+    revertOptions: RevertOptions;
+    txOptions: TxOptions;
     zrc20: string;
   }
 ) {

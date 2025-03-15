@@ -1,15 +1,15 @@
 /* eslint-disable prettier/prettier */
 import { ethers } from "ethers";
 
-interface RevertOptions {
-  abortAddress: string;
+export interface RevertOptions {
+  abortAddress?: string;
   callOnRevert: boolean;
   onRevertGasLimit?: number;
   revertAddress?: string;
   revertMessage: string;
 }
 
-interface TxOptions {
+export interface TxOptions {
   gasLimit?: number;
   gasPrice?: ethers.BigNumberish;
   value?: ethers.BigNumberish;
