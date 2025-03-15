@@ -1,12 +1,11 @@
 import * as fs from "fs";
 import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
 
-import { processTemplates } from "./processTemplates";
+import { PrepareDataArgs, processTemplates } from "./processTemplates";
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  processTemplates("omnichain", args);
+const main = async (args: PrepareDataArgs) => {
+  await processTemplates("omnichain", args);
 
   const configPath = path.resolve(process.cwd(), "hardhat.config.ts");
   let hardhatConfigContents = fs.readFileSync(configPath, "utf8");

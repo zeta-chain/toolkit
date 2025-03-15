@@ -55,8 +55,8 @@
     "@types/node": ">=12.0.0",
     "@types/spinnies": "^0.5.3",
     "@types/ws": "^8.5.5",
-    "@typescript-eslint/eslint-plugin": "^5.59.9",
-    "@typescript-eslint/parser": "^5.59.9",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
     "@uniswap/v2-core": "^1.0.1",
     "chai": "^4.2.0",
     "cpx": "^1.5.0",
@@ -125,7 +125,8 @@
     "spinnies": "^0.5.1",
     "tiny-secp256k1": "^2.2.3",
     "web3": "^4.15.0",
-    "ws": "^8.17.1"
+    "ws": "^8.17.1",
+    "zod": "^3.24.2"
   },
   "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
 }

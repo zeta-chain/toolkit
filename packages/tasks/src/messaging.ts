@@ -1,11 +1,10 @@
 import * as fs from "fs";
 import { task, types } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as path from "path";
 
-import { processTemplates } from "./processTemplates";
+import { PrepareDataArgs, processTemplates } from "./processTemplates";
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+const main = async (args: PrepareDataArgs) => {
   await processTemplates("messaging", args);
 
   const configPath = path.resolve(process.cwd(), "hardhat.config.ts");

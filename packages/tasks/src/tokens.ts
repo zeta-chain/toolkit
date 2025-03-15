@@ -1,17 +1,31 @@
 import { task } from "hardhat/config";
+import { z } from "zod";
 
 import { ZetaChainClient } from "../../client/src/";
 
-const main = async (args: any, hre: any) => {
+const tokensArgsSchema = z.object({
+  mainnet: z.boolean().optional(),
+});
+
+type TokensArgs = z.infer<typeof tokensArgsSchema>;
+
+const main = async (args: TokensArgs) => {
+  const { data: parsedArgs, success, error } = tokensArgsSchema.safeParse(args);
+
+  if (!success) {
+    console.error("Invalid arguments:", error?.message);
+    return;
+  }
+
   const client = new ZetaChainClient({
-    network: args.mainnet ? "mainnet" : "testnet",
+    network: parsedArgs.mainnet ? "mainnet" : "testnet",
   });
   const tokens = await client.getForeignCoins();
   const chains = await client.getSupportedChains();
 
-  const tableData = tokens.map((token: any) => {
+  const tableData = tokens.map((token) => {
     const chain = chains.find(
-      (chain: any) => chain.chain_id === token.foreign_chain_id
+      (chain) => chain.chain_id === token.foreign_chain_id
     );
     const name = chain ? chain.chain_name : "Unsupported Chain";
     return {
@@ -24,7 +38,7 @@ const main = async (args: any, hre: any) => {
     };
   });
 
-  tableData.sort((a: any, b: any) => a.Chain.localeCompare(b.Chain));
+  tableData.sort((a, b) => a.Chain.localeCompare(b.Chain));
 
   console.table(tableData);
 };

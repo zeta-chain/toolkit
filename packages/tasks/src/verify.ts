@@ -1,45 +1,63 @@
 import select from "@inquirer/select";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
+import { utils } from "ethers";
 import FormData from "form-data";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getFullyQualifiedName } from "hardhat/utils/contract-names";
+import { z } from "zod";
+
+interface AxiosErrorResponse {
+  error: string; // Define the expected structure of `data`
+}
+
+const verifyTaskArgsSchema = z.object({
+  contract: z.string().refine((val) => utils.isAddress(val), {
+    message: "Contract address must be a valid EVM address",
+  }),
+});
+
+type VerifyTaskArgs = z.infer<typeof verifyTaskArgsSchema>;
 
 const URL = "https://sourcify.dev/server";
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  try {
-    const checkURL = `${URL}/check-by-addresses`;
-    const params = {
-      addresses: args.contract,
-      chainIds: 7001,
-    };
-    const res = await axios.get(checkURL, { params });
-    if (res.status === 200 && res?.data[0]?.status == "perfect") {
-      console.log(`✅ Contract has already been verified.`);
-      return;
-    }
-  } catch (error: any) {}
+const main = async (args: VerifyTaskArgs, hre: HardhatRuntimeEnvironment) => {
+  const {
+    success: argsParseSuccess,
+    error: argsParseError,
+    data: parsedArgs,
+  } = verifyTaskArgsSchema.safeParse(args);
+
+  if (!argsParseSuccess) {
+    throw new Error(`❌ Invalid arguments: ${argsParseError.message}`);
+  }
+
+  const checkURL = `${URL}/check-by-addresses`;
+  const params = {
+    addresses: parsedArgs.contract,
+    chainIds: 7001,
+  };
+  const res = await axios.get<{ status: string }[]>(checkURL, { params });
+
+  if (res.status === 200 && res?.data?.[0]?.status === "perfect") {
+    throw new Error(`✅ Contract has already been verified.`);
+  }
 
   const names = await hre.artifacts.getAllFullyQualifiedNames();
-  if (names.length === 0) {
-    console.error(
-      "❌ Error: no contracts found. Please make sure there are compiled contracts."
-    );
-    return;
+
+  if (!names) {
+    throw new Error("❌ Error: no contracts found. Please make sure there are compiled contracts.");
   }
 
   const chosen = parseInt(
     await select({
       choices: names.map((name, i) => ({ name, value: i.toString() })),
       message: "Select a contract to verify:",
-    })
+    }),
   );
   const [path, name] = names[chosen].split(":");
 
-  const metadata = await hre.artifacts.getBuildInfo(
-    getFullyQualifiedName(path, name)
-  );
+  const metadata = await hre.artifacts.getBuildInfo(getFullyQualifiedName(path, name));
   const source = metadata?.input.sources[path]?.content;
 
   if (!source) {
@@ -48,7 +66,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   }
 
   const formData = new FormData();
-  formData.append("address", args.contract);
+  formData.append("address", parsedArgs.contract);
   formData.append("chain", "7001");
   formData.append("chosenContract", chosen.toString());
   formData.append("files", Buffer.from(source), {
@@ -61,20 +79,27 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   });
 
   const headers = { headers: formData.getHeaders() };
+
   try {
     await axios.post(URL, formData, headers);
     console.log(
-      `✅ Contract verified: https://athens3.explorer.zetachain.com/address/${args.contract}`
+      `✅ Contract verified: https://athens3.explorer.zetachain.com/address/${parsedArgs.contract}`,
     );
-  } catch (error: any) {
-    console.error(
-      `❌ Error during contract verification: ${error.response.data.error}`
-    );
+    return;
+  } catch (error: unknown) {
+    if (isAxiosError(error) && (error.response?.data as AxiosErrorResponse)?.error) {
+      throw new Error(
+        `❌ Error during contract verification: ${
+          (error.response?.data as AxiosErrorResponse)?.error
+        }`,
+      );
+    }
+
+    throw new Error(`❌ Error during contract verification: Unknown error`);
   }
 };
 
-export const verifyTask = task(
-  "verify:zeta",
-  "Verify a contract on ZetaChain.",
-  main
-).addParam("contract", "Contract address to verify");
+export const verifyTask = task("verify:zeta", "Verify a contract on ZetaChain.", main).addParam(
+  "contract",
+  "Contract address to verify",
+);

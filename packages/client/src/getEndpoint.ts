@@ -2,14 +2,26 @@ import { ZetaChainClient } from "./client";
 
 export const getEndpoint = function (
   this: ZetaChainClient,
-  type: any,
-  network: any
+  type: string,
+  network: string
 ) {
-  if (!(this.chains as any)[network]) {
+  const chain = this.chains[network];
+
+  if (!chain) {
     throw new Error(`Network ${network} does not exist.`);
   }
 
-  return (this.chains as any)[network].api.filter(
-    (api: any) => api.type === type
-  )[0]?.url;
+  if (!chain.api) {
+    throw new Error(`Network ${network} does not have an api property.`);
+  }
+
+  const firstChainApiUrlByType = chain.api.filter(
+    (api) => api.type === type
+  )?.[0]?.url;
+
+  if (!firstChainApiUrlByType) {
+    throw new Error(`Network ${network} does not have api for ${type}.`);
+  }
+
+  return firstChainApiUrlByType;
 };

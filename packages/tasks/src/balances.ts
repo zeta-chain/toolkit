@@ -3,8 +3,8 @@ import bs58 from "bs58";
 import * as dotenv from "dotenv";
 import { ethers } from "ethers";
 import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ora from "ora";
+import { z } from "zod";
 
 import { ZetaChainClient } from "../../client/src/";
 import { bitcoinAddress } from "./bitcoinAddress";
@@ -35,12 +35,31 @@ const balancesError = `
   npx hardhat balances --evm <evm_address> --solana <solana_address> --bitcoin <bitcoin_address>
 `;
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+const solanaKeySchema = z.array(z.number());
+
+const balancesArgsSchema = z.object({
+  bitcoin: z.string().optional(),
+  evm: z.string().optional(),
+  json: z.boolean().optional(),
+  mainnet: z.boolean().optional(),
+  solana: z.string().optional(),
+});
+
+type BalancesArgs = z.infer<typeof balancesArgsSchema>;
+
+const main = async (args: BalancesArgs) => {
+  const { data: parsedArgs, success, error } = balancesArgsSchema.safeParse(args);
+
+  if (!success) {
+    console.error("Invalid arguments:", error?.message);
+    return;
+  }
+
   const client = new ZetaChainClient({
-    network: args.mainnet ? "mainnet" : "testnet",
+    network: parsedArgs.mainnet ? "mainnet" : "testnet",
   });
   const spinner = ora("Fetching balances...");
-  if (!args.json) {
+  if (!parsedArgs.json) {
     spinner.start();
   }
 
@@ -52,14 +71,14 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   let btcAddress: string | undefined;
   let solanaAddress: string | undefined;
 
-  if (args.evm) {
-    evmAddress = args.evm;
+  if (parsedArgs.evm) {
+    evmAddress = parsedArgs.evm;
   }
-  if (args.solana) {
-    solanaAddress = args.solana;
+  if (parsedArgs.solana) {
+    solanaAddress = parsedArgs.solana;
   }
-  if (args.bitcoin) {
-    btcAddress = args.bitcoin;
+  if (parsedArgs.bitcoin) {
+    btcAddress = parsedArgs.bitcoin;
   }
 
   if (!evmAddress && !solanaAddress && !btcAddress) {
@@ -74,14 +93,12 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     }
     if (solanaKey) {
       try {
+        const parsedKey = solanaKeySchema.parse(JSON.parse(solanaKey));
+
         if (solanaKey.startsWith("[") && solanaKey.endsWith("]")) {
-          solanaAddress = Keypair.fromSecretKey(
-            Uint8Array.from(JSON.parse(solanaKey))
-          ).publicKey.toString();
+          solanaAddress = Keypair.fromSecretKey(Uint8Array.from(parsedKey)).publicKey.toString();
         } else {
-          solanaAddress = Keypair.fromSecretKey(
-            bs58.decode(solanaKey)
-          ).publicKey.toString();
+          solanaAddress = Keypair.fromSecretKey(bs58.decode(solanaKey)).publicKey.toString();
         }
       } catch (error) {
         spinner.stop();
@@ -90,7 +107,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
       }
     }
     if (btcKey) {
-      btcAddress = bitcoinAddress(btcKey, args.mainnet ? "mainnet" : "testnet");
+      btcAddress = bitcoinAddress(btcKey, parsedArgs.mainnet ? "mainnet" : "testnet");
     }
     if (!solanaKey && !btcKey && !evmKey) {
       {
@@ -101,22 +118,23 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     }
   }
 
-  let balances = (await client.getBalances({
+  let balances = await client.getBalances({
     btcAddress,
     evmAddress,
     solanaAddress,
-  })) as any;
+  });
 
-  if (args.json) {
+  if (parsedArgs.json) {
     console.log(JSON.stringify(balances, null, 2));
   } else {
     spinner.stop();
+
     console.log(`
 EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""} ${
       solanaAddress ? `\nSolana: ${solanaAddress}` : ""
     }
     `);
-    balances = balances.sort((a: any, b: any) => {
+    balances = balances.sort((a, b) => {
       if (a?.chain_name === undefined && b?.chain_name === undefined) return 0;
       if (a?.chain_name === undefined) return 1;
       if (b?.chain_name === undefined) return -1;
@@ -124,23 +142,17 @@ EVM: ${evmAddress} ${btcAddress ? `\nBitcoin: ${btcAddress}` : ""} ${
       return a.chain_name.localeCompare(b.chain_name);
     });
 
-    balances = balances.map((balance: any) => ({
-      /* eslint-disable */
+    const parsedBalances = balances.map((balance) => ({
+      Amount: `${parseFloat(balance.balance).toFixed(6)}`,
       Chain: balance.chain_name,
       Token: balance.symbol,
       Type: balance.coin_type,
-      Amount: `${parseFloat(balance.balance).toFixed(6)}`,
-      /* eslint-enable */
     }));
-    console.table(balances);
+    console.table(parsedBalances);
   }
 };
 
-export const balancesTask = task(
-  "balances",
-  `Fetch native and ZETA token balances`,
-  main
-)
+export const balancesTask = task("balances", `Fetch native and ZETA token balances`, main)
   .addFlag("json", "Output balances as JSON")
   .addFlag("mainnet", "Run the task on mainnet")
   .addOptionalParam("evm", `Fetch balances for a specific EVM address`)
