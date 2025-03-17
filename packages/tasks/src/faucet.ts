@@ -1,10 +1,11 @@
 // @ts-expect-error @description Could not find a declaration file for drip module
 import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
 import * as dotenv from "dotenv";
-import { ethers, utils } from "ethers";
+import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 
+import { evmAddressSchema } from "../../../types/shared.schema";
 import { walletError } from "./balances";
 
 dotenv.config();
@@ -27,10 +28,6 @@ const getRecipientAddress = (address: string) => {
     throw new Error(walletError + faucetError);
   }
 };
-
-const evmAddressSchema = z
-  .string()
-  .refine((val) => utils.isAddress(val), "Must be a valid EVM address");
 
 const faucetArgsSchema = z.object({
   address: evmAddressSchema,

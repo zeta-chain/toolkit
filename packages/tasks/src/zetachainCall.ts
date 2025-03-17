@@ -1,14 +1,11 @@
-import { BigNumber, utils } from "ethers";
+import { BigNumber } from "ethers";
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { z } from "zod";
 
+import { evmAddressSchema } from "../../../types/shared.schema";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
-
-const evmAddressSchema = z
-  .string()
-  .refine((val) => utils.isAddress(val), "Must be a valid EVM address");
 
 const zetachainCallArgsSchema = z.object({
   callOnRevert: z.boolean().optional(),
