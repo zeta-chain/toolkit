@@ -14,7 +14,7 @@ const zetachainWithdrawArgsSchema = z.object({
   callOnRevert: z.boolean().optional(),
   gatewayZetaChain: evmAddressSchema.optional(),
   onRevertGasLimit: z.number().int().min(0),
-  receiver: evmAddressSchema,
+  receiver: z.string(),
   revertAddress: z.string(),
   revertMessage: z.string(),
   txOptionsGasLimit: z.number().int().min(0),
