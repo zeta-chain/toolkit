@@ -63,25 +63,40 @@ const fetchCCMFees = async function (
   if (["7000", "7001", "18332", "8332"].includes(chainID)) return;
 
   const API = this.getEndpoint("cosmos-http", `zeta_${this.network}`);
+
   if (!API) {
     throw new Error("API endpoint not found");
   }
-  const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
-  const response = await axios.get<ConvertGasToZetaResponse>(url);
 
-  const isResponseOk = response.status >= 200 && response.status < 300;
-  if (!isResponseOk) {
-    return;
+  try {
+    const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
+    const response = await axios.get<ConvertGasToZetaResponse>(url);
+    const isResponseOk = response.status >= 200 && response.status < 300;
+
+    if (!isResponseOk) {
+      throw new Error(`Could not fetch CCM fees for chain id: ${chainID}`);
+    }
+
+    const data = response.data;
+    const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);
+    const protocolFee = ethers.BigNumber.from(data.protocolFeeInZeta);
+
+    return {
+      chainID,
+      gasFee: utils.formatUnits(gasFee, 18),
+      protocolFee: utils.formatUnits(protocolFee, 18),
+      totalFee: utils.formatUnits(gasFee.add(protocolFee), 18),
+    };
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : error?.toString() || "Unknown Error";
+
+    console.error(
+      `Something failed fetching CCTX By Inbound hash: ${errorMessage}`
+    );
   }
-  const data = response.data;
-  const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);
-  const protocolFee = ethers.BigNumber.from(data.protocolFeeInZeta);
-  return {
-    chainID,
-    gasFee: utils.formatUnits(gasFee, 18),
-    protocolFee: utils.formatUnits(protocolFee, 18),
-    totalFee: utils.formatUnits(gasFee.add(protocolFee), 18),
-  };
 };
 
 type Fees = {
