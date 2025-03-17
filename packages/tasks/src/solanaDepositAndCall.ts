@@ -5,6 +5,7 @@ import { utils } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 
+import { validJsonStringSchema } from "../../../types/shared.schema";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src";
 
@@ -13,17 +14,7 @@ const solanaDepositAndCallArgsSchema = z.object({
   idPath: z.string(),
   recipient: z.string(),
   solanaNetwork: z.string(),
-  types: z.string().refine(
-    (val) => {
-      try {
-        JSON.parse(val);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    { message: "Types must be a valid JSON array of strings" }
-  ),
+  types: validJsonStringSchema,
   values: z.array(z.string()).min(1, "At least one value is required"),
 });
 

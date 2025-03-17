@@ -2,7 +2,10 @@ import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { z } from "zod";
 
-import { evmAddressSchema } from "../../../types/shared.schema";
+import {
+  evmAddressSchema,
+  validJsonStringSchema,
+} from "../../../types/shared.schema";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
@@ -19,17 +22,7 @@ const zetachainWithdrawAndCallArgsSchema = z.object({
   revertMessage: z.string(),
   txOptionsGasLimit: z.number().int().min(0),
   txOptionsGasPrice: z.number().int().min(0),
-  types: z.string().refine(
-    (val) => {
-      try {
-        JSON.parse(val);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    { message: "Types must be a valid JSON array of strings" }
-  ),
+  types: validJsonStringSchema,
   values: z.array(z.string()).min(1, "At least one value is required"),
   zrc20: z.string(),
 });
