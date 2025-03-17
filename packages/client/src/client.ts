@@ -160,7 +160,9 @@ export class ZetaChainClient {
     if (params.contracts) {
       this.contracts = params.contracts;
     } else {
-      this.contracts = this.network.includes("test") ? testnetAddresses : mainnetAddresses;
+      this.contracts = this.network.includes("test")
+        ? testnetAddresses
+        : mainnetAddresses;
     }
 
     this.mergeChains(params.chains);
@@ -177,7 +179,7 @@ export class ZetaChainClient {
   public async getGatewayAddress(): Promise<string> {
     if (this.network === "localnet" || this.network === "localhost") {
       const gateway = (this.contracts as LocalnetAddress[]).find(
-        (item) => item.type === "gatewayZEVM",
+        (item) => item.type === "gatewayZEVM"
       );
 
       if (!gateway) {
@@ -191,22 +193,26 @@ export class ZetaChainClient {
         try {
           const chainId = await this.wallet.getChainId();
           gateway = (this.contracts as MainnetTestnetAddress[]).find(
-            (item) => chainId === item.chain_id && item.type === "gateway",
+            (item) => chainId === item.chain_id && item.type === "gateway"
           );
         } catch (error: unknown) {
           throw new Error(
-            `Failed to get gateway address. ${typeof error === "string" ? error : ""}`,
+            `Failed to get gateway address. ${
+              typeof error === "string" ? error : ""
+            }`
           );
         }
       } else {
         try {
           const chainId = await this.signer!.getChainId();
           gateway = (this.contracts as MainnetTestnetAddress[]).find(
-            (item) => chainId === item.chain_id && item.type === "gateway",
+            (item) => chainId === item.chain_id && item.type === "gateway"
           );
         } catch (error: unknown) {
           throw new Error(
-            `Failed to get gateway address. ${typeof error === "string" ? error : ""}`,
+            `Failed to get gateway address. ${
+              typeof error === "string" ? error : ""
+            }`
           );
         }
       }
@@ -228,7 +234,9 @@ export class ZetaChainClient {
   }
 
   public getSolanaPublicKey(): PublicKey | null {
-    return this.solanaAdapter?.publicKey || this.solanaWallet?.publicKey || null;
+    return (
+      this.solanaAdapter?.publicKey || this.solanaWallet?.publicKey || null
+    );
   }
 
   getEndpoint = getEndpoint;
