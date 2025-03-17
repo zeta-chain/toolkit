@@ -97,9 +97,9 @@ const main = async (args: BalancesArgs) => {
     }
     if (solanaKey) {
       try {
-        const parsedKey = solanaKeySchema.parse(JSON.parse(solanaKey));
-
         if (solanaKey.startsWith("[") && solanaKey.endsWith("]")) {
+          const parsedKey = solanaKeySchema.parse(JSON.parse(solanaKey));
+
           solanaAddress = Keypair.fromSecretKey(
             Uint8Array.from(parsedKey)
           ).publicKey.toString();
