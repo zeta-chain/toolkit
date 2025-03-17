@@ -7,7 +7,6 @@ import { ZetaChainClient } from "../../client/src/";
 const poolsArgsSchema = z.object({
   json: z.boolean().optional(),
   mainnet: z.boolean().optional(),
-  tx: z.string(),
 });
 
 type PoolsArgs = z.infer<typeof poolsArgsSchema>;
