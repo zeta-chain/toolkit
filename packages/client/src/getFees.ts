@@ -15,7 +15,7 @@ const fetchZEVMFees = async (
   zrc20: (typeof mainnet)[number],
   rpcUrl: string,
   foreignCoins: ForeignCoin[]
-): Promise<FeeItem | void> => {
+): Promise<FeeItem | undefined> => {
   const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl);
   const contract = new ethers.Contract(
     zrc20.address,
