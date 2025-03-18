@@ -1,10 +1,9 @@
-import { task, types } from "hardhat/config";
+import { task } from "hardhat/config";
 import { z } from "zod";
 
 import { ZetaChainClient } from "../../client/src/";
 
 const feesArgsSchema = z.object({
-  gas: z.number().int().min(0),
   json: z.boolean().optional(),
   mainnet: z.boolean().optional(),
 });
@@ -22,7 +21,7 @@ const main = async (args: FeesArgs) => {
     network: parsedArgs.mainnet ? "mainnet" : "testnet",
   });
 
-  const fees = await client.getFees(parsedArgs.gas);
+  const fees = await client.getFees();
 
   if (parsedArgs.json) {
     console.log(JSON.stringify(fees, null, 2));
@@ -41,10 +40,6 @@ const main = async (args: FeesArgs) => {
         })
       )
     );
-    console.log(
-      `\nCross-chain messaging fees (in ZETA, gas limit: ${parsedArgs.gas}):`
-    );
-    console.table(fees.messaging);
   }
 };
 
@@ -53,11 +48,5 @@ export const feesTask = task(
   "Show omnichain and cross-chain messaging fees",
   main
 )
-  .addOptionalParam(
-    "gas",
-    "Gas limit for a cross-chain messaging transaction",
-    500000,
-    types.int
-  )
   .addFlag("json", "Print the result in JSON format")
   .addFlag("mainnet", "Run the task on mainnet");
