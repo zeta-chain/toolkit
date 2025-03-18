@@ -1,9 +1,9 @@
-import { BigNumber } from "ethers";
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { z } from "zod";
 
 import {
+  bigNumberStringSchema,
   evmAddressSchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
@@ -12,16 +12,16 @@ import { ZetaChainClient } from "../../client/src/";
 
 const zetachainCallArgsSchema = z.object({
   callOnRevert: z.boolean().optional(),
-  callOptionsGasLimit: z.number().int().min(0),
+  callOptionsGasLimit: bigNumberStringSchema,
   callOptionsIsArbitraryCall: z.boolean().optional(),
   function: z.string(),
   gatewayZetaChain: evmAddressSchema.optional(),
-  onRevertGasLimit: z.number().int().min(0),
+  onRevertGasLimit: bigNumberStringSchema,
   receiver: z.string(),
   revertAddress: z.string(),
   revertMessage: z.string(),
-  txOptionsGasLimit: z.number().int().min(0),
-  txOptionsGasPrice: z.number().int().min(0),
+  txOptionsGasLimit: bigNumberStringSchema,
+  txOptionsGasPrice: bigNumberStringSchema,
   types: validJsonStringSchema,
   values: z.array(z.string()).min(1, "At least one value is required"),
   zrc20: z.string(),
@@ -70,7 +70,7 @@ export const zetachainCall = async (
       },
       txOptions: {
         gasLimit: parsedArgs.txOptionsGasLimit,
-        gasPrice: BigNumber.from(parsedArgs.txOptionsGasPrice),
+        gasPrice: parsedArgs.txOptionsGasPrice,
       },
       types: parsedTypes,
       values,

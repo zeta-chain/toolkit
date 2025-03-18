@@ -1,19 +1,21 @@
-import { BigNumber } from "ethers";
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { z } from "zod";
 
-import { evmAddressSchema } from "../../../types/shared.schema";
+import {
+  bigNumberStringSchema,
+  evmAddressSchema,
+} from "../../../types/shared.schema";
 import { ZetaChainClient } from "../../client/src/";
 
 const evmDepositArgsSchema = z.object({
   amount: z.string(),
   callOnRevert: z.boolean().optional(),
   erc20: z.string().optional(),
-  gasLimit: z.number().int().min(0),
-  gasPrice: z.number().int().min(0),
+  gasLimit: bigNumberStringSchema,
+  gasPrice: bigNumberStringSchema,
   gatewayEvm: evmAddressSchema.optional(),
-  onRevertGasLimit: z.number().int().min(0),
+  onRevertGasLimit: bigNumberStringSchema,
   receiver: evmAddressSchema,
   revertAddress: evmAddressSchema,
   revertMessage: z.string(),
@@ -53,7 +55,7 @@ export const evmDeposit = async (
       },
       txOptions: {
         gasLimit: parsedArgs.gasLimit,
-        gasPrice: BigNumber.from(parsedArgs.gasPrice),
+        gasPrice: parsedArgs.gasPrice,
       },
     });
 

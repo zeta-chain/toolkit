@@ -3,13 +3,13 @@ import { ethers } from "ethers";
 export interface RevertOptions {
   abortAddress?: string;
   callOnRevert: boolean;
-  onRevertGasLimit?: number;
+  onRevertGasLimit?: ethers.BigNumberish;
   revertAddress?: string;
   revertMessage: string;
 }
 
 export interface TxOptions {
-  gasLimit?: number;
+  gasLimit?: ethers.BigNumberish;
   gasPrice?: ethers.BigNumberish;
   value?: ethers.BigNumberish;
 }

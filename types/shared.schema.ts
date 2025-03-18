@@ -1,4 +1,4 @@
-import { utils } from "ethers";
+import { BigNumber, utils } from "ethers";
 import { z } from "zod";
 
 export const evmAddressSchema = z
@@ -16,3 +16,9 @@ export const validJsonStringSchema = z.string().refine(
   },
   { message: "Types must be a valid JSON array of strings" }
 );
+
+export const bigNumberStringSchema = z
+  .number()
+  .int()
+  .min(0)
+  .transform((val) => BigNumber.from(val));

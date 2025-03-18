@@ -1,21 +1,23 @@
-import { BigNumber } from "ethers";
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { z } from "zod";
 
-import { evmAddressSchema } from "../../../types/shared.schema";
+import {
+  bigNumberStringSchema,
+  evmAddressSchema,
+} from "../../../types/shared.schema";
 import { ZetaChainClient } from "../../client/src/";
 
 const zetachainWithdrawArgsSchema = z.object({
   amount: z.string(),
   callOnRevert: z.boolean().optional(),
   gatewayZetaChain: evmAddressSchema.optional(),
-  onRevertGasLimit: z.number().int().min(0),
+  onRevertGasLimit: bigNumberStringSchema,
   receiver: z.string(),
   revertAddress: z.string(),
   revertMessage: z.string(),
-  txOptionsGasLimit: z.number().int().min(0),
-  txOptionsGasPrice: z.number().int().min(0),
+  txOptionsGasLimit: bigNumberStringSchema,
+  txOptionsGasPrice: bigNumberStringSchema,
   zrc20: z.string(),
 });
 
@@ -52,7 +54,7 @@ export const zetachainWithdraw = async (
       },
       txOptions: {
         gasLimit: parsedArgs.txOptionsGasLimit,
-        gasPrice: BigNumber.from(parsedArgs.txOptionsGasPrice),
+        gasPrice: parsedArgs.txOptionsGasPrice,
       },
       zrc20: parsedArgs.zrc20,
     });

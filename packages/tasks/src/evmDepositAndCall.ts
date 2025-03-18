@@ -1,9 +1,9 @@
-import { BigNumber } from "ethers";
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { z } from "zod";
 
 import {
+  bigNumberStringSchema,
   evmAddressSchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
@@ -14,10 +14,10 @@ const evmDepositAndCallArgsSchema = z.object({
   amount: z.string(),
   callOnRevert: z.boolean().optional(),
   erc20: z.string().optional(),
-  gasLimit: z.number().int().min(0),
-  gasPrice: z.number().int().min(0),
+  gasLimit: bigNumberStringSchema,
+  gasPrice: bigNumberStringSchema,
   gatewayEvm: evmAddressSchema.optional(),
-  onRevertGasLimit: z.number().int().min(0),
+  onRevertGasLimit: bigNumberStringSchema,
   receiver: evmAddressSchema,
   revertAddress: evmAddressSchema,
   revertMessage: z.string(),
@@ -62,7 +62,7 @@ export const evmDepositAndCall = async (
       },
       txOptions: {
         gasLimit: parsedArgs.gasLimit,
-        gasPrice: BigNumber.from(parsedArgs.gasPrice),
+        gasPrice: parsedArgs.gasPrice,
       },
       types: JSON.parse(parsedArgs.types) as string[],
       values,
