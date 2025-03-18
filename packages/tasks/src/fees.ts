@@ -41,10 +41,6 @@ const main = async (args: FeesArgs) => {
         })
       )
     );
-    console.log(
-      `\nCross-chain messaging fees (in ZETA, gas limit: ${parsedArgs.gas}):`
-    );
-    console.table(fees.messaging);
   }
 };
 
