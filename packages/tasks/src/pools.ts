@@ -1,18 +1,30 @@
-import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import { formatUnits } from "ethers/lib/utils";
 import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
 import { ZetaChainClient } from "../../client/src/";
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+const poolsArgsSchema = z.object({
+  json: z.boolean().optional(),
+  mainnet: z.boolean().optional(),
+});
+
+type PoolsArgs = z.infer<typeof poolsArgsSchema>;
+
+const main = async (args: PoolsArgs) => {
+  const { data: parsedArgs, success, error } = poolsArgsSchema.safeParse(args);
+
+  if (!success) {
+    throw new Error(`Invalid arguments: ${error?.message}`);
+  }
+
   const client = new ZetaChainClient({
-    network: args.mainnet ? "mainnet" : "testnet",
+    network: parsedArgs.mainnet ? "mainnet" : "testnet",
   });
 
   const pools = await client.getPools();
 
-  const poolsDisplay = pools.map((pool: any) => {
+  const poolsDisplay = pools.map((pool) => {
     return {
       ...pool,
       t0: {
@@ -26,8 +38,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     };
   });
 
-  const tableData = {} as any;
-  poolsDisplay.forEach((pool: any) => {
+  const tableData: Record<string, { Pool: string; Reserves: string }> = {};
+  poolsDisplay.forEach((pool) => {
     const r0 = parseFloat(pool.t0.reserve);
     const r1 = parseFloat(pool.t1.reserve);
 
@@ -37,7 +49,7 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     };
   });
 
-  if (args.json) {
+  if (parsedArgs.json) {
     console.log(pools);
   } else {
     console.table(tableData);

@@ -1,31 +1,51 @@
 import EventEmitter from "eventemitter3";
 import { task } from "hardhat/config";
 import Spinnies from "spinnies";
+import { z } from "zod";
 
 import { ZetaChainClient } from "../../client/src/";
+
+interface EmitterArgs {
+  hash: string;
+  text: string;
+}
 
 const trackCCTXInteractive = async (
   network: string,
   hash: string,
-  json: Boolean = false
+  json: boolean = false
 ) => {
   const client = new ZetaChainClient({ network });
   const s = new Spinnies();
   const emitter = new EventEmitter();
   emitter
-    .on("search-add", ({ text }) => s.add(`search`, { text }))
-    .on("search-end", ({ text }) => s.succeed(`search`, { text }))
-    .on("add", ({ hash, text }) => s.add(hash, { text }))
-    .on("succeed", ({ hash, text }) => s.succeed(hash, { text }))
-    .on("fail", ({ hash, text }) => s.fail(hash, { text }))
-    .on("update", ({ hash, text }) => s.update(hash, { text }));
+    .on("search-add", ({ text }: EmitterArgs) => s.add(`search`, { text }))
+    .on("search-end", ({ text }: EmitterArgs) => s.succeed(`search`, { text }))
+    .on("add", ({ hash, text }: EmitterArgs) => s.add(hash, { text }))
+    .on("succeed", ({ hash, text }: EmitterArgs) => s.succeed(hash, { text }))
+    .on("fail", ({ hash, text }: EmitterArgs) => s.fail(hash, { text }))
+    .on("update", ({ hash, text }: EmitterArgs) => s.update(hash, { text }));
   await client.trackCCTX({ emitter, hash, json });
 };
 
-const main = async (args: any) => {
-  const network = args.mainnet ? "mainnet" : "testnet";
+const cctxArgsSchema = z.object({
+  json: z.boolean().optional(),
+  mainnet: z.boolean().optional(),
+  tx: z.string(),
+});
 
-  await trackCCTXInteractive(network, args.tx, args.json);
+type CctxArgs = z.infer<typeof cctxArgsSchema>;
+
+const main = async (args: CctxArgs) => {
+  const { data: parsedArgs, success, error } = cctxArgsSchema.safeParse(args);
+
+  if (!success) {
+    throw new Error(`Invalid arguments: ${error?.message}`);
+  }
+
+  const network = parsedArgs.mainnet ? "mainnet" : "testnet";
+
+  await trackCCTXInteractive(network, parsedArgs.tx, parsedArgs.json);
 };
 
 export const cctxTask = task(

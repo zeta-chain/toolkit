@@ -1,14 +1,13 @@
 import { MaxUint256 } from "@ethersproject/constants";
 import { parseEther, parseUnits } from "@ethersproject/units";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import {
-  MockSystemContract,
-  MockSystemContract__factory,
   MockZRC20,
   MockZRC20__factory,
+  SystemContract,
+  SystemContract__factory,
   TestUniswapRouter,
   TestUniswapRouter__factory,
   UniswapV2Factory,
@@ -17,13 +16,11 @@ import {
   WZETA__factory,
 } from "../typechain-types";
 
-export const deployWZETA = async (
-  signer: SignerWithAddress
-): Promise<WZETA> => {
+export const deployWZETA = async (): Promise<WZETA> => {
   const WZETAFactory = (await ethers.getContractFactory(
     "WZETA"
   )) as WZETA__factory;
-  const wZETAContract = (await WZETAFactory.deploy()) as WZETA;
+  const wZETAContract = await WZETAFactory.deploy();
   await wZETAContract.deployed();
   await wZETAContract.deposit({ value: parseEther("10") });
   return wZETAContract;
@@ -41,18 +38,16 @@ export const deployUniswap = async (
   const UniswapV2Factory = (await ethers.getContractFactory(
     "UniswapV2Factory"
   )) as UniswapV2Factory__factory;
-  const uniswapFactory = (await UniswapV2Factory.deploy(
-    signer.address
-  )) as UniswapV2Factory;
+  const uniswapFactory = await UniswapV2Factory.deploy(signer.address);
   await uniswapFactory.deployed();
 
   const UniswapRouter = (await ethers.getContractFactory(
     "TestUniswapRouter"
   )) as TestUniswapRouter__factory;
-  const uniswapRouter = (await UniswapRouter.deploy(
+  const uniswapRouter = await UniswapRouter.deploy(
     uniswapFactory.address,
     wZETA
-  )) as TestUniswapRouter;
+  );
   await uniswapRouter.deployed();
 
   return { uniswapFactory, uniswapRouter };
@@ -90,7 +85,7 @@ const addZetaEthLiquidity = async (
 
 interface EvmSetupResult {
   ZRC20Contracts: MockZRC20[];
-  systemContract: MockSystemContract;
+  systemContract: SystemContract;
 }
 
 export const evmSetup = async (
@@ -104,31 +99,31 @@ export const evmSetup = async (
     "MockZRC20"
   )) as MockZRC20__factory;
 
-  const token1Contract = (await ZRC20Factory.deploy(
+  const token1Contract = await ZRC20Factory.deploy(
     parseUnits("1000000"),
     "tBNB",
     "tBNB"
-  )) as MockZRC20;
-  const token2Contract = (await ZRC20Factory.deploy(
+  );
+  const token2Contract = await ZRC20Factory.deploy(
     parseUnits("1000000"),
     "gETH",
     "gETH"
-  )) as MockZRC20;
-  const token3Contract = (await ZRC20Factory.deploy(
+  );
+  const token3Contract = await ZRC20Factory.deploy(
     parseUnits("1000000"),
     "tMATIC",
     "tMATIC"
-  )) as MockZRC20;
-  const token4Contract = (await ZRC20Factory.deploy(
+  );
+  const token4Contract = await ZRC20Factory.deploy(
     parseUnits("1000000"),
     "USDC",
     "USDC"
-  )) as MockZRC20;
-  const token5Contract = (await ZRC20Factory.deploy(
+  );
+  const token5Contract = await ZRC20Factory.deploy(
     parseUnits("1000000"),
     "tBTC",
     "tBTC"
-  )) as MockZRC20;
+  );
 
   const ZRC20Contracts = [
     token1Contract,
@@ -140,13 +135,13 @@ export const evmSetup = async (
 
   const SystemContractFactory = (await ethers.getContractFactory(
     "MockSystemContract"
-  )) as MockSystemContract__factory;
+  )) as SystemContract__factory;
 
-  const systemContract = (await SystemContractFactory.deploy(
+  const systemContract = await SystemContractFactory.deploy(
     gasTokenAddr,
     uniswapFactoryAddr,
     uniswapRouterAddr
-  )) as MockSystemContract;
+  );
 
   await systemContract.setGasCoinZRC20(97, ZRC20Contracts[0].address);
   await systemContract.setGasCoinZRC20(5, ZRC20Contracts[1].address);

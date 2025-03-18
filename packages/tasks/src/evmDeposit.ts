@@ -1,29 +1,63 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
+import {
+  bigNumberStringSchema,
+  evmAddressSchema,
+} from "../../../types/shared.schema";
 import { ZetaChainClient } from "../../client/src/";
 
-export const evmDeposit = async (args: any, hre: HardhatRuntimeEnvironment) => {
+const evmDepositArgsSchema = z.object({
+  amount: z.string(),
+  callOnRevert: z.boolean().optional(),
+  erc20: z.string().optional(),
+  gasLimit: bigNumberStringSchema,
+  gasPrice: bigNumberStringSchema,
+  gatewayEvm: evmAddressSchema.optional(),
+  onRevertGasLimit: bigNumberStringSchema,
+  receiver: evmAddressSchema,
+  revertAddress: evmAddressSchema,
+  revertMessage: z.string(),
+});
+
+type EvmDepositArgs = z.infer<typeof evmDepositArgsSchema>;
+
+export const evmDeposit = async (
+  args: EvmDepositArgs,
+  hre: HardhatRuntimeEnvironment
+) => {
   try {
+    const {
+      success,
+      error,
+      data: parsedArgs,
+    } = evmDepositArgsSchema.safeParse(args);
+
+    if (!success) {
+      throw new Error(`Invalid arguments: ${error?.message}`);
+    }
+
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
     const client = new ZetaChainClient({ network, signer });
     const tx = await client.evmDeposit({
-      amount: args.amount,
-      erc20: args.erc20,
-      gatewayEvm: args.gatewayEvm,
-      receiver: args.receiver,
+      amount: parsedArgs.amount,
+      erc20: parsedArgs.erc20,
+      gatewayEvm: parsedArgs.gatewayEvm,
+      receiver: parsedArgs.receiver,
       revertOptions: {
-        callOnRevert: args.callOnRevert,
-        onRevertGasLimit: args.onRevertGasLimit,
-        revertAddress: args.revertAddress,
-        revertMessage: args.revertMessage,
+        callOnRevert: Boolean(parsedArgs.callOnRevert),
+        onRevertGasLimit: parsedArgs.onRevertGasLimit,
+        revertAddress: parsedArgs.revertAddress,
+        revertMessage: parsedArgs.revertMessage,
       },
       txOptions: {
-        gasLimit: args.gasLimit,
-        gasPrice: args.gasPrice,
+        gasLimit: parsedArgs.gasLimit,
+        gasPrice: parsedArgs.gasPrice,
       },
     });
+
     if (tx) {
       const receipt = await tx.wait();
       console.log("Transaction hash:", receipt.transactionHash);

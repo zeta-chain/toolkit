@@ -1,49 +1,83 @@
 import { Wallet } from "@coral-xyz/anchor";
 import { Keypair } from "@solana/web3.js";
-import bech32 from "bech32";
+import { bech32 } from "bech32";
 import { utils } from "ethers";
 import { task } from "hardhat/config";
-import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
+import { validJsonStringSchema } from "../../../types/shared.schema";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src";
 
-export const solanaDepositAndCall = async (
-  args: any,
-  hre: HardhatRuntimeEnvironment
-) => {
-  const values = parseAbiValues(args.types, args.values);
+const solanaDepositAndCallArgsSchema = z.object({
+  amount: z.string(),
+  idPath: z.string(),
+  recipient: z.string(),
+  solanaNetwork: z.string(),
+  types: validJsonStringSchema,
+  values: z.array(z.string()).min(1, "At least one value is required"),
+});
 
-  const keypair = await getKeypairFromFile(args.idPath);
+type SolanaDepositAndCallArgs = z.infer<typeof solanaDepositAndCallArgsSchema>;
+
+export const solanaDepositAndCall = async (args: SolanaDepositAndCallArgs) => {
+  const {
+    success,
+    error,
+    data: parsedArgs,
+  } = solanaDepositAndCallArgsSchema.safeParse(args);
+
+  if (!success) {
+    throw new Error(`Invalid arguments: ${error?.message}`);
+  }
+
+  const values = parseAbiValues(parsedArgs.types, parsedArgs.values);
+
+  const keypair = await getKeypairFromFile(parsedArgs.idPath);
   const wallet = new Wallet(keypair);
 
   const client = new ZetaChainClient({
-    network: args.solanaNetwork,
+    network: parsedArgs.solanaNetwork,
     solanaWallet: wallet,
   });
-  let recipient;
+
+  let recipient: string;
+
   try {
-    if ((bech32 as any).decode(args.recipient)) {
+    if (bech32.decode(parsedArgs.recipient)) {
       recipient = utils.solidityPack(
         ["bytes"],
-        [utils.toUtf8Bytes(args.recipient)]
+        [utils.toUtf8Bytes(parsedArgs.recipient)]
       );
+    } else {
+      recipient = parsedArgs.recipient;
     }
-  } catch (e) {
-    recipient = args.recipient;
+  } catch {
+    recipient = parsedArgs.recipient;
   }
-  let paramTypes;
+
+  let paramTypes: string[];
+
   try {
-    paramTypes = JSON.parse(args.types);
-  } catch (error: any) {
-    throw new Error(`Invalid JSON in 'types' parameter: ${error.message}`);
+    const parsedParamTypes = z
+      .array(z.string())
+      .parse(JSON.parse(parsedArgs.types));
+
+    paramTypes = parsedParamTypes;
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    throw new Error(`Invalid JSON in 'types' parameter: ${errorMessage}`);
   }
+
   const res = await client.solanaDepositAndCall({
-    amount: args.amount,
+    amount: Number(parsedArgs.amount),
     recipient,
-    types: JSON.parse(args.types),
+    types: paramTypes,
     values,
   });
+
   console.log(`Transaction hash: ${res}`);
 };
 
@@ -61,20 +95,29 @@ export const getKeypairFromFile = async (filepath: string) => {
     const { readFile } = await import("fs/promises");
     const fileContentsBuffer = await readFile(filepath);
     fileContents = fileContentsBuffer.toString();
-  } catch (error) {
+  } catch {
     throw new Error(`Could not read keypair from file at '${filepath}'`);
   }
+
   // Parse contents of file
   let parsedFileContents;
+
   try {
-    parsedFileContents = Uint8Array.from(JSON.parse(fileContents));
-  } catch (thrownObject) {
-    const error: any = thrownObject;
-    if (!error.message.includes("Unexpected token")) {
-      throw error;
+    const parsedFileContentsResult = z
+      .array(z.number())
+      .parse(JSON.parse(fileContents));
+    parsedFileContents = Uint8Array.from(parsedFileContentsResult);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    if (!errorMessage.includes("Unexpected token")) {
+      throw new Error(errorMessage);
     }
+
     throw new Error(`Invalid secret key file at '${filepath}'!`);
   }
+
   return Keypair.fromSecretKey(parsedFileContents);
 };
 

@@ -21,9 +21,12 @@ export const hexToBech32Address = (
   return bech32.encode(prefix, words);
 };
 
-export const getWalletFromRecoveryInput = async (ethers: any) => {
+export const getWalletFromRecoveryInput = async (
+  ethers: HardhatRuntimeEnvironment["ethers"]
+) => {
+  // eslint-disable-next-line no-constant-condition
   while (true) {
-    let recovery = await input(
+    const recovery = await input(
       {
         message: "EVM Mnemonic or private key:",
       },
@@ -39,8 +42,11 @@ export const getWalletFromRecoveryInput = async (ethers: any) => {
           recovery.startsWith("0x") ? recovery : "0x" + recovery
         );
       }
-    } catch (e) {
-      console.error(`❌ Invalid mnemonic or private key: ${e}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+
+      console.error(`❌ Invalid mnemonic or private key: ${errorMessage}`);
       continue;
     }
   }
@@ -54,13 +60,14 @@ export const getSolanaWalletFromLocalFileOrInput =
       "solana",
       "id.json"
     );
+
     if (fs.existsSync(solanaConfigPath)) {
       try {
         const fileContent = await fs.promises.readFile(
           solanaConfigPath,
           "utf-8"
         );
-        const secretKey = JSON.parse(fileContent);
+        const secretKey = JSON.parse(fileContent) as number[];
         return Keypair.fromSecretKey(Uint8Array.from(secretKey));
       } catch (error) {
         console.error("Failed to load Solana private key:", error);
@@ -70,8 +77,9 @@ export const getSolanaWalletFromLocalFileOrInput =
       }
     }
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
-      let solanaPrivateKey = await input({
+      const solanaPrivateKey = await input({
         message: "Solana private key (press Enter to skip):",
       });
       if (solanaPrivateKey.trim() === "") {
@@ -80,8 +88,11 @@ export const getSolanaWalletFromLocalFileOrInput =
       }
       try {
         return Keypair.fromSecretKey(bs58.decode(solanaPrivateKey));
-      } catch (e) {
-        console.error(`❌ Invalid Solana private key: ${e}`);
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+
+        console.error(`❌ Invalid Solana private key: ${errorMessage}`);
       }
     }
   };
@@ -91,7 +102,7 @@ export const savePrivateKey = (
   solanaPrivateKey?: string
 ) => {
   const filePath = path.join(process.cwd(), ".env");
-  let env = envfile.parse(
+  const env = envfile.parse(
     fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : ""
   );
   env.PRIVATE_KEY = privateKey.slice(2);
@@ -105,8 +116,16 @@ export const savePrivateKey = (
   console.log(`✅ Saved the private key to '${filePath}' file.\n`);
 };
 
-export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
-  const { ethers } = hre as any;
+interface AccountTaskArgs {
+  recover?: boolean;
+  save?: boolean;
+}
+
+export const main = async (
+  args: AccountTaskArgs,
+  hre: HardhatRuntimeEnvironment
+) => {
+  const ethers = hre.ethers;
   let evmWallet;
   let solanaWallet;
 
@@ -123,21 +142,26 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
 
   console.log(`
     🔑 EVM Private key: ${pk}`);
-  solanaWallet &&
-    console.log(`
-    🔑 Solana Private key: ${bs58.encode(solanaWallet.secretKey)}`);
 
-  mnemonic &&
+  if (solanaWallet) {
     console.log(`
-    🔐 EVM Mnemonic phrase: ${mnemonic.phrase}`);
+      🔑 Solana Private key: ${bs58.encode(solanaWallet.secretKey)}`);
+  }
+
+  if (mnemonic) {
+    console.log(`
+      🔐 EVM Mnemonic phrase: ${mnemonic.phrase}`);
+  }
 
   console.log(`
   😃 EVM address: ${address}
     😃 Bitcoin address: ${bitcoinAddress(pk, "testnet")}
     😃 Bech32 address: ${hexToBech32Address(address, "zeta")}`);
-  solanaWallet &&
+
+  if (solanaWallet) {
     console.log(`
-    😃 Solana address: ${solanaWallet.publicKey.toString()}`);
+      😃 Solana address: ${solanaWallet.publicKey.toString()}`);
+  }
 
   if (args.save) {
     savePrivateKey(

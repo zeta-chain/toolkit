@@ -1,3 +1,5 @@
+import has from "lodash/has";
+
 import { ZetaChainClient } from "./client";
 
 /**
@@ -12,14 +14,15 @@ export const getChainId = function (
   chainNameOrAlias: string
 ): number | null {
   const networks = this.chains;
-  if (networks.hasOwnProperty(chainNameOrAlias)) {
-    return networks[chainNameOrAlias as keyof typeof networks].chain_id;
+  if (has(networks, chainNameOrAlias)) {
+    return networks[chainNameOrAlias].chain_id;
   }
 
   // Iterate through networks to check aliases
   for (const key in networks) {
-    if (networks.hasOwnProperty(key)) {
-      const chain: any = networks[key as keyof typeof networks];
+    if (has(networks, key)) {
+      const chain = networks[key];
+
       if (
         chain.chain_aliases &&
         chain.chain_aliases.includes(chainNameOrAlias)

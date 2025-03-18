@@ -1,6 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
-import { TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { Transaction } from "@solana/web3.js";
+import {
+  Transaction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { getEndpoints } from "@zetachain/networks";
 import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
 import { ethers } from "ethers";
@@ -21,7 +24,7 @@ export const solanaDeposit = async function (
   }
 
   const network = "solana_" + this.network;
-  const api = getEndpoints("solana" as any, network);
+  const api = getEndpoints("solana", network);
 
   const connection = new anchor.web3.Connection(api[0].url);
 
@@ -47,7 +50,7 @@ export const solanaDeposit = async function (
 
     provider = new anchor.AnchorProvider(
       connection,
-      walletAdapter as any,
+      walletAdapter as anchor.Wallet,
       anchor.AnchorProvider.defaultOptions()
     );
   } else if (this.solanaWallet) {
@@ -96,8 +99,7 @@ export const solanaDeposit = async function (
     // Send the transaction
     let txSignature;
     if (this.solanaAdapter) {
-      const { blockhash, lastValidBlockHeight } =
-        await connection.getLatestBlockhash();
+      const { blockhash } = await connection.getLatestBlockhash();
       const messageLegacy = new TransactionMessage({
         instructions: tx.instructions,
         payerKey: this.solanaAdapter.publicKey!,
@@ -118,7 +120,10 @@ export const solanaDeposit = async function (
       );
     }
     return txSignature;
-  } catch (error) {
-    throw new Error(`Transaction failed:, ${error}`);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    throw new Error(`Transaction failed:, ${errorMessage}`);
   }
 };

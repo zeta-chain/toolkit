@@ -1,35 +1,69 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
+import {
+  bigNumberStringSchema,
+  evmAddressSchema,
+  validJsonStringSchema,
+} from "../../../types/shared.schema";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
+const evmDepositAndCallArgsSchema = z.object({
+  amount: z.string(),
+  callOnRevert: z.boolean().optional(),
+  erc20: z.string().optional(),
+  gasLimit: bigNumberStringSchema,
+  gasPrice: bigNumberStringSchema,
+  gatewayEvm: evmAddressSchema.optional(),
+  onRevertGasLimit: bigNumberStringSchema,
+  receiver: evmAddressSchema,
+  revertAddress: evmAddressSchema,
+  revertMessage: z.string(),
+  types: validJsonStringSchema,
+  values: z.array(z.string()).min(1, "At least one value is required"),
+});
+
+type EvmDepositAndCallArgs = z.infer<typeof evmDepositAndCallArgsSchema>;
+
 export const evmDepositAndCall = async (
-  args: any,
+  args: EvmDepositAndCallArgs,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const values = parseAbiValues(args.types, args.values);
+  const {
+    success,
+    error,
+    data: parsedArgs,
+  } = evmDepositAndCallArgsSchema.safeParse(args);
+
+  if (!success) {
+    throw new Error(`Invalid arguments: ${error?.message}`);
+  }
 
   try {
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
     const client = new ZetaChainClient({ network, signer });
+
+    const values = parseAbiValues(parsedArgs.types, parsedArgs.values);
+
     const tx = await client.evmDepositAndCall({
-      amount: args.amount,
-      erc20: args.erc20,
-      gatewayEvm: args.gatewayEvm,
-      receiver: args.receiver,
+      amount: parsedArgs.amount,
+      erc20: parsedArgs.erc20,
+      gatewayEvm: parsedArgs.gatewayEvm,
+      receiver: parsedArgs.receiver,
       revertOptions: {
-        callOnRevert: args.callOnRevert,
-        onRevertGasLimit: args.onRevertGasLimit,
-        revertAddress: args.revertAddress,
-        revertMessage: args.revertMessage,
+        callOnRevert: parsedArgs.callOnRevert || false,
+        onRevertGasLimit: parsedArgs.onRevertGasLimit,
+        revertAddress: parsedArgs.revertAddress,
+        revertMessage: parsedArgs.revertMessage,
       },
       txOptions: {
-        gasLimit: args.gasLimit,
-        gasPrice: args.gasPrice,
+        gasLimit: parsedArgs.gasLimit,
+        gasPrice: parsedArgs.gasPrice,
       },
-      types: JSON.parse(args.types),
+      types: JSON.parse(parsedArgs.types) as string[],
       values,
     });
     if (tx) {
@@ -51,8 +85,18 @@ task("evm-deposit-and-call", "Deposit tokens", evmDepositAndCall)
     "0x0000000000000000000000000000000000000000",
     types.string
   )
-  .addOptionalParam("gasPrice", "The gas price for the transaction")
-  .addOptionalParam("gasLimit", "The gas limit for the transaction")
+  .addOptionalParam(
+    "gasPrice",
+    "The gas price for the transaction",
+    50000000000,
+    types.int
+  )
+  .addOptionalParam(
+    "gasLimit",
+    "The gas limit for the transaction",
+    7000000,
+    types.int
+  )
   .addOptionalParam(
     "onRevertGasLimit",
     "The gas limit for the revert transaction",

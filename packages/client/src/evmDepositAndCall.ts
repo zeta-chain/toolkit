@@ -2,8 +2,14 @@ import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
 import { ethers } from "ethers";
 
+import {
+  ERC20Contract,
+  GatewayContract,
+  RevertOptions,
+  TxOptions,
+} from "../../../types/contracts.types";
+import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import { ZetaChainClient } from "./client";
-import type { revertOptions, txOptions } from "./types";
 
 /**
  * @function evmDepositAndCall
@@ -28,23 +34,28 @@ export const evmDepositAndCall = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    erc20: string;
+    erc20?: string;
     gatewayEvm?: string;
     receiver: string;
-    revertOptions: revertOptions;
-    txOptions: txOptions;
+    revertOptions: RevertOptions;
+    txOptions: TxOptions;
     types: string[];
-    values: any[];
+    values: ParseAbiValuesReturnType;
   }
 ) {
   const signer = this.signer;
+
+  if (!signer) {
+    throw new Error("Signer is undefined. Please provide a valid signer.");
+  }
+
   const { utils } = ethers;
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
     gatewayEvmAddress,
     GatewayABI.abi,
     signer
-  );
+  ) as GatewayContract;
 
   const revertOptions = {
     abortAddress: "0x0000000000000000000000000000000000000000", // not used
@@ -73,13 +84,22 @@ export const evmDepositAndCall = async function (
       args.erc20,
       ERC20_ABI.abi,
       signer
-    );
+    ) as ERC20Contract;
+
     const decimals = await erc20Contract.decimals();
     const value = utils.parseUnits(args.amount, decimals);
-    await erc20Contract.connect(signer).approve(gatewayEvmAddress, value);
-    const method =
+
+    const connectedContract = erc20Contract.connect(signer) as ERC20Contract;
+
+    await connectedContract.approve(gatewayEvmAddress, value);
+
+    const depositAndCallAbiSignature =
       "depositAndCall(address,uint256,address,bytes,(address,bool,address,bytes,uint256))";
-    tx = await gateway[method](
+    const gatewayDepositAndCallFunction = gateway[
+      depositAndCallAbiSignature
+    ] as GatewayContract["depositAndCall"];
+
+    tx = await gatewayDepositAndCallFunction(
       args.receiver,
       value,
       args.erc20,
@@ -88,10 +108,14 @@ export const evmDepositAndCall = async function (
       txOptions
     );
   } else {
-    const value = utils.parseEther(args.amount);
-    const method =
+    const depositAndCallAbiSignature =
       "depositAndCall(address,bytes,(address,bool,address,bytes,uint256))";
-    tx = await gateway[method](
+    const depositAndCallFunction = gateway[
+      depositAndCallAbiSignature
+    ] as GatewayContract["depositAndCall"];
+    const value = utils.parseEther(args.amount);
+
+    tx = await depositAndCallFunction(
       args.receiver,
       encodedParameters,
       revertOptions,

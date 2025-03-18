@@ -1,19 +1,54 @@
 import confirm from "@inquirer/confirm";
+import axios from "axios";
 import * as bitcoin from "bitcoinjs-lib";
 import * as dotenv from "dotenv";
 import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import { task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as ecc from "tiny-secp256k1";
+import { z } from "zod";
 
 dotenv.config();
 
+interface BtcUtxo {
+  status: {
+    block_hash: string;
+    block_height: number;
+    block_time: number;
+    confirmed: boolean;
+  };
+  txid: string;
+  value: number;
+  vout: number;
+}
+
+interface BtcVout {
+  scriptpubkey: string; // The scriptpubkey is a hex-encoded string
+  value: number; // The value of the output in satoshis
+}
+
+interface BtcTxById {
+  fee: number;
+  locktime: number;
+  size: number;
+  status: {
+    block_hash: string;
+    block_height: number;
+    block_time: number;
+    confirmed: boolean;
+  };
+  txid: string;
+  version: number;
+  vin: [];
+  vout: BtcVout[];
+  weight: number;
+}
+
 const makeTransaction = async (
   to: string,
-  key: any,
-  amount: any,
-  utxos: any,
+  key: bitcoin.Signer,
+  amount: number,
+  utxos: BtcUtxo[],
   address: string,
   api: string,
   m: string = ""
@@ -22,7 +57,7 @@ const makeTransaction = async (
   const memo = Buffer.from(m, "hex");
 
   if (memo.length >= 78) throw new Error("Memo too long");
-  utxos.sort((a: any, b: any) => a.value - b.value); // sort by value, ascending
+  utxos.sort((a, b) => a.value - b.value); // sort by value, ascending
   const fee = 10000;
   const total = amount + fee;
   let sum = 0;
@@ -38,8 +73,8 @@ const makeTransaction = async (
   const txs = []; // txs corresponding to the utxos
   for (let i = 0; i < pickUtxos.length; i++) {
     const utxo = pickUtxos[i];
-    const p1 = await fetch(`${api}/tx/${utxo.txid}`);
-    const data = await p1.json();
+    const p1Response = await axios.get<BtcTxById>(`${api}/tx/${utxo.txid}`);
+    const data = p1Response.data;
     txs.push(data);
   }
 
@@ -57,15 +92,19 @@ const makeTransaction = async (
 
   for (let i = 0; i < pickUtxos.length; i++) {
     const utxo = pickUtxos[i];
-    const inputData = { hash: "", index: 0, witnessUtxo: {} };
-    inputData.hash = txs[i].txid;
-    inputData.index = utxo.vout;
     const witnessUtxo = {
       script: Buffer.from(txs[i].vout[utxo.vout].scriptpubkey, "hex"),
       value: utxo.value,
     };
+
+    const inputData = {
+      hash: txs[i].txid || "",
+      index: utxo.vout || 0,
+      witnessUtxo,
+    };
+
     inputData.witnessUtxo = witnessUtxo;
-    psbt.addInput(inputData as any);
+    psbt.addInput(inputData);
   }
   for (let i = 0; i < pickUtxos.length; i++) {
     psbt.signInput(i, key);
@@ -75,10 +114,31 @@ const makeTransaction = async (
   return psbt.extractTransaction().toHex();
 };
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+const bitcoinDepositAndCallArgsSchema = z.object({
+  amount: z.string(),
+  api: z.string(),
+  memo: z.string().optional(),
+  privateKey: z.string().optional(),
+  recipient: z.string(),
+});
+
+type BtcDepositAndCallArgs = z.infer<typeof bitcoinDepositAndCallArgsSchema>;
+
+const main = async (args: BtcDepositAndCallArgs) => {
   const TESTNET = bitcoin.networks.testnet;
 
-  const pk = args.privateKey || (process.env.BTC_PRIVATE_KEY as any);
+  const {
+    success,
+    error,
+    data: parsedArgs,
+  } = bitcoinDepositAndCallArgsSchema.safeParse(args);
+
+  if (!success) {
+    throw new Error(`Invalid arguments: ${error?.message}`);
+  }
+
+  const pk = parsedArgs.privateKey || process.env.BTC_PRIVATE_KEY;
+
   if (!pk) {
     throw new Error(
       "Cannot find a private key, please pass --private-key or set the BTC_PRIVATE_KEY env variable"
@@ -93,10 +153,13 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     network: TESTNET,
     pubkey: key.publicKey,
   });
+
   if (address === undefined) throw new Error("Address is undefined");
 
-  const utxoResponse = await fetch(`${args.api}/address/${address}/utxo`);
-  const utxos = await utxoResponse.json();
+  const utxoResponse = await axios.get<BtcUtxo[]>(
+    `${args.api}/address/${address}/utxo`
+  );
+  const utxos = utxoResponse.data;
 
   const tx = await makeTransaction(
     args.recipient,
@@ -104,8 +167,8 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
     ethers.utils.parseUnits(args.amount, 8).toNumber(),
     utxos,
     address,
-    args.api,
-    args.memo
+    parsedArgs.api,
+    parsedArgs.memo
   );
 
   console.log(`

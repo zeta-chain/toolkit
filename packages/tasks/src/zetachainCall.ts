@@ -1,42 +1,79 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
+import {
+  bigNumberStringSchema,
+  evmAddressSchema,
+  validJsonStringSchema,
+} from "../../../types/shared.schema";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
+const zetachainCallArgsSchema = z.object({
+  callOnRevert: z.boolean().optional(),
+  callOptionsGasLimit: bigNumberStringSchema,
+  callOptionsIsArbitraryCall: z.boolean().optional(),
+  function: z.string(),
+  gatewayZetaChain: evmAddressSchema.optional(),
+  onRevertGasLimit: bigNumberStringSchema,
+  receiver: z.string(),
+  revertAddress: z.string(),
+  revertMessage: z.string(),
+  txOptionsGasLimit: bigNumberStringSchema,
+  txOptionsGasPrice: bigNumberStringSchema,
+  types: validJsonStringSchema,
+  values: z.array(z.string()).min(1, "At least one value is required"),
+  zrc20: z.string(),
+});
+
+type ZetachainCallArgs = z.infer<typeof zetachainCallArgsSchema>;
+
 export const zetachainCall = async (
-  args: any,
+  args: ZetachainCallArgs,
   hre: HardhatRuntimeEnvironment
 ) => {
+  const {
+    success,
+    error,
+    data: parsedArgs,
+  } = zetachainCallArgsSchema.safeParse(args);
+
+  if (!success) {
+    throw new Error(`Invalid arguments: ${error?.message}`);
+  }
+
   const callOptions = {
-    gasLimit: args.callOptionsGasLimit,
-    isArbitraryCall: args.callOptionsIsArbitraryCall,
+    gasLimit: parsedArgs.callOptionsGasLimit,
+    isArbitraryCall: parsedArgs.callOptionsIsArbitraryCall || false,
   };
 
   try {
-    const values = parseAbiValues(args.types, args.values);
+    const values = parseAbiValues(parsedArgs.types, parsedArgs.values);
 
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
     const client = new ZetaChainClient({ network, signer });
+    const parsedTypes = z.array(z.string()).parse(JSON.parse(parsedArgs.types));
+
     const response = await client.zetachainCall({
       callOptions,
-      function: args.function,
-      gatewayZetaChain: args.gatewayZetaChain,
-      receiver: args.receiver,
+      function: parsedArgs.function,
+      gatewayZetaChain: parsedArgs.gatewayZetaChain,
+      receiver: parsedArgs.receiver,
       revertOptions: {
-        callOnRevert: args.callOnRevert,
-        onRevertGasLimit: args.onRevertGasLimit,
-        revertAddress: args.revertAddress,
-        revertMessage: args.revertMessage,
+        callOnRevert: parsedArgs.callOnRevert || false,
+        onRevertGasLimit: parsedArgs.onRevertGasLimit,
+        revertAddress: parsedArgs.revertAddress,
+        revertMessage: parsedArgs.revertMessage,
       },
       txOptions: {
-        gasLimit: args.txOptionsGasLimit,
-        gasPrice: args.txOptionsGasPrice,
+        gasLimit: parsedArgs.txOptionsGasLimit,
+        gasPrice: parsedArgs.txOptionsGasPrice,
       },
-      types: JSON.parse(args.types),
+      types: parsedTypes,
       values,
-      zrc20: args.zrc20,
+      zrc20: parsedArgs.zrc20,
     });
     const receipt = await response.tx.wait();
     console.log("Transaction hash:", receipt.transactionHash);

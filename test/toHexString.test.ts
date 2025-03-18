@@ -34,6 +34,7 @@ describe("toHexString", () => {
     { input: 123, type: "number" },
     { input: {}, type: "object" },
   ])("should throw for non-string input: $input", ({ input, type }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
     expect(() => toHexString(input as any)).toThrow(
       `Input must be a string, got: ${type}`
     );

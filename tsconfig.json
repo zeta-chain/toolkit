@@ -15,6 +15,14 @@
     "strict": true
   },
   "files": ["./hardhat.config.ts"],
-  "include": ["packages/client", "packages/tasks", "packages/test", "utils"],
-  "exclude": ["./typechain-types"]
+  "include": [
+    "packages/client",
+    "packages/tasks",
+    "packages/test",
+    "utils",
+    "types",
+    "test",
+    "types/client.types.ts"
+  ],
+  "exclude": ["./typechain-types", "./memo.test.js"]
 }
