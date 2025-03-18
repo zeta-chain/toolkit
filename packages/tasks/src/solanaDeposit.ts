@@ -24,8 +24,7 @@ export const solanaDeposit = async (args: SolanaDepositArgs) => {
   } = solanaDepositArgsSchema.safeParse(args);
 
   if (!success) {
-    console.error("Invalid arguments:", error?.message);
-    return;
+    throw new Error(`Invalid arguments: ${error?.message}`);
   }
 
   const keypair = await getKeypairFromFile(parsedArgs.idPath);

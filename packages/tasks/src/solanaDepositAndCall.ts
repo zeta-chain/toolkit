@@ -28,8 +28,7 @@ export const solanaDepositAndCall = async (args: SolanaDepositAndCallArgs) => {
   } = solanaDepositAndCallArgsSchema.safeParse(args);
 
   if (!success) {
-    console.error("Invalid arguments:", error?.message);
-    return;
+    throw new Error(`Invalid arguments: ${error?.message}`);
   }
 
   const values = parseAbiValues(parsedArgs.types, parsedArgs.values);

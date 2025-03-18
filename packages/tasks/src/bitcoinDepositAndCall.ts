@@ -134,8 +134,7 @@ const main = async (args: BtcDepositAndCallArgs) => {
   } = bitcoinDepositAndCallArgsSchema.safeParse(args);
 
   if (!success) {
-    console.error("Invalid arguments:", error?.message);
-    return;
+    throw new Error(`Invalid arguments: ${error?.message}`);
   }
 
   const pk = parsedArgs.privateKey || process.env.BTC_PRIVATE_KEY;

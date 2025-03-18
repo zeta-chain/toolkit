@@ -35,8 +35,7 @@ export const evmDeposit = async (
     } = evmDepositArgsSchema.safeParse(args);
 
     if (!success) {
-      console.error("Invalid arguments:", error?.message);
-      return;
+      throw new Error(`Invalid arguments: ${error?.message}`);
     }
 
     const [signer] = await hre.ethers.getSigners();

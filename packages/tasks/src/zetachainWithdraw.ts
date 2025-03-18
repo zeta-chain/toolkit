@@ -34,8 +34,7 @@ export const zetachainWithdraw = async (
   } = zetachainWithdrawArgsSchema.safeParse(args);
 
   if (!success) {
-    console.error("Invalid arguments:", error?.message);
-    return;
+    throw new Error(`Invalid arguments: ${error?.message}`);
   }
 
   try {

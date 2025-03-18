@@ -40,8 +40,7 @@ const main = async (args: CctxArgs) => {
   const { data: parsedArgs, success, error } = cctxArgsSchema.safeParse(args);
 
   if (!success) {
-    console.error("Invalid arguments:", error?.message);
-    return;
+    throw new Error(`Invalid arguments: ${error?.message}`);
   }
 
   const network = parsedArgs.mainnet ? "mainnet" : "testnet";

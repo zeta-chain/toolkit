@@ -15,8 +15,7 @@ const main = async (args: FeesArgs) => {
   const { data: parsedArgs, success, error } = feesArgsSchema.safeParse(args);
 
   if (!success) {
-    console.error("Invalid arguments:", error?.message);
-    return;
+    throw new Error(`Invalid arguments: ${error?.message}`);
   }
 
   const client = new ZetaChainClient({
