@@ -45,7 +45,7 @@ const main = async (args: VerifyTaskArgs, hre: HardhatRuntimeEnvironment) => {
 
   const names = await hre.artifacts.getAllFullyQualifiedNames();
 
-  if (!names.length) {
+  if (!names?.length) {
     throw new Error(
       "❌ Error: no contracts found. Please make sure there are compiled contracts."
     );
