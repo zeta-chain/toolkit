@@ -1,6 +1,10 @@
-import { MaxUint256 } from "@ethersproject/constants";
-import { parseEther, parseUnits } from "@ethersproject/units";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import {
+  ContractTransactionResponse,
+  JsonRpcProvider,
+  parseEther,
+  parseUnits,
+} from "ethers";
 import { ethers } from "hardhat";
 
 import {
@@ -30,7 +34,6 @@ interface UniswapDeployResult {
   uniswapFactory: UniswapV2Factory;
   uniswapRouter: TestUniswapRouter;
 }
-
 export const deployUniswap = async (
   signer: SignerWithAddress,
   wZETA: string
@@ -58,28 +61,41 @@ const addZetaEthLiquidity = async (
   token: MockZRC20,
   uniswapRouterAddr: string
 ) => {
-  const block = await ethers.provider.getBlock("latest");
+  const provider = ethers.provider as JsonRpcProvider;
 
-  const tx1 = await token.approve(uniswapRouterAddr, MaxUint256);
+  const block = await provider.getBlock("latest");
+
+  if (!block) {
+    throw new Error("Failed to fetch the latest block");
+  }
+
+  const tx1: ContractTransactionResponse = await token.approve(
+    uniswapRouterAddr,
+    ethers.MaxInt256
+  );
   await tx1.wait();
 
   const uniswapRouterFork = TestUniswapRouter__factory.connect(
     uniswapRouterAddr,
-    signer
-  );
-
-  const tx2 = await uniswapRouterFork.addLiquidityETH(
-    token.target,
-    parseUnits("2000"),
-    0,
-    0,
-    signer.address,
-    BigNumber.from(block.timestamp + 360),
     {
-      gasLimit: 10_000_000,
-      value: parseUnits("1000"),
+      ...signer,
+      provider,
     }
   );
+
+  const tx2: ContractTransactionResponse =
+    await uniswapRouterFork.addLiquidityETH(
+      token.target,
+      parseUnits("2000"),
+      0,
+      0,
+      signer.address,
+      ethers.toBigInt(block.timestamp + 360),
+      {
+        gasLimit: 10_000_000,
+        value: parseUnits("1000"),
+      }
+    );
   await tx2.wait();
 };
 
