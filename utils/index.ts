@@ -3,3 +3,4 @@ export * from "./compareBigIntAndNumber";
 export * from "./getHardhatConfig";
 export * from "./parseAbiValues";
 export * from "./toHexString";
+export * from "./validateSigner";

@@ -9,7 +9,7 @@ import {
   TxOptions,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
-import { toHexString } from "../../../utils";
+import { toHexString, validateSigner } from "../../../utils";
 import { ZetaChainClient } from "./client";
 
 /**
@@ -44,15 +44,7 @@ export const evmDepositAndCall = async function (
     values: ParseAbiValuesReturnType;
   }
 ) {
-  const signer = this.signer;
-
-  if (!signer) {
-    throw new Error("Signer is undefined. Please provide a valid signer.");
-  }
-
-  if (signer && !("provider" in signer)) {
-    throw new Error("Signer does not have a valid provider");
-  }
+  const signer = validateSigner(this.signer);
 
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(

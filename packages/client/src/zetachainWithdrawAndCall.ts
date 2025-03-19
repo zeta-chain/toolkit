@@ -10,6 +10,7 @@ import {
   ZRC20Contract,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { validateSigner } from "../../../utils";
 import { toHexString } from "../../../utils/toHexString";
 import { ZetaChainClient } from "./client";
 
@@ -51,11 +52,7 @@ export const zetachainWithdrawAndCall = async function (
     zrc20: string;
   }
 ) {
-  const signer = this.signer;
-
-  if (signer && !("provider" in signer)) {
-    throw new Error("Signer does not have a valid provider");
-  }
+  const signer = validateSigner(this.signer);
 
   const gatewayZetaChainAddress =
     args.gatewayZetaChain || (await this.getGatewayAddress());

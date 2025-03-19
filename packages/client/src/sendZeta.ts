@@ -2,6 +2,7 @@ import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZetaToken from "@zetachain/protocol-contracts/abi/Zeta.non-eth.sol/ZetaNonEth.json";
 import { ethers } from "ethers";
 
+import { validateSigner } from "../../../utils";
 import { ZetaChainClient } from "./client";
 import type {
   ZetaConnectorContract,
@@ -41,20 +42,17 @@ export const sendZeta = async function (
     recipient: string;
   }
 ) {
-  let signer;
+  let signer: ethers.Signer;
+
   if (this.signer) {
-    signer = this.signer;
+    signer = validateSigner(this.signer);
   } else if (this.wallet) {
     const rpc = this.getEndpoint("evm", chain);
     if (!rpc) throw new Error(`No EVM RPC endpoint found for ${chain} chain.`);
     const provider = new ethers.JsonRpcProvider(rpc);
-    signer = this.wallet.connect(provider);
+    signer = validateSigner(this.wallet.connect(provider));
   } else {
     throw new Error("No wallet or signer found.");
-  }
-
-  if (signer && !("provider" in signer)) {
-    throw new Error("Signer does not have a valid provider");
   }
 
   const fromZetaChain = ["zeta_testnet", "zeta_mainnet"].includes(chain);
