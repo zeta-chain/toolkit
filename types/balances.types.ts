@@ -1,4 +1,6 @@
-import { ethers } from "ethers";
+import { Contract, ContractMethod, ethers } from "ethers";
+
+import { OmitIndexSignature } from "./shared.types";
 
 export interface TokenBalance {
   balance: string;
@@ -77,13 +79,10 @@ export interface Call {
   target: string;
 }
 
-export interface AggregateOutput {
-  blockNumber: ethers.BigNumber;
-  returnData: string[];
-}
+export type AggregateResult = [blockNumber: bigint, returnData: string[]];
 
-export interface MulticallContract extends ethers.Contract {
-  aggregate: (calls: Call[]) => Promise<AggregateOutput>;
+export interface MulticallContract extends OmitIndexSignature<Contract> {
+  aggregate?: ContractMethod<[calls: Call[]], AggregateResult, AggregateResult>;
 }
 
 export interface EsploraResponse {

@@ -1,5 +1,5 @@
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
-import { ethers } from "ethers";
+import { AbiCoder, ethers } from "ethers";
 
 import {
   GatewayContract,
@@ -7,6 +7,7 @@ import {
   TxOptions,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { toHexString } from "../../../utils";
 import { ZetaChainClient } from "./client";
 
 /**
@@ -38,7 +39,6 @@ export const evmCall = async function (
   }
 ) {
   const signer = this.signer;
-  const { utils } = ethers;
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
     gatewayEvmAddress,
@@ -46,10 +46,8 @@ export const evmCall = async function (
     signer
   ) as GatewayContract;
 
-  const encodedParameters = utils.defaultAbiCoder.encode(
-    args.types,
-    args.values
-  );
+  const abiCoder = AbiCoder.defaultAbiCoder();
+  const encodedParameters = abiCoder.encode(args.types, args.values);
 
   const callAbiSignature =
     "call(address,bytes,(address,bool,address,bytes,uint256))";
@@ -65,9 +63,7 @@ export const evmCall = async function (
       callOnRevert: args.revertOptions.callOnRevert,
       onRevertGasLimit: args.revertOptions.onRevertGasLimit,
       revertAddress: args.revertOptions.revertAddress,
-      revertMessage: utils.hexlify(
-        utils.toUtf8Bytes(args.revertOptions.revertMessage)
-      ),
+      revertMessage: toHexString(args.revertOptions.revertMessage),
     },
     {
       gasLimit: args.txOptions.gasLimit,

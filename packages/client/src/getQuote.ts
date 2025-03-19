@@ -13,7 +13,7 @@ import { ZetaChainClient } from "./client";
 /**
  * Retrieves the amounts for swapping tokens using UniswapV2.
  * @param {"in" | "out"} direction - The direction of the swap ("in" or "out").
- * @param {ethers.providers.JsonRpcProvider} provider - The ethers provider.
+ * @param {ethers.JsonRpcProvider} provider - The ethers provider.
  * @param {ethers.BigNumberish} amount - The amount to swap.
  * @param {string} tokenA - The address of token A.
  * @param {string} tokenB - The address of token B.
@@ -22,7 +22,7 @@ import { ZetaChainClient } from "./client";
  */
 const getAmounts = async (
   direction: "in" | "out",
-  provider: ethers.providers.JsonRpcProvider,
+  provider: ethers.JsonRpcProvider,
   amount: ethers.BigNumberish,
   tokenA: string,
   tokenB: string
@@ -108,7 +108,7 @@ export const getRefundFee = async function (
   inputZRC20: string
 ) {
   const rpc = this.getEndpoint("evm", "zeta_testnet");
-  const provider = new ethers.providers.JsonRpcProvider(rpc);
+  const provider = new ethers.JsonRpcProvider(rpc);
   const zetaToken = getZetaToken();
 
   const inputContract = new ethers.Contract(
@@ -156,7 +156,7 @@ export const getWithdrawFeeInInputToken = async function (
   outputZRC20: string
 ) {
   const rpc = this.getEndpoint("evm", "zeta_testnet");
-  const provider = new ethers.providers.JsonRpcProvider(rpc);
+  const provider = new ethers.JsonRpcProvider(rpc);
   const zetaToken = getZetaToken();
 
   const inputContract = new ethers.Contract(
@@ -206,7 +206,7 @@ export const getQuote = async function (
   outputToken: string
 ) {
   const rpc = this.getEndpoint("evm", "zeta_testnet");
-  const provider = new ethers.providers.JsonRpcProvider(rpc);
+  const provider = new ethers.JsonRpcProvider(rpc);
   const zetaToken = getZetaToken();
 
   const inputContract = new ethers.Contract(

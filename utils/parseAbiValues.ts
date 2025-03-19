@@ -65,8 +65,11 @@ export const parseAbiValues = (
     } else if (type.startsWith("bytes")) {
       return toHexString(value);
     } else if (type === "address") {
-      if (!ethers.isAddress(value)) {
-        throw new Error(`Invalid evm address for type ${type}: ${value}`);
+      const isValidEvmAddress = ethers.isAddress(value);
+      if (!isValidEvmAddress) {
+        throw new Error(
+          `Invalid evm address for type ${type}: ${String(value)}`
+        );
       }
 
       return value;

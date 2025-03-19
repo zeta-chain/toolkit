@@ -1,6 +1,6 @@
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
-import { ethers } from "ethers";
+import { AbiCoder, ethers } from "ethers";
 
 import {
   ERC20Contract,
@@ -9,6 +9,7 @@ import {
   TxOptions,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { toHexString } from "../../../utils";
 import { ZetaChainClient } from "./client";
 
 /**
@@ -49,7 +50,6 @@ export const evmDepositAndCall = async function (
     throw new Error("Signer is undefined. Please provide a valid signer.");
   }
 
-  const { utils } = ethers;
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
     gatewayEvmAddress,
@@ -63,9 +63,7 @@ export const evmDepositAndCall = async function (
     onRevertGasLimit: args.revertOptions.onRevertGasLimit,
     revertAddress: args.revertOptions.revertAddress,
     // not used
-    revertMessage: utils.hexlify(
-      utils.toUtf8Bytes(args.revertOptions.revertMessage)
-    ),
+    revertMessage: toHexString(args.revertOptions.revertMessage),
   };
 
   const txOptions = {
@@ -73,10 +71,8 @@ export const evmDepositAndCall = async function (
     gasPrice: args.txOptions.gasPrice,
   };
 
-  const encodedParameters = utils.defaultAbiCoder.encode(
-    args.types,
-    args.values
-  );
+  const abiCoder = AbiCoder.defaultAbiCoder();
+  const encodedParameters = abiCoder.encode(args.types, args.values);
 
   let tx;
   if (args.erc20) {
@@ -87,7 +83,7 @@ export const evmDepositAndCall = async function (
     ) as ERC20Contract;
 
     const decimals = await erc20Contract.decimals();
-    const value = utils.parseUnits(args.amount, decimals);
+    const value = ethers.parseUnits(args.amount, decimals);
 
     const connectedContract = erc20Contract.connect(signer) as ERC20Contract;
 
@@ -113,7 +109,7 @@ export const evmDepositAndCall = async function (
     const depositAndCallFunction = gateway[
       depositAndCallAbiSignature
     ] as GatewayContract["depositAndCall"];
-    const value = utils.parseEther(args.amount);
+    const value = ethers.parseEther(args.amount);
 
     tx = await depositAndCallFunction(
       args.receiver,

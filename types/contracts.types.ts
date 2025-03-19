@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { ContractTransactionResponse, ethers } from "ethers";
 
 export interface RevertOptions {
   abortAddress?: string;
@@ -23,26 +23,26 @@ export type UniswapV2Router02Contract = ethers.Contract & {
   getAmountsIn: (
     amountOut: ethers.BigNumberish,
     path: string[]
-  ) => Promise<ethers.BigNumber[]>;
+  ) => Promise<ethers.BigNumberish[]>;
   getAmountsOut: (
     amountIn: ethers.BigNumberish,
     path: string[]
-  ) => Promise<ethers.BigNumber[]>;
+  ) => Promise<ethers.BigNumberish[]>;
 };
 
 export type ZRC20Contract = ethers.Contract & {
   COIN_TYPE: () => Promise<number>;
-  PROTOCOL_FLAT_FEE: () => Promise<ethers.BigNumber>;
+  PROTOCOL_FLAT_FEE: () => Promise<ethers.BigNumberish>;
   approve: (
     spender: string,
     value: ethers.BigNumberish,
     txOptions: TxOptions
-  ) => Promise<ethers.ContractTransaction>;
+  ) => Promise<ContractTransactionResponse>;
   decimals: () => Promise<number>;
-  withdrawGasFee: () => Promise<[string, ethers.BigNumber]>;
+  withdrawGasFee: () => Promise<[string, ethers.BigNumberish]>;
   withdrawGasFeeWithGasLimit: (
     gasLimit: ethers.BigNumberish
-  ) => Promise<[string, ethers.BigNumber]>;
+  ) => Promise<[string, ethers.BigNumberish]>;
 };
 
 export type GatewayContract = ethers.Contract & {

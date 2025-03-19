@@ -6,7 +6,7 @@ import {
 } from "@solana/web3.js";
 import { getEndpoints } from "@zetachain/networks";
 import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
-import { ethers } from "ethers";
+import { AbiCoder, ethers } from "ethers";
 
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import { ZetaChainClient } from "./client";
@@ -85,7 +85,7 @@ export const solanaDepositAndCall = async function (
 
   try {
     const tx = new anchor.web3.Transaction();
-    const recipient = Buffer.from(ethers.utils.arrayify(args.recipient));
+    const recipient = Buffer.from(ethers.getBytes(args.recipient));
 
     if (!Array.isArray(args.types) || !Array.isArray(args.values)) {
       throw new Error(
@@ -93,10 +93,9 @@ export const solanaDepositAndCall = async function (
       );
     }
 
+    const abiCoder = AbiCoder.defaultAbiCoder();
     const message = Buffer.from(
-      ethers.utils.arrayify(
-        ethers.utils.defaultAbiCoder.encode(args.types, args.values)
-      )
+      ethers.getBytes(abiCoder.encode(args.types, args.values))
     );
 
     const depositInstruction = await gatewayProgram.methods

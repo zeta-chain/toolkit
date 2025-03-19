@@ -1,10 +1,12 @@
-import { ethers } from "ethers";
+import { Contract, ContractTransactionResponse, ethers } from "ethers";
+
+import { OmitIndexSignature } from "../../../types/shared.types";
 
 export type ZetaTokenContract = ethers.Contract & {
   approve: (
     spender: string,
-    value: ethers.BigNumber
-  ) => Promise<ethers.ContractTransaction>;
+    value: ethers.BigNumberish
+  ) => Promise<ContractTransactionResponse>;
 };
 
 export const sendFunctionAbi = [
@@ -64,6 +66,6 @@ interface SendInput {
   zetaValueAndGas: ethers.BigNumberish;
 }
 
-export interface ZetaConnectorContract extends ethers.Contract {
-  send: (input: SendInput) => Promise<ethers.ContractTransaction>;
+export interface ZetaConnectorContract extends OmitIndexSignature<Contract> {
+  send?: (input: SendInput) => Promise<ethers.ContractTransaction>;
 }
