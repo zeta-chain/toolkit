@@ -21,7 +21,7 @@ export const deployWZETA = async (): Promise<WZETA> => {
     "WZETA"
   )) as WZETA__factory;
   const wZETAContract = await WZETAFactory.deploy();
-  await wZETAContract.deployed();
+  await wZETAContract.waitForDeployment();
   await wZETAContract.deposit({ value: parseEther("10") });
   return wZETAContract;
 };
@@ -39,16 +39,16 @@ export const deployUniswap = async (
     "UniswapV2Factory"
   )) as UniswapV2Factory__factory;
   const uniswapFactory = await UniswapV2Factory.deploy(signer.address);
-  await uniswapFactory.deployed();
+  await uniswapFactory.waitForDeployment();
 
   const UniswapRouter = (await ethers.getContractFactory(
     "TestUniswapRouter"
   )) as TestUniswapRouter__factory;
   const uniswapRouter = await UniswapRouter.deploy(
-    uniswapFactory.address,
+    uniswapFactory.target,
     wZETA
   );
-  await uniswapRouter.deployed();
+  await uniswapRouter.waitForDeployment();
 
   return { uniswapFactory, uniswapRouter };
 };
@@ -69,12 +69,12 @@ const addZetaEthLiquidity = async (
   );
 
   const tx2 = await uniswapRouterFork.addLiquidityETH(
-    token.address,
+    token.target,
     parseUnits("2000"),
     0,
     0,
     signer.address,
-    block.timestamp + 360,
+    BigNumber.from(block.timestamp + 360),
     {
       gasLimit: 10_000_000,
       value: parseUnits("1000"),
@@ -143,24 +143,24 @@ export const evmSetup = async (
     uniswapRouterAddr
   );
 
-  await systemContract.setGasCoinZRC20(97, ZRC20Contracts[0].address);
-  await systemContract.setGasCoinZRC20(5, ZRC20Contracts[1].address);
-  await systemContract.setGasCoinZRC20(80001, ZRC20Contracts[2].address);
-  await systemContract.setGasCoinZRC20(18332, ZRC20Contracts[4].address);
+  await systemContract.setGasCoinZRC20(97, ZRC20Contracts[0].target);
+  await systemContract.setGasCoinZRC20(5, ZRC20Contracts[1].target);
+  await systemContract.setGasCoinZRC20(80001, ZRC20Contracts[2].target);
+  await systemContract.setGasCoinZRC20(18332, ZRC20Contracts[4].target);
 
-  await ZRC20Contracts[0].setGasFeeAddress(ZRC20Contracts[0].address);
+  await ZRC20Contracts[0].setGasFeeAddress(ZRC20Contracts[0].target);
   await ZRC20Contracts[0].setGasFee(parseEther("0.01"));
 
-  await ZRC20Contracts[1].setGasFeeAddress(ZRC20Contracts[1].address);
+  await ZRC20Contracts[1].setGasFeeAddress(ZRC20Contracts[1].target);
   await ZRC20Contracts[1].setGasFee(parseEther("0.01"));
 
-  await ZRC20Contracts[2].setGasFeeAddress(ZRC20Contracts[2].address);
+  await ZRC20Contracts[2].setGasFeeAddress(ZRC20Contracts[2].target);
   await ZRC20Contracts[2].setGasFee(parseEther("0.01"));
 
-  await ZRC20Contracts[3].setGasFeeAddress(ZRC20Contracts[1].address);
+  await ZRC20Contracts[3].setGasFeeAddress(ZRC20Contracts[1].target);
   await ZRC20Contracts[3].setGasFee(parseEther("0.01"));
 
-  await ZRC20Contracts[4].setGasFeeAddress(ZRC20Contracts[4].address);
+  await ZRC20Contracts[4].setGasFeeAddress(ZRC20Contracts[4].target);
   await ZRC20Contracts[4].setGasFee(parseEther("0.01"));
 
   await addZetaEthLiquidity(signer, ZRC20Contracts[0], uniswapRouterAddr);

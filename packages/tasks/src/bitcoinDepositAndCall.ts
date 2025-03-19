@@ -164,7 +164,7 @@ const main = async (args: BtcDepositAndCallArgs) => {
   const tx = await makeTransaction(
     args.recipient,
     key,
-    ethers.utils.parseUnits(args.amount, 8).toNumber(),
+    ethers.toNumber(ethers.parseUnits(args.amount, 8)),
     utxos,
     address,
     parsedArgs.api,

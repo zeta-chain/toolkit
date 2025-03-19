@@ -43,6 +43,10 @@ export const zetachainWithdraw = async function (
 ) {
   const signer = this.signer;
 
+  if (signer && !("provider" in signer)) {
+    throw new Error("Signer does not have a valid provider");
+  }
+
   const gatewayZetaChainAddress =
     args.gatewayZetaChain || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(

@@ -67,5 +67,5 @@ interface SendInput {
 }
 
 export interface ZetaConnectorContract extends OmitIndexSignature<Contract> {
-  send?: (input: SendInput) => Promise<ethers.ContractTransaction>;
+  send?: (input: SendInput) => Promise<ContractTransactionResponse>;
 }

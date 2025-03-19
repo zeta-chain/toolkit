@@ -14,7 +14,7 @@ export const validJsonStringSchema = z.string().refine(
       return false;
     }
   },
-  { message: "Types must be a valid JSON array of strings" }
+  { message: "Types must be a valid JSON string" }
 );
 
 export const bigNumberStringSchema = z

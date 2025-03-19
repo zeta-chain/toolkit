@@ -51,7 +51,7 @@ export type GatewayContract = ethers.Contract & {
     encodedParameters: ethers.BytesLike,
     revertOptions: RevertOptions,
     txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>) &
+  ) => Promise<ContractTransactionResponse>) &
     ((
       receiver: string,
       gasZrc20: string,
@@ -59,7 +59,7 @@ export type GatewayContract = ethers.Contract & {
       callOptions: CallOptions,
       revertOptions: RevertOptions,
       txOptions?: TxOptions
-    ) => Promise<ethers.ContractTransaction>);
+    ) => Promise<ContractTransactionResponse>);
   /**
    * Deposits ERC-20 tokens or native tokens to a receiver on ZetaChain.
    *
@@ -73,12 +73,12 @@ export type GatewayContract = ethers.Contract & {
     erc20: string,
     revertOptions: RevertOptions,
     txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>) &
+  ) => Promise<ContractTransactionResponse>) &
     ((
       receiver: string,
       revertOptions: RevertOptions,
       txOptions?: TxOptions
-    ) => Promise<ethers.ContractTransaction>);
+    ) => Promise<ContractTransactionResponse>);
   depositAndCall: ((
     receiver: string,
     value: ethers.BigNumberish,
@@ -86,20 +86,20 @@ export type GatewayContract = ethers.Contract & {
     encodedParameters: ethers.BytesLike,
     revertOptions: RevertOptions,
     txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>) &
+  ) => Promise<ContractTransactionResponse>) &
     ((
       receiver: string,
       encodedParameters: ethers.BytesLike,
       revertOptions: RevertOptions,
       txOptions?: TxOptions
-    ) => Promise<ethers.ContractTransaction>);
+    ) => Promise<ContractTransactionResponse>);
   withdraw: (
     receiver: string,
     value: ethers.BigNumberish,
     erc20: string,
     revertOptions: RevertOptions,
     txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>;
+  ) => Promise<ContractTransactionResponse>;
   withdrawAndCall: (
     receiver: string,
     value: ethers.BigNumberish,
@@ -108,7 +108,7 @@ export type GatewayContract = ethers.Contract & {
     callOptions: CallOptions,
     revertOptions: RevertOptions,
     txOptions?: TxOptions
-  ) => Promise<ethers.ContractTransaction>;
+  ) => Promise<ContractTransactionResponse>;
 };
 
 export type ERC20Contract = ethers.Contract & {
@@ -122,7 +122,7 @@ export type ERC20Contract = ethers.Contract & {
   approve: (
     spender: string,
     value: ethers.BigNumberish
-  ) => Promise<ethers.ContractTransaction>;
+  ) => Promise<ContractTransactionResponse>;
 
   /**
    * Returns the number of decimals used by the token.

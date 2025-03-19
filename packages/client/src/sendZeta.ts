@@ -53,6 +53,10 @@ export const sendZeta = async function (
     throw new Error("No wallet or signer found.");
   }
 
+  if (signer && !("provider" in signer)) {
+    throw new Error("Signer does not have a valid provider");
+  }
+
   const fromZetaChain = ["zeta_testnet", "zeta_mainnet"].includes(chain);
 
   const connector = getAddress("connector", chain as ParamChainName);

@@ -1,4 +1,5 @@
 import "@nomicfoundation/hardhat-toolbox";
+import "@typechain/hardhat";
 import "./packages/tasks/src";
 
 import * as dotenv from "dotenv";
@@ -20,6 +21,10 @@ const config: HardhatUserConfig = {
       { version: "0.5.10" /** For create2 factory */ },
       { version: "0.5.16" /** For uniswap v2 core*/ },
     ],
+  },
+  typechain: {
+    outDir: "typechain-types",
+    target: "ethers-v6",
   },
 };
 

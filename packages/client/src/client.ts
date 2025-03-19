@@ -1,4 +1,5 @@
 import type { Wallet as SolanaWallet } from "@coral-xyz/anchor";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import type { WalletContextState } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { networks } from "@zetachain/networks";
@@ -44,7 +45,7 @@ export interface ZetaChainClientParamsBase {
 export type ZetaChainClientParams = ZetaChainClientParamsBase &
   (
     | {
-        signer: Signer;
+        signer: Signer | SignerWithAddress;
         solanaAdapter?: never;
         solanaWallet?: never;
         wallet?: never;
@@ -93,7 +94,7 @@ export class ZetaChainClient {
   public chains: Chains;
   public network: string;
   public wallet: Wallet | undefined;
-  public signer: Signer | undefined;
+  public signer: Signer | SignerWithAddress | undefined;
   public solanaWallet: SolanaWallet | undefined;
   public solanaAdapter: WalletContextState | undefined;
   private contracts: LocalnetAddress[] | MainnetTestnetAddress[];
@@ -211,11 +212,16 @@ export class ZetaChainClient {
         }
       } else {
         try {
-          if (!this.signer?.provider) {
+          if (this.signer && !("provider" in this.signer)) {
             throw new Error("Signer does not have a valid provider");
           }
 
-          const signerNetwork = await this.signer.provider.getNetwork();
+          const signerNetwork = await this.signer?.provider?.getNetwork();
+
+          if (!signerNetwork) {
+            throw new Error("Invalid Signer network");
+          }
+
           const chainId = signerNetwork.chainId;
           gateway = (this.contracts as MainnetTestnetAddress[]).find((item) => {
             const isSameChainId = compareBigIntAndNumber(
