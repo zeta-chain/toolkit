@@ -76,7 +76,7 @@ export const zetachainCall = async (
       zrc20: parsedArgs.zrc20,
     });
     const receipt = await response.tx.wait();
-    console.log("Transaction hash:", receipt.transactionHash);
+    console.log("Transaction hash:", receipt?.hash);
   } catch (e) {
     console.error("Transaction error:", e);
   }
