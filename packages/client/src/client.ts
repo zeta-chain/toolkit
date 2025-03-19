@@ -9,6 +9,7 @@ import has from "lodash/has";
 import merge from "lodash/merge";
 
 import { Chains } from "../../../types/client.types";
+import { compareBigIntAndNumber } from "../../../utils";
 import {
   evmCall,
   evmDeposit,
@@ -189,12 +190,18 @@ export class ZetaChainClient {
       return gateway.address;
     } else {
       let gateway;
-      if (this.wallet) {
+      if (this.wallet?.provider) {
         try {
-          const chainId = await this.wallet.getChainId();
-          gateway = (this.contracts as MainnetTestnetAddress[]).find(
-            (item) => chainId === item.chain_id && item.type === "gateway"
-          );
+          const walletNetwork = await this.wallet.provider.getNetwork();
+          const chainId = walletNetwork?.chainId;
+          gateway = (this.contracts as MainnetTestnetAddress[]).find((item) => {
+            const isSameChainId = compareBigIntAndNumber(
+              chainId,
+              item.chain_id
+            );
+
+            return isSameChainId && item.type === "gateway";
+          });
         } catch (error: unknown) {
           throw new Error(
             `Failed to get gateway address. ${
@@ -204,10 +211,19 @@ export class ZetaChainClient {
         }
       } else {
         try {
-          const chainId = await this.signer!.getChainId();
-          gateway = (this.contracts as MainnetTestnetAddress[]).find(
-            (item) => chainId === item.chain_id && item.type === "gateway"
-          );
+          if (!this.signer?.provider) {
+            throw new Error("Signer does not have a valid provider");
+          }
+
+          const signerNetwork = await this.signer.provider.getNetwork();
+          const chainId = signerNetwork.chainId;
+          gateway = (this.contracts as MainnetTestnetAddress[]).find((item) => {
+            const isSameChainId = compareBigIntAndNumber(
+              chainId,
+              item.chain_id
+            );
+            return isSameChainId && item.type === "gateway";
+          });
         } catch (error: unknown) {
           throw new Error(
             `Failed to get gateway address. ${
