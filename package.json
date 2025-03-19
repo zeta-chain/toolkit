@@ -99,7 +99,7 @@
     "@openzeppelin/contracts": "^5.0.2",
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
     "@solana/wallet-adapter-react": "^0.15.35",
-    "@solana/web3.js": "^1.95.3",
+    "@solana/web3.js": "^1.98.0",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@zetachain/faucet-cli": "^4.1.1",
     "@zetachain/networks": "^13.0.0",
