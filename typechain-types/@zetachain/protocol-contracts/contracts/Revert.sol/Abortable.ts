@@ -3,57 +3,51 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
+  FunctionFragment,
+  Result,
+  Interface,
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
   TypedListener,
-  OnEvent,
-  PromiseOrValue,
+  TypedContractMethod,
 } from "../../../../common";
 
 export type AbortContextStruct = {
-  sender: PromiseOrValue<BytesLike>;
-  asset: PromiseOrValue<string>;
-  amount: PromiseOrValue<BigNumberish>;
-  outgoing: PromiseOrValue<boolean>;
-  chainID: PromiseOrValue<BigNumberish>;
-  revertMessage: PromiseOrValue<BytesLike>;
+  sender: BytesLike;
+  asset: AddressLike;
+  amount: BigNumberish;
+  outgoing: boolean;
+  chainID: BigNumberish;
+  revertMessage: BytesLike;
 };
 
 export type AbortContextStructOutput = [
-  string,
-  string,
-  BigNumber,
-  boolean,
-  BigNumber,
-  string
+  sender: string,
+  asset: string,
+  amount: bigint,
+  outgoing: boolean,
+  chainID: bigint,
+  revertMessage: string
 ] & {
   sender: string;
   asset: string;
-  amount: BigNumber;
+  amount: bigint;
   outgoing: boolean;
-  chainID: BigNumber;
+  chainID: bigint;
   revertMessage: string;
 };
 
-export interface AbortableInterface extends utils.Interface {
-  functions: {
-    "onAbort((bytes,address,uint256,bool,uint256,bytes))": FunctionFragment;
-  };
-
-  getFunction(nameOrSignatureOrTopic: "onAbort"): FunctionFragment;
+export interface AbortableInterface extends Interface {
+  getFunction(nameOrSignature: "onAbort"): FunctionFragment;
 
   encodeFunctionData(
     functionFragment: "onAbort",
@@ -61,68 +55,68 @@ export interface AbortableInterface extends utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "onAbort", data: BytesLike): Result;
-
-  events: {};
 }
 
 export interface Abortable extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): Abortable;
+  waitForDeployment(): Promise<this>;
 
   interface: AbortableInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    onAbort(
-      abortContext: AbortContextStruct,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-  };
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  onAbort(
-    abortContext: AbortContextStruct,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-  callStatic: {
-    onAbort(
-      abortContext: AbortContextStruct,
-      overrides?: CallOverrides
-    ): Promise<void>;
-  };
+  onAbort: TypedContractMethod<
+    [abortContext: AbortContextStruct],
+    [void],
+    "nonpayable"
+  >;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "onAbort"
+  ): TypedContractMethod<
+    [abortContext: AbortContextStruct],
+    [void],
+    "nonpayable"
+  >;
 
   filters: {};
-
-  estimateGas: {
-    onAbort(
-      abortContext: AbortContextStruct,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    onAbort(
-      abortContext: AbortContextStruct,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-  };
 }
