@@ -8,7 +8,11 @@ export const validateSigner = (
     throw new Error("Signer is undefined. Please provide a valid signer.");
   }
 
-  if (signer && !("provider" in signer)) {
+  if (!("provider" in signer)) {
+    throw new Error("Signer does not have a valid provider");
+  }
+
+  if (!signer.provider) {
     throw new Error("Signer does not have a valid provider");
   }
 
