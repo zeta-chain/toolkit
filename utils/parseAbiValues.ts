@@ -1,4 +1,4 @@
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import { isNull } from "lodash";
 
 import {
@@ -65,7 +65,7 @@ export const parseAbiValues = (
     } else if (type.startsWith("bytes")) {
       return toHexString(value);
     } else if (type === "address") {
-      if (!utils.isAddress(value)) {
+      if (!ethers.isAddress(value)) {
         throw new Error(`Invalid evm address for type ${type}: ${value}`);
       }
 
