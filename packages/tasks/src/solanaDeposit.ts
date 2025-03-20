@@ -1,7 +1,7 @@
 import { Wallet } from "@coral-xyz/anchor";
 import { Keypair } from "@solana/web3.js";
 import { bech32 } from "bech32";
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 
@@ -37,9 +37,9 @@ export const solanaDeposit = async (args: SolanaDepositArgs) => {
   let recipient: string;
   try {
     if (bech32.decode(parsedArgs.recipient)) {
-      recipient = utils.solidityPack(
+      recipient = ethers.solidityPacked(
         ["bytes"],
-        [utils.toUtf8Bytes(parsedArgs.recipient)]
+        [ethers.toUtf8Bytes(parsedArgs.recipient)]
       );
     } else {
       recipient = parsedArgs.recipient;

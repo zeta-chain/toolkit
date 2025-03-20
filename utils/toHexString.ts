@@ -1,4 +1,4 @@
-import { utils } from "ethers";
+import { ethers } from "ethers";
 
 export const toHexString = (data: string) => {
   // Validate input type
@@ -23,5 +23,5 @@ export const toHexString = (data: string) => {
   }
 
   // Convert regular strings to hex
-  return utils.hexlify(utils.toUtf8Bytes(data));
+  return ethers.hexlify(ethers.toUtf8Bytes(data));
 };

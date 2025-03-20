@@ -1,7 +1,7 @@
 import { mainnet, testnet } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import axios from "axios";
-import { ethers, utils } from "ethers";
+import { BigNumberish, ethers } from "ethers";
 
 import { ZRC20Contract } from "../../../types/contracts.types";
 import { ForeignCoin } from "../../../types/foreignCoins.types";
@@ -16,22 +16,22 @@ const fetchZEVMFees = async (
   rpcUrl: string,
   foreignCoins: ForeignCoin[]
 ): Promise<FeeItem | undefined> => {
-  const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
   const contract = new ethers.Contract(
     zrc20.address,
     ZRC20.abi,
     provider
   ) as ZRC20Contract;
-  let withdrawGasFee;
+  let withdrawGasFee: BigNumberish;
   try {
     [, withdrawGasFee] = await contract.withdrawGasFee();
   } catch {
     return;
   }
 
-  const gasFee = ethers.BigNumber.from(withdrawGasFee);
+  const gasFee = ethers.toBigInt(withdrawGasFee);
   const rawProtocolFlatFee = await contract.PROTOCOL_FLAT_FEE();
-  const protocolFee = ethers.BigNumber.from(rawProtocolFlatFee);
+  const protocolFee = ethers.toBigInt(rawProtocolFlatFee);
   const gasToken = foreignCoins.find((foreignCoin) => {
     return (
       foreignCoin.foreign_chain_id === zrc20.foreign_chain_id &&
@@ -46,9 +46,9 @@ const fetchZEVMFees = async (
   const result = {
     ...zrc20,
     chain_id: String(zrc20.chain_id),
-    gasFee: utils.formatUnits(gasFee.sub(protocolFee), gasToken.decimals),
-    protocolFee: utils.formatUnits(protocolFee, gasToken.decimals),
-    totalFee: utils.formatUnits(gasFee, gasToken.decimals),
+    gasFee: ethers.formatUnits(gasFee - protocolFee, gasToken.decimals),
+    protocolFee: ethers.formatUnits(protocolFee, gasToken.decimals),
+    totalFee: ethers.formatUnits(gasFee, gasToken.decimals),
   } as FeeItem;
 
   return result;
@@ -78,14 +78,14 @@ const fetchCCMFees = async function (
     }
 
     const data = response.data;
-    const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);
-    const protocolFee = ethers.BigNumber.from(data.protocolFeeInZeta);
+    const gasFee = ethers.toBigInt(data.outboundGasInZeta);
+    const protocolFee = ethers.toBigInt(data.protocolFeeInZeta);
 
     return {
       chainID,
-      gasFee: utils.formatUnits(gasFee, 18),
-      protocolFee: utils.formatUnits(protocolFee, 18),
-      totalFee: utils.formatUnits(gasFee.add(protocolFee), 18),
+      gasFee: ethers.formatUnits(gasFee, 18),
+      protocolFee: ethers.formatUnits(protocolFee, 18),
+      totalFee: ethers.formatUnits(gasFee + protocolFee, 18),
     };
   } catch (error: unknown) {
     const errorMessage =

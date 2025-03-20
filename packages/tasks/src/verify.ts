@@ -1,6 +1,6 @@
 import select from "@inquirer/select";
 import axios, { isAxiosError } from "axios";
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import FormData from "form-data";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -12,7 +12,7 @@ interface AxiosErrorResponse {
 }
 
 const verifyTaskArgsSchema = z.object({
-  contract: z.string().refine((val) => utils.isAddress(val), {
+  contract: z.string().refine((val) => ethers.isAddress(val), {
     message: "Contract address must be a valid EVM address",
   }),
 });

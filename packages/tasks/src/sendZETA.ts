@@ -1,5 +1,5 @@
 import confirm from "@inquirer/confirm";
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { z } from "zod";
@@ -19,7 +19,7 @@ const sendZetaTaskArgsSchema = z.object({
   json: z.boolean().optional(),
   recipient: z
     .string()
-    .refine((val) => utils.isAddress(val), {
+    .refine((val) => ethers.isAddress(val), {
       message: "Recipient address must be a valid EVM address",
     })
     .optional(),

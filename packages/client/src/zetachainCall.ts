@@ -1,6 +1,6 @@
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayZEVM.sol/GatewayZEVM.json";
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
-import { ethers } from "ethers";
+import { AbiCoder, ethers } from "ethers";
 
 import {
   CallOptions,
@@ -10,7 +10,7 @@ import {
   ZRC20Contract,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
-import { toHexString } from "../../../utils/toHexString";
+import { toHexString, validateSigner } from "../../../utils";
 import { ZetaChainClient } from "./client";
 
 /**
@@ -49,8 +49,8 @@ export const zetachainCall = async function (
     zrc20: string;
   }
 ) {
-  const signer = this.signer;
-  const { utils } = ethers;
+  const signer = validateSigner(this.signer);
+
   const gatewayZetaChainAddress =
     args.gatewayZetaChain || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
@@ -64,20 +64,16 @@ export const zetachainCall = async function (
     callOnRevert: args.revertOptions.callOnRevert,
     onRevertGasLimit: args.revertOptions.onRevertGasLimit,
     revertAddress: args.revertOptions.revertAddress,
-    revertMessage: utils.hexlify(
-      utils.toUtf8Bytes(args.revertOptions.revertMessage)
-    ),
+    revertMessage: toHexString(args.revertOptions.revertMessage),
   };
 
-  const functionSignature = utils.id(args.function).slice(0, 10);
+  const functionSignature = ethers.id(args.function).slice(0, 10);
 
-  const encodedParameters = utils.defaultAbiCoder.encode(
-    args.types,
-    args.values
-  );
+  const abiCoder = AbiCoder.defaultAbiCoder();
+  const encodedParameters = abiCoder.encode(args.types, args.values);
 
-  const message = utils.hexlify(
-    utils.concat([functionSignature, encodedParameters])
+  const message = ethers.hexlify(
+    ethers.concat([functionSignature, encodedParameters])
   );
   const zrc20 = new ethers.Contract(
     args.zrc20,

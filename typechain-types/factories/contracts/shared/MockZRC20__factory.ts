@@ -2,15 +2,18 @@
 /* tslint:disable */
 /* eslint-disable */
 import {
-  Signer,
-  utils,
   Contract,
   ContractFactory,
-  BigNumberish,
-  Overrides,
+  ContractTransactionResponse,
+  Interface,
 } from "ethers";
-import type { Provider, TransactionRequest } from "@ethersproject/providers";
-import type { PromiseOrValue } from "../../../common";
+import type {
+  Signer,
+  BigNumberish,
+  ContractDeployTransaction,
+  ContractRunner,
+} from "ethers";
+import type { NonPayableOverrides } from "../../../common";
 import type {
   MockZRC20,
   MockZRC20Interface,
@@ -552,25 +555,12 @@ export class MockZRC20__factory extends ContractFactory {
     }
   }
 
-  override deploy(
-    initialSupply: PromiseOrValue<BigNumberish>,
-    name: PromiseOrValue<string>,
-    symbol: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<MockZRC20> {
-    return super.deploy(
-      initialSupply,
-      name,
-      symbol,
-      overrides || {}
-    ) as Promise<MockZRC20>;
-  }
   override getDeployTransaction(
-    initialSupply: PromiseOrValue<BigNumberish>,
-    name: PromiseOrValue<string>,
-    symbol: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): TransactionRequest {
+    initialSupply: BigNumberish,
+    name: string,
+    symbol: string,
+    overrides?: NonPayableOverrides & { from?: string }
+  ): Promise<ContractDeployTransaction> {
     return super.getDeployTransaction(
       initialSupply,
       name,
@@ -578,22 +568,33 @@ export class MockZRC20__factory extends ContractFactory {
       overrides || {}
     );
   }
-  override attach(address: string): MockZRC20 {
-    return super.attach(address) as MockZRC20;
+  override deploy(
+    initialSupply: BigNumberish,
+    name: string,
+    symbol: string,
+    overrides?: NonPayableOverrides & { from?: string }
+  ) {
+    return super.deploy(
+      initialSupply,
+      name,
+      symbol,
+      overrides || {}
+    ) as Promise<
+      MockZRC20 & {
+        deploymentTransaction(): ContractTransactionResponse;
+      }
+    >;
   }
-  override connect(signer: Signer): MockZRC20__factory {
-    return super.connect(signer) as MockZRC20__factory;
+  override connect(runner: ContractRunner | null): MockZRC20__factory {
+    return super.connect(runner) as MockZRC20__factory;
   }
 
   static readonly bytecode = _bytecode;
   static readonly abi = _abi;
   static createInterface(): MockZRC20Interface {
-    return new utils.Interface(_abi) as MockZRC20Interface;
+    return new Interface(_abi) as MockZRC20Interface;
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): MockZRC20 {
-    return new Contract(address, _abi, signerOrProvider) as MockZRC20;
+  static connect(address: string, runner?: ContractRunner | null): MockZRC20 {
+    return new Contract(address, _abi, runner) as unknown as MockZRC20;
   }
 }

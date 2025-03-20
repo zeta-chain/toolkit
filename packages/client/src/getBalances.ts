@@ -2,11 +2,9 @@ import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import axios from "axios";
-import { ethers } from "ethers";
-import { formatUnits } from "ethers/lib/utils";
+import { AbiCoder, ethers } from "ethers";
 
 import {
-  AggregateOutput,
   EsploraResponse,
   MULTICALL3_ABI,
   MulticallContract,
@@ -162,7 +160,7 @@ export const getBalances = async function (
         }
 
         multicallContexts[token.chain_name].push({
-          callData: new ethers.utils.Interface(
+          callData: new ethers.Interface(
             token.coin_type === "ERC20" ? ERC20_ABI.abi : ZRC20.abi
           ).encodeFunctionData("balanceOf", [evmAddress]),
           target: token.contract,
@@ -173,19 +171,26 @@ export const getBalances = async function (
     await Promise.all(
       Object.keys(multicallContexts).map(async (chainName) => {
         const rpc = this.getEndpoint("evm", chainName);
-        const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-        const multicallContract = new ethers.Contract(
+        const provider = new ethers.JsonRpcProvider(rpc);
+        const multicallInterface = new ethers.Interface(MULTICALL3_ABI);
+        const multicallContract: MulticallContract = new ethers.Contract(
           multicallAddress,
-          MULTICALL3_ABI,
+          multicallInterface,
           provider
-        ) as MulticallContract;
+        );
 
         const calls = multicallContexts[chainName];
 
         try {
-          const { returnData } = (await multicallContract.callStatic.aggregate(
+          if (!multicallContract.aggregate) {
+            throw new Error(
+              "aggregate method not available on Multicall Contract"
+            );
+          }
+
+          const [, returnData] = await multicallContract.aggregate.staticCall(
             calls
-          )) as AggregateOutput;
+          );
 
           returnData.forEach((data, index: number) => {
             const token = tokens.find(
@@ -195,13 +200,19 @@ export const getBalances = async function (
                 t.contract === calls[index].target
             );
             if (token) {
-              const decoded = ethers.utils.defaultAbiCoder.decode(
-                ["uint256"],
-                data
-              ) as [string];
-              const balance = BigInt(decoded[0]);
+              const abiCoder = AbiCoder.defaultAbiCoder();
+              const [decoded] = abiCoder.decode(["uint256"], data);
 
-              const formattedBalance = formatUnits(balance, token.decimals);
+              if (typeof decoded !== "bigint") {
+                throw new Error("Invalid decoded value: expected bigint");
+              }
+
+              const balance = BigInt(decoded);
+
+              const formattedBalance = ethers.formatUnits(
+                balance,
+                token.decimals
+              );
 
               balances.push({
                 ...token,
@@ -229,7 +240,10 @@ export const getBalances = async function (
               ) as TokenContract;
 
               const balance = await contract.balanceOf(evmAddress);
-              const formattedBalance = formatUnits(balance, token.decimals);
+              const formattedBalance = ethers.formatUnits(
+                balance,
+                token.decimals
+              );
 
               balances.push({
                 ...token,
@@ -274,9 +288,12 @@ export const getBalances = async function (
 
           if (chainLabel) {
             const rpc = this.getEndpoint("evm", chainLabel);
-            const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+            const provider = new ethers.JsonRpcProvider(rpc);
             const balance = await provider.getBalance(evmAddress);
-            const formattedBalance = formatUnits(balance, token.decimals);
+            const formattedBalance = ethers.formatUnits(
+              balance,
+              token.decimals
+            );
 
             balances.push({
               ...token,

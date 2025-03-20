@@ -3,63 +3,41 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
-  PromiseOrValue,
+  TypedContractMethod,
 } from "../../../../../common";
 
 export type ZContextStruct = {
-  origin: PromiseOrValue<BytesLike>;
-  sender: PromiseOrValue<string>;
-  chainID: PromiseOrValue<BigNumberish>;
+  origin: BytesLike;
+  sender: AddressLike;
+  chainID: BigNumberish;
 };
 
-export type ZContextStructOutput = [string, string, BigNumber] & {
-  origin: string;
-  sender: string;
-  chainID: BigNumber;
-};
+export type ZContextStructOutput = [
+  origin: string,
+  sender: string,
+  chainID: bigint
+] & { origin: string; sender: string; chainID: bigint };
 
-export interface SystemContractInterface extends utils.Interface {
-  functions: {
-    "FUNGIBLE_MODULE_ADDRESS()": FunctionFragment;
-    "depositAndCall((bytes,address,uint256),address,uint256,address,bytes)": FunctionFragment;
-    "gasCoinZRC20ByChainId(uint256)": FunctionFragment;
-    "gasPriceByChainId(uint256)": FunctionFragment;
-    "gasZetaPoolByChainId(uint256)": FunctionFragment;
-    "setConnectorZEVMAddress(address)": FunctionFragment;
-    "setGasCoinZRC20(uint256,address)": FunctionFragment;
-    "setGasPrice(uint256,uint256)": FunctionFragment;
-    "setGasZetaPool(uint256,address)": FunctionFragment;
-    "setWZETAContractAddress(address)": FunctionFragment;
-    "uniswapv2FactoryAddress()": FunctionFragment;
-    "uniswapv2PairFor(address,address,address)": FunctionFragment;
-    "uniswapv2Router02Address()": FunctionFragment;
-    "wZetaContractAddress()": FunctionFragment;
-    "zetaConnectorZEVMAddress()": FunctionFragment;
-  };
-
+export interface SystemContractInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "FUNGIBLE_MODULE_ADDRESS"
       | "depositAndCall"
       | "gasCoinZRC20ByChainId"
@@ -77,51 +55,55 @@ export interface SystemContractInterface extends utils.Interface {
       | "zetaConnectorZEVMAddress"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "SetConnectorZEVM"
+      | "SetGasCoin"
+      | "SetGasPrice"
+      | "SetGasZetaPool"
+      | "SetWZeta"
+      | "SystemContractDeployed"
+  ): EventFragment;
+
   encodeFunctionData(
     functionFragment: "FUNGIBLE_MODULE_ADDRESS",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "depositAndCall",
-    values: [
-      ZContextStruct,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BytesLike>
-    ]
+    values: [ZContextStruct, AddressLike, BigNumberish, AddressLike, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "gasCoinZRC20ByChainId",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "gasPriceByChainId",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "gasZetaPoolByChainId",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setConnectorZEVMAddress",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setGasCoinZRC20",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setGasPrice",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setGasZetaPool",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setWZETAContractAddress",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "uniswapv2FactoryAddress",
@@ -129,11 +111,7 @@ export interface SystemContractInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "uniswapv2PairFor",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<string>,
-      PromiseOrValue<string>
-    ]
+    values: [AddressLike, AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "uniswapv2Router02Address",
@@ -208,499 +186,384 @@ export interface SystemContractInterface extends utils.Interface {
     functionFragment: "zetaConnectorZEVMAddress",
     data: BytesLike
   ): Result;
-
-  events: {
-    "SetConnectorZEVM(address)": EventFragment;
-    "SetGasCoin(uint256,address)": EventFragment;
-    "SetGasPrice(uint256,uint256)": EventFragment;
-    "SetGasZetaPool(uint256,address)": EventFragment;
-    "SetWZeta(address)": EventFragment;
-    "SystemContractDeployed()": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "SetConnectorZEVM"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetGasCoin"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetGasPrice"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetGasZetaPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetWZeta"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SystemContractDeployed"): EventFragment;
 }
 
-export interface SetConnectorZEVMEventObject {
-  arg0: string;
+export namespace SetConnectorZEVMEvent {
+  export type InputTuple = [arg0: AddressLike];
+  export type OutputTuple = [arg0: string];
+  export interface OutputObject {
+    arg0: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type SetConnectorZEVMEvent = TypedEvent<
-  [string],
-  SetConnectorZEVMEventObject
->;
 
-export type SetConnectorZEVMEventFilter =
-  TypedEventFilter<SetConnectorZEVMEvent>;
-
-export interface SetGasCoinEventObject {
-  arg0: BigNumber;
-  arg1: string;
+export namespace SetGasCoinEvent {
+  export type InputTuple = [arg0: BigNumberish, arg1: AddressLike];
+  export type OutputTuple = [arg0: bigint, arg1: string];
+  export interface OutputObject {
+    arg0: bigint;
+    arg1: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type SetGasCoinEvent = TypedEvent<
-  [BigNumber, string],
-  SetGasCoinEventObject
->;
 
-export type SetGasCoinEventFilter = TypedEventFilter<SetGasCoinEvent>;
-
-export interface SetGasPriceEventObject {
-  arg0: BigNumber;
-  arg1: BigNumber;
+export namespace SetGasPriceEvent {
+  export type InputTuple = [arg0: BigNumberish, arg1: BigNumberish];
+  export type OutputTuple = [arg0: bigint, arg1: bigint];
+  export interface OutputObject {
+    arg0: bigint;
+    arg1: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type SetGasPriceEvent = TypedEvent<
-  [BigNumber, BigNumber],
-  SetGasPriceEventObject
->;
 
-export type SetGasPriceEventFilter = TypedEventFilter<SetGasPriceEvent>;
-
-export interface SetGasZetaPoolEventObject {
-  arg0: BigNumber;
-  arg1: string;
+export namespace SetGasZetaPoolEvent {
+  export type InputTuple = [arg0: BigNumberish, arg1: AddressLike];
+  export type OutputTuple = [arg0: bigint, arg1: string];
+  export interface OutputObject {
+    arg0: bigint;
+    arg1: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type SetGasZetaPoolEvent = TypedEvent<
-  [BigNumber, string],
-  SetGasZetaPoolEventObject
->;
 
-export type SetGasZetaPoolEventFilter = TypedEventFilter<SetGasZetaPoolEvent>;
-
-export interface SetWZetaEventObject {
-  arg0: string;
+export namespace SetWZetaEvent {
+  export type InputTuple = [arg0: AddressLike];
+  export type OutputTuple = [arg0: string];
+  export interface OutputObject {
+    arg0: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type SetWZetaEvent = TypedEvent<[string], SetWZetaEventObject>;
 
-export type SetWZetaEventFilter = TypedEventFilter<SetWZetaEvent>;
-
-export interface SystemContractDeployedEventObject {}
-export type SystemContractDeployedEvent = TypedEvent<
-  [],
-  SystemContractDeployedEventObject
->;
-
-export type SystemContractDeployedEventFilter =
-  TypedEventFilter<SystemContractDeployedEvent>;
+export namespace SystemContractDeployedEvent {
+  export type InputTuple = [];
+  export type OutputTuple = [];
+  export interface OutputObject {}
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
 export interface SystemContract extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): SystemContract;
+  waitForDeployment(): Promise<this>;
 
   interface: SystemContractInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    FUNGIBLE_MODULE_ADDRESS(overrides?: CallOverrides): Promise<[string]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    depositAndCall(
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
+
+  FUNGIBLE_MODULE_ADDRESS: TypedContractMethod<[], [string], "view">;
+
+  depositAndCall: TypedContractMethod<
+    [
       context: ZContextStruct,
-      zrc20: PromiseOrValue<string>,
-      amount: PromiseOrValue<BigNumberish>,
-      target: PromiseOrValue<string>,
-      message: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+      zrc20: AddressLike,
+      amount: BigNumberish,
+      target: AddressLike,
+      message: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    gasCoinZRC20ByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
+  gasCoinZRC20ByChainId: TypedContractMethod<
+    [arg0: BigNumberish],
+    [string],
+    "view"
+  >;
 
-    gasPriceByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  gasPriceByChainId: TypedContractMethod<
+    [arg0: BigNumberish],
+    [bigint],
+    "view"
+  >;
 
-    gasZetaPoolByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
+  gasZetaPoolByChainId: TypedContractMethod<
+    [arg0: BigNumberish],
+    [string],
+    "view"
+  >;
 
-    setConnectorZEVMAddress(
-      addr: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  setConnectorZEVMAddress: TypedContractMethod<
+    [addr: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    setGasCoinZRC20(
-      chainID: PromiseOrValue<BigNumberish>,
-      zrc20: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  setGasCoinZRC20: TypedContractMethod<
+    [chainID: BigNumberish, zrc20: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    setGasPrice(
-      chainID: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  setGasPrice: TypedContractMethod<
+    [chainID: BigNumberish, price: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    setGasZetaPool(
-      chainID: PromiseOrValue<BigNumberish>,
-      erc20: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  setGasZetaPool: TypedContractMethod<
+    [chainID: BigNumberish, erc20: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    setWZETAContractAddress(
-      addr: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  setWZETAContractAddress: TypedContractMethod<
+    [addr: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    uniswapv2FactoryAddress(overrides?: CallOverrides): Promise<[string]>;
+  uniswapv2FactoryAddress: TypedContractMethod<[], [string], "view">;
 
-    uniswapv2PairFor(
-      factory: PromiseOrValue<string>,
-      tokenA: PromiseOrValue<string>,
-      tokenB: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[string] & { pair: string }>;
+  uniswapv2PairFor: TypedContractMethod<
+    [factory: AddressLike, tokenA: AddressLike, tokenB: AddressLike],
+    [string],
+    "view"
+  >;
 
-    uniswapv2Router02Address(overrides?: CallOverrides): Promise<[string]>;
+  uniswapv2Router02Address: TypedContractMethod<[], [string], "view">;
 
-    wZetaContractAddress(overrides?: CallOverrides): Promise<[string]>;
+  wZetaContractAddress: TypedContractMethod<[], [string], "view">;
 
-    zetaConnectorZEVMAddress(overrides?: CallOverrides): Promise<[string]>;
-  };
+  zetaConnectorZEVMAddress: TypedContractMethod<[], [string], "view">;
 
-  FUNGIBLE_MODULE_ADDRESS(overrides?: CallOverrides): Promise<string>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-  depositAndCall(
-    context: ZContextStruct,
-    zrc20: PromiseOrValue<string>,
-    amount: PromiseOrValue<BigNumberish>,
-    target: PromiseOrValue<string>,
-    message: PromiseOrValue<BytesLike>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  gasCoinZRC20ByChainId(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  gasPriceByChainId(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  gasZetaPoolByChainId(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  setConnectorZEVMAddress(
-    addr: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setGasCoinZRC20(
-    chainID: PromiseOrValue<BigNumberish>,
-    zrc20: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setGasPrice(
-    chainID: PromiseOrValue<BigNumberish>,
-    price: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setGasZetaPool(
-    chainID: PromiseOrValue<BigNumberish>,
-    erc20: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setWZETAContractAddress(
-    addr: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  uniswapv2FactoryAddress(overrides?: CallOverrides): Promise<string>;
-
-  uniswapv2PairFor(
-    factory: PromiseOrValue<string>,
-    tokenA: PromiseOrValue<string>,
-    tokenB: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  uniswapv2Router02Address(overrides?: CallOverrides): Promise<string>;
-
-  wZetaContractAddress(overrides?: CallOverrides): Promise<string>;
-
-  zetaConnectorZEVMAddress(overrides?: CallOverrides): Promise<string>;
-
-  callStatic: {
-    FUNGIBLE_MODULE_ADDRESS(overrides?: CallOverrides): Promise<string>;
-
-    depositAndCall(
+  getFunction(
+    nameOrSignature: "FUNGIBLE_MODULE_ADDRESS"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "depositAndCall"
+  ): TypedContractMethod<
+    [
       context: ZContextStruct,
-      zrc20: PromiseOrValue<string>,
-      amount: PromiseOrValue<BigNumberish>,
-      target: PromiseOrValue<string>,
-      message: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      zrc20: AddressLike,
+      amount: BigNumberish,
+      target: AddressLike,
+      message: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "gasCoinZRC20ByChainId"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "gasPriceByChainId"
+  ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "gasZetaPoolByChainId"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "setConnectorZEVMAddress"
+  ): TypedContractMethod<[addr: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setGasCoinZRC20"
+  ): TypedContractMethod<
+    [chainID: BigNumberish, zrc20: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setGasPrice"
+  ): TypedContractMethod<
+    [chainID: BigNumberish, price: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setGasZetaPool"
+  ): TypedContractMethod<
+    [chainID: BigNumberish, erc20: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setWZETAContractAddress"
+  ): TypedContractMethod<[addr: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "uniswapv2FactoryAddress"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "uniswapv2PairFor"
+  ): TypedContractMethod<
+    [factory: AddressLike, tokenA: AddressLike, tokenB: AddressLike],
+    [string],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "uniswapv2Router02Address"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "wZetaContractAddress"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "zetaConnectorZEVMAddress"
+  ): TypedContractMethod<[], [string], "view">;
 
-    gasCoinZRC20ByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    gasPriceByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    gasZetaPoolByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    setConnectorZEVMAddress(
-      addr: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setGasCoinZRC20(
-      chainID: PromiseOrValue<BigNumberish>,
-      zrc20: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setGasPrice(
-      chainID: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setGasZetaPool(
-      chainID: PromiseOrValue<BigNumberish>,
-      erc20: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setWZETAContractAddress(
-      addr: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    uniswapv2FactoryAddress(overrides?: CallOverrides): Promise<string>;
-
-    uniswapv2PairFor(
-      factory: PromiseOrValue<string>,
-      tokenA: PromiseOrValue<string>,
-      tokenB: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    uniswapv2Router02Address(overrides?: CallOverrides): Promise<string>;
-
-    wZetaContractAddress(overrides?: CallOverrides): Promise<string>;
-
-    zetaConnectorZEVMAddress(overrides?: CallOverrides): Promise<string>;
-  };
+  getEvent(
+    key: "SetConnectorZEVM"
+  ): TypedContractEvent<
+    SetConnectorZEVMEvent.InputTuple,
+    SetConnectorZEVMEvent.OutputTuple,
+    SetConnectorZEVMEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetGasCoin"
+  ): TypedContractEvent<
+    SetGasCoinEvent.InputTuple,
+    SetGasCoinEvent.OutputTuple,
+    SetGasCoinEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetGasPrice"
+  ): TypedContractEvent<
+    SetGasPriceEvent.InputTuple,
+    SetGasPriceEvent.OutputTuple,
+    SetGasPriceEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetGasZetaPool"
+  ): TypedContractEvent<
+    SetGasZetaPoolEvent.InputTuple,
+    SetGasZetaPoolEvent.OutputTuple,
+    SetGasZetaPoolEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetWZeta"
+  ): TypedContractEvent<
+    SetWZetaEvent.InputTuple,
+    SetWZetaEvent.OutputTuple,
+    SetWZetaEvent.OutputObject
+  >;
+  getEvent(
+    key: "SystemContractDeployed"
+  ): TypedContractEvent<
+    SystemContractDeployedEvent.InputTuple,
+    SystemContractDeployedEvent.OutputTuple,
+    SystemContractDeployedEvent.OutputObject
+  >;
 
   filters: {
-    "SetConnectorZEVM(address)"(arg0?: null): SetConnectorZEVMEventFilter;
-    SetConnectorZEVM(arg0?: null): SetConnectorZEVMEventFilter;
+    "SetConnectorZEVM(address)": TypedContractEvent<
+      SetConnectorZEVMEvent.InputTuple,
+      SetConnectorZEVMEvent.OutputTuple,
+      SetConnectorZEVMEvent.OutputObject
+    >;
+    SetConnectorZEVM: TypedContractEvent<
+      SetConnectorZEVMEvent.InputTuple,
+      SetConnectorZEVMEvent.OutputTuple,
+      SetConnectorZEVMEvent.OutputObject
+    >;
 
-    "SetGasCoin(uint256,address)"(
-      arg0?: null,
-      arg1?: null
-    ): SetGasCoinEventFilter;
-    SetGasCoin(arg0?: null, arg1?: null): SetGasCoinEventFilter;
+    "SetGasCoin(uint256,address)": TypedContractEvent<
+      SetGasCoinEvent.InputTuple,
+      SetGasCoinEvent.OutputTuple,
+      SetGasCoinEvent.OutputObject
+    >;
+    SetGasCoin: TypedContractEvent<
+      SetGasCoinEvent.InputTuple,
+      SetGasCoinEvent.OutputTuple,
+      SetGasCoinEvent.OutputObject
+    >;
 
-    "SetGasPrice(uint256,uint256)"(
-      arg0?: null,
-      arg1?: null
-    ): SetGasPriceEventFilter;
-    SetGasPrice(arg0?: null, arg1?: null): SetGasPriceEventFilter;
+    "SetGasPrice(uint256,uint256)": TypedContractEvent<
+      SetGasPriceEvent.InputTuple,
+      SetGasPriceEvent.OutputTuple,
+      SetGasPriceEvent.OutputObject
+    >;
+    SetGasPrice: TypedContractEvent<
+      SetGasPriceEvent.InputTuple,
+      SetGasPriceEvent.OutputTuple,
+      SetGasPriceEvent.OutputObject
+    >;
 
-    "SetGasZetaPool(uint256,address)"(
-      arg0?: null,
-      arg1?: null
-    ): SetGasZetaPoolEventFilter;
-    SetGasZetaPool(arg0?: null, arg1?: null): SetGasZetaPoolEventFilter;
+    "SetGasZetaPool(uint256,address)": TypedContractEvent<
+      SetGasZetaPoolEvent.InputTuple,
+      SetGasZetaPoolEvent.OutputTuple,
+      SetGasZetaPoolEvent.OutputObject
+    >;
+    SetGasZetaPool: TypedContractEvent<
+      SetGasZetaPoolEvent.InputTuple,
+      SetGasZetaPoolEvent.OutputTuple,
+      SetGasZetaPoolEvent.OutputObject
+    >;
 
-    "SetWZeta(address)"(arg0?: null): SetWZetaEventFilter;
-    SetWZeta(arg0?: null): SetWZetaEventFilter;
+    "SetWZeta(address)": TypedContractEvent<
+      SetWZetaEvent.InputTuple,
+      SetWZetaEvent.OutputTuple,
+      SetWZetaEvent.OutputObject
+    >;
+    SetWZeta: TypedContractEvent<
+      SetWZetaEvent.InputTuple,
+      SetWZetaEvent.OutputTuple,
+      SetWZetaEvent.OutputObject
+    >;
 
-    "SystemContractDeployed()"(): SystemContractDeployedEventFilter;
-    SystemContractDeployed(): SystemContractDeployedEventFilter;
-  };
-
-  estimateGas: {
-    FUNGIBLE_MODULE_ADDRESS(overrides?: CallOverrides): Promise<BigNumber>;
-
-    depositAndCall(
-      context: ZContextStruct,
-      zrc20: PromiseOrValue<string>,
-      amount: PromiseOrValue<BigNumberish>,
-      target: PromiseOrValue<string>,
-      message: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    gasCoinZRC20ByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    gasPriceByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    gasZetaPoolByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    setConnectorZEVMAddress(
-      addr: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setGasCoinZRC20(
-      chainID: PromiseOrValue<BigNumberish>,
-      zrc20: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setGasPrice(
-      chainID: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setGasZetaPool(
-      chainID: PromiseOrValue<BigNumberish>,
-      erc20: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setWZETAContractAddress(
-      addr: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    uniswapv2FactoryAddress(overrides?: CallOverrides): Promise<BigNumber>;
-
-    uniswapv2PairFor(
-      factory: PromiseOrValue<string>,
-      tokenA: PromiseOrValue<string>,
-      tokenB: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    uniswapv2Router02Address(overrides?: CallOverrides): Promise<BigNumber>;
-
-    wZetaContractAddress(overrides?: CallOverrides): Promise<BigNumber>;
-
-    zetaConnectorZEVMAddress(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    FUNGIBLE_MODULE_ADDRESS(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    depositAndCall(
-      context: ZContextStruct,
-      zrc20: PromiseOrValue<string>,
-      amount: PromiseOrValue<BigNumberish>,
-      target: PromiseOrValue<string>,
-      message: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    gasCoinZRC20ByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    gasPriceByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    gasZetaPoolByChainId(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    setConnectorZEVMAddress(
-      addr: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setGasCoinZRC20(
-      chainID: PromiseOrValue<BigNumberish>,
-      zrc20: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setGasPrice(
-      chainID: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setGasZetaPool(
-      chainID: PromiseOrValue<BigNumberish>,
-      erc20: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setWZETAContractAddress(
-      addr: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    uniswapv2FactoryAddress(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    uniswapv2PairFor(
-      factory: PromiseOrValue<string>,
-      tokenA: PromiseOrValue<string>,
-      tokenB: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    uniswapv2Router02Address(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    wZetaContractAddress(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    zetaConnectorZEVMAddress(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    "SystemContractDeployed()": TypedContractEvent<
+      SystemContractDeployedEvent.InputTuple,
+      SystemContractDeployedEvent.OutputTuple,
+      SystemContractDeployedEvent.OutputObject
+    >;
+    SystemContractDeployed: TypedContractEvent<
+      SystemContractDeployedEvent.InputTuple,
+      SystemContractDeployedEvent.OutputTuple,
+      SystemContractDeployedEvent.OutputObject
+    >;
   };
 }

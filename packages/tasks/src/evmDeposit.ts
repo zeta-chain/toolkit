@@ -60,7 +60,7 @@ export const evmDeposit = async (
 
     if (tx) {
       const receipt = await tx.wait();
-      console.log("Transaction hash:", receipt.transactionHash);
+      console.log("Transaction hash:", receipt?.hash);
     }
   } catch (e) {
     console.error("Transaction error:", e);

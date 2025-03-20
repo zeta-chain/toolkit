@@ -36,7 +36,7 @@ export const getWalletFromRecoveryInput = async (
     );
     try {
       if (validateMnemonic(recovery)) {
-        return ethers.Wallet.fromMnemonic(recovery);
+        return ethers.Wallet.fromPhrase(recovery);
       } else {
         return new ethers.Wallet(
           recovery.startsWith("0x") ? recovery : "0x" + recovery
@@ -137,7 +137,7 @@ export const main = async (
     solanaWallet = Keypair.generate();
   }
 
-  const { privateKey, address, mnemonic } = evmWallet;
+  const { privateKey, address } = evmWallet;
   const pk = privateKey.slice(2);
 
   console.log(`
@@ -148,9 +148,9 @@ export const main = async (
       🔑 Solana Private key: ${bs58.encode(solanaWallet.secretKey)}`);
   }
 
-  if (mnemonic) {
+  if ("mnemonic" in evmWallet && evmWallet.mnemonic?.phrase) {
     console.log(`
-      🔐 EVM Mnemonic phrase: ${mnemonic.phrase}`);
+      🔐 EVM Mnemonic phrase: ${evmWallet.mnemonic.phrase}`);
   }
 
   console.log(`

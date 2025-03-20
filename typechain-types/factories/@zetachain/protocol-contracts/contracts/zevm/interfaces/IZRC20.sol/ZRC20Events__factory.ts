@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   ZRC20Events,
   ZRC20EventsInterface,
@@ -179,12 +178,9 @@ const _abi = [
 export class ZRC20Events__factory {
   static readonly abi = _abi;
   static createInterface(): ZRC20EventsInterface {
-    return new utils.Interface(_abi) as ZRC20EventsInterface;
+    return new Interface(_abi) as ZRC20EventsInterface;
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): ZRC20Events {
-    return new Contract(address, _abi, signerOrProvider) as ZRC20Events;
+  static connect(address: string, runner?: ContractRunner | null): ZRC20Events {
+    return new Contract(address, _abi, runner) as unknown as ZRC20Events;
   }
 }

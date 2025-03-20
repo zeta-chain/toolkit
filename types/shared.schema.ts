@@ -1,9 +1,9 @@
-import { BigNumber, utils } from "ethers";
+import { ethers } from "ethers";
 import { z } from "zod";
 
 export const evmAddressSchema = z
   .string()
-  .refine((val) => utils.isAddress(val), "Must be a valid EVM address");
+  .refine((val) => ethers.isAddress(val), "Must be a valid EVM address");
 
 export const validJsonStringSchema = z.string().refine(
   (val) => {
@@ -14,11 +14,11 @@ export const validJsonStringSchema = z.string().refine(
       return false;
     }
   },
-  { message: "Types must be a valid JSON array of strings" }
+  { message: "Types must be a valid JSON string" }
 );
 
 export const bigNumberStringSchema = z
   .number()
   .int()
   .min(0)
-  .transform((val) => BigNumber.from(val));
+  .transform((val) => ethers.toBigInt(val));

@@ -8,6 +8,7 @@ import {
   RevertOptions,
   TxOptions,
 } from "../../../types/contracts.types";
+import { toHexString, validateSigner } from "../../../utils";
 import { ZetaChainClient } from "./client";
 
 /**
@@ -38,13 +39,8 @@ export const evmDeposit = async function (
     txOptions: TxOptions;
   }
 ) {
-  const signer = this.signer;
+  const signer = validateSigner(this.signer);
 
-  if (!signer) {
-    throw new Error("Signer is undefined. Please provide a valid signer.");
-  }
-
-  const { utils } = ethers;
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
     gatewayEvmAddress,
@@ -58,9 +54,7 @@ export const evmDeposit = async function (
     onRevertGasLimit: args.revertOptions.onRevertGasLimit,
     revertAddress: args.revertOptions.revertAddress,
     // not used
-    revertMessage: utils.hexlify(
-      utils.toUtf8Bytes(args.revertOptions.revertMessage)
-    ),
+    revertMessage: toHexString(args.revertOptions.revertMessage),
   };
 
   const txOptions = {
@@ -76,7 +70,7 @@ export const evmDeposit = async function (
     ) as ERC20Contract;
 
     const decimals = await erc20Contract.decimals();
-    const value = utils.parseUnits(args.amount, decimals);
+    const value = ethers.parseUnits(args.amount, decimals);
 
     const connectedContract = erc20Contract.connect(signer) as ERC20Contract;
 
@@ -101,7 +95,7 @@ export const evmDeposit = async function (
     const gatewayDepositFunction = gateway[
       depositAbiSignature
     ] as GatewayContract["deposit"];
-    const value = utils.parseEther(args.amount);
+    const value = ethers.parseEther(args.amount);
 
     tx = await gatewayDepositFunction(args.receiver, revertOptions, {
       ...txOptions,

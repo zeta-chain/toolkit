@@ -1,4 +1,4 @@
-import { formatUnits } from "ethers/lib/utils";
+import { formatUnits } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 

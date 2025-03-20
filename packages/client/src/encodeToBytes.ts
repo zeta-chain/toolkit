@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { AbiCoder } from "ethers";
 import { Web3 } from "web3";
 import { isAddress } from "web3-validator";
 
@@ -83,7 +83,8 @@ const encodeToBytes = (header: Header, fields: FieldsV0): Uint8Array => {
 const encodeFieldsABI = (fields: FieldsV0): Uint8Array => {
   const types = ["address", "bytes", "string"];
   const values = [fields.receiver, fields.payload, fields.revertAddress];
-  const encodedData = ethers.utils.defaultAbiCoder.encode(types, values);
+  const abiCoder = AbiCoder.defaultAbiCoder();
+  const encodedData = abiCoder.encode(types, values);
   return Uint8Array.from(Buffer.from(encodedData.slice(2), "hex"));
 };
 

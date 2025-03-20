@@ -1,5 +1,4 @@
-import { BytesLike, ethers } from "ethers";
-import { isBytesLike } from "ethers/lib/utils";
+import { AbiCoder, BytesLike, ethers } from "ethers";
 
 export type SupportedArgType =
   | string
@@ -18,12 +17,10 @@ export const prepareData = (
 };
 
 export const prepareParams = (types: string[], args: SupportedArgType[]) => {
-  const abiCoder = ethers.utils.defaultAbiCoder;
+  const abiCoder = AbiCoder.defaultAbiCoder();
   for (let i = 0; i < args.length; i++) {
-    if (types[i] === "bytes32" && isBytesLike(args[i])) {
-      args[i] = ethers.utils.hexlify(
-        ethers.utils.zeroPad(args[i] as BytesLike, 32)
-      );
+    if (types[i] === "bytes32" && ethers.isBytesLike(args[i])) {
+      args[i] = ethers.hexlify(ethers.zeroPadBytes(args[i] as BytesLike, 32));
     }
   }
   return abiCoder.encode(types, args);

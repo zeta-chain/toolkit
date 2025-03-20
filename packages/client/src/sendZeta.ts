@@ -2,6 +2,7 @@ import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZetaToken from "@zetachain/protocol-contracts/abi/Zeta.non-eth.sol/ZetaNonEth.json";
 import { ethers } from "ethers";
 
+import { validateSigner } from "../../../utils";
 import { ZetaChainClient } from "./client";
 import type {
   ZetaConnectorContract,
@@ -41,14 +42,15 @@ export const sendZeta = async function (
     recipient: string;
   }
 ) {
-  let signer;
+  let signer: ethers.Signer;
+
   if (this.signer) {
-    signer = this.signer;
+    signer = validateSigner(this.signer);
   } else if (this.wallet) {
     const rpc = this.getEndpoint("evm", chain);
     if (!rpc) throw new Error(`No EVM RPC endpoint found for ${chain} chain.`);
-    const provider = new ethers.providers.JsonRpcProvider(rpc);
-    signer = this.wallet.connect(provider);
+    const provider = new ethers.JsonRpcProvider(rpc);
+    signer = validateSigner(this.wallet.connect(provider));
   } else {
     throw new Error("No wallet or signer found.");
   }
@@ -64,7 +66,7 @@ export const sendZeta = async function (
     throw new Error(`zetaToken address on chain ${chain} not found`);
   }
 
-  const connectorContract = new ethers.Contract(
+  const connectorContract: ZetaConnectorContract = new ethers.Contract(
     connector,
     // fromZetaChain ? ZetaConnectorZEVM.abi : ZetaConnectorEth.abi,
     /**
@@ -73,7 +75,7 @@ export const sendZeta = async function (
      */
     sendFunctionAbi,
     signer
-  ) as ZetaConnectorContract;
+  );
 
   const zetaTokenContract = new ethers.Contract(
     zetaToken,
@@ -81,7 +83,7 @@ export const sendZeta = async function (
     signer
   ) as ZetaTokenContract;
 
-  const value = ethers.utils.parseEther(amount);
+  const value = ethers.parseEther(amount);
 
   if (fromZetaChain) {
     await signer.sendTransaction({ to: zetaToken, value });
@@ -93,12 +95,16 @@ export const sendZeta = async function (
   const destinationChainId = this.getChains()[destination]?.chain_id;
   const destinationAddress = recipient;
 
+  if (!connectorContract.send) {
+    throw new Error("Connector contract does not have a send method");
+  }
+
   const sendTx = await connectorContract.send({
     destinationAddress,
     destinationChainId,
     destinationGasLimit: gasLimit,
-    message: ethers.utils.toUtf8Bytes(""),
-    zetaParams: ethers.utils.toUtf8Bytes(""),
+    message: ethers.toUtf8Bytes(""),
+    zetaParams: ethers.toUtf8Bytes(""),
     zetaValueAndGas: value,
   });
 

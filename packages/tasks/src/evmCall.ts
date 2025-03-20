@@ -66,7 +66,7 @@ export const evmCall = async (
     });
 
     const receipt = await tx.wait();
-    console.log("Transaction hash:", receipt.transactionHash);
+    console.log("Transaction hash:", receipt?.hash);
   } catch (e) {
     console.error("Transaction error:", e);
   }

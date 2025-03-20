@@ -82,7 +82,7 @@ export const solanaDeposit = async function (
 
   try {
     const tx = new anchor.web3.Transaction();
-    const recipient = Buffer.from(ethers.utils.arrayify(args.recipient));
+    const recipient = Buffer.from(ethers.getBytes(args.recipient));
     const depositInstruction = await gatewayProgram.methods
       .deposit(depositAmount, recipient)
       .accounts({
