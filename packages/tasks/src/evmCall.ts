@@ -5,8 +5,10 @@ import { z } from "zod";
 import {
   bigNumberStringSchema,
   evmAddressSchema,
+  stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
+import { parseJson } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
@@ -61,7 +63,7 @@ export const evmCall = async (
         gasLimit: parsedArgs.gasLimit,
         gasPrice: parsedArgs.gasPrice,
       },
-      types: JSON.parse(parsedArgs.types) as string[],
+      types: parseJson(parsedArgs.types, stringArraySchema),
       values,
     });
 

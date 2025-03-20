@@ -10,6 +10,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as os from "os";
 import * as path from "path";
 
+import { numberArraySchema } from "../../../types/shared.schema";
+import { parseJson } from "../../../utils";
 import { bitcoinAddress } from "./bitcoinAddress";
 
 export const hexToBech32Address = (
@@ -67,7 +69,7 @@ export const getSolanaWalletFromLocalFileOrInput =
           solanaConfigPath,
           "utf-8"
         );
-        const secretKey = JSON.parse(fileContent) as number[];
+        const secretKey = parseJson(fileContent, numberArraySchema);
         return Keypair.fromSecretKey(Uint8Array.from(secretKey));
       } catch (error) {
         console.error("Failed to load Solana private key:", error);

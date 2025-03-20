@@ -22,3 +22,6 @@ export const bigNumberStringSchema = z
   .int()
   .min(0)
   .transform((val) => ethers.toBigInt(val));
+
+export const numberArraySchema = z.array(z.number());
+export const stringArraySchema = z.array(z.string());

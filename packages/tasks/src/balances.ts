@@ -6,6 +6,8 @@ import { task } from "hardhat/config";
 import ora from "ora";
 import { z } from "zod";
 
+import { numberArraySchema } from "../../../types/shared.schema";
+import { parseJson } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 import { bitcoinAddress } from "./bitcoinAddress";
 
@@ -34,8 +36,6 @@ const balancesError = `
   
   npx hardhat balances --evm <evm_address> --solana <solana_address> --bitcoin <bitcoin_address>
 `;
-
-const solanaKeySchema = z.array(z.number());
 
 const balancesArgsSchema = z.object({
   bitcoin: z.string().optional(),
@@ -97,7 +97,7 @@ const main = async (args: BalancesArgs) => {
     if (solanaKey) {
       try {
         if (solanaKey.startsWith("[") && solanaKey.endsWith("]")) {
-          const parsedKey = solanaKeySchema.parse(JSON.parse(solanaKey));
+          const parsedKey = parseJson(solanaKey, numberArraySchema);
 
           solanaAddress = Keypair.fromSecretKey(
             Uint8Array.from(parsedKey)

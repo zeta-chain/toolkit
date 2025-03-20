@@ -5,6 +5,8 @@ import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 
+import { numberArraySchema } from "../../../types/shared.schema";
+import { parseJson } from "../../../utils";
 import { ZetaChainClient } from "../../client/src";
 
 const solanaDepositArgsSchema = z.object({
@@ -72,9 +74,7 @@ export const getKeypairFromFile = async (filepath: string) => {
   // Parse contents of file
   let parsedFileContents;
   try {
-    const parsedFileContentsResult = z
-      .array(z.number())
-      .parse(JSON.parse(fileContents));
+    const parsedFileContentsResult = parseJson(fileContents, numberArraySchema);
     parsedFileContents = Uint8Array.from(parsedFileContentsResult);
   } catch (error: unknown) {
     const errorMessage =
@@ -86,6 +86,7 @@ export const getKeypairFromFile = async (filepath: string) => {
 
     throw new Error(`Invalid secret key file at '${filepath}'!`);
   }
+
   return Keypair.fromSecretKey(parsedFileContents);
 };
 

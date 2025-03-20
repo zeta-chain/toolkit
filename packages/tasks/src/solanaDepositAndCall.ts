@@ -5,7 +5,12 @@ import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 
-import { validJsonStringSchema } from "../../../types/shared.schema";
+import {
+  numberArraySchema,
+  stringArraySchema,
+  validJsonStringSchema,
+} from "../../../types/shared.schema";
+import { parseJson } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src";
 
@@ -59,9 +64,7 @@ export const solanaDepositAndCall = async (args: SolanaDepositAndCallArgs) => {
   let paramTypes: string[];
 
   try {
-    const parsedParamTypes = z
-      .array(z.string())
-      .parse(JSON.parse(parsedArgs.types));
+    const parsedParamTypes = parseJson(parsedArgs.types, stringArraySchema);
 
     paramTypes = parsedParamTypes;
   } catch (error: unknown) {
@@ -103,9 +106,7 @@ export const getKeypairFromFile = async (filepath: string) => {
   let parsedFileContents;
 
   try {
-    const parsedFileContentsResult = z
-      .array(z.number())
-      .parse(JSON.parse(fileContents));
+    const parsedFileContentsResult = parseJson(fileContents, numberArraySchema);
     parsedFileContents = Uint8Array.from(parsedFileContentsResult);
   } catch (error: unknown) {
     const errorMessage =

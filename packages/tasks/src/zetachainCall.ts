@@ -5,8 +5,10 @@ import { z } from "zod";
 import {
   bigNumberStringSchema,
   evmAddressSchema,
+  stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
+import { parseJson } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
@@ -54,7 +56,7 @@ export const zetachainCall = async (
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
     const client = new ZetaChainClient({ network, signer });
-    const parsedTypes = z.array(z.string()).parse(JSON.parse(parsedArgs.types));
+    const parsedTypes = parseJson(parsedArgs.types, stringArraySchema);
 
     const response = await client.zetachainCall({
       callOptions,
