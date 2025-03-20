@@ -1,6 +1,7 @@
 import { task } from "hardhat/config";
 import { z } from "zod";
 
+import { validateTaskArgs } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 const tokensArgsSchema = z.object({
@@ -10,11 +11,7 @@ const tokensArgsSchema = z.object({
 type TokensArgs = z.infer<typeof tokensArgsSchema>;
 
 const main = async (args: TokensArgs) => {
-  const { data: parsedArgs, success, error } = tokensArgsSchema.safeParse(args);
-
-  if (!success) {
-    throw new Error(`Invalid arguments: ${error?.message}`);
-  }
+  const parsedArgs = validateTaskArgs(args, tokensArgsSchema);
 
   const client = new ZetaChainClient({
     network: parsedArgs.mainnet ? "mainnet" : "testnet",

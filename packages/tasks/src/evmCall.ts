@@ -8,7 +8,7 @@ import {
   stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
-import { parseJson } from "../../../utils";
+import { parseJson, validateTaskArgs } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
@@ -32,15 +32,7 @@ export const evmCall = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   try {
-    const {
-      success,
-      error,
-      data: parsedArgs,
-    } = evmCallArgsSchema.safeParse(args);
-
-    if (!success) {
-      throw new Error(`Invalid arguments: ${error?.message}`);
-    }
+    const parsedArgs = validateTaskArgs(args, evmCallArgsSchema);
 
     // Parse the ABI values
     const values = parseAbiValues(parsedArgs.types, parsedArgs.values);

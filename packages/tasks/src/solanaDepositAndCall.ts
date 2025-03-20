@@ -10,7 +10,7 @@ import {
   stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
-import { parseJson } from "../../../utils";
+import { parseJson, validateTaskArgs } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src";
 
@@ -26,15 +26,7 @@ const solanaDepositAndCallArgsSchema = z.object({
 type SolanaDepositAndCallArgs = z.infer<typeof solanaDepositAndCallArgsSchema>;
 
 export const solanaDepositAndCall = async (args: SolanaDepositAndCallArgs) => {
-  const {
-    success,
-    error,
-    data: parsedArgs,
-  } = solanaDepositAndCallArgsSchema.safeParse(args);
-
-  if (!success) {
-    throw new Error(`Invalid arguments: ${error?.message}`);
-  }
+  const parsedArgs = validateTaskArgs(args, solanaDepositAndCallArgsSchema);
 
   const values = parseAbiValues(parsedArgs.types, parsedArgs.values);
 

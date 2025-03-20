@@ -3,6 +3,7 @@ import { task } from "hardhat/config";
 import Spinnies from "spinnies";
 import { z } from "zod";
 
+import { validateTaskArgs } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 interface EmitterArgs {
@@ -37,11 +38,7 @@ const cctxArgsSchema = z.object({
 type CctxArgs = z.infer<typeof cctxArgsSchema>;
 
 const main = async (args: CctxArgs) => {
-  const { data: parsedArgs, success, error } = cctxArgsSchema.safeParse(args);
-
-  if (!success) {
-    throw new Error(`Invalid arguments: ${error?.message}`);
-  }
+  const parsedArgs = validateTaskArgs(args, cctxArgsSchema);
 
   const network = parsedArgs.mainnet ? "mainnet" : "testnet";
 
