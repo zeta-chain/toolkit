@@ -26,7 +26,12 @@ const fetchZEVMFees = async (
   let withdrawGasFee: BigNumberish;
   try {
     [, withdrawGasFee] = await contract.withdrawGasFee();
-  } catch {
+  } catch (error: unknown) {
+    handleError({
+      context: "Something went wrong fetching withdraw gas fee",
+      error,
+    });
+
     return;
   }
 
@@ -41,6 +46,7 @@ const fetchZEVMFees = async (
   });
 
   if (!gasToken) {
+    console.error("Gas token not found");
     return;
   }
 
@@ -117,8 +123,11 @@ export const getFees = async function (this: ZetaChainClient, gas: number) {
       try {
         const fee = await fetchCCMFees.call(this, n.chain_id, gas);
         if (fee) fees.messaging.push(fee);
-      } catch (err) {
-        console.log(err);
+      } catch (error: unknown) {
+        handleError({
+          context: "Something went wrong fetching CCM fees",
+          error,
+        });
       }
     })
   );
@@ -129,8 +138,11 @@ export const getFees = async function (this: ZetaChainClient, gas: number) {
         const rpcUrl = this.getEndpoint("evm", `zeta_${this.network}`);
         const fee = await fetchZEVMFees(zrc20, rpcUrl, foreignCoins);
         if (fee) fees.omnichain.push(fee);
-      } catch (err) {
-        console.log(err);
+      } catch (error: unknown) {
+        handleError({
+          context: "Something went wrong fetching ZEVM fees",
+          error,
+        });
       }
     })
   );
