@@ -9,6 +9,7 @@ import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
 import { AbiCoder, ethers } from "ethers";
 
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { handleError } from "../../../utils";
 import { ZetaChainClient } from "./client";
 
 const SEED = "meta";
@@ -136,9 +137,10 @@ export const solanaDepositAndCall = async function (
     }
     return txSignature;
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    throw new Error(`Transaction failed:, ${errorMessage}`);
+    handleError({
+      context: "Transaction failed",
+      error,
+      shouldThrow: true,
+    });
   }
 };

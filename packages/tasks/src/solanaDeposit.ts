@@ -6,7 +6,7 @@ import { task } from "hardhat/config";
 import { z } from "zod";
 
 import { numberArraySchema } from "../../../types/shared.schema";
-import { parseJson, validateTaskArgs } from "../../../utils";
+import { handleError, parseJson, validateTaskArgs } from "../../../utils";
 import { ZetaChainClient } from "../../client/src";
 
 const solanaDepositArgsSchema = z.object({
@@ -69,8 +69,10 @@ export const getKeypairFromFile = async (filepath: string) => {
     const parsedFileContentsResult = parseJson(fileContents, numberArraySchema);
     parsedFileContents = Uint8Array.from(parsedFileContentsResult);
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = handleError({
+      context: `Invalid secret key file at '${filepath}'!`,
+      error,
+    });
 
     if (!errorMessage.includes("Unexpected token")) {
       throw new Error(errorMessage);

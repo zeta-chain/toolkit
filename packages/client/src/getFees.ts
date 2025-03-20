@@ -9,6 +9,7 @@ import {
   ConvertGasToZetaResponse,
   FeeItem,
 } from "../../../types/getFees.types";
+import { handleError } from "../../../utils";
 import { ZetaChainClient } from "./client";
 
 const fetchZEVMFees = async (
@@ -88,14 +89,10 @@ const fetchCCMFees = async function (
       totalFee: ethers.formatUnits(gasFee + protocolFee, 18),
     };
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : error?.toString() || "Unknown Error";
-
-    console.error(
-      `Something failed fetching CCTX By Inbound hash: ${errorMessage}`
-    );
+    handleError({
+      context: "Something failed fetching CCTX By Inbound hash",
+      error,
+    });
   }
 };
 

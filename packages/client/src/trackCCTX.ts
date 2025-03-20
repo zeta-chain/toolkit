@@ -10,6 +10,7 @@ import {
   Spinners,
   TssResponse,
 } from "../../../types/trackCCTX.types";
+import { handleError } from "../../../utils";
 import type { ZetaChainClient } from "./client";
 
 const apiFetch = async <T>(url: string) => {
@@ -46,12 +47,10 @@ const fetchCCTXByInbound = async (
       }
     });
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    console.error(
-      `Something failed fetching CCTX By Inbound hash: ${errorMessage}`
-    );
+    handleError({
+      context: "Something failed fetching CCTX By Inbound hash",
+      error,
+    });
   }
 };
 
@@ -61,10 +60,7 @@ const getCCTX = async (hash: string, API: string) => {
     const apiResponseData = await apiFetch<CrossChainTxResponse>(url);
     return apiResponseData?.CrossChainTx;
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    console.error(`Something failed fetching CCTX: ${errorMessage}`);
+    handleError({ context: "Something failed fetching CCTX", error });
   }
 };
 
@@ -75,10 +71,7 @@ const fetchNonces = async (API: string, TSS: string) => {
     const nonces = apiResponseData?.pending_nonces;
     return nonces.filter((n) => n.tss === TSS);
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    console.error(`Something failed fetching Nonces: ${errorMessage}`);
+    handleError({ context: "Something failed fetching Nonces", error });
   }
 };
 
@@ -88,10 +81,7 @@ const fetchTSS = async (API: string) => {
     const apiResponseData = await apiFetch<TssResponse>(url);
     return apiResponseData?.TSS.tss_pubkey;
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    console.error(`Something failed fetching TSS: ${errorMessage}`);
+    handleError({ context: "Something failed fetching TSS", error });
   }
 };
 
@@ -243,12 +233,10 @@ export const trackCCTX = async function (
                   json
                 );
               } catch (error: unknown) {
-                const errorMessage =
-                  error instanceof Error ? error.message : "Unknown error";
-
-                console.error(
-                  `Something failed on Fetch CCTX call: ${errorMessage}`
-                );
+                handleError({
+                  context: "Something failed on Fetch CCTX call",
+                  error,
+                });
               }
             }
           }
@@ -286,7 +274,7 @@ export const trackCCTX = async function (
             }
           }
         } catch (error: unknown) {
-          console.error("Error in interval:", error);
+          handleError({ context: "Error in interval", error });
           clearInterval(intervalID);
           reject(new Error("Error in interval"));
         }

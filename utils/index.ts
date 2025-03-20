@@ -1,6 +1,7 @@
 export * from "./bitsize";
 export * from "./compareBigIntAndNumber";
 export * from "./getHardhatConfig";
+export * from "./handleError";
 export * from "./parseAbiValues";
 export * from "./parseJson";
 export * from "./toHexString";
