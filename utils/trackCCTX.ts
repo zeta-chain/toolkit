@@ -78,7 +78,13 @@ export const processTransactionUpdate = async ({
     return state;
   }
 
-  const cctxHashes = await getCctxByInboundHash(api, hash).catch(() => []);
+  let cctxHashes: string[] = [];
+  try {
+    cctxHashes = await getCctxByInboundHash(api, hash);
+  } catch {
+    cctxHashes = [];
+  }
+
   const result = processNewCctxHashes(
     cctxHashes,
     state.cctxs,
@@ -103,9 +109,13 @@ export const updateTransactionState = async ({
   emitter,
   json,
 }: UpdateTransactionStateArgs): Promise<TransactionState> => {
-  const tx = await updateTransactionStatus(api, txHash, state.cctxs).catch(
-    () => undefined
-  );
+  let tx;
+  try {
+    tx = await updateTransactionStatus(api, txHash, state.cctxs);
+  } catch {
+    return state;
+  }
+
   if (!tx) return state;
 
   const updatedCctxs = {
@@ -187,7 +197,12 @@ export const pollTransactions = async ({
   }
 
   // Update pending nonces
-  const pendingNonces = await getPendingNoncesForTss(api, tss).catch(() => []);
+  let pendingNonces: PendingNonce[] = [];
+  try {
+    pendingNonces = await getPendingNoncesForTss(api, tss);
+  } catch {
+    pendingNonces = [];
+  }
   let newState = updateState(state, { pendingNonces });
 
   // Find transactions if we don't have any yet
@@ -216,7 +231,13 @@ export const pollTransactions = async ({
 
     // If we didn't find any, try direct lookup
     if (Object.keys(newState.cctxs).length === 0) {
-      const cctx = await getCctxByHash(api, hash).catch(() => undefined);
+      let cctx;
+      try {
+        cctx = await getCctxByHash(api, hash);
+      } catch {
+        cctx = undefined;
+      }
+
       if (cctx && !newState.cctxs[hash]) {
         const updatedCctxs = { ...newState.cctxs, [hash]: [] };
         const updatedSpinners = { ...newState.spinners };
