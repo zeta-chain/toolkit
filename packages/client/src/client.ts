@@ -1,12 +1,16 @@
 import type { Wallet as SolanaWallet } from "@coral-xyz/anchor";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import type { WalletContextState } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { networks } from "@zetachain/networks";
 import mainnetAddresses from "@zetachain/protocol-contracts/dist/data/addresses.mainnet.json";
 import testnetAddresses from "@zetachain/protocol-contracts/dist/data/addresses.testnet.json";
 import type { Signer, Wallet } from "ethers";
+import has from "lodash/has";
 import merge from "lodash/merge";
 
+import { Chains } from "../../../types/client.types";
+import { compareBigIntAndNumber } from "../../../utils";
 import {
   evmCall,
   evmDeposit,
@@ -33,7 +37,7 @@ import {
 } from ".";
 
 export interface ZetaChainClientParamsBase {
-  chains?: { [key: string]: any };
+  chains?: Chains;
   contracts?: LocalnetAddress[] | MainnetTestnetAddress[];
   network?: string;
 }
@@ -41,7 +45,7 @@ export interface ZetaChainClientParamsBase {
 export type ZetaChainClientParams = ZetaChainClientParamsBase &
   (
     | {
-        signer: Signer;
+        signer: Signer | SignerWithAddress;
         solanaAdapter?: never;
         solanaWallet?: never;
         wallet?: never;
@@ -87,10 +91,10 @@ interface LocalnetAddress {
 }
 
 export class ZetaChainClient {
-  public chains: { [key: string]: any };
+  public chains: Chains;
   public network: string;
   public wallet: Wallet | undefined;
-  public signer: any | undefined;
+  public signer: Signer | SignerWithAddress | undefined;
   public solanaWallet: SolanaWallet | undefined;
   public solanaAdapter: WalletContextState | undefined;
   private contracts: LocalnetAddress[] | MainnetTestnetAddress[];
@@ -166,9 +170,9 @@ export class ZetaChainClient {
     this.mergeChains(params.chains);
   }
 
-  private mergeChains(customChains: { [key: string]: any } = {}): void {
+  private mergeChains(customChains: Chains = {}): void {
     Object.entries(customChains).forEach(([key, value]) => {
-      if (customChains.hasOwnProperty(key)) {
+      if (has(customChains, key)) {
         this.chains[key] = merge({}, this.chains[key], value);
       }
     });
@@ -187,23 +191,51 @@ export class ZetaChainClient {
       return gateway.address;
     } else {
       let gateway;
-      if (this.wallet) {
+      if (this.wallet?.provider) {
         try {
-          const chainId = await this.wallet!.getChainId();
-          gateway = (this.contracts as MainnetTestnetAddress[]).find(
-            (item) => chainId === item.chain_id && item.type === "gateway"
+          const walletNetwork = await this.wallet.provider.getNetwork();
+          const chainId = walletNetwork?.chainId;
+          gateway = (this.contracts as MainnetTestnetAddress[]).find((item) => {
+            const isSameChainId = compareBigIntAndNumber(
+              chainId,
+              item.chain_id
+            );
+
+            return isSameChainId && item.type === "gateway";
+          });
+        } catch (error: unknown) {
+          throw new Error(
+            `Failed to get gateway address. ${
+              typeof error === "string" ? error : ""
+            }`
           );
-        } catch (error) {
-          throw new Error("Failed to get gateway address: " + error);
         }
       } else {
         try {
-          const chainId = await this.signer!.getChainId();
-          gateway = (this.contracts as MainnetTestnetAddress[]).find(
-            (item) => chainId === item.chain_id && item.type === "gateway"
+          if (this.signer && !("provider" in this.signer)) {
+            throw new Error("Signer does not have a valid provider");
+          }
+
+          const signerNetwork = await this.signer?.provider?.getNetwork();
+
+          if (!signerNetwork) {
+            throw new Error("Invalid Signer network");
+          }
+
+          const chainId = signerNetwork.chainId;
+          gateway = (this.contracts as MainnetTestnetAddress[]).find((item) => {
+            const isSameChainId = compareBigIntAndNumber(
+              chainId,
+              item.chain_id
+            );
+            return isSameChainId && item.type === "gateway";
+          });
+        } catch (error: unknown) {
+          throw new Error(
+            `Failed to get gateway address. ${
+              typeof error === "string" ? error : ""
+            }`
           );
-        } catch (error) {
-          throw new Error("Failed to get gateway address: " + error);
         }
       }
 
@@ -215,7 +247,7 @@ export class ZetaChainClient {
     }
   }
 
-  public getChains(): { [key: string]: any } {
+  public getChains(): Chains {
     return this.chains;
   }
 

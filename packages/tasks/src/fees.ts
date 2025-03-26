@@ -1,16 +1,30 @@
 import { task, types } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
 import { ZetaChainClient } from "../../client/src/";
 
-const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
+const feesArgsSchema = z.object({
+  gas: z.number().int().min(0),
+  json: z.boolean().optional(),
+  mainnet: z.boolean().optional(),
+});
+
+type FeesArgs = z.infer<typeof feesArgsSchema>;
+
+const main = async (args: FeesArgs) => {
+  const { data: parsedArgs, success, error } = feesArgsSchema.safeParse(args);
+
+  if (!success) {
+    throw new Error(`Invalid arguments: ${error?.message}`);
+  }
+
   const client = new ZetaChainClient({
-    network: args.mainnet ? "mainnet" : "testnet",
+    network: parsedArgs.mainnet ? "mainnet" : "testnet",
   });
 
-  const fees = await client.getFees(args.gas);
+  const fees = await client.getFees(parsedArgs.gas);
 
-  if (args.json) {
+  if (parsedArgs.json) {
     console.log(JSON.stringify(fees, null, 2));
   } else {
     console.log(
@@ -27,10 +41,6 @@ const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
         })
       )
     );
-    console.log(
-      `\nCross-chain messaging fees (in ZETA, gas limit: ${args.gas}):`
-    );
-    console.table(fees.messaging);
   }
 };
 

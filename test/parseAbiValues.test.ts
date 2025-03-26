@@ -107,7 +107,7 @@ describe("parseAbiValues", () => {
     const types = '["unsupportedType", "invalidType"]';
     const values = ["value1", "value2"];
     expect(() => parseAbiValues(types, values)).toThrow(
-      "Unsupported type: unsupportedType"
+      'Invalid types array: (["unsupportedType", "invalidType"])'
     );
   });
 
@@ -115,7 +115,7 @@ describe("parseAbiValues", () => {
     const types = '["uint256", "invalidType"]';
     const values = ["123", "value2"];
     expect(() => parseAbiValues(types, values)).toThrow(
-      "Unsupported type: invalidType"
+      'Invalid types array: (["uint256", "invalidType"])'
     );
   });
 
@@ -171,7 +171,7 @@ describe("parseAbiValues", () => {
     const types = '"address"'; // Not an array
     const values = ["0x236b0DE675cC8F46AE186897fCCeFe3370C9eDeD"];
     expect(() => parseAbiValues(types, values)).toThrow(
-      'Expected types to be an array, got: "address"'
+      'Invalid types array: ("address")'
     );
   });
 

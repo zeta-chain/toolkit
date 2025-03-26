@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   IZRC20Metadata,
   IZRC20MetadataInterface,
@@ -348,12 +347,12 @@ const _abi = [
 export class IZRC20Metadata__factory {
   static readonly abi = _abi;
   static createInterface(): IZRC20MetadataInterface {
-    return new utils.Interface(_abi) as IZRC20MetadataInterface;
+    return new Interface(_abi) as IZRC20MetadataInterface;
   }
   static connect(
     address: string,
-    signerOrProvider: Signer | Provider
+    runner?: ContractRunner | null
   ): IZRC20Metadata {
-    return new Contract(address, _abi, signerOrProvider) as IZRC20Metadata;
+    return new Contract(address, _abi, runner) as unknown as IZRC20Metadata;
   }
 }

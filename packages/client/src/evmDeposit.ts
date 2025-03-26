@@ -2,8 +2,14 @@ import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
 import { ethers } from "ethers";
 
+import {
+  ERC20Contract,
+  GatewayContract,
+  RevertOptions,
+  TxOptions,
+} from "../../../types/contracts.types";
+import { toHexString, validateSigner } from "../../../utils";
 import { ZetaChainClient } from "./client";
-import type { revertOptions, txOptions } from "./types";
 
 /**
  * @function evmDeposit
@@ -26,21 +32,21 @@ export const evmDeposit = async function (
   this: ZetaChainClient,
   args: {
     amount: string;
-    erc20: string;
+    erc20?: string;
     gatewayEvm?: string;
     receiver: string;
-    revertOptions: revertOptions;
-    txOptions: txOptions;
+    revertOptions: RevertOptions;
+    txOptions: TxOptions;
   }
 ) {
-  const signer = this.signer;
-  const { utils } = ethers;
+  const signer = validateSigner(this.signer);
+
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
   const gateway = new ethers.Contract(
     gatewayEvmAddress,
     GatewayABI.abi,
     signer
-  );
+  ) as GatewayContract;
 
   const revertOptions = {
     abortAddress: "0x0000000000000000000000000000000000000000", // not used
@@ -48,9 +54,7 @@ export const evmDeposit = async function (
     onRevertGasLimit: args.revertOptions.onRevertGasLimit,
     revertAddress: args.revertOptions.revertAddress,
     // not used
-    revertMessage: utils.hexlify(
-      utils.toUtf8Bytes(args.revertOptions.revertMessage)
-    ),
+    revertMessage: toHexString(args.revertOptions.revertMessage),
   };
 
   const txOptions = {
@@ -63,13 +67,22 @@ export const evmDeposit = async function (
       args.erc20,
       ERC20_ABI.abi,
       signer
-    );
+    ) as ERC20Contract;
+
     const decimals = await erc20Contract.decimals();
-    const value = utils.parseUnits(args.amount, decimals);
-    await erc20Contract.connect(signer).approve(gatewayEvmAddress, value);
-    const method =
+    const value = ethers.parseUnits(args.amount, decimals);
+
+    const connectedContract = erc20Contract.connect(signer) as ERC20Contract;
+
+    await connectedContract.approve(gatewayEvmAddress, value);
+
+    const depositAbiSignature =
       "deposit(address,uint256,address,(address,bool,address,bytes,uint256))";
-    tx = await gateway[method](
+    const gatewayDepositFunction = gateway[
+      depositAbiSignature
+    ] as GatewayContract["deposit"];
+
+    tx = await gatewayDepositFunction(
       args.receiver,
       value,
       args.erc20,
@@ -77,9 +90,14 @@ export const evmDeposit = async function (
       txOptions
     );
   } else {
-    const value = utils.parseEther(args.amount);
-    const method = "deposit(address,(address,bool,address,bytes,uint256))";
-    tx = await gateway[method](args.receiver, revertOptions, {
+    const depositAbiSignature =
+      "deposit(address,(address,bool,address,bytes,uint256))";
+    const gatewayDepositFunction = gateway[
+      depositAbiSignature
+    ] as GatewayContract["deposit"];
+    const value = ethers.parseEther(args.amount);
+
+    tx = await gatewayDepositFunction(args.receiver, revertOptions, {
       ...txOptions,
       value,
     });

@@ -1,8 +1,14 @@
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
-import { ethers } from "ethers";
+import { AbiCoder, ethers } from "ethers";
 
+import {
+  GatewayContract,
+  RevertOptions,
+  TxOptions,
+} from "../../../types/contracts.types";
+import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { toHexString, validateSigner } from "../../../utils";
 import { ZetaChainClient } from "./client";
-import type { revertOptions, txOptions } from "./types";
 
 /**
  * @function evmCall
@@ -26,29 +32,31 @@ export const evmCall = async function (
   args: {
     gatewayEvm?: string;
     receiver: string;
-    revertOptions: revertOptions;
-    txOptions: txOptions;
+    revertOptions: RevertOptions;
+    txOptions: TxOptions;
     types: string[];
-    values: any[];
+    values: ParseAbiValuesReturnType;
   }
 ) {
-  const signer = this.signer;
-  const { utils } = ethers;
+  const signer = validateSigner(this.signer);
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
+
   const gateway = new ethers.Contract(
     gatewayEvmAddress,
     GatewayABI.abi,
     signer
-  );
+  ) as GatewayContract;
 
-  const encodedParameters = utils.defaultAbiCoder.encode(
-    args.types,
-    args.values
-  );
+  const abiCoder = AbiCoder.defaultAbiCoder();
+  const encodedParameters = abiCoder.encode(args.types, args.values);
 
-  const tx = await gateway[
-    "call(address,bytes,(address,bool,address,bytes,uint256))"
-  ](
+  const callAbiSignature =
+    "call(address,bytes,(address,bool,address,bytes,uint256))";
+  const gatewayCallFunction = gateway[
+    callAbiSignature
+  ] as GatewayContract["call"];
+
+  const tx = await gatewayCallFunction(
     args.receiver,
     encodedParameters,
     {
@@ -56,9 +64,7 @@ export const evmCall = async function (
       callOnRevert: args.revertOptions.callOnRevert,
       onRevertGasLimit: args.revertOptions.onRevertGasLimit,
       revertAddress: args.revertOptions.revertAddress,
-      revertMessage: utils.hexlify(
-        utils.toUtf8Bytes(args.revertOptions.revertMessage)
-      ),
+      revertMessage: toHexString(args.revertOptions.revertMessage),
     },
     {
       gasLimit: args.txOptions.gasLimit,

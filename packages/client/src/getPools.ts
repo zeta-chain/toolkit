@@ -1,9 +1,9 @@
-import UniswapV2Factory from "@uniswap/v2-core/build/UniswapV2Factory.json";
 import UniswapV2Pair from "@uniswap/v2-core/build/UniswapV2Pair.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import SystemContract from "@zetachain/protocol-contracts/abi/SystemContract.sol/SystemContract.json";
 import { ethers } from "ethers";
 
+import { MulticallContract } from "../../../types/balances.types";
 import { ZetaChainClient } from "./client";
 import MULTICALL3_ABI from "./multicall3.json";
 
@@ -13,9 +13,22 @@ type Pair = {
   tokenB: string;
 };
 
+interface Reserves {
+  _blockTimestampLast: number;
+  _reserve0: bigint;
+  _reserve1: bigint;
+}
+
+interface Zrc20Details {
+  [key: string]: {
+    decimals?: number;
+    symbol?: string;
+  };
+}
+
 export const getPools = async function (this: ZetaChainClient) {
   const rpc = this.getEndpoint("evm", `zeta_${this.network}`);
-  const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+  const provider = new ethers.JsonRpcProvider(rpc);
   const zetaNetwork = `zeta_${this.network}` as ParamChainName;
   const uniswapV2FactoryAddress = getAddress("uniswapV2Factory", zetaNetwork);
 
@@ -41,7 +54,7 @@ export const getPools = async function (this: ZetaChainClient) {
 
   const foreignCoins = await this.getForeignCoins();
   const tokenAddresses = foreignCoins.map(
-    (coin: any) => coin.zrc20_contract_address
+    (coin) => coin.zrc20_contract_address
   );
   tokenAddresses.push(zetaTokenAddress);
 
@@ -59,7 +72,7 @@ export const getPools = async function (this: ZetaChainClient) {
   );
 
   const multicallAddress = "0xca11bde05977b3631167028862be2a173976ca11";
-  const multicallContract = new ethers.Contract(
+  const multicallContract: MulticallContract = new ethers.Contract(
     multicallAddress,
     MULTICALL3_ABI,
     provider
@@ -74,16 +87,20 @@ export const getPools = async function (this: ZetaChainClient) {
     target: systemContractAddress,
   }));
 
-  const { returnData } = await multicallContract.callStatic.aggregate(calls);
+  if (!multicallContract.aggregate) {
+    throw new Error("aggregate method not available on Multicall Contract");
+  }
+
+  const [, returnData] = await multicallContract.aggregate.staticCall(calls);
 
   const validPairs = returnData
-    .map((data: any, index: number) => {
+    .map((data) => {
       try {
         const pair = systemContract.interface.decodeFunctionResult(
           "uniswapv2PairFor",
           data
-        )[0];
-        return pair !== ethers.constants.AddressZero ? pair : null;
+        )[0] as string;
+        return pair !== ethers.ZeroAddress ? pair : null;
       } catch {
         return null;
       }
@@ -93,59 +110,72 @@ export const getPools = async function (this: ZetaChainClient) {
   const pairCalls = validPairs
     .map((pair: string) => [
       {
-        callData: new ethers.utils.Interface(
-          UniswapV2Pair.abi
-        ).encodeFunctionData("token0"),
+        callData: new ethers.Interface(UniswapV2Pair.abi).encodeFunctionData(
+          "token0"
+        ),
         target: pair,
       },
       {
-        callData: new ethers.utils.Interface(
-          UniswapV2Pair.abi
-        ).encodeFunctionData("token1"),
+        callData: new ethers.Interface(UniswapV2Pair.abi).encodeFunctionData(
+          "token1"
+        ),
         target: pair,
       },
       {
-        callData: new ethers.utils.Interface(
-          UniswapV2Pair.abi
-        ).encodeFunctionData("getReserves"),
+        callData: new ethers.Interface(UniswapV2Pair.abi).encodeFunctionData(
+          "getReserves"
+        ),
         target: pair,
       },
     ])
     .flat();
 
-  const pairReturnData = await multicallContract.callStatic.aggregate(
+  const [, pairReturnData] = await multicallContract.aggregate.staticCall(
     pairCalls
   );
 
   const pools = [];
-  const uniswapInterface = new ethers.utils.Interface(UniswapV2Pair.abi);
+  const uniswapInterface = new ethers.Interface(UniswapV2Pair.abi);
 
-  for (let i = 0; i < pairReturnData.returnData.length; i += 3) {
+  for (let i = 0; i < pairReturnData.length; i += 3) {
     const pairIndex = Math.floor(i / 3);
     const pair = validPairs[pairIndex];
 
     if (
-      !pairReturnData.returnData[i] ||
-      !pairReturnData.returnData[i + 1] ||
-      !pairReturnData.returnData[i + 2]
+      !pairReturnData[i] ||
+      !pairReturnData[i + 1] ||
+      !pairReturnData[i + 2]
     ) {
       console.warn(`Missing data for pair ${pair} at index ${i}`);
       continue;
     }
 
-    const token0Data = pairReturnData.returnData[i];
-    const token1Data = pairReturnData.returnData[i + 1];
-    const reservesData = pairReturnData.returnData[i + 2];
+    const token0Data = pairReturnData[i];
+    const token1Data = pairReturnData[i + 1];
+    const reservesData = pairReturnData[i + 2];
 
     // Check if data can be decoded
-    let token0, token1, reserves;
+    let token0, token1: string;
+    let reserves: Reserves;
+
     try {
-      token0 = uniswapInterface.decodeFunctionResult("token0", token0Data)[0];
-      token1 = uniswapInterface.decodeFunctionResult("token1", token1Data)[0];
-      reserves = uniswapInterface.decodeFunctionResult(
+      token0 = uniswapInterface.decodeFunctionResult(
+        "token0",
+        token0Data
+      )[0] as string;
+      token1 = uniswapInterface.decodeFunctionResult(
+        "token1",
+        token1Data
+      )[0] as string;
+      const decodedReserves = uniswapInterface.decodeFunctionResult(
         "getReserves",
         reservesData
       );
+      reserves = {
+        _blockTimestampLast: decodedReserves[2] as number,
+        _reserve0: decodedReserves[0] as bigint,
+        _reserve1: decodedReserves[1] as bigint,
+      };
     } catch {
       continue;
     }
@@ -156,20 +186,21 @@ export const getPools = async function (this: ZetaChainClient) {
     });
   }
 
-  const zrc20Details = foreignCoins.reduce((acc: any, coin: any) => {
+  const zrc20Details = foreignCoins.reduce((acc: Zrc20Details, coin) => {
     acc[coin.zrc20_contract_address.toLowerCase()] = {
       decimals: coin.decimals,
       symbol: coin.symbol,
     };
     return acc;
-  }, {});
+  }, {} as Zrc20Details);
 
-  const formattedPools = pools.map((t: any) => {
+  const formattedPools = pools.map((t) => {
     const zeta = { decimals: 18, symbol: "WZETA" };
     const t0 = t.t0.address.toLowerCase();
     const t1 = t.t1.address.toLowerCase();
     const t0ZETA = t0 === zetaTokenAddress.toLowerCase() && zeta;
     const t1ZETA = t1 === zetaTokenAddress.toLowerCase() && zeta;
+
     return {
       ...t,
       t0: {

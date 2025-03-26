@@ -1,35 +1,65 @@
 import { task, types } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
+import {
+  bigNumberStringSchema,
+  evmAddressSchema,
+} from "../../../types/shared.schema";
 import { ZetaChainClient } from "../../client/src/";
 
+const zetachainWithdrawArgsSchema = z.object({
+  amount: z.string(),
+  callOnRevert: z.boolean().optional(),
+  gatewayZetaChain: evmAddressSchema.optional(),
+  onRevertGasLimit: bigNumberStringSchema,
+  receiver: z.string(),
+  revertAddress: z.string(),
+  revertMessage: z.string(),
+  txOptionsGasLimit: bigNumberStringSchema,
+  txOptionsGasPrice: bigNumberStringSchema,
+  zrc20: z.string(),
+});
+
+type ZetachainWithdrawArgs = z.infer<typeof zetachainWithdrawArgsSchema>;
+
 export const zetachainWithdraw = async (
-  args: any,
+  args: ZetachainWithdrawArgs,
   hre: HardhatRuntimeEnvironment
 ) => {
+  const {
+    success,
+    error,
+    data: parsedArgs,
+  } = zetachainWithdrawArgsSchema.safeParse(args);
+
+  if (!success) {
+    throw new Error(`Invalid arguments: ${error?.message}`);
+  }
+
   try {
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
     const client = new ZetaChainClient({ network, signer });
     const response = await client.zetachainWithdraw({
-      amount: args.amount,
-      gatewayZetaChain: args.gatewayZetaChain,
-      receiver: args.receiver,
+      amount: parsedArgs.amount,
+      gatewayZetaChain: parsedArgs.gatewayZetaChain,
+      receiver: parsedArgs.receiver,
       revertOptions: {
-        callOnRevert: args.callOnRevert,
-        onRevertGasLimit: args.onRevertGasLimit,
-        revertAddress: args.revertAddress,
-        revertMessage: args.revertMessage,
+        callOnRevert: parsedArgs.callOnRevert || false,
+        onRevertGasLimit: parsedArgs.onRevertGasLimit,
+        revertAddress: parsedArgs.revertAddress,
+        revertMessage: parsedArgs.revertMessage,
       },
       txOptions: {
-        gasLimit: args.txOptionsGasLimit,
-        gasPrice: args.txOptionsGasPrice,
+        gasLimit: parsedArgs.txOptionsGasLimit,
+        gasPrice: parsedArgs.txOptionsGasPrice,
       },
-      zrc20: args.zrc20,
+      zrc20: parsedArgs.zrc20,
     });
 
     const receipt = await response.tx.wait();
-    console.log("Transaction hash:", receipt.transactionHash);
+    console.log("Transaction hash:", receipt?.hash);
   } catch (e) {
     console.error("Transaction error:", e);
   }

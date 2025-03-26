@@ -1,15 +1,26 @@
-import { ethers } from "ethers";
+import { AbiCoder, BytesLike, ethers } from "ethers";
 
-export const prepareData = (contract: string, types: string[], args: any[]) => {
+export type SupportedArgType =
+  | string
+  | bigint
+  | boolean
+  | Uint8Array
+  | BytesLike;
+
+export const prepareData = (
+  contract: string,
+  types: string[],
+  args: SupportedArgType[]
+) => {
   const params = prepareParams(types, args);
   return `${contract}${params.slice(2)}`;
 };
 
-export const prepareParams = (types: string[], args: any[]) => {
-  const abiCoder = ethers.utils.defaultAbiCoder;
+export const prepareParams = (types: string[], args: SupportedArgType[]) => {
+  const abiCoder = AbiCoder.defaultAbiCoder();
   for (let i = 0; i < args.length; i++) {
-    if (types[i] === "bytes32") {
-      args[i] = ethers.utils.hexlify(ethers.utils.zeroPad(args[i], 32));
+    if (types[i] === "bytes32" && ethers.isBytesLike(args[i])) {
+      args[i] = ethers.hexlify(ethers.zeroPadBytes(args[i] as BytesLike, 32));
     }
   }
   return abiCoder.encode(types, args);

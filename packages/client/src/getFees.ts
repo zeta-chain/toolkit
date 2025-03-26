@@ -1,76 +1,111 @@
 import { mainnet, testnet } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
-import { ethers, utils } from "ethers";
-import fetch from "isomorphic-fetch";
+import axios from "axios";
+import { BigNumberish, ethers } from "ethers";
 
+import { ZRC20Contract } from "../../../types/contracts.types";
+import { ForeignCoin } from "../../../types/foreignCoins.types";
+import {
+  ConvertGasToZetaResponse,
+  FeeItem,
+} from "../../../types/getFees.types";
 import { ZetaChainClient } from "./client";
 
-const fetchZEVMFees = async function (
-  zrc20: any,
+const fetchZEVMFees = async (
+  zrc20: (typeof mainnet)[number],
   rpcUrl: string,
-  foreignCoins: any
-) {
-  const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl);
-  const contract = new ethers.Contract(zrc20.address, ZRC20.abi, provider);
-  let withdrawGasFee;
+  foreignCoins: ForeignCoin[]
+): Promise<FeeItem | undefined> => {
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
+  const contract = new ethers.Contract(
+    zrc20.address,
+    ZRC20.abi,
+    provider
+  ) as ZRC20Contract;
+  let withdrawGasFee: BigNumberish;
   try {
     [, withdrawGasFee] = await contract.withdrawGasFee();
-  } catch (e) {
+  } catch {
     return;
   }
-  const gasFee = ethers.BigNumber.from(withdrawGasFee);
-  const protocolFee = ethers.BigNumber.from(await contract.PROTOCOL_FLAT_FEE());
-  const gasToken = foreignCoins.find((c: any) => {
+
+  const gasFee = ethers.toBigInt(withdrawGasFee);
+  const rawProtocolFlatFee = await contract.PROTOCOL_FLAT_FEE();
+  const protocolFee = ethers.toBigInt(rawProtocolFlatFee);
+  const gasToken = foreignCoins.find((foreignCoin) => {
     return (
-      c.foreign_chain_id === zrc20.foreign_chain_id && c.coin_type === "Gas"
+      foreignCoin.foreign_chain_id === zrc20.foreign_chain_id &&
+      foreignCoin.coin_type === "Gas"
     );
   });
-  return {
-    /* eslint-disable */
+
+  if (!gasToken) {
+    return;
+  }
+
+  const result = {
     ...zrc20,
-    totalFee: utils.formatUnits(gasFee, gasToken.decimals),
-    gasFee: utils.formatUnits(gasFee.sub(protocolFee), gasToken.decimals),
-    protocolFee: utils.formatUnits(protocolFee, gasToken.decimals),
-    /* eslint-enable */
-  };
+    chain_id: String(zrc20.chain_id),
+    gasFee: ethers.formatUnits(gasFee - protocolFee, gasToken.decimals),
+    protocolFee: ethers.formatUnits(protocolFee, gasToken.decimals),
+    totalFee: ethers.formatUnits(gasFee, gasToken.decimals),
+  } as FeeItem;
+
+  return result;
 };
 
 const fetchCCMFees = async function (
   this: ZetaChainClient,
   chainID: string,
-  gas: Number
+  gas: number
 ) {
   // Skip ZetaChain and Bitcoin
   if (["7000", "7001", "18332", "8332"].includes(chainID)) return;
+
   const API = this.getEndpoint("cosmos-http", `zeta_${this.network}`);
+
   if (!API) {
     throw new Error("API endpoint not found");
   }
-  const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    return;
+
+  try {
+    const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
+    const response = await axios.get<ConvertGasToZetaResponse>(url);
+    const isResponseOk = response.status >= 200 && response.status < 300;
+
+    if (!isResponseOk) {
+      throw new Error(`Could not fetch CCM fees for chain id: ${chainID}`);
+    }
+
+    const data = response.data;
+    const gasFee = ethers.toBigInt(data.outboundGasInZeta);
+    const protocolFee = ethers.toBigInt(data.protocolFeeInZeta);
+
+    return {
+      chainID,
+      gasFee: ethers.formatUnits(gasFee, 18),
+      protocolFee: ethers.formatUnits(protocolFee, 18),
+      totalFee: ethers.formatUnits(gasFee + protocolFee, 18),
+    };
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : error?.toString() || "Unknown Error";
+
+    console.error(
+      `Something failed fetching CCTX By Inbound hash: ${errorMessage}`
+    );
   }
-  const data = await response.json();
-  const gasFee = ethers.BigNumber.from(data.outboundGasInZeta);
-  const protocolFee = ethers.BigNumber.from(data.protocolFeeInZeta);
-  return {
-    /* eslint-disable */
-    chainID,
-    totalFee: utils.formatUnits(gasFee.add(protocolFee), 18),
-    gasFee: utils.formatUnits(gasFee, 18),
-    protocolFee: utils.formatUnits(protocolFee, 18),
-    /* eslint-enable */
-  };
 };
 
 type Fees = {
   messaging: Array<{ [key: string]: string }>;
-  omnichain: Array<{ [key: string]: string }>;
+  omnichain: Array<FeeItem>;
 };
 
-export const getFees = async function (this: ZetaChainClient, gas: Number) {
-  let fees: Fees = {
+export const getFees = async function (this: ZetaChainClient, gas: number) {
+  const fees: Fees = {
     messaging: [],
     omnichain: [],
   };
@@ -78,7 +113,7 @@ export const getFees = async function (this: ZetaChainClient, gas: Number) {
   const foreignCoins = await this.getForeignCoins();
 
   const addresses = this.network === "mainnet" ? mainnet : testnet;
-  const zrc20Addresses = addresses.filter((a: any) => a.type === "zrc20");
+  const zrc20Addresses = addresses.filter((a) => a.type === "zrc20");
 
   await Promise.all(
     supportedChains.map(async (n: { chain_id: string; chain_name: string }) => {
@@ -90,8 +125,9 @@ export const getFees = async function (this: ZetaChainClient, gas: Number) {
       }
     })
   );
+
   await Promise.all(
-    zrc20Addresses.map(async (zrc20: any) => {
+    zrc20Addresses.map(async (zrc20) => {
       try {
         const rpcUrl = this.getEndpoint("evm", `zeta_${this.network}`);
         const fee = await fetchZEVMFees(zrc20, rpcUrl, foreignCoins);
@@ -101,5 +137,6 @@ export const getFees = async function (this: ZetaChainClient, gas: Number) {
       }
     })
   );
+
   return fees;
 };

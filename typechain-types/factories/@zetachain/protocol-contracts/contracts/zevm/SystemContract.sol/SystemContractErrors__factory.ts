@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   SystemContractErrors,
   SystemContractErrorsInterface,
@@ -40,16 +39,16 @@ const _abi = [
 export class SystemContractErrors__factory {
   static readonly abi = _abi;
   static createInterface(): SystemContractErrorsInterface {
-    return new utils.Interface(_abi) as SystemContractErrorsInterface;
+    return new Interface(_abi) as SystemContractErrorsInterface;
   }
   static connect(
     address: string,
-    signerOrProvider: Signer | Provider
+    runner?: ContractRunner | null
   ): SystemContractErrors {
     return new Contract(
       address,
       _abi,
-      signerOrProvider
-    ) as SystemContractErrors;
+      runner
+    ) as unknown as SystemContractErrors;
   }
 }

@@ -3,50 +3,36 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
+  FunctionFragment,
+  Result,
+  Interface,
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
   TypedListener,
-  OnEvent,
-  PromiseOrValue,
+  TypedContractMethod,
 } from "../common";
 
-export interface SwapHelperLibInterface extends utils.Interface {
-  functions: {
-    "getMinOutAmount(address,address,address,uint256)": FunctionFragment;
-    "uniswapv2PairFor(address,address,address)": FunctionFragment;
-  };
-
+export interface SwapHelperLibInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic: "getMinOutAmount" | "uniswapv2PairFor"
+    nameOrSignature: "getMinOutAmount" | "uniswapv2PairFor"
   ): FunctionFragment;
 
   encodeFunctionData(
     functionFragment: "getMinOutAmount",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<string>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>
-    ]
+    values: [AddressLike, AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "uniswapv2PairFor",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<string>,
-      PromiseOrValue<string>
-    ]
+    values: [AddressLike, AddressLike, AddressLike]
   ): string;
 
   decodeFunctionResult(
@@ -57,118 +43,91 @@ export interface SwapHelperLibInterface extends utils.Interface {
     functionFragment: "uniswapv2PairFor",
     data: BytesLike
   ): Result;
-
-  events: {};
 }
 
 export interface SwapHelperLib extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): SwapHelperLib;
+  waitForDeployment(): Promise<this>;
 
   interface: SwapHelperLibInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    getMinOutAmount(
-      router: PromiseOrValue<string>,
-      zrc20: PromiseOrValue<string>,
-      target: PromiseOrValue<string>,
-      amountIn: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { minOutAmount: BigNumber }>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    uniswapv2PairFor(
-      factory: PromiseOrValue<string>,
-      tokenA: PromiseOrValue<string>,
-      tokenB: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[string] & { pair: string }>;
-  };
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-  getMinOutAmount(
-    router: PromiseOrValue<string>,
-    zrc20: PromiseOrValue<string>,
-    target: PromiseOrValue<string>,
-    amountIn: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  getMinOutAmount: TypedContractMethod<
+    [
+      router: AddressLike,
+      zrc20: AddressLike,
+      target: AddressLike,
+      amountIn: BigNumberish
+    ],
+    [bigint],
+    "view"
+  >;
 
-  uniswapv2PairFor(
-    factory: PromiseOrValue<string>,
-    tokenA: PromiseOrValue<string>,
-    tokenB: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<string>;
+  uniswapv2PairFor: TypedContractMethod<
+    [factory: AddressLike, tokenA: AddressLike, tokenB: AddressLike],
+    [string],
+    "view"
+  >;
 
-  callStatic: {
-    getMinOutAmount(
-      router: PromiseOrValue<string>,
-      zrc20: PromiseOrValue<string>,
-      target: PromiseOrValue<string>,
-      amountIn: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-    uniswapv2PairFor(
-      factory: PromiseOrValue<string>,
-      tokenA: PromiseOrValue<string>,
-      tokenB: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<string>;
-  };
+  getFunction(
+    nameOrSignature: "getMinOutAmount"
+  ): TypedContractMethod<
+    [
+      router: AddressLike,
+      zrc20: AddressLike,
+      target: AddressLike,
+      amountIn: BigNumberish
+    ],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "uniswapv2PairFor"
+  ): TypedContractMethod<
+    [factory: AddressLike, tokenA: AddressLike, tokenB: AddressLike],
+    [string],
+    "view"
+  >;
 
   filters: {};
-
-  estimateGas: {
-    getMinOutAmount(
-      router: PromiseOrValue<string>,
-      zrc20: PromiseOrValue<string>,
-      target: PromiseOrValue<string>,
-      amountIn: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    uniswapv2PairFor(
-      factory: PromiseOrValue<string>,
-      tokenA: PromiseOrValue<string>,
-      tokenB: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    getMinOutAmount(
-      router: PromiseOrValue<string>,
-      zrc20: PromiseOrValue<string>,
-      target: PromiseOrValue<string>,
-      amountIn: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    uniswapv2PairFor(
-      factory: PromiseOrValue<string>,
-      tokenA: PromiseOrValue<string>,
-      tokenB: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-  };
 }

@@ -1,9 +1,43 @@
 import confirm from "@inquirer/confirm";
+import { ethers } from "ethers";
 import { task } from "hardhat/config";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { z } from "zod";
 
 import { ZetaChainClient } from "../../client/src/";
 
-const main = async (args: any, hre: any) => {
+const sendZetaTaskArgsSchema = z.object({
+  amount: z.string().refine((val) => !isNaN(Number(val)), {
+    message: "Amount must be a valid number",
+  }),
+  destination: z.string().min(1, "Destination chain must not be empty"),
+  gasLimit: z
+    .string()
+    .refine((val) => !isNaN(Number(val)))
+    .optional(),
+  ignoreChecks: z.boolean().optional(),
+  json: z.boolean().optional(),
+  recipient: z
+    .string()
+    .refine((val) => ethers.isAddress(val), {
+      message: "Recipient address must be a valid EVM address",
+    })
+    .optional(),
+});
+
+type SendZetaTaskArgs = z.infer<typeof sendZetaTaskArgsSchema>;
+
+const main = async (args: SendZetaTaskArgs, hre: HardhatRuntimeEnvironment) => {
+  const {
+    success: argsParseSuccess,
+    error: argsParseError,
+    data: parsedArgs,
+  } = sendZetaTaskArgsSchema.safeParse(args);
+
+  if (!argsParseSuccess) {
+    throw new Error(`❌ Invalid arguments: ${argsParseError.message}`);
+  }
+
   const [signer] = await hre.ethers.getSigners();
   if (!signer) {
     throw new Error(
@@ -14,40 +48,47 @@ const main = async (args: any, hre: any) => {
   const client = new ZetaChainClient({ network: "testnet", signer });
 
   const isDestinationZeta = ["zeta_testnet", "zeta_mainnet"].includes(
-    args.destination
+    parsedArgs.destination
   );
   let fee = "0";
 
   if (!isDestinationZeta) {
     const fees = await client.getFees(5000000);
-    const chainID = client.chains[args.destination].chain_id;
-    const chainFee = fees.messaging.find((f: any) => f.chainID == chainID);
+    const chainID = client.chains[parsedArgs.destination].chain_id;
+    const chainFee = fees.messaging.find((f) => f.chainID == String(chainID));
+
     if (!chainFee) {
       throw new Error(`Cannot fetch fees for chain ID ${chainID}`);
     }
+
     fee = chainFee.totalFee;
-    if (parseFloat(args.amount) < parseFloat(fee) && !args.ignoreChecks) {
+
+    if (
+      parseFloat(parsedArgs.amount) < parseFloat(fee) &&
+      !parsedArgs.ignoreChecks
+    ) {
       throw new Error(
         `Amount must be greater than ${fee} ZETA to cover the cross-chain fees`
       );
     }
   }
 
-  const { amount, destination } = args;
+  const { amount, destination } = parsedArgs;
   const signerAddress = await signer.getAddress();
-  const recipient = args.recipient || signerAddress;
+  const recipient = parsedArgs.recipient || signerAddress;
   const chain = hre.network.name;
 
-  const data: any = {
+  const data = {
     amount,
     chain,
     destination,
+    gasLimit: 0,
     recipient,
   };
 
-  if (args.gasLimit) data.gasLimit = args.gasLimit;
+  if (parsedArgs.gasLimit) data.gasLimit = Number(parsedArgs.gasLimit);
 
-  if (args.json) {
+  if (parsedArgs.json) {
     const tx = await client.sendZeta(data);
     console.log(JSON.stringify(tx, null, 2));
   } else {

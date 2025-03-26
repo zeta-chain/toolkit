@@ -2,15 +2,19 @@
 /* tslint:disable */
 /* eslint-disable */
 import {
-  Signer,
-  utils,
   Contract,
   ContractFactory,
-  BigNumberish,
-  Overrides,
+  ContractTransactionResponse,
+  Interface,
 } from "ethers";
-import type { Provider, TransactionRequest } from "@ethersproject/providers";
-import type { PromiseOrValue } from "../../../common";
+import type {
+  Signer,
+  BigNumberish,
+  AddressLike,
+  ContractDeployTransaction,
+  ContractRunner,
+} from "ethers";
+import type { NonPayableOverrides } from "../../../common";
 import type {
   ZetaEthMock,
   ZetaEthMockInterface,
@@ -363,40 +367,34 @@ export class ZetaEthMock__factory extends ContractFactory {
     }
   }
 
-  override deploy(
-    creator: PromiseOrValue<string>,
-    initialSupply: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ZetaEthMock> {
-    return super.deploy(
-      creator,
-      initialSupply,
-      overrides || {}
-    ) as Promise<ZetaEthMock>;
-  }
   override getDeployTransaction(
-    creator: PromiseOrValue<string>,
-    initialSupply: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): TransactionRequest {
+    creator: AddressLike,
+    initialSupply: BigNumberish,
+    overrides?: NonPayableOverrides & { from?: string }
+  ): Promise<ContractDeployTransaction> {
     return super.getDeployTransaction(creator, initialSupply, overrides || {});
   }
-  override attach(address: string): ZetaEthMock {
-    return super.attach(address) as ZetaEthMock;
+  override deploy(
+    creator: AddressLike,
+    initialSupply: BigNumberish,
+    overrides?: NonPayableOverrides & { from?: string }
+  ) {
+    return super.deploy(creator, initialSupply, overrides || {}) as Promise<
+      ZetaEthMock & {
+        deploymentTransaction(): ContractTransactionResponse;
+      }
+    >;
   }
-  override connect(signer: Signer): ZetaEthMock__factory {
-    return super.connect(signer) as ZetaEthMock__factory;
+  override connect(runner: ContractRunner | null): ZetaEthMock__factory {
+    return super.connect(runner) as ZetaEthMock__factory;
   }
 
   static readonly bytecode = _bytecode;
   static readonly abi = _abi;
   static createInterface(): ZetaEthMockInterface {
-    return new utils.Interface(_abi) as ZetaEthMockInterface;
+    return new Interface(_abi) as ZetaEthMockInterface;
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): ZetaEthMock {
-    return new Contract(address, _abi, signerOrProvider) as ZetaEthMock;
+  static connect(address: string, runner?: ContractRunner | null): ZetaEthMock {
+    return new Contract(address, _abi, runner) as unknown as ZetaEthMock;
   }
 }

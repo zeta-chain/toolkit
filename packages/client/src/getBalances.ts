@@ -1,47 +1,26 @@
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
-import { getAddress } from "@zetachain/protocol-contracts";
+import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
-import { ethers } from "ethers";
-import { formatUnits } from "ethers/lib/utils";
-import fetch from "isomorphic-fetch";
+import axios from "axios";
+import { AbiCoder, ethers } from "ethers";
 
+import {
+  EsploraResponse,
+  MULTICALL3_ABI,
+  MulticallContract,
+  RpcSolTokenByAccountResponse,
+  Token,
+  TokenBalance,
+  TokenContract,
+} from "../../../types/balances.types";
 import { ZetaChainClient } from "./client";
 
-export interface TokenBalance {
-  balance: string;
-  chain_id: number | string;
-  chain_name: string;
-  coin_type: string;
-  contract?: string;
-  decimals: number;
-  id: string;
-  symbol: string;
-  ticker: string;
-  zrc20?: string;
-}
-
-const MULTICALL3_ABI = [
-  {
-    inputs: [
-      {
-        components: [
-          { internalType: "address", name: "target", type: "address" },
-          { internalType: "bytes", name: "callData", type: "bytes" },
-        ],
-        internalType: "struct IMulticall3.Call[]",
-        name: "calls",
-        type: "tuple[]",
-      },
-    ],
-    name: "aggregate",
-    outputs: [
-      { internalType: "uint256", name: "blockNumber", type: "uint256" },
-      { internalType: "bytes[]", name: "returnData", type: "bytes[]" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
+const parseTokenId = (
+  chainId: string = "",
+  symbol: string = ""
+): `${string}__${string}` => {
+  return `${chainId}__${symbol}`;
+};
 
 /**
  * Get token balances of all tokens on all chains connected to ZetaChain.
@@ -59,62 +38,69 @@ export const getBalances = async function (
     solanaAddress,
   }: { btcAddress?: string; evmAddress?: string; solanaAddress?: string }
 ): Promise<TokenBalance[]> {
-  let tokens = [];
+  let tokens: Token[] = [];
+
   const supportedChains = await this.getSupportedChains();
   const foreignCoins = await this.getForeignCoins();
-  foreignCoins.forEach((token: any) => {
-    if (token.coin_type === "Gas") {
+
+  foreignCoins.forEach((foreignCoin) => {
+    if (foreignCoin.coin_type === "Gas") {
       tokens.push({
-        chain_id: token.foreign_chain_id,
-        coin_type: token.coin_type,
-        decimals: token.decimals,
-        symbol: token.symbol,
-        zrc20: token.zrc20_contract_address,
+        chain_id: foreignCoin.foreign_chain_id,
+        coin_type: foreignCoin.coin_type,
+        decimals: foreignCoin.decimals,
+        symbol: foreignCoin.symbol,
+        zrc20: foreignCoin.zrc20_contract_address,
       });
       tokens.push({
         chain_id: this.getChainId(`zeta_${this.network}`),
         coin_type: "ZRC20",
-        contract: token.zrc20_contract_address,
-        decimals: token.decimals,
-        symbol: token.symbol,
+        contract: foreignCoin.zrc20_contract_address,
+        decimals: foreignCoin.decimals,
+        symbol: foreignCoin.symbol,
       });
-    } else if (token.coin_type === "ERC20") {
+    } else if (foreignCoin.coin_type === "ERC20") {
       const supportedChain = supportedChains.find(
-        (c: any) => c.chain_id === token.foreign_chain_id
+        (c) => c.chain_id === foreignCoin.foreign_chain_id
       );
-      if (supportedChain.vm === "evm") {
+
+      if (supportedChain?.vm === "evm") {
         tokens.push({
-          chain_id: token.foreign_chain_id,
+          chain_id: foreignCoin.foreign_chain_id,
           coin_type: "ERC20",
-          contract: token.asset,
-          symbol: token.symbol,
-          zrc20: token.zrc20_contract_address,
+          contract: foreignCoin.asset,
+          decimals: foreignCoin.decimals,
+          symbol: foreignCoin.symbol,
+          zrc20: foreignCoin.zrc20_contract_address,
         });
-      } else if (supportedChain.vm === "svm") {
+      } else if (supportedChain?.vm === "svm") {
         tokens.push({
-          chain_id: token.foreign_chain_id,
+          chain_id: foreignCoin.foreign_chain_id,
           coin_type: "SPL",
-          contract: token.asset,
-          symbol: token.symbol,
-          zrc20: token.zrc20_contract_address,
+          contract: foreignCoin.asset,
+          decimals: foreignCoin.decimals,
+          symbol: foreignCoin.symbol,
+          zrc20: foreignCoin.zrc20_contract_address,
         });
       }
+
       tokens.push({
         chain_id: this.getChainId(`zeta_${this.network}`),
         coin_type: "ZRC20",
-        contract: token.zrc20_contract_address,
-        decimals: token.decimals,
-        symbol: token.name,
+        contract: foreignCoin.zrc20_contract_address,
+        decimals: foreignCoin.decimals,
+        symbol: foreignCoin.name,
       });
     }
   });
-  supportedChains.forEach((chain: any) => {
+
+  supportedChains.forEach((chain) => {
     const chainLabel = Object.keys(this.getChains()).find(
       (key) => this.getChains()[key].chain_id === parseInt(chain.chain_id)
     );
 
     if (chainLabel) {
-      const contract = getAddress("zetaToken", chainLabel as any);
+      const contract = getAddress("zetaToken", chainLabel as ParamChainName);
       if (contract) {
         tokens.push({
           chain_id: chain.chain_id,
@@ -126,6 +112,7 @@ export const getBalances = async function (
       }
     }
   });
+
   tokens.push({
     chain_id: this.getChainId(`zeta_${this.network}`),
     coin_type: "Gas",
@@ -134,37 +121,46 @@ export const getBalances = async function (
   });
 
   tokens = tokens
-    .map((token: any) => {
+    .map((token) => {
       const ticker = token.symbol.split("-")[0];
       const chain_name = supportedChains.find(
-        (c: any) => c.chain_id === token.chain_id.toString()
+        (c) => c.chain_id === token.chain_id?.toString()
       )?.name;
+
       return {
         ...token,
         chain_name,
-        id: `${token.chain_id.toString().toLowerCase()}__${token.symbol
+        id: `${token.chain_id?.toString().toLowerCase()}__${token.symbol
           .toLowerCase()
           .split(" ")
           .join("_")}`,
         ticker,
       };
     })
-    .filter((token: any) => token.chain_name);
+    .filter((token) => token.chain_name);
 
   const multicallAddress = "0xca11bde05977b3631167028862be2a173976ca11";
 
-  const multicallContexts: Record<string, any[]> = {};
+  const multicallContexts: Record<
+    string,
+    { callData: string; target: string }[]
+  > = {};
 
   const balances: TokenBalance[] = [];
 
   if (evmAddress) {
-    tokens.forEach((token: any) => {
-      if (token.coin_type === "ERC20" || token.coin_type === "ZRC20") {
+    tokens.forEach((token) => {
+      if (
+        (token.coin_type === "ERC20" || token.coin_type === "ZRC20") &&
+        token.chain_name &&
+        token.contract
+      ) {
         if (!multicallContexts[token.chain_name]) {
           multicallContexts[token.chain_name] = [];
         }
+
         multicallContexts[token.chain_name].push({
-          callData: new ethers.utils.Interface(
+          callData: new ethers.Interface(
             token.coin_type === "ERC20" ? ERC20_ABI.abi : ZRC20.abi
           ).encodeFunctionData("balanceOf", [evmAddress]),
           target: token.contract,
@@ -174,22 +170,29 @@ export const getBalances = async function (
 
     await Promise.all(
       Object.keys(multicallContexts).map(async (chainName) => {
-        const rpc = await this.getEndpoint("evm", chainName);
-        const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-        const multicallContract = new ethers.Contract(
+        const rpc = this.getEndpoint("evm", chainName);
+        const provider = new ethers.JsonRpcProvider(rpc);
+        const multicallInterface = new ethers.Interface(MULTICALL3_ABI);
+        const multicallContract: MulticallContract = new ethers.Contract(
           multicallAddress,
-          MULTICALL3_ABI,
+          multicallInterface,
           provider
         );
 
         const calls = multicallContexts[chainName];
 
         try {
-          const { returnData } = await multicallContract.callStatic.aggregate(
+          if (!multicallContract.aggregate) {
+            throw new Error(
+              "aggregate method not available on Multicall Contract"
+            );
+          }
+
+          const [, returnData] = await multicallContract.aggregate.staticCall(
             calls
           );
 
-          returnData.forEach((data: any, index: number) => {
+          returnData.forEach((data, index: number) => {
             const token = tokens.find(
               (t) =>
                 t.chain_name === chainName &&
@@ -197,14 +200,28 @@ export const getBalances = async function (
                 t.contract === calls[index].target
             );
             if (token) {
-              const balance = BigInt(
-                ethers.utils.defaultAbiCoder.decode(["uint256"], data)[0]
+              const abiCoder = AbiCoder.defaultAbiCoder();
+              const [decoded] = abiCoder.decode(["uint256"], data);
+
+              if (typeof decoded !== "bigint") {
+                throw new Error("Invalid decoded value: expected bigint");
+              }
+
+              const balance = BigInt(decoded);
+
+              const formattedBalance = ethers.formatUnits(
+                balance,
+                token.decimals
               );
-              const formattedBalance = formatUnits(balance, token.decimals);
-              balances.push({ ...token, balance: formattedBalance });
+
+              balances.push({
+                ...token,
+                balance: formattedBalance,
+                id: parseTokenId(token.chain_id?.toString(), token.symbol),
+              });
             }
           });
-        } catch (error) {
+        } catch {
           // Fallback to individual calls if multicall fails
           for (const token of tokens.filter(
             (t) =>
@@ -212,14 +229,27 @@ export const getBalances = async function (
               (t.coin_type === "ERC20" || t.coin_type === "ZRC20")
           )) {
             try {
+              if (!token.contract) {
+                continue;
+              }
+
               const contract = new ethers.Contract(
                 token.contract,
                 token.coin_type === "ERC20" ? ERC20_ABI.abi : ZRC20.abi,
                 provider
-              );
+              ) as TokenContract;
+
               const balance = await contract.balanceOf(evmAddress);
-              const formattedBalance = formatUnits(balance, token.decimals);
-              balances.push({ ...token, balance: formattedBalance });
+              const formattedBalance = ethers.formatUnits(
+                balance,
+                token.decimals
+              );
+
+              balances.push({
+                ...token,
+                balance: formattedBalance,
+                id: parseTokenId(token.chain_id?.toString(), token.symbol),
+              });
             } catch (err) {
               console.error(
                 `Failed to get balance for ${token.symbol} on ${chainName}:`,
@@ -231,93 +261,126 @@ export const getBalances = async function (
       })
     );
 
+    const nonEvmChainNames = [
+      "btc_testnet",
+      "btc_mainnet",
+      "solana_mainnet",
+      "solana_testnet",
+      "solana_devnet",
+    ];
+
     await Promise.all(
       tokens
         .filter(
           (token) =>
             token.coin_type === "Gas" &&
-            ![
-              "btc_testnet",
-              "btc_mainnet",
-              "solana_mainnet",
-              "solana_testnet",
-              "solana_devnet",
-            ].includes(token.chain_name)
+            token.chain_name &&
+            !nonEvmChainNames.includes(token.chain_name)
         )
         .map(async (token) => {
-          const chainLabel = Object.keys(this.getChains()).find(
-            (key) => this.getChains()[key].chain_id === parseInt(token.chain_id)
-          );
+          const chainLabel = Object.keys(this.getChains()).find((key) => {
+            const parsedTokenChainId = parseInt(
+              (token.chain_id as string) || ""
+            );
+
+            return this.getChains()[key].chain_id === parsedTokenChainId;
+          });
+
           if (chainLabel) {
-            const rpc = await this.getEndpoint("evm", chainLabel);
-            const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+            const rpc = this.getEndpoint("evm", chainLabel);
+            const provider = new ethers.JsonRpcProvider(rpc);
             const balance = await provider.getBalance(evmAddress);
-            const formattedBalance = formatUnits(balance, token.decimals);
-            balances.push({ ...token, balance: formattedBalance });
+            const formattedBalance = ethers.formatUnits(
+              balance,
+              token.decimals
+            );
+
+            balances.push({
+              ...token,
+              balance: formattedBalance,
+              id: parseTokenId(token.chain_id?.toString(), token.symbol),
+            });
           }
         })
     );
   }
 
+  const btcChainNames = ["btc_testnet", "btc_mainnet"];
+
   await Promise.all(
     tokens
       .filter(
         (token) =>
           token.coin_type === "Gas" &&
-          ["btc_testnet", "btc_mainnet"].includes(token.chain_name) &&
+          token.chain_name &&
+          btcChainNames.includes(token.chain_name) &&
           btcAddress
       )
       .map(async (token) => {
-        const API = this.getEndpoint("esplora", token.chain_name);
-        const response = await fetch(`${API}/address/${btcAddress}`);
-        const r = await response.json();
-        const { funded_txo_sum, spent_txo_sum } = r.chain_stats;
+        const API = this.getEndpoint("esplora", token.chain_name || "");
+
+        const { data } = await axios.get<EsploraResponse>(
+          `${API}/address/${btcAddress}`
+        );
+
+        const { funded_txo_sum, spent_txo_sum } = data.chain_stats;
+
         const balance = (
           (BigInt(funded_txo_sum) - BigInt(spent_txo_sum)) /
           BigInt(100000000)
         ).toString();
 
-        balances.push({ ...token, balance });
+        balances.push({
+          ...token,
+          balance,
+          id: parseTokenId(token.chain_id?.toString(), token.symbol),
+        });
       })
   );
+
+  const solChainNames = ["solana_mainnet", "solana_testnet", "solana_devnet"];
 
   await Promise.all(
     tokens
       .filter(
         (token) =>
           token.coin_type === "Gas" &&
-          ["solana_mainnet", "solana_testnet", "solana_devnet"].includes(
-            token.chain_name
-          ) &&
+          token.chain_name &&
+          solChainNames.includes(token.chain_name) &&
           solanaAddress
       )
       .map(async (token) => {
-        const API = this.getEndpoint("solana", token.chain_name);
-        const response = await fetch(API, {
-          body: JSON.stringify({
+        const API = this.getEndpoint("solana", token.chain_name || "");
+
+        const { data } = await axios.post<{ result: { value: number } }>(
+          API,
+          {
             id: 1,
             jsonrpc: "2.0",
             method: "getBalance",
             params: [solanaAddress],
-          }),
-          headers: {
-            "Content-Type": "application/json",
           },
-          method: "POST",
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const balance = (Number(data.result.value) / 10 ** 9).toFixed(9);
+
+        balances.push({
+          ...token,
+          balance,
+          id: parseTokenId(token.chain_id?.toString(), token.symbol),
         });
-        if (!response.ok) {
-          console.error("Failed to get balance for Solana", response);
-          return;
-        }
-        const r = await response.json();
-        const balance = r.result.value / 10 ** 9;
-        balances.push({ ...token, balance });
       })
   );
 
   const splTokens = tokens.filter(
     (token) =>
       token.coin_type === "SPL" &&
+      token.chain_name &&
       ["solana_mainnet", "solana_testnet", "solana_devnet"].includes(
         token.chain_name
       )
@@ -326,9 +389,10 @@ export const getBalances = async function (
   await Promise.all(
     splTokens.map(async (token) => {
       try {
-        const API = this.getEndpoint("solana", token.chain_name);
-        const response = await fetch(API, {
-          body: JSON.stringify({
+        const API = this.getEndpoint("solana", token.chain_name || "");
+        const response = await axios.post<RpcSolTokenByAccountResponse>(
+          API,
+          {
             id: 1,
             jsonrpc: "2.0",
             method: "getTokenAccountsByOwner",
@@ -339,41 +403,61 @@ export const getBalances = async function (
                 encoding: "jsonParsed",
               },
             ],
-          }),
-          headers: {
-            "Content-Type": "application/json",
           },
-          method: "POST",
-        });
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-        if (!response.ok) {
+        const isResponseOk = response.status >= 200 && response.status < 300;
+
+        if (!isResponseOk) {
           console.error(
             `Failed to fetch SPL token accounts for ${token.symbol}`,
             response
           );
-          balances.push({ ...token, balance: "0" });
+          balances.push({
+            ...token,
+            balance: "0",
+            id: parseTokenId(token.chain_id?.toString(), token.symbol),
+          });
           return;
         }
 
-        const r = await response.json();
+        const data = response.data;
 
-        if (r.result && r.result.value && r.result.value.length > 0) {
+        if (data.result && data.result.value && data.result.value.length > 0) {
           let totalBalance = BigInt(0);
-          for (const acc of r.result.value) {
+
+          for (const acc of data.result.value) {
             const amount = acc.account.data.parsed.info.tokenAmount.amount;
             const decimals = acc.account.data.parsed.info.tokenAmount.decimals;
             totalBalance += BigInt(amount) / BigInt(10 ** decimals);
           }
-          balances.push({ ...token, balance: totalBalance.toString() });
+          balances.push({
+            ...token,
+            balance: totalBalance.toString(),
+            id: parseTokenId(token.chain_id?.toString(), token.symbol),
+          });
         } else {
-          balances.push({ ...token, balance: "0" });
+          balances.push({
+            ...token,
+            balance: "0",
+            id: parseTokenId(token.chain_id?.toString(), token.symbol),
+          });
         }
       } catch (err) {
         console.error(
           `Failed to get SPL balance for ${token.symbol} on ${token.chain_name}:`,
           err
         );
-        balances.push({ ...token, balance: "0" });
+        balances.push({
+          ...token,
+          balance: "0",
+          id: parseTokenId(token.chain_id?.toString(), token.symbol),
+        });
       }
     })
   );
