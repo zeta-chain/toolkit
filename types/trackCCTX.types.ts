@@ -6,7 +6,10 @@ export interface Emitter {
     event: "succeed" | "fail" | "update",
     payload: { hash: string; text: string }
   ): void;
-  emit(event: "search-add" | "search-end", payload: { text: string }): void;
+  emit(
+    event: "search-add" | "search-end" | "search-fail" | "search-update",
+    payload: { text: string }
+  ): void;
   emit(event: "mined-fail" | "mined-success", payload: { cctxs: CCTXs }): void;
 }
 
