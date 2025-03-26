@@ -9,5 +9,6 @@ export * from "./parseJson";
 export * from "./toHexString";
 export * from "./trackCCTX";
 export * from "./transactions";
+export * from "./uniswap";
 export * from "./validateSigner";
 export * from "./validateTaskArgs";
