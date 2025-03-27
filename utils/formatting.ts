@@ -5,9 +5,9 @@ import { CCTX } from "../types/trackCCTX.types";
  */
 export const shortenHash = (hash: string): string => {
   if (!hash || hash.length === 0) {
-    return '';
+    return "";
   }
-  
+
   // For short hashes, just return the original
   if (hash.length <= 10) {
     return hash;
@@ -22,5 +22,8 @@ export const shortenHash = (hash: string): string => {
  * Format the status text with optional status message
  */
 export const formatStatusText = (tx: CCTX): string => {
-  return `${tx.status}${tx.status_message ? ` (${tx.status_message})` : ""}`;
+  if (!tx) return "";
+  return `${tx.status || "Unknown"}${
+    tx.status_message ? ` (${tx.status_message})` : ""
+  }`;
 };

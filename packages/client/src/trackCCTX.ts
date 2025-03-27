@@ -27,6 +27,10 @@ export const trackCCTX = async function (
     timeoutSeconds?: number;
   }
 ): Promise<CCTXs> {
+  if (timeoutSeconds <= 0) {
+    throw new Error("timeoutSeconds must be a positive number");
+  }
+
   // Validate transaction hash format
   if (!validateTransactionHash(hash)) {
     if (emitter) {

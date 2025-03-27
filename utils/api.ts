@@ -14,10 +14,13 @@ import { handleError } from "../utils";
  */
 export const fetchFromApi = async <T>(
   api: string,
-  endpoint: string
+  endpoint: string,
+  timeoutMs: number = 10000
 ): Promise<T> => {
   const url = `${api}${endpoint}`;
-  const response = await axios.get<T>(url);
+  const response = await axios.get<T>(url, {
+    timeout: timeoutMs,
+  });
 
   if (response.status < 200 || response.status >= 300) {
     throw new Error(`Fetch failed with status: ${response.status}`);

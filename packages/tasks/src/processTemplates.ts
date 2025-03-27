@@ -156,7 +156,11 @@ const processTemplatesRecursive = async (
       }
     }
   } catch (error: unknown) {
-    handleError({ context: "Error processing templates", error });
+    handleError({
+      context: "Error processing templates",
+      error,
+      shouldThrow: true,
+    });
   }
 };
 
