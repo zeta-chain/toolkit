@@ -4,9 +4,13 @@ import { CCTX } from "../types/trackCCTX.types";
  * Create a shortened hash representation for better readability
  */
 export const shortenHash = (hash: string): string => {
-  // Special handling for short hashes
+  if (!hash || hash.length === 0) {
+    return '';
+  }
+  
+  // For short hashes, just return the original
   if (hash.length <= 10) {
-    return `${hash}...${hash.substring(2)}`;
+    return hash;
   }
 
   const start = hash.substring(0, 10);
