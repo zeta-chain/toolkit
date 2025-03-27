@@ -17,7 +17,7 @@ describe("shortenHash", () => {
   it("should handle short hashes", () => {
     const hash = "0x1234";
     const shortened = shortenHash(hash);
-    expect(shortened).toBe("0x1234...1234");
+    expect(shortened).toBe("0x1234");
   });
 });
 
