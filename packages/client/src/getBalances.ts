@@ -30,6 +30,8 @@ export const getBalances = async function (
     solanaAddress,
   }: { btcAddress?: string; evmAddress?: string; solanaAddress?: string }
 ): Promise<TokenBalance[]> {
+  // Helper functions to preserve 'this' context when passed as callbacks
+  // These ensure methods maintain the correct client context when used in other functions
   const getEndpoint = (type: string, chainName: string): string =>
     this.getEndpoint(type, chainName);
 
