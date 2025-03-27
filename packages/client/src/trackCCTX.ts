@@ -142,10 +142,12 @@ export const trackCCTX = async function (
         api: apiEndpoint,
         emitter,
         hash,
+        intervalId,
         json,
         reject,
         resolve,
         state: initialState,
+        timeoutId,
         timeoutSeconds,
         tss,
       }).catch((error) => {

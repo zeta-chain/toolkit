@@ -28,10 +28,12 @@ export interface PollTransactionsArgs {
   api: string;
   emitter: Emitter | null;
   hash: string;
+  intervalId?: NodeJS.Timeout;
   json: boolean;
   reject: (error: Error) => void;
   resolve: (cctxs: CCTXs) => void;
   state: TransactionState;
+  timeoutId?: NodeJS.Timeout | null;
   timeoutSeconds: number;
   tss: string;
 }
@@ -184,6 +186,8 @@ export const pollTransactions = async ({
   timeoutSeconds,
   resolve,
   reject,
+  intervalId,
+  timeoutId,
 }: PollTransactionsArgs): Promise<void> => {
   // Calculate remaining time for display purposes
   const elapsedSeconds = Math.min(state.pollCount * 3, timeoutSeconds);
@@ -304,6 +308,13 @@ export const pollTransactions = async ({
 
   if (isComplete) {
     if (isSuccessful) {
+      // Clear timers before resolving to prevent memory leaks
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       resolve(newState.cctxs);
     } else {
       reject(new Error("CCTX aborted or reverted"));
