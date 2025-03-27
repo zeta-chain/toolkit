@@ -8,7 +8,9 @@ export const getEndpoint = function (
   const chain = this.chains[network];
 
   if (!chain) {
-    throw new Error(`Network ${network} does not exist.`);
+    throw new Error(
+      `Network ${network} not present in networks configuration.`
+    );
   }
 
   if (!chain.api) {

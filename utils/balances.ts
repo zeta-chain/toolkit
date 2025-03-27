@@ -414,8 +414,7 @@ export const getBtcBalances = async (
   getEndpoint: (type: string, chainName: string) => string
 ): Promise<TokenBalance[]> => {
   const balances: TokenBalance[] = [];
-  // Update to include testnet4
-  const btcChainNames = ["btc_testnet", "btc_mainnet", "btc_testnet4"];
+  const btcChainNames = ["btc_testnet", "btc_mainnet"];
 
   const btcTokens = tokens.filter(
     (token) =>
@@ -424,85 +423,8 @@ export const getBtcBalances = async (
       btcChainNames.includes(token.chain_name)
   );
 
-  // If we have no tokens but the address starts with tb1, create a testnet4 token
-  if (btcTokens.length === 0 && btcAddress.startsWith("tb1")) {
-    btcTokens.push({
-      chain_id: "18444", // Testnet4 chain ID
-      chain_name: "btc_testnet4",
-      coin_type: "Gas",
-      decimals: 8,
-      symbol: "tBTC",
-    });
-  }
-
   for (const token of btcTokens) {
     try {
-      // Special case for testnet4
-      if (token.chain_name === "btc_testnet4") {
-        // For testnet4 addresses, we'll use the Blockstream testnet API
-        // This won't show actual testnet4 balances, but at least regular testnet balances
-        /**
-         * @todo (Hernan): For now, we're fetching the vanilla testnet balances
-         * but we should fetch the testnet4 balances once we have a testnet4 API
-         */
-        const API = "https://blockstream.info/testnet/api";
-
-        try {
-          interface TestnetResponseData {
-            chain_stats: {
-              funded_txo_sum: string;
-              spent_txo_sum: string;
-            };
-            mempool_stats?: {
-              funded_txo_sum: string;
-              spent_txo_sum: string;
-            };
-          }
-
-          const response = await axios.get<TestnetResponseData>(
-            `${API}/address/${btcAddress}`,
-            { timeout: 5000 }
-          );
-          const data = response.data;
-
-          // Calculate balance by subtracting spent from funded
-          let fundedTxoSum = BigInt(data.chain_stats.funded_txo_sum || "0");
-          let spentTxoSum = BigInt(data.chain_stats.spent_txo_sum || "0");
-
-          // Add mempool transactions if available
-          if (data.mempool_stats) {
-            fundedTxoSum += BigInt(data.mempool_stats.funded_txo_sum || "0");
-            spentTxoSum += BigInt(data.mempool_stats.spent_txo_sum || "0");
-          }
-
-          // Convert satoshis to BTC
-          const satoshiBalance = fundedTxoSum - spentTxoSum;
-          const balanceInBtc = Number(satoshiBalance) / 100000000;
-          const formattedBalance = balanceInBtc.toFixed(8);
-
-          balances.push({
-            ...token,
-            balance: formattedBalance,
-            id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
-          });
-        } catch (err) {
-          console.error(
-            `Error fetching testnet balance: ${
-              err instanceof Error ? err.message : String(err)
-            }`
-          );
-
-          // Add token with zero balance in case of error
-          balances.push({
-            ...token,
-            balance: "0.00000000",
-            id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
-          });
-        }
-        continue; // Skip the rest of the loop for testnet4
-      }
-
-      // Normal path for other chains
       const API = getEndpoint("esplora", token.chain_name || "");
 
       if (!API) {
