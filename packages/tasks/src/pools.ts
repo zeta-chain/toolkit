@@ -2,8 +2,8 @@ import { formatUnits } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 
+import { validateTaskArgs } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
-
 const poolsArgsSchema = z.object({
   json: z.boolean().optional(),
   mainnet: z.boolean().optional(),
@@ -12,11 +12,7 @@ const poolsArgsSchema = z.object({
 type PoolsArgs = z.infer<typeof poolsArgsSchema>;
 
 const main = async (args: PoolsArgs) => {
-  const { data: parsedArgs, success, error } = poolsArgsSchema.safeParse(args);
-
-  if (!success) {
-    throw new Error(`Invalid arguments: ${error?.message}`);
-  }
+  const parsedArgs = validateTaskArgs(args, poolsArgsSchema);
 
   const client = new ZetaChainClient({
     network: parsedArgs.mainnet ? "mainnet" : "testnet",

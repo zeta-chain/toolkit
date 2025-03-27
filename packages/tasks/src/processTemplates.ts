@@ -2,6 +2,8 @@ import * as fs from "fs";
 import * as handlebars from "handlebars";
 import * as path from "path";
 
+import { handleError } from "../../../utils";
+
 const numberTypes = [
   "int",
   "int8",
@@ -154,10 +156,11 @@ const processTemplatesRecursive = async (
       }
     }
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    console.error(`Error processing templates: ${errorMessage}`);
+    handleError({
+      context: "Error processing templates",
+      error,
+      shouldThrow: true,
+    });
   }
 };
 

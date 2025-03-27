@@ -56,6 +56,7 @@ module.exports = {
 
     camelcase: "off",
     "func-style": ["error", "expression", { allowArrowFunctions: true }],
+    "object-shorthand": ["error", "always"],
     "prefer-arrow/prefer-arrow-functions": [
       "warn",
       {

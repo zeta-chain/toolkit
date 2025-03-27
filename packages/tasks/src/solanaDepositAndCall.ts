@@ -5,7 +5,12 @@ import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 
-import { validJsonStringSchema } from "../../../types/shared.schema";
+import {
+  numberArraySchema,
+  stringArraySchema,
+  validJsonStringSchema,
+} from "../../../types/shared.schema";
+import { handleError, parseJson, validateTaskArgs } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src";
 
@@ -21,15 +26,7 @@ const solanaDepositAndCallArgsSchema = z.object({
 type SolanaDepositAndCallArgs = z.infer<typeof solanaDepositAndCallArgsSchema>;
 
 export const solanaDepositAndCall = async (args: SolanaDepositAndCallArgs) => {
-  const {
-    success,
-    error,
-    data: parsedArgs,
-  } = solanaDepositAndCallArgsSchema.safeParse(args);
-
-  if (!success) {
-    throw new Error(`Invalid arguments: ${error?.message}`);
-  }
+  const parsedArgs = validateTaskArgs(args, solanaDepositAndCallArgsSchema);
 
   const values = parseAbiValues(parsedArgs.types, parsedArgs.values);
 
@@ -56,20 +53,7 @@ export const solanaDepositAndCall = async (args: SolanaDepositAndCallArgs) => {
     recipient = parsedArgs.recipient;
   }
 
-  let paramTypes: string[];
-
-  try {
-    const parsedParamTypes = z
-      .array(z.string())
-      .parse(JSON.parse(parsedArgs.types));
-
-    paramTypes = parsedParamTypes;
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    throw new Error(`Invalid JSON in 'types' parameter: ${errorMessage}`);
-  }
+  const paramTypes = parseJson(parsedArgs.types, stringArraySchema);
 
   const res = await client.solanaDepositAndCall({
     amount: Number(parsedArgs.amount),
@@ -103,13 +87,13 @@ export const getKeypairFromFile = async (filepath: string) => {
   let parsedFileContents;
 
   try {
-    const parsedFileContentsResult = z
-      .array(z.number())
-      .parse(JSON.parse(fileContents));
+    const parsedFileContentsResult = parseJson(fileContents, numberArraySchema);
     parsedFileContents = Uint8Array.from(parsedFileContentsResult);
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = handleError({
+      context: `Invalid secret key file at '${filepath}'!`,
+      error,
+    });
 
     if (!errorMessage.includes("Unexpected token")) {
       throw new Error(errorMessage);
