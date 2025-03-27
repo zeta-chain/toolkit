@@ -460,7 +460,8 @@ export const getBtcBalances = async (
           }
 
           const response = await axios.get<TestnetResponseData>(
-            `${API}/address/${btcAddress}`
+            `${API}/address/${btcAddress}`,
+            { timeout: 5000 }
           );
           const data = response.data;
 
