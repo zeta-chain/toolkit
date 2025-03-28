@@ -1,4 +1,5 @@
 import { Command } from "commander";
+
 import { solanaEncodeCommand } from "./solanaEncode";
 
 export const toolkitCommand = new Command("toolkit")

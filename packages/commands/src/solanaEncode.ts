@@ -1,9 +1,11 @@
 import { Command } from "commander";
-import { solanaEncode, EncodeOptions } from "../../client/src/solanaEncode";
+
+import { EncodeOptions, solanaEncode } from "../../client/src/solanaEncode";
 
 const main = async (options: EncodeOptions) => {
   try {
-    await solanaEncode(options);
+    const encoded = await solanaEncode(options);
+    console.log(encoded);
   } catch (error) {
     console.error("Error encoding Solana payload:", error);
     process.exit(1);

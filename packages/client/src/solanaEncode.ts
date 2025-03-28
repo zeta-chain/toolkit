@@ -1,13 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
-import { ethers } from "ethers";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
+import { ethers } from "ethers";
 
 export interface EncodeOptions {
-  gateway: string;
+  accounts?: string[];
   connected: string;
   data: string;
+  gateway: string;
   mint?: string;
-  accounts?: string[];
 }
 
 export const solanaEncode = async ({
@@ -92,5 +92,5 @@ export const solanaEncode = async ({
     [[allAccounts, encodedData]]
   );
 
-  console.log(encoded);
+  return encoded;
 };
