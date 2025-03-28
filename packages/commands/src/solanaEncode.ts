@@ -4,25 +4,26 @@ import { ethers } from "ethers";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 
 interface EncodeOptions {
+  gateway: string;
   connected: string;
   data: string;
   mint?: string;
   accounts?: string[];
 }
 
-export const GATEWAY = new anchor.web3.PublicKey(
-  "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
-);
-
-const encodeSolanaPayload = async (options: EncodeOptions) => {
-  const { connected, data, mint, accounts = [] } = options;
-
+const encodeSolanaPayload = async ({
+  gateway,
+  connected,
+  data,
+  mint,
+  accounts = [],
+}: EncodeOptions) => {
   // Convert connected address to PublicKey
   const connectedPdaAccount = new anchor.web3.PublicKey(connected);
 
   const [pdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("meta", "utf-8")],
-    GATEWAY
+    new anchor.web3.PublicKey(gateway)
   );
 
   // Base accounts array with required accounts
@@ -109,6 +110,7 @@ export const solanaEncodeCommand = new Command("encode")
   .description("Encode payload data for Solana")
   .requiredOption("--connected <address>", "Connected PDA account address")
   .requiredOption("--data <data>", "Data to encode")
+  .requiredOption("--gateway <address>", "Gateway program address")
   // .option("--mint <address>", "Mint address for SPL token operations")
   // .option(
   //   "--accounts <accounts...>",
