@@ -32,7 +32,8 @@
     "copy-templates": "npx cpx './packages/tasks/templates/**/*' ./dist/packages/tasks/templates",
     "copy-types": "npx cpx './typechain-types/**/*' ./dist/typechain-types",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "toolkit": "yarn build && node dist/packages/commands/src/program.js"
   },
   "keywords": [],
   "author": "ZetaChain",
@@ -115,6 +116,7 @@
     "bip39": "^3.1.0",
     "bitcoinjs-lib": "^6.1.7",
     "bs58": "^6.0.0",
+    "commander": "^13.1.0",
     "dotenv": "16.0.3",
     "ecpair": "^2.1.0",
     "envfile": "^6.18.0",
