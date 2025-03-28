@@ -18,71 +18,73 @@ const encodeSolanaPayload = async ({
   mint,
   accounts = [],
 }: EncodeOptions) => {
-  // Convert connected address to PublicKey
   const connectedPdaAccount = new anchor.web3.PublicKey(connected);
-
   const [pdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("meta", "utf-8")],
     new anchor.web3.PublicKey(gateway)
   );
 
-  // Base accounts array with required accounts
-  const baseAccounts = [
-    {
+  const pda = {
+    isWritable: true,
+    publicKey: ethers.hexlify(connectedPdaAccount.toBytes()),
+  };
+
+  const gatewayPda = {
+    isWritable: false,
+    publicKey: ethers.hexlify(pdaAccount.toBytes()),
+  };
+
+  const systemProgram = {
+    isWritable: false,
+    publicKey: ethers.hexlify(anchor.web3.SystemProgram.programId.toBytes()),
+  };
+
+  let baseAccounts;
+  if (mint) {
+    const mintPubkey = new anchor.web3.PublicKey(mint);
+    const connectedPdaATA = await getAssociatedTokenAddress(
+      mintPubkey,
+      connectedPdaAccount,
+      true
+    );
+
+    const pdaAta = {
       isWritable: true,
-      publicKey: ethers.hexlify(connectedPdaAccount.toBytes()),
-    },
-    {
-      isWritable: false,
-      publicKey: ethers.hexlify(pdaAccount.toBytes()),
-    },
-    {
-      isWritable: false,
-      publicKey: ethers.hexlify(anchor.web3.SystemProgram.programId.toBytes()),
-    },
-  ];
+      publicKey: ethers.hexlify(connectedPdaATA.toBytes()),
+    };
 
-  // If mint is provided, add SPL token accounts
-  // if (mint) {
-  //   const mintPubkey = new anchor.web3.PublicKey(mint);
-  //   const connectedPdaATA = await getAssociatedTokenAddress(
-  //     mintPubkey,
-  //     connectedPdaAccount,
-  //     true
-  //   );
+    const mintAccount = {
+      isWritable: false,
+      publicKey: ethers.hexlify(mintPubkey.toBytes()),
+    };
 
-  //   baseAccounts.push(
-  //     {
-  //       isWritable: true,
-  //       publicKey: ethers.hexlify(connectedPdaATA.toBytes()),
-  //     },
-  //     {
-  //       isWritable: false,
-  //       publicKey: ethers.hexlify(mintPubkey.toBytes()),
-  //     },
-  //     {
-  //       isWritable: false,
-  //       publicKey: ethers.hexlify(
-  //         anchor.utils.token.TOKEN_PROGRAM_ID.toBytes()
-  //       ),
-  //     }
-  //   );
-  // }
+    const tokenProgram = {
+      isWritable: false,
+      publicKey: ethers.hexlify(anchor.utils.token.TOKEN_PROGRAM_ID.toBytes()),
+    };
+
+    baseAccounts = [
+      pda,
+      pdaAta,
+      mintAccount,
+      gatewayPda,
+      tokenProgram,
+      systemProgram,
+    ];
+  } else {
+    baseAccounts = [pda, gatewayPda, systemProgram];
+  }
 
   // Parse additional accounts if provided
-  // const additionalAccounts = accounts.map((account) => {
-  //   const [pubkey, isWritable] = account.split(":");
-  //   return {
-  //     isWritable: isWritable === "true",
-  //     publicKey: ethers.hexlify(new anchor.web3.PublicKey(pubkey).toBytes()),
-  //   };
-  // });
+  const additionalAccounts = accounts.map((account) => {
+    const [pubkey, isWritable] = account.split(":");
+    return {
+      isWritable: isWritable === "true",
+      publicKey: ethers.hexlify(new anchor.web3.PublicKey(pubkey).toBytes()),
+    };
+  });
 
-  // Combine all accounts
-  const allAccounts = [
-    ...baseAccounts,
-    // ...additionalAccounts
-  ];
+  const allAccounts = [...baseAccounts, ...additionalAccounts];
 
   // Encode the data
   const encodedData = ethers.hexlify(ethers.toUtf8Bytes(data));
@@ -111,9 +113,9 @@ export const solanaEncodeCommand = new Command("encode")
   .requiredOption("--connected <address>", "Connected PDA account address")
   .requiredOption("--data <data>", "Data to encode")
   .requiredOption("--gateway <address>", "Gateway program address")
-  // .option("--mint <address>", "Mint address for SPL token operations")
-  // .option(
-  //   "--accounts <accounts...>",
-  //   "Additional accounts in format 'address:isWritable'"
-  // )
+  .option("--mint <address>", "Mint address for SPL token operations")
+  .option(
+    "--accounts <accounts...>",
+    "Additional accounts in format 'address:isWritable'"
+  )
   .action(main);
