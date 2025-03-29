@@ -12,8 +12,8 @@ beforeEach(() => {
     private value: string;
 
     constructor(value: string) {
-      // Very basic validation - in real Solana, this would be more complex
-      if (typeof value !== "string" || value.length < 32) {
+      // Solana public keys in base58 are typically 44 characters
+      if (typeof value !== "string" || value.length < 43) {
         throw new Error("Invalid public key input");
       }
       this.value = value;
@@ -64,9 +64,7 @@ describe("solanaAccountStringSchema", () => {
     const result = solanaAccountStringSchema.safeParse(`${validPubkey}:false`);
 
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.isWritableStr).toBe(false);
-    }
+    expect(result.data?.isWritableStr).toBe(false);
   });
 
   it("should reject strings without a colon", () => {
@@ -131,6 +129,12 @@ describe("parseSolanaAccounts", () => {
     expect(result).toHaveLength(2);
     expect(result[0].isWritable).toBe(true);
     expect(result[1].isWritable).toBe(false);
+    expect(result[0].publicKey).toBe(
+      "0x0101010101010101010101010101010101010101010101010101010101010101"
+    );
+    expect(result[1].publicKey).toBe(
+      "0x0101010101010101010101010101010101010101010101010101010101010101"
+    );
   });
 
   it("should throw an error with the correct index for invalid accounts", () => {
