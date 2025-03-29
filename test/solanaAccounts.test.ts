@@ -146,4 +146,9 @@ describe("parseSolanaAccounts", () => {
 
     expect(() => parseSolanaAccounts(accounts)).toThrow(/at index 1/);
   });
+
+  it("should handle an empty array of accounts", () => {
+    const result = parseSolanaAccounts([]);
+    expect(result).toEqual([]);
+  });
 });
