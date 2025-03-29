@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { ethers } from "ethers";
 
-import { parseSolanaAccounts } from "../../../utils/solanaAccounts";
+import { parseSolanaAccounts, safeAwait } from "../../../utils";
 
 export interface EncodeOptions {
   accounts?: string[];
@@ -43,10 +43,10 @@ export const solanaEncode = async ({
   let baseAccounts;
   if (mint) {
     const mintPubkey = new anchor.web3.PublicKey(mint);
-    const connectedPdaATA = await getAssociatedTokenAddress(
-      mintPubkey,
-      connectedPdaAccount,
-      true
+
+    const connectedPdaATA = await safeAwait(
+      () => getAssociatedTokenAddress(mintPubkey, connectedPdaAccount, true),
+      { errorContext: "Error getting associated token address" }
     );
 
     const pdaAta = {
