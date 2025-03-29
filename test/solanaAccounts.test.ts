@@ -9,15 +9,22 @@ import {
 beforeEach(() => {
   // Create a mock class for PublicKey
   class MockPublicKey {
+    private value: string;
+
     constructor(value: string) {
       // Very basic validation - in real Solana, this would be more complex
       if (typeof value !== "string" || value.length < 32) {
         throw new Error("Invalid public key input");
       }
+      this.value = value;
     }
 
     toBytes() {
       return new Uint8Array(32).fill(1);
+    }
+
+    toString() {
+      return this.value;
     }
   }
 
@@ -47,17 +54,21 @@ describe("solanaAccountStringSchema", () => {
     const result = solanaAccountStringSchema.safeParse(`${validPubkey}:true`);
 
     expect(result.success).toBe(true);
-    expect(result.data).toEqual({
-      isWritableStr: true,
-      pubkey: validPubkey,
-    });
+    if (result.success) {
+      expect(result.data).toEqual({
+        isWritableStr: true,
+        pubkey: validPubkey,
+      });
+    }
   });
 
   it('should transform "false" to boolean false', () => {
     const result = solanaAccountStringSchema.safeParse(`${validPubkey}:false`);
 
     expect(result.success).toBe(true);
-    expect(result.data?.isWritableStr).toBe(false);
+    if (result.success) {
+      expect(result.data.isWritableStr).toBe(false);
+    }
   });
 
   it("should reject strings without a colon", () => {
