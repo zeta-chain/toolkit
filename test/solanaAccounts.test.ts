@@ -54,12 +54,10 @@ describe("solanaAccountStringSchema", () => {
     const result = solanaAccountStringSchema.safeParse(`${validPubkey}:true`);
 
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data).toEqual({
-        isWritableStr: true,
-        pubkey: validPubkey,
-      });
-    }
+    expect(result.data).toEqual({
+      isWritableStr: true,
+      pubkey: validPubkey,
+    });
   });
 
   it('should transform "false" to boolean false', () => {
@@ -120,12 +118,7 @@ describe("parseSolanaAccount", () => {
   });
 
   it("should include the index in error messages when provided", () => {
-    try {
-      parseSolanaAccount("invalid-format", 2);
-      fail("Should have thrown an error");
-    } catch (error) {
-      expect((error as Error).message).toContain("at index 2");
-    }
+    expect(() => parseSolanaAccount("invalid-format", 2)).toThrow(/at index 2/);
   });
 });
 

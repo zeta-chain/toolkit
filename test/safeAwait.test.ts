@@ -1,5 +1,5 @@
 import * as handleErrorModule from "../utils/handleError";
-import { safeAwait } from "../utils/safeAwait";
+import { safeAwait, SafeAwaitOptions } from "../utils/safeAwait";
 
 describe("safeAwait", () => {
   let handleErrorSpy: jest.SpyInstance;
@@ -110,7 +110,7 @@ describe("safeAwait", () => {
     it("should use context from options object if provided", async () => {
       const mockError = new Error("Test error");
       const mockPromise = jest.fn().mockRejectedValue(mockError);
-      const options = { errorContext: "Error from options" };
+      const options: SafeAwaitOptions = { errorContext: "Error from options" };
 
       await expect(safeAwait(mockPromise, options)).rejects.toBe(mockError);
       expect(handleErrorSpy).toHaveBeenCalledWith({
@@ -122,22 +122,26 @@ describe("safeAwait", () => {
     it("should transform the error if transformError option is true", async () => {
       const mockError = new Error("Original error");
       const mockPromise = jest.fn().mockRejectedValue(mockError);
-      const options = {
+      const options: SafeAwaitOptions = {
         errorContext: "Transformed context",
         transformError: true,
       };
 
+      const asyncCall = async () => await safeAwait(mockPromise, options);
+
+      await expect(asyncCall()).rejects.toThrow(
+        "Transformed context: Original error"
+      );
+
+      // Verify it's a new error, not the original
+      let thrownError: unknown;
       try {
-        await safeAwait(mockPromise, options);
-        fail("Expected an error to be thrown");
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          expect(error.message).toBe("Transformed context: Original error");
-          expect(error).not.toBe(mockError); // Should be a new error instance
-        } else {
-          fail("Expected error to be an Error instance");
-        }
+        await asyncCall();
+      } catch (error) {
+        thrownError = error;
       }
+      expect(thrownError).not.toBe(mockError);
+      expect(thrownError).toBeInstanceOf(Error);
 
       expect(handleErrorSpy).toHaveBeenCalledWith({
         context: options.errorContext,
@@ -150,21 +154,15 @@ describe("safeAwait", () => {
         const value = "string error";
         const expected = "string error";
         const mockPromise = jest.fn().mockRejectedValue(value);
-        const options = {
+        const options: SafeAwaitOptions = {
           errorContext: "Non-error rejection",
           transformError: true,
         };
 
-        try {
-          await safeAwait(mockPromise, options);
-          fail("Expected an error to be thrown");
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            expect(error.message).toBe(`Non-error rejection: ${expected}`);
-          } else {
-            fail("Expected error to be an Error instance");
-          }
-        }
+        const asyncCall = async () => await safeAwait(mockPromise, options);
+        await expect(asyncCall()).rejects.toThrow(
+          `Non-error rejection: ${expected}`
+        );
 
         expect(handleErrorSpy).toHaveBeenCalledWith({
           context: options.errorContext,
@@ -176,21 +174,15 @@ describe("safeAwait", () => {
         const value = 123;
         const expected = "123";
         const mockPromise = jest.fn().mockRejectedValue(value);
-        const options = {
+        const options: SafeAwaitOptions = {
           errorContext: "Non-error rejection",
           transformError: true,
         };
 
-        try {
-          await safeAwait(mockPromise, options);
-          fail("Expected an error to be thrown");
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            expect(error.message).toBe(`Non-error rejection: ${expected}`);
-          } else {
-            fail("Expected error to be an Error instance");
-          }
-        }
+        const asyncCall = async () => await safeAwait(mockPromise, options);
+        await expect(asyncCall()).rejects.toThrow(
+          `Non-error rejection: ${expected}`
+        );
 
         expect(handleErrorSpy).toHaveBeenCalledWith({
           context: options.errorContext,
@@ -202,21 +194,15 @@ describe("safeAwait", () => {
         const value = { custom: "error" };
         const expected = "[object Object]";
         const mockPromise = jest.fn().mockRejectedValue(value);
-        const options = {
+        const options: SafeAwaitOptions = {
           errorContext: "Non-error rejection",
           transformError: true,
         };
 
-        try {
-          await safeAwait(mockPromise, options);
-          fail("Expected an error to be thrown");
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            expect(error.message).toBe(`Non-error rejection: ${expected}`);
-          } else {
-            fail("Expected error to be an Error instance");
-          }
-        }
+        const asyncCall = async () => await safeAwait(mockPromise, options);
+        await expect(asyncCall()).rejects.toThrow(
+          `Non-error rejection: ${expected}`
+        );
 
         expect(handleErrorSpy).toHaveBeenCalledWith({
           context: options.errorContext,
