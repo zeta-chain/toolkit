@@ -6,6 +6,8 @@ export * from "./getHardhatConfig";
 export * from "./handleError";
 export * from "./parseAbiValues";
 export * from "./parseJson";
+export * from "./safeAwait";
+export * from "./solanaAccounts";
 export * from "./toHexString";
 export * from "./trackCCTX";
 export * from "./transactions";
