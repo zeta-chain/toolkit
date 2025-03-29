@@ -48,4 +48,25 @@ describe("solanaEncode", () => {
     const result = await solanaEncode(input);
     expect(result).toBe(expected);
   });
+
+  it("should throw error for invalid account format", async () => {
+    const input = {
+      accounts: ["invalidAccountFormat"],
+      connected: "mUrEUmbhru5ykcuMdsKdVh9Q75kTq4HqHSbgotQvUEM",
+      data: "sol",
+      gateway: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
+    };
+
+    await expect(solanaEncode(input)).rejects.toThrow();
+  });
+
+  it("should throw error for invalid public key", async () => {
+    const input = {
+      connected: "invalid-public-key",
+      data: "sol",
+      gateway: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
+    };
+
+    await expect(solanaEncode(input)).rejects.toThrow();
+  });
 });
