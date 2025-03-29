@@ -23,8 +23,8 @@ export interface SolanaAccount {
 const publicKeySchema = z.string().refine(
   (val) => {
     try {
-      new dependencies.anchor.web3.PublicKey(val);
-      return true;
+      const pubkey = new dependencies.anchor.web3.PublicKey(val);
+      return pubkey.toBytes().length === 32 && pubkey.toString() === val;
     } catch (error) {
       return false;
     }
