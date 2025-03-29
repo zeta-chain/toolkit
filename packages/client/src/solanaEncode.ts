@@ -2,6 +2,8 @@ import * as anchor from "@coral-xyz/anchor";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { ethers } from "ethers";
 
+import { parseSolanaAccounts } from "../../../utils/solanaAccounts";
+
 export interface EncodeOptions {
   accounts?: string[];
   connected: string;
@@ -74,14 +76,8 @@ export const solanaEncode = async ({
     baseAccounts = [pda, gatewayPda, systemProgram];
   }
 
-  // Parse additional accounts if provided
-  const additionalAccounts = accounts.map((account) => {
-    const [pubkey, isWritable] = account.split(":");
-    return {
-      isWritable: isWritable === "true",
-      publicKey: ethers.hexlify(new anchor.web3.PublicKey(pubkey).toBytes()),
-    };
-  });
+  // Parse additional accounts using our utility function
+  const additionalAccounts = parseSolanaAccounts(accounts);
 
   const allAccounts = [...baseAccounts, ...additionalAccounts];
 
