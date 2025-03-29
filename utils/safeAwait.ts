@@ -8,6 +8,10 @@ export interface SafeAwaitOptions {
    * Context description for the error
    */
   errorContext?: string;
+  /**
+   * Whether to log the error (defaults to true)
+   */
+  logError?: boolean;
 
   /**
    * Whether to transform the error with additional context
@@ -46,19 +50,24 @@ export const safeAwait = async <T>(
     // Determine error handling options
     let context = "Operation failed";
     let transformError = false;
+    let shouldLog = true;
 
     if (typeof contextOrOptions === "string") {
       context = contextOrOptions;
     } else if (contextOrOptions) {
       context = contextOrOptions.errorContext || context;
       transformError = contextOrOptions.transformError || false;
+      shouldLog = contextOrOptions.logError || true;
     }
 
     // Log the error through central error handler
-    handleError({
-      context,
-      error,
-    });
+    if (shouldLog) {
+      // Log the error through central error handler
+      handleError({
+        context,
+        error,
+      });
+    }
 
     // Either transform the error or rethrow the original
     if (transformError) {
