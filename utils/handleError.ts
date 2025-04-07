@@ -14,7 +14,7 @@ export const getErrorMessage = (error: unknown): string => {
 /**
  * Options for error handling
  */
-export interface ErrorHandlingOptions {
+interface ErrorHandlingOptions {
   /** Optional context to add to the error message */
   context?: string;
   /** The error to handle */

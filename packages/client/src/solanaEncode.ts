@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 
 import { parseSolanaAccounts, safeAwait } from "../../../utils";
 
-export interface EncodeOptions {
+interface EncodeOptions {
   accounts?: string[];
   connected: string;
   data: string;

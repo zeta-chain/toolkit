@@ -24,7 +24,7 @@ export interface TransactionState {
   spinners: Spinners;
 }
 
-export interface PollTransactionsArgs {
+interface PollTransactionsArgs {
   api: string;
   emitter: Emitter | null;
   hash: string;
@@ -38,7 +38,7 @@ export interface PollTransactionsArgs {
   tss: string;
 }
 
-export interface ProcessTransactionUpdateArgs {
+interface ProcessTransactionUpdateArgs {
   api: string;
   emitter: Emitter | null;
   hash: string;
@@ -46,7 +46,7 @@ export interface ProcessTransactionUpdateArgs {
   state: TransactionState;
 }
 
-export interface UpdateTransactionStateArgs {
+interface UpdateTransactionStateArgs {
   api: string;
   emitter: Emitter | null;
   json: boolean;

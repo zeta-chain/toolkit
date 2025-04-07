@@ -17,7 +17,7 @@ export interface Zrc20Details {
   };
 }
 
-export interface PoolToken {
+interface PoolToken {
   address: string;
   decimals?: number;
   reserve: bigint;
