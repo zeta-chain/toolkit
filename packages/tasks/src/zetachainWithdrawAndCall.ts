@@ -23,7 +23,7 @@ const zetachainWithdrawAndCallArgsSchema = z.object({
   onRevertGasLimit: bigNumberStringSchema,
   receiver: z.string(),
   revertAddress: evmAddressSchema,
-  revertMessage: evmAddressSchema,
+  revertMessage: z.string(),
   txOptionsGasLimit: bigNumberStringSchema,
   txOptionsGasPrice: bigNumberStringSchema,
   types: validJsonStringSchema,
