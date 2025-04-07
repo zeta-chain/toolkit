@@ -47,6 +47,19 @@ export const evmCall = async function (
     signer
   ) as GatewayContract;
 
+  const revertOptions = {
+    abortAddress: args.revertOptions.abortAddress,
+    callOnRevert: args.revertOptions.callOnRevert,
+    onRevertGasLimit: args.revertOptions.onRevertGasLimit,
+    revertAddress: args.revertOptions.revertAddress,
+    revertMessage: toHexString(args.revertOptions.revertMessage),
+  };
+
+  const txOptions = {
+    gasLimit: args.txOptions.gasLimit,
+    gasPrice: args.txOptions.gasPrice,
+  };
+
   const abiCoder = AbiCoder.defaultAbiCoder();
   const encodedParameters = abiCoder.encode(args.types, args.values);
 
@@ -59,17 +72,8 @@ export const evmCall = async function (
   const tx = await gatewayCallFunction(
     args.receiver,
     encodedParameters,
-    {
-      abortAddress: args.revertOptions.abortAddress,
-      callOnRevert: args.revertOptions.callOnRevert,
-      onRevertGasLimit: args.revertOptions.onRevertGasLimit,
-      revertAddress: args.revertOptions.revertAddress,
-      revertMessage: toHexString(args.revertOptions.revertMessage),
-    },
-    {
-      gasLimit: args.txOptions.gasLimit,
-      gasPrice: args.txOptions.gasPrice,
-    }
+    revertOptions,
+    txOptions
   );
 
   return tx;
