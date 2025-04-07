@@ -68,7 +68,7 @@ export const updateState = (
 /**
  * Process a transaction update and return new state
  */
-export const processTransactionUpdate = async ({
+const processTransactionUpdate = async ({
   state,
   hash,
   api,
@@ -104,7 +104,7 @@ export const processTransactionUpdate = async ({
 /**
  * Update transaction status and return new state
  */
-export const updateTransactionState = async ({
+const updateTransactionState = async ({
   state,
   txHash,
   api,

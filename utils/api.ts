@@ -12,7 +12,7 @@ import { handleError } from "../utils";
 /**
  * Generic API fetch function with error handling
  */
-export const fetchFromApi = async <T>(
+const fetchFromApi = async <T>(
   api: string,
   endpoint: string,
   timeoutMs: number = 10000
