@@ -20,7 +20,8 @@ const zetachainCallArgsSchema = z.object({
   gatewayZetaChain: evmAddressSchema.optional(),
   onRevertGasLimit: bigNumberStringSchema,
   receiver: z.string(),
-  revertAddress: z.string(),
+  revertAddress: evmAddressSchema,
+  abortAddress: evmAddressSchema,
   revertMessage: z.string(),
   txOptionsGasLimit: bigNumberStringSchema,
   txOptionsGasPrice: bigNumberStringSchema,
@@ -60,6 +61,7 @@ export const zetachainCall = async (
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
         revertMessage: parsedArgs.revertMessage,
+        abortAddress: parsedArgs.abortAddress,
       },
       txOptions: {
         gasLimit: parsedArgs.txOptionsGasLimit,
@@ -86,6 +88,11 @@ task("zetachain-call", "Call a contract on a connected chain", zetachainCall)
   .addOptionalParam(
     "revertAddress",
     "Revert address",
+    "0x0000000000000000000000000000000000000000"
+  )
+  .addOptionalParam(
+    "abortAddress",
+    "Abort address",
     "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(

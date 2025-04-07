@@ -54,7 +54,7 @@ export const evmDepositAndCall = async function (
   ) as GatewayContract;
 
   const revertOptions = {
-    abortAddress: "0x0000000000000000000000000000000000000000", // not used
+    abortAddress: args.revertOptions.abortAddress,
     callOnRevert: args.revertOptions.callOnRevert,
     onRevertGasLimit: args.revertOptions.onRevertGasLimit,
     revertAddress: args.revertOptions.revertAddress,

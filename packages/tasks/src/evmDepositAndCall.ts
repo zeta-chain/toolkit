@@ -23,6 +23,7 @@ const evmDepositAndCallArgsSchema = z.object({
   receiver: evmAddressSchema,
   revertAddress: evmAddressSchema,
   revertMessage: z.string(),
+  abortAddress: evmAddressSchema,
   types: validJsonStringSchema,
   values: z.array(z.string()).min(1, "At least one value is required"),
 });
@@ -52,6 +53,7 @@ export const evmDepositAndCall = async (
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
         revertMessage: parsedArgs.revertMessage,
+        abortAddress: parsedArgs.abortAddress,
       },
       txOptions: {
         gasLimit: parsedArgs.gasLimit,
@@ -78,6 +80,11 @@ task("evm-deposit-and-call", "Deposit tokens", evmDepositAndCall)
     "Revert address",
     "0x0000000000000000000000000000000000000000",
     types.string
+  )
+  .addOptionalParam(
+    "abortAddress",
+    "Abort address",
+    "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(
     "gasPrice",

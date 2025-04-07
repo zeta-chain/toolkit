@@ -17,6 +17,7 @@ const zetachainWithdrawArgsSchema = z.object({
   receiver: z.string(),
   revertAddress: z.string(),
   revertMessage: z.string(),
+  abortAddress: z.string(),
   txOptionsGasLimit: bigNumberStringSchema,
   txOptionsGasPrice: bigNumberStringSchema,
   zrc20: z.string(),
@@ -43,6 +44,7 @@ export const zetachainWithdraw = async (
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
         revertMessage: parsedArgs.revertMessage,
+        abortAddress: parsedArgs.abortAddress,
       },
       txOptions: {
         gasLimit: parsedArgs.txOptionsGasLimit,
@@ -68,6 +70,11 @@ task("zetachain-withdraw", "Withdraw tokens from ZetaChain", zetachainWithdraw)
   .addOptionalParam(
     "revertAddress",
     "Revert address",
+    "0x0000000000000000000000000000000000000000"
+  )
+  .addOptionalParam(
+    "abortAddress",
+    "Abort address",
     "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(

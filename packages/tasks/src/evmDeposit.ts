@@ -19,6 +19,7 @@ const evmDepositArgsSchema = z.object({
   onRevertGasLimit: bigNumberStringSchema,
   receiver: evmAddressSchema,
   revertAddress: evmAddressSchema,
+  abortAddress: evmAddressSchema,
   revertMessage: z.string(),
 });
 
@@ -44,6 +45,7 @@ export const evmDeposit = async (
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
         revertMessage: parsedArgs.revertMessage,
+        abortAddress: parsedArgs.abortAddress,
       },
       txOptions: {
         gasLimit: parsedArgs.gasLimit,
@@ -69,6 +71,11 @@ task("evm-deposit", "Deposit tokens", evmDeposit)
     "Revert address",
     "0x0000000000000000000000000000000000000000",
     types.string
+  )
+  .addOptionalParam(
+    "abortAddress",
+    "Abort address",
+    "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(
     "gasPrice",

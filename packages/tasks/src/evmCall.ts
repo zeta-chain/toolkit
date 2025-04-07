@@ -20,6 +20,7 @@ const evmCallArgsSchema = z.object({
   onRevertGasLimit: bigNumberStringSchema,
   receiver: evmAddressSchema,
   revertAddress: evmAddressSchema,
+  abortAddress: evmAddressSchema,
   revertMessage: z.string(),
   types: validJsonStringSchema,
   values: z.array(z.string()).min(1, "At least one value is required"),
@@ -50,6 +51,7 @@ export const evmCall = async (
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
         revertMessage: parsedArgs.revertMessage,
+        abortAddress: parsedArgs.abortAddress,
       },
       txOptions: {
         gasLimit: parsedArgs.gasLimit,
@@ -73,6 +75,11 @@ task("evm-call", "Call a universal app", evmCall)
   .addOptionalParam(
     "revertAddress",
     "Revert address",
+    "0x0000000000000000000000000000000000000000"
+  )
+  .addOptionalParam(
+    "abortAddress",
+    "Abort address",
     "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(

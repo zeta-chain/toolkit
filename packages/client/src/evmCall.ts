@@ -60,7 +60,7 @@ export const evmCall = async function (
     args.receiver,
     encodedParameters,
     {
-      abortAddress: "0x0000000000000000000000000000000000000000", // not used
+      abortAddress: args.revertOptions.abortAddress,
       callOnRevert: args.revertOptions.callOnRevert,
       onRevertGasLimit: args.revertOptions.onRevertGasLimit,
       revertAddress: args.revertOptions.revertAddress,

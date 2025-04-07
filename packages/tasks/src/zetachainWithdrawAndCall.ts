@@ -21,13 +21,13 @@ const zetachainWithdrawAndCallArgsSchema = z.object({
   gatewayZetaChain: evmAddressSchema.optional(),
   onRevertGasLimit: bigNumberStringSchema,
   receiver: z.string(),
-  revertAddress: z.string(),
-  revertMessage: z.string(),
+  revertAddress: evmAddressSchema,
+  revertMessage: evmAddressSchema,
   txOptionsGasLimit: bigNumberStringSchema,
   txOptionsGasPrice: bigNumberStringSchema,
   types: validJsonStringSchema,
   values: z.array(z.string()).min(1, "At least one value is required"),
-  zrc20: z.string(),
+  zrc20: evmAddressSchema,
 });
 
 type ZetachainWithdrawAndCallArgs = z.infer<

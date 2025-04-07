@@ -53,7 +53,7 @@ export const zetachainWithdraw = async function (
   ) as GatewayContract;
 
   const revertOptions = {
-    abortAddress: "0x0000000000000000000000000000000000000000",
+    abortAddress: args.revertOptions.abortAddress,
     callOnRevert: args.revertOptions.callOnRevert,
     onRevertGasLimit: args.revertOptions.onRevertGasLimit,
     revertAddress: args.revertOptions.revertAddress,
