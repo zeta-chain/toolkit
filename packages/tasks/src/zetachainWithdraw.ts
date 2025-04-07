@@ -10,6 +10,7 @@ import { validateTaskArgs } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 const zetachainWithdrawArgsSchema = z.object({
+  abortAddress: z.string(),
   amount: z.string(),
   callOnRevert: z.boolean().optional(),
   gatewayZetaChain: evmAddressSchema.optional(),
@@ -17,7 +18,6 @@ const zetachainWithdrawArgsSchema = z.object({
   receiver: z.string(),
   revertAddress: z.string(),
   revertMessage: z.string(),
-  abortAddress: z.string(),
   txOptionsGasLimit: bigNumberStringSchema,
   txOptionsGasPrice: bigNumberStringSchema,
   zrc20: z.string(),
@@ -40,11 +40,11 @@ export const zetachainWithdraw = async (
       gatewayZetaChain: parsedArgs.gatewayZetaChain,
       receiver: parsedArgs.receiver,
       revertOptions: {
+        abortAddress: parsedArgs.abortAddress,
         callOnRevert: parsedArgs.callOnRevert || false,
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
         revertMessage: parsedArgs.revertMessage,
-        abortAddress: parsedArgs.abortAddress,
       },
       txOptions: {
         gasLimit: parsedArgs.txOptionsGasLimit,

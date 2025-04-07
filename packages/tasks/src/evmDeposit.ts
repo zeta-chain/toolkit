@@ -10,6 +10,7 @@ import { validateTaskArgs } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 const evmDepositArgsSchema = z.object({
+  abortAddress: evmAddressSchema,
   amount: z.string(),
   callOnRevert: z.boolean().optional(),
   erc20: z.string().optional(),
@@ -19,7 +20,6 @@ const evmDepositArgsSchema = z.object({
   onRevertGasLimit: bigNumberStringSchema,
   receiver: evmAddressSchema,
   revertAddress: evmAddressSchema,
-  abortAddress: evmAddressSchema,
   revertMessage: z.string(),
 });
 
@@ -41,11 +41,11 @@ export const evmDeposit = async (
       gatewayEvm: parsedArgs.gatewayEvm,
       receiver: parsedArgs.receiver,
       revertOptions: {
+        abortAddress: parsedArgs.abortAddress,
         callOnRevert: Boolean(parsedArgs.callOnRevert),
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
         revertMessage: parsedArgs.revertMessage,
-        abortAddress: parsedArgs.abortAddress,
       },
       txOptions: {
         gasLimit: parsedArgs.gasLimit,
