@@ -58,7 +58,6 @@ export const evmDepositAndCall = async function (
     callOnRevert: args.revertOptions.callOnRevert,
     onRevertGasLimit: args.revertOptions.onRevertGasLimit,
     revertAddress: args.revertOptions.revertAddress,
-    // not used
     revertMessage: toHexString(args.revertOptions.revertMessage),
   };
 
