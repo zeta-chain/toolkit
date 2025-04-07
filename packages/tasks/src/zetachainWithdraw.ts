@@ -10,7 +10,7 @@ import { validateTaskArgs } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 const zetachainWithdrawArgsSchema = z.object({
-  abortAddress: z.string(),
+  abortAddress: evmAddressSchema,
   amount: z.string(),
   callOnRevert: z.boolean().optional(),
   gatewayZetaChain: evmAddressSchema.optional(),
