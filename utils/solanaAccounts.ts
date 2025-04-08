@@ -11,7 +11,7 @@ export const dependencies = {
 /**
  * Interface representing a Solana account with public key and isWritable flag
  */
-export interface SolanaAccount {
+interface SolanaAccount {
   isWritable: boolean;
   publicKey: string; // Hex-encoded public key
 }

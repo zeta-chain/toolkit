@@ -36,13 +36,13 @@ import {
   zetachainWithdrawAndCall,
 } from ".";
 
-export interface ZetaChainClientParamsBase {
+interface ZetaChainClientParamsBase {
   chains?: Chains;
   contracts?: LocalnetAddress[] | MainnetTestnetAddress[];
   network?: string;
 }
 
-export type ZetaChainClientParams = ZetaChainClientParamsBase &
+type ZetaChainClientParams = ZetaChainClientParamsBase &
   (
     | {
         signer: Signer | SignerWithAddress;

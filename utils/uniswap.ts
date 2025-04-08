@@ -88,7 +88,7 @@ export const generateUniquePairs = (tokenAddresses: string[]): Pair[] => {
 /**
  * Create a multicall contract instance
  */
-export const createMulticallContract = (
+const createMulticallContract = (
   provider: ethers.JsonRpcProvider
 ): MulticallContract => {
   const multicallContract = new ethers.Contract(
