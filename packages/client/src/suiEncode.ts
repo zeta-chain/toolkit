@@ -1,9 +1,9 @@
 import { ethers } from "ethers";
 
 export interface EncodeOptions {
-  typeArguments?: string[];
-  objects?: string[];
   data: string;
+  objects?: string[];
+  typeArguments?: string[];
 }
 
 export const suiEncode = ({

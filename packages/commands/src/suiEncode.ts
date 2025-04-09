@@ -2,7 +2,7 @@ import { Command } from "commander";
 
 import { EncodeOptions, suiEncode } from "../../client/src/suiEncode";
 
-const main = async (options: EncodeOptions) => {
+const main = (options: EncodeOptions) => {
   try {
     if (options.objects) {
       options.objects = options.objects.flatMap((obj) => obj.split(","));
