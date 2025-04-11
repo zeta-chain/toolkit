@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 import fs from "fs";
 import os from "os";
 import path from "path";
+
 import { AccountData } from "../../../../types/accounts.types";
 
 const createEVMAccount = (): AccountData => {
