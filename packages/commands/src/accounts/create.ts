@@ -25,14 +25,10 @@ const createSolanaAccount = (): AccountData => {
   };
 };
 
-const main = async (options: { name: string; type: string }) => {
-  const { type, name } = options;
-
-  if (type !== "evm" && type !== "solana") {
-    console.error("Invalid account type. Must be either 'evm' or 'solana'");
-    return;
-  }
-
+const createAccountForType = async (
+  type: string,
+  name: string
+): Promise<void> => {
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
   fs.mkdirSync(baseDir, { recursive: true });
 
@@ -43,7 +39,7 @@ const main = async (options: { name: string; type: string }) => {
       message: `File ${keyPath} already exists. Overwrite?`,
     });
     if (!shouldOverwrite) {
-      console.log("Operation cancelled.");
+      console.log(`Operation cancelled for ${type} account.`);
       return;
     }
   }
@@ -51,7 +47,7 @@ const main = async (options: { name: string; type: string }) => {
   const keyData = type === "evm" ? createEVMAccount() : createSolanaAccount();
 
   fs.writeFileSync(keyPath, JSON.stringify(keyData, null, 2));
-  console.log(`Account created successfully!`);
+  console.log(`${type.toUpperCase()} account created successfully!`);
   console.log(`Key saved to: ${keyPath}`);
   if (type === "evm") {
     console.log(`Address: ${keyData.address}`);
@@ -60,8 +56,25 @@ const main = async (options: { name: string; type: string }) => {
   }
 };
 
+const main = async (options: { name: string; type?: string }) => {
+  const { type, name } = options;
+
+  if (type && type !== "evm" && type !== "solana") {
+    console.error("Invalid account type. Must be either 'evm' or 'solana'");
+    return;
+  }
+
+  if (type) {
+    await createAccountForType(type, name);
+  } else {
+    console.log("Creating accounts for all supported types...");
+    await createAccountForType("evm", name);
+    await createAccountForType("solana", name);
+  }
+};
+
 export const createAccountsCommand = new Command("create")
   .description("Create a new account")
-  .requiredOption("--type <type>", "Account type (evm or solana)")
+  .option("--type <type>", "Account type (evm or solana)")
   .requiredOption("--name <name>", "Account name")
   .action(main);

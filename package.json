@@ -33,8 +33,8 @@
     "copy-types": "npx cpx './typechain-types/**/*' ./dist/typechain-types",
     "test": "jest",
     "test:watch": "jest --watch",
-    "toolkit": "yarn build && node dist/packages/commands/src/program.js",
-    "toolkit:dev": "npx ts-node packages/commands/src/program.ts"
+    "zetachain:build": "yarn build && node dist/packages/commands/src/program.js",
+    "zetachain": "npx ts-node packages/commands/src/program.ts"
   },
   "keywords": [],
   "author": "ZetaChain",
