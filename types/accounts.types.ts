@@ -3,9 +3,9 @@ export interface AccountData {
 }
 
 export interface AccountInfo {
-  Address: string;
-  Name: string;
-  Type: string;
+  address: string;
+  name: string;
+  type: string;
 }
 
 export interface EVMAccountData {

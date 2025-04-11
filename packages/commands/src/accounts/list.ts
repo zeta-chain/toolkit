@@ -26,9 +26,9 @@ const main = (options: { json: boolean }): void => {
         fs.readFileSync(keyPath, "utf-8")
       ) as EVMAccountData;
       accounts.push({
-        Address: keyData.address,
-        Name: file.replace(".json", ""),
-        Type: "EVM",
+        address: keyData.address,
+        name: file.replace(".json", ""),
+        type: "evm",
       });
     }
   }
@@ -45,9 +45,9 @@ const main = (options: { json: boolean }): void => {
         fs.readFileSync(keyPath, "utf-8")
       ) as SolanaAccountData;
       accounts.push({
-        Address: keyData.publicKey,
-        Name: file.replace(".json", ""),
-        Type: "Solana",
+        address: keyData.publicKey,
+        name: file.replace(".json", ""),
+        type: "solana",
       });
     }
   }

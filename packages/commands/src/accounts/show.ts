@@ -14,12 +14,12 @@ const getEVMAccountDetails = (
   keyPath: string
 ): AccountDetails => {
   return {
-    Address: keyData.address,
-    "File Location": keyPath,
-    Mnemonic: keyData.mnemonic || "N/A",
-    Name: keyData.name || "N/A",
-    "Private Key": keyData.privateKey,
-    Type: "EVM",
+    address: keyData.address,
+    fileLocation: keyPath,
+    mnemonic: keyData.mnemonic || "N/A",
+    name: keyData.name || "N/A",
+    privateKey: keyData.privateKey,
+    type: "evm",
   };
 };
 
@@ -28,11 +28,11 @@ const getSolanaAccountDetails = (
   keyPath: string
 ): AccountDetails => {
   return {
-    "File Location": keyPath,
-    Name: keyData.name || "N/A",
-    "Public Key": keyData.publicKey,
-    "Secret Key": keyData.secretKey,
-    Type: "Solana",
+    fileLocation: keyPath,
+    name: keyData.name || "N/A",
+    publicKey: keyData.publicKey,
+    secretKey: keyData.secretKey,
+    type: "solana",
   };
 };
 
