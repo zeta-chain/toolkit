@@ -1,10 +1,10 @@
+import confirm from "@inquirer/confirm";
+import { Keypair } from "@solana/web3.js";
 import { Command } from "commander";
 import { ethers } from "ethers";
-import { Keypair } from "@solana/web3.js";
 import fs from "fs";
-import path from "path";
 import os from "os";
-import confirm from "@inquirer/confirm";
+import path from "path";
 
 interface AccountData {
   [key: string]: string | undefined;
@@ -14,8 +14,8 @@ async function createEVMAccount(): Promise<AccountData> {
   const wallet = ethers.Wallet.createRandom();
   return {
     address: wallet.address,
-    privateKey: wallet.privateKey,
     mnemonic: wallet.mnemonic?.phrase,
+    privateKey: wallet.privateKey,
   };
 }
 
@@ -27,7 +27,7 @@ async function createSolanaAccount(): Promise<AccountData> {
   };
 }
 
-async function main(options: { type: string; name: string }) {
+async function main(options: { name: string; type: string }) {
   const { type, name } = options;
 
   if (type !== "evm" && type !== "solana") {
@@ -41,8 +41,8 @@ async function main(options: { type: string; name: string }) {
   const keyPath = path.join(baseDir, `${name}.json`);
   if (fs.existsSync(keyPath)) {
     const shouldOverwrite = await confirm({
-      message: `File ${keyPath} already exists. Overwrite?`,
       default: false,
+      message: `File ${keyPath} already exists. Overwrite?`,
     });
     if (!shouldOverwrite) {
       console.log("Operation cancelled.");

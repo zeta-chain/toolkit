@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import fs from "fs";
-import path from "path";
 import os from "os";
+import path from "path";
 
 interface AccountDetails {
   [key: string]: string;
@@ -9,12 +9,12 @@ interface AccountDetails {
 
 function getEVMAccountDetails(keyData: any, keyPath: string): AccountDetails {
   return {
-    Type: "EVM",
-    Name: keyData.name,
     Address: keyData.address,
-    "Private Key": keyData.privateKey,
-    Mnemonic: keyData.mnemonic || "N/A",
     "File Location": keyPath,
+    Mnemonic: keyData.mnemonic || "N/A",
+    Name: keyData.name,
+    "Private Key": keyData.privateKey,
+    Type: "EVM",
   };
 }
 
@@ -23,15 +23,15 @@ function getSolanaAccountDetails(
   keyPath: string
 ): AccountDetails {
   return {
-    Type: "Solana",
+    "File Location": keyPath,
     Name: keyData.name,
     "Public Key": keyData.publicKey,
     "Secret Key": keyData.secretKey,
-    "File Location": keyPath,
+    Type: "Solana",
   };
 }
 
-async function main(options: { type: string; name: string }) {
+async function main(options: { name: string; type: string }) {
   const { type, name } = options;
 
   if (type !== "evm" && type !== "solana") {
