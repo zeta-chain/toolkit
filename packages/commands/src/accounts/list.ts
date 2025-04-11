@@ -9,7 +9,8 @@ import {
   SolanaAccountData,
 } from "../../../../types/accounts.types";
 
-const main = (): void => {
+const main = (options: { json: boolean }): void => {
+  const { json } = options;
   const baseDir = path.join(os.homedir(), ".zetachain", "keys");
   const accounts: AccountInfo[] = [];
 
@@ -56,10 +57,15 @@ const main = (): void => {
     return;
   }
 
-  console.log("\nAvailable Accounts:");
-  console.table(accounts);
+  if (json) {
+    console.log(JSON.stringify(accounts, null, 2));
+  } else {
+    console.log("\nAvailable Accounts:");
+    console.table(accounts);
+  }
 };
 
 export const listAccountsCommand = new Command("list")
   .description("List all available accounts")
+  .option("--json", "Output in JSON format")
   .action(main);
