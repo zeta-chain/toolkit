@@ -2,20 +2,11 @@ import { Command } from "commander";
 import fs from "fs";
 import os from "os";
 import path from "path";
-
-interface AccountInfo {
-  Address: string;
-  Name: string;
-  Type: string;
-}
-
-interface EVMAccountData {
-  address: string;
-}
-
-interface SolanaAccountData {
-  publicKey: string;
-}
+import {
+  AccountInfo,
+  EVMAccountData,
+  SolanaAccountData,
+} from "../../../../types/accounts.types";
 
 const main = (): void => {
   const baseDir = path.join(os.homedir(), ".zetachain", "keys");

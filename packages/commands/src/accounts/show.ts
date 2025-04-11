@@ -2,23 +2,11 @@ import { Command } from "commander";
 import fs from "fs";
 import os from "os";
 import path from "path";
-
-interface AccountDetails {
-  [key: string]: string;
-}
-
-interface EVMAccountData {
-  address: string;
-  mnemonic?: string;
-  name?: string;
-  privateKey: string;
-}
-
-interface SolanaAccountData {
-  name?: string;
-  publicKey: string;
-  secretKey: string;
-}
+import {
+  AccountDetails,
+  EVMAccountData,
+  SolanaAccountData,
+} from "../../../../types/accounts.types";
 
 const getEVMAccountDetails = (
   keyData: EVMAccountData,
