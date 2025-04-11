@@ -36,8 +36,8 @@ const getSolanaAccountDetails = (
   };
 };
 
-const main = (options: { name: string; type: string }): void => {
-  const { type, name } = options;
+const main = (options: { json: boolean; name: string; type: string }): void => {
+  const { type, name, json } = options;
 
   if (type !== "evm" && type !== "solana") {
     console.error("Invalid account type. Must be either 'evm' or 'solana'");
@@ -62,12 +62,17 @@ const main = (options: { name: string; type: string }): void => {
       ? getEVMAccountDetails(keyData as EVMAccountData, keyPath)
       : getSolanaAccountDetails(keyData as SolanaAccountData, keyPath);
 
-  console.log("\nAccount Details:");
-  console.table(accountDetails);
+  if (json) {
+    console.log(JSON.stringify(accountDetails, null, 2));
+  } else {
+    console.log("\nAccount Details:");
+    console.table(accountDetails);
+  }
 };
 
 export const showAccountsCommand = new Command("show")
   .description("Show details of an existing account")
   .requiredOption("--type <type>", "Account type (evm or solana)")
   .requiredOption("--name <name>", "Account name")
+  .option("--json", "Output in JSON format")
   .action(main);
