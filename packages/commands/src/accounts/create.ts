@@ -1,13 +1,39 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
+import { Keypair } from "@solana/web3.js";
 import fs from "fs";
 import path from "path";
 import os from "os";
 import confirm from "@inquirer/confirm";
 
+interface AccountData {
+  [key: string]: string | undefined;
+}
+
+async function createEVMAccount(): Promise<AccountData> {
+  const wallet = ethers.Wallet.createRandom();
+  return {
+    address: wallet.address,
+    privateKey: wallet.privateKey,
+    mnemonic: wallet.mnemonic?.phrase,
+  };
+}
+
+async function createSolanaAccount(): Promise<AccountData> {
+  const keypair = Keypair.generate();
+  return {
+    publicKey: keypair.publicKey.toBase58(),
+    secretKey: Buffer.from(keypair.secretKey).toString("hex"),
+  };
+}
+
 async function main(options: { type: string; name: string }) {
   const { type, name } = options;
-  const wallet = ethers.Wallet.createRandom();
+
+  if (type !== "evm" && type !== "solana") {
+    console.error("Invalid account type. Must be either 'evm' or 'solana'");
+    return;
+  }
 
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
   fs.mkdirSync(baseDir, { recursive: true });
@@ -24,20 +50,21 @@ async function main(options: { type: string; name: string }) {
     }
   }
 
-  const keyData = {
-    address: wallet.address,
-    privateKey: wallet.privateKey,
-    mnemonic: wallet.mnemonic?.phrase,
-  };
+  const keyData =
+    type === "evm" ? await createEVMAccount() : await createSolanaAccount();
 
   fs.writeFileSync(keyPath, JSON.stringify(keyData, null, 2));
   console.log(`Account created successfully!`);
-  console.log(`Private key saved to: ${keyPath}`);
-  console.log(`Address: ${wallet.address}`);
+  console.log(`Key saved to: ${keyPath}`);
+  if (type === "evm") {
+    console.log(`Address: ${keyData.address}`);
+  } else {
+    console.log(`Public Key: ${keyData.publicKey}`);
+  }
 }
 
 export const createAccountsCommand = new Command("create")
   .description("Create a new account")
-  .requiredOption("--type <type>", "Account type (e.g. evm)")
+  .requiredOption("--type <type>", "Account type (evm or solana)")
   .requiredOption("--name <name>", "Account name")
   .action(main);
