@@ -1,7 +1,7 @@
 import { Command } from "commander";
 
-import { solanaEncodeCommand } from "./solanaEncode";
 import { evmDepositCommand } from "./evmDeposit";
+import { solanaEncodeCommand } from "./solanaEncode";
 
 export const toolkitCommand = new Command("toolkit")
   .description("Local development environment")

@@ -1,24 +1,23 @@
-import { Command } from "commander";
-import { ethers } from "ethers";
 import { networks } from "@zetachain/networks";
 import { type NetworksSchema } from "@zetachain/networks/dist/src/types";
+import { Command } from "commander";
+import { ethers } from "ethers";
 
 import { ZetaChainClient } from "../../client/src/client";
-import { evmDeposit } from "../../client/src/evmDeposit";
 
 const main = async (options: {
   amount: string;
-  erc20?: string;
-  gateway?: string;
-  receiver: string;
-  revertAddress: string;
   callOnRevert: boolean;
-  onRevertGasLimit: string;
-  revertMessage: string;
+  erc20?: string;
   gasLimit: string;
   gasPrice: string;
-  network: string;
+  gateway?: string;
   keyRaw: string;
+  network: string;
+  onRevertGasLimit: string;
+  receiver: string;
+  revertAddress: string;
+  revertMessage: string;
   rpc: string;
 }) => {
   try {
@@ -29,9 +28,11 @@ const main = async (options: {
     let signer;
     try {
       signer = new ethers.Wallet(options.keyRaw, provider);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       throw new Error(
-        `Failed to create signer from private key: ${error.message}`
+        `Failed to create signer from private key: ${errorMessage}`
       );
     }
     const client = new ZetaChainClient({ network: networkType, signer });
@@ -40,9 +41,9 @@ const main = async (options: {
       erc20: options.erc20,
       receiver: options.receiver,
       revertOptions: {
-        revertAddress: options.revertAddress,
         callOnRevert: options.callOnRevert,
         onRevertGasLimit: options.onRevertGasLimit,
+        revertAddress: options.revertAddress,
         revertMessage: options.revertMessage,
       },
       txOptions: {
