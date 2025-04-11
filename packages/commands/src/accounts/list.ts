@@ -9,7 +9,15 @@ interface AccountInfo {
   Type: string;
 }
 
-async function main() {
+interface EVMAccountData {
+  address: string;
+}
+
+interface SolanaAccountData {
+  publicKey: string;
+}
+
+const main = (): void => {
   const baseDir = path.join(os.homedir(), ".zetachain", "keys");
   const accounts: AccountInfo[] = [];
 
@@ -21,7 +29,9 @@ async function main() {
       .filter((file) => file.endsWith(".json"));
     for (const file of evmFiles) {
       const keyPath = path.join(evmDir, file);
-      const keyData = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
+      const keyData = JSON.parse(
+        fs.readFileSync(keyPath, "utf-8")
+      ) as EVMAccountData;
       accounts.push({
         Address: keyData.address,
         Name: file.replace(".json", ""),
@@ -38,7 +48,9 @@ async function main() {
       .filter((file) => file.endsWith(".json"));
     for (const file of solanaFiles) {
       const keyPath = path.join(solanaDir, file);
-      const keyData = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
+      const keyData = JSON.parse(
+        fs.readFileSync(keyPath, "utf-8")
+      ) as SolanaAccountData;
       accounts.push({
         Address: keyData.publicKey,
         Name: file.replace(".json", ""),
@@ -54,7 +66,7 @@ async function main() {
 
   console.log("\nAvailable Accounts:");
   console.table(accounts);
-}
+};
 
 export const listAccountsCommand = new Command("list")
   .description("List all available accounts")

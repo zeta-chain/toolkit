@@ -10,24 +10,24 @@ interface AccountData {
   [key: string]: string | undefined;
 }
 
-async function createEVMAccount(): Promise<AccountData> {
+const createEVMAccount = (): AccountData => {
   const wallet = ethers.Wallet.createRandom();
   return {
     address: wallet.address,
     mnemonic: wallet.mnemonic?.phrase,
     privateKey: wallet.privateKey,
   };
-}
+};
 
-async function createSolanaAccount(): Promise<AccountData> {
+const createSolanaAccount = (): AccountData => {
   const keypair = Keypair.generate();
   return {
     publicKey: keypair.publicKey.toBase58(),
     secretKey: Buffer.from(keypair.secretKey).toString("hex"),
   };
-}
+};
 
-async function main(options: { name: string; type: string }) {
+const main = async (options: { name: string; type: string }) => {
   const { type, name } = options;
 
   if (type !== "evm" && type !== "solana") {
@@ -50,8 +50,7 @@ async function main(options: { name: string; type: string }) {
     }
   }
 
-  const keyData =
-    type === "evm" ? await createEVMAccount() : await createSolanaAccount();
+  const keyData = type === "evm" ? createEVMAccount() : createSolanaAccount();
 
   fs.writeFileSync(keyPath, JSON.stringify(keyData, null, 2));
   console.log(`Account created successfully!`);
@@ -61,7 +60,7 @@ async function main(options: { name: string; type: string }) {
   } else {
     console.log(`Public Key: ${keyData.publicKey}`);
   }
-}
+};
 
 export const createAccountsCommand = new Command("create")
   .description("Create a new account")
