@@ -1,5 +1,7 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
+import { networks } from "@zetachain/networks";
+import { type NetworksSchema } from "@zetachain/networks/dist/src/types";
 
 import { ZetaChainClient } from "../../client/src/client";
 import { evmDeposit } from "../../client/src/evmDeposit";
@@ -16,14 +18,24 @@ const main = async (options: {
   gasLimit: string;
   gasPrice: string;
   network: string;
-  privateKey: string;
+  keyRaw: string;
   rpc: string;
 }) => {
   try {
-    const provider = new ethers.JsonRpcProvider(options.rpc);
-    const signer = new ethers.Wallet(options.privateKey, provider);
-    const client = new ZetaChainClient({ network: options.network, signer });
-    const tx = await evmDeposit.call(client, {
+    const chainId = parseInt(options.network);
+    const networkType = getNetworkType(chainId);
+    const rpcUrl = options.rpc || getRpcUrl(chainId);
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    let signer;
+    try {
+      signer = new ethers.Wallet(options.keyRaw, provider);
+    } catch (error: any) {
+      throw new Error(
+        `Failed to create signer from private key: ${error.message}`
+      );
+    }
+    const client = new ZetaChainClient({ network: networkType, signer });
+    const tx = await client.evmDeposit({
       amount: options.amount,
       erc20: options.erc20,
       receiver: options.receiver,
@@ -45,16 +57,48 @@ const main = async (options: {
   }
 };
 
+const getNetworkType = (chainId: number): "testnet" | "mainnet" => {
+  const typedNetworks = networks as NetworksSchema;
+  const network = Object.values(typedNetworks).find(
+    (n) => n.chain_id === chainId
+  );
+
+  if (!network) {
+    throw new Error(`Network with chain ID ${chainId} not found`);
+  }
+
+  return network.type;
+};
+
+const getRpcUrl = (chainId: number): string => {
+  const typedNetworks = networks as NetworksSchema;
+  const network = Object.values(typedNetworks).find(
+    (n) => n.chain_id === chainId
+  );
+
+  if (!network) {
+    throw new Error(`Network with chain ID ${chainId} not found`);
+  }
+
+  if (!network.api) {
+    throw new Error(`Network with chain ID ${chainId} has no API endpoints`);
+  }
+
+  const evmRpc = network.api.find((api) => api.type === "evm");
+  if (!evmRpc) {
+    throw new Error(`Network with chain ID ${chainId} has no EVM RPC endpoint`);
+  }
+
+  return evmRpc.url;
+};
+
 export const evmDepositCommand = new Command("evm-deposit")
   .description("Deposit tokens to ZetaChain from an EVM-compatible chain")
-  .requiredOption("--amount<amount>", "Amount of tokens to deposit")
-  .requiredOption(
-    "--network <network>",
-    "Network to use (e.g., testnet, mainnet)"
-  )
+  .requiredOption("--amount <amount>", "Amount of tokens to deposit")
+  .requiredOption("--network <network>", "Chain ID of the network")
   .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
-  .requiredOption("--private-key <key>", "Private key for signing transactions")
-  .requiredOption("--rpc <url>", "RPC URL for the source chain")
+  .requiredOption("--key-raw <key>", "Private key for signing transactions")
+  .option("--rpc <url>", "RPC URL for the source chain")
   .option(
     "--erc20 <address>",
     "ERC20 token address (optional for native token deposits)"
@@ -62,15 +106,20 @@ export const evmDepositCommand = new Command("evm-deposit")
   .option("--gateway <address>", "EVM Gateway address")
   .option(
     "--revert-address <address>",
-    "Address to revert to in case of failure"
+    "Address to revert to in case of failure",
+    ethers.ZeroAddress
   )
   .option(
     "--call-on-revert",
     "Whether to call revert address on failure",
     false
   )
-  .option("--on-revert-gas-limit <limit>", "Gas limit for revert operation")
-  .option("--revert-message <message>", "Message to include in revert")
+  .option(
+    "--on-revert-gas-limit <limit>",
+    "Gas limit for revert operation",
+    "0"
+  )
+  .option("--revert-message <message>", "Message to include in revert", "")
   .option("--gas-limit <limit>", "Gas limit for the transaction")
   .option("--gas-price <price>", "Gas price for the transaction")
   .action(main);
