@@ -1,23 +1,24 @@
-import { Command } from "commander";
-import { bitcoinEncode, trimOx } from "../../../client/src/bitcoinEncode";
 import { Buffer } from "buffer";
+import { Command } from "commander";
 import { ethers } from "ethers";
 
+import { bitcoinEncode, trimOx } from "../../../client/src/bitcoinEncode";
+
 interface EncodeOptions {
+  format?: string;
+  opCode?: string;
   receiver: string;
+  revertAddress: string;
   types: string;
   values: string[];
-  revertAddress: string;
-  opCode?: string;
-  format?: string;
 }
 
-const main = async (options: EncodeOptions) => {
+const main = (options: EncodeOptions) => {
   let types: string[];
-  let values: any[];
+  let values: unknown[];
   try {
-    types = JSON.parse(options.types);
-    values = JSON.parse(options.values[0]);
+    types = JSON.parse(options.types) as string[];
+    values = JSON.parse(options.values[0]) as unknown[];
     if (!Array.isArray(types)) {
       throw new Error("Types must be an array");
     }
