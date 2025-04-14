@@ -15,7 +15,7 @@ describe("Bitcoin Encode Functions", () => {
 
   // Mock payload for testing
   const mockOperation = {
-    OpenVault: 1,
+    test: 1,
   };
 
   describe("bitcoinEncode function", () => {
@@ -81,7 +81,7 @@ describe("Bitcoin Encode Functions", () => {
 
       const message = new ethers.AbiCoder().encode(
         ["uint8", "bytes"],
-        [mockOperation.OpenVault, params]
+        [mockOperation.test, params]
       );
       const payload = Buffer.from(trimOx(message), "hex");
       const result = bitcoinEncode(receiverAddress, payload, btcRevertAddress);
