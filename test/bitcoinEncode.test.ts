@@ -1,9 +1,10 @@
 import { ethers } from "ethers";
+
 import {
-  bitcoinEncode,
-  trimOx,
   Address,
+  bitcoinEncode,
   BtcAddress,
+  trimOx,
 } from "../packages/client/src/bitcoinEncode";
 
 describe("Bitcoin Encode Functions", () => {
