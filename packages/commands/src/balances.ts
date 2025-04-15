@@ -17,20 +17,24 @@ dotenv.config();
  * @todo (Hernan): We need to change this to the account command once we have it.
  */
 const WALLET_ERROR = `
-❌ Error: Wallet address not found.
+❌ Error: Wallet addresses not found.
 
-To resolve this issue, please follow these steps:
+To resolve this issue, please choose one of these options:
 
-* Set your EVM_PRIVATE_KEY, SOLANA_PRIVATE_KEY, or BTC_PRIVATE_KEY environment variables. 
-You can write it to a .env file in the root of your project like this:
+1. Provide wallet addresses directly with command arguments:
+   --evm <address>
+   --solana <address>
+   --bitcoin <address>
 
-  EVM_PRIVATE_KEY=123... (without the 0x prefix)
-  BTC_PRIVATE_KEY=123... (without the 0x prefix)
-  SOLANA_PRIVATE_KEY=123.. (base58 encoded or json array)
-  
-  Or you can generate a new private key by running:
+2. Use existing wallets by setting their private keys in environment variables:
+   Add these to a .env file in the root of your project:
 
-  npx hardhat account --save
+   EVM_PRIVATE_KEY=123... (without the 0x prefix)
+   BTC_PRIVATE_KEY=123... (without the 0x prefix)
+   SOLANA_PRIVATE_KEY=123.. (base58 encoded or json array)
+   
+3. Generate new wallets automatically by running:
+   npx hardhat account --save
 `;
 
 interface BalancesOptions {
