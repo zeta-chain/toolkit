@@ -18,10 +18,8 @@ describe("Bitcoin Encode Functions", () => {
 
   describe("bitcoinEncode function", () => {
     it("should encode arbitrary bytes data", () => {
-      // Simple payload
       const payload = Buffer.from("some_payload_bytes");
 
-      // Call the function
       const result = bitcoinEncode(receiverAddress, payload, btcRevertAddress);
 
       expect(result).toMatch(
