@@ -1,5 +1,6 @@
 import { Command } from "commander";
 
+import { bitcoinCommand } from "./bitcoin";
 import { solanaEncodeCommand } from "./solanaEncode";
 
 export const toolkitCommand = new Command("toolkit")
@@ -7,3 +8,4 @@ export const toolkitCommand = new Command("toolkit")
   .helpCommand(false);
 
 toolkitCommand.addCommand(solanaEncodeCommand);
+toolkitCommand.addCommand(bitcoinCommand);
