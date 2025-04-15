@@ -8,18 +8,18 @@ export type BtcAddress = string;
 const MemoIdentifier = 0x5a;
 
 // Enums
-const OpCode = Object.freeze({
-  Call: 0b0010,
-  Deposit: 0b0000,
-  DepositAndCall: 0b0001,
-  Invalid: 0b0011,
-});
+enum OpCode {
+  Call = 0b0010,
+  Deposit = 0b0000,
+  DepositAndCall = 0b0001,
+  Invalid = 0b0011,
+}
 
-const EncodingFormat = Object.freeze({
-  EncodingFmtABI: 0b0000,
-  EncodingFmtCompactLong: 0b0010,
-  EncodingFmtCompactShort: 0b0001,
-});
+enum EncodingFormat {
+  EncodingFmtABI = 0b0000,
+  EncodingFmtCompactLong = 0b0010,
+  EncodingFmtCompactShort = 0b0001,
+}
 
 // Header Class
 class Header {
