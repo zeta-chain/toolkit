@@ -12,7 +12,7 @@ import * as path from "path";
 
 import { numberArraySchema } from "../../../types/shared.schema";
 import { handleError, parseJson } from "../../../utils";
-import { bitcoinAddress } from "./bitcoinAddress";
+import { generateBitcoinAddress } from "../../../utils/generateBitcoinAddress";
 
 export const hexToBech32Address = (
   hexAddress: string,
@@ -152,7 +152,7 @@ export const main = async (
 
   console.log(`
   😃 EVM address: ${address}
-    😃 Bitcoin address: ${bitcoinAddress(pk, "testnet")}
+    😃 Bitcoin address: ${generateBitcoinAddress(pk, "testnet")}
     😃 Bech32 address: ${hexToBech32Address(address, "zeta")}`);
 
   if (solanaWallet) {
