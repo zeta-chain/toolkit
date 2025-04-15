@@ -8,12 +8,10 @@ import {
 } from "../packages/client/src/bitcoinEncode";
 
 describe("Bitcoin Encode Functions", () => {
-  // Test data
   const receiverAddress: Address = "0xEA9808f0Ac504d1F521B5BbdfC33e6f1953757a7";
   const btcRevertAddress: BtcAddress =
     "tb1qj3jkxdlpmlgaj6n28u7gfpykcv08fcuyllhpyd";
 
-  // Mock payload for testing
   const mockOperation = {
     test: 1,
   };
