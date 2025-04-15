@@ -3,12 +3,12 @@ import { Command } from "commander";
 import * as dotenv from "dotenv";
 import ora from "ora";
 
-import { TokenBalance } from "../../../types/balances.types";
 import {
   resolveBitcoinAddress,
   resolveEvmAddress,
   resolveSolanaAddress,
 } from "../../../utils/addressResolver";
+import { formatAddresses, formatBalances } from "../../../utils/formatting";
 import { ZetaChainClient } from "../../client/src/client";
 
 dotenv.config();
@@ -37,57 +37,6 @@ interface BalancesOptions {
   mainnet?: boolean;
   solana?: string;
 }
-
-interface FormattedBalance {
-  Amount: string;
-  Chain: string;
-  Token: string;
-  Type: string;
-}
-
-const formatAddresses = (options: {
-  bitcoin?: string;
-  evm?: string;
-  solana?: string;
-}): string => {
-  const parts = [];
-
-  if (options.evm) {
-    parts.push(`EVM: ${chalk.cyan(options.evm)}`);
-  }
-
-  if (options.bitcoin) {
-    parts.push(`Bitcoin: ${chalk.yellow(options.bitcoin)}`);
-  }
-
-  if (options.solana) {
-    parts.push(`Solana: ${chalk.magenta(options.solana)}`);
-  }
-
-  return parts.join("\n");
-};
-
-const formatBalances = (balances: TokenBalance[]): FormattedBalance[] => {
-  const sortedBalances = [...balances].sort((a, b) => {
-    if (!a.chain_name && !b.chain_name) return 0;
-    if (!a.chain_name) return 1;
-    if (!b.chain_name) return -1;
-
-    // First sort by chain name
-    const chainCompare = a.chain_name.localeCompare(b.chain_name);
-    if (chainCompare !== 0) return chainCompare;
-
-    // Then by balance (descending)
-    return parseFloat(b.balance) - parseFloat(a.balance);
-  });
-
-  return sortedBalances.map((balance) => ({
-    Amount: parseFloat(balance.balance).toFixed(6),
-    Chain: balance.chain_name || "Unknown",
-    Token: balance.symbol,
-    Type: balance.coin_type,
-  }));
-};
 
 const main = async (options: BalancesOptions) => {
   const spinner = ora("Connecting to network...").start();
