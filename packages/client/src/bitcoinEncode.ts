@@ -23,10 +23,10 @@ export enum EncodingFormat {
 
 // Header Class
 class Header {
-  encodingFmt: number;
-  opCode: number;
+  encodingFmt: EncodingFormat;
+  opCode: OpCode;
 
-  constructor(encodingFmt: number, opCode: number) {
+  constructor(encodingFmt: EncodingFormat, opCode: OpCode) {
     this.encodingFmt = encodingFmt;
     this.opCode = opCode;
   }
@@ -58,8 +58,8 @@ export const bitcoinEncode = (
   receiver: Address,
   payload: Buffer,
   revertAddress: BtcAddress,
-  opCode: number = OpCode.DepositAndCall,
-  encodingFormat: number = EncodingFormat.EncodingFmtABI
+  opCode: OpCode = OpCode.DepositAndCall,
+  encodingFormat: EncodingFormat = EncodingFormat.EncodingFmtABI
 ): string => {
   // Create memo header
   const header = new Header(encodingFormat, opCode);
@@ -113,7 +113,7 @@ const encodeFieldsABI = (fields: FieldsV0): Uint8Array => {
 
 // Helper: Compact Encoding
 const encodeFieldsCompact = (
-  compactFmt: number,
+  compactFmt: EncodingFormat,
   fields: FieldsV0
 ): Uint8Array => {
   const encodedReceiver = Buffer.from(hexStringToBytes(fields.receiver));
@@ -130,7 +130,7 @@ const encodeFieldsCompact = (
 
 // Helper: Compact Data Encoding
 const encodeDataCompact = (
-  compactFmt: number,
+  compactFmt: EncodingFormat,
   data: Buffer | Uint8Array
 ): Buffer => {
   const dataLen = data.length;

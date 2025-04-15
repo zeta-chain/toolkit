@@ -4,9 +4,9 @@ import { ethers } from "ethers";
 
 import {
   bitcoinEncode,
-  trimOx,
-  OpCode,
   EncodingFormat,
+  OpCode,
+  trimOx,
 } from "../../../client/src/bitcoinEncode";
 
 interface EncodeOptions {
