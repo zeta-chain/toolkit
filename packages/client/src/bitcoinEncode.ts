@@ -8,14 +8,14 @@ export type BtcAddress = string;
 const MemoIdentifier = 0x5a;
 
 // Enums
-enum OpCode {
+export enum OpCode {
   Call = 0b0010,
   Deposit = 0b0000,
   DepositAndCall = 0b0001,
   Invalid = 0b0011,
 }
 
-enum EncodingFormat {
+export enum EncodingFormat {
   EncodingFmtABI = 0b0000,
   EncodingFmtCompactLong = 0b0010,
   EncodingFmtCompactShort = 0b0001,
