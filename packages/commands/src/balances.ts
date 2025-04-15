@@ -13,6 +13,9 @@ import { ZetaChainClient } from "../../client/src/client";
 
 dotenv.config();
 
+/**
+ * @todo (Hernan): We need to change this to the account command once we have it.
+ */
 const WALLET_ERROR = `
 ❌ Error: Wallet address not found.
 
