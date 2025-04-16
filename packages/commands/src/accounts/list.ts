@@ -2,12 +2,18 @@ import { Command } from "commander";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { z } from "zod";
 
 import {
   AccountInfo,
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
+import { validateTaskArgs } from "../../../../utils";
+
+const listAccountsOptionsSchema = z.object({
+  json: z.boolean().default(false),
+});
 
 const listChainAccounts = (
   baseDir: string,
@@ -38,8 +44,10 @@ const listChainAccounts = (
   }
 };
 
-const main = (options: { json: boolean }): void => {
-  const { json } = options;
+type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
+
+const main = (options: ListAccountsOptions): void => {
+  const { json } = validateTaskArgs(options, listAccountsOptionsSchema);
   const baseDir = path.join(os.homedir(), ".zetachain", "keys");
   const accounts: AccountInfo[] = [];
 
