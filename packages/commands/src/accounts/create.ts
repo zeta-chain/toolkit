@@ -12,7 +12,11 @@ import { validateTaskArgs } from "../../../../utils";
 
 const createAccountOptionsSchema = z.object({
   name: z.string().min(1, "Account name is required"),
-  type: z.enum(["evm", "solana"]).optional(),
+  type: z
+    .enum(["evm", "solana"], {
+      errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
+    })
+    .optional(),
 });
 
 type CreateAccountOptions = z.infer<typeof createAccountOptionsSchema>;

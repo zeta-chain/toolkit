@@ -2,12 +2,24 @@ import { Command } from "commander";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { z } from "zod";
 
 import {
   AccountDetails,
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
+import { validateTaskArgs } from "../../../../utils";
+
+const showAccountOptionsSchema = z.object({
+  json: z.boolean().default(false),
+  name: z.string().min(1, "Account name is required"),
+  type: z.enum(["evm", "solana"], {
+    errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
+  }),
+});
+
+type ShowAccountOptions = z.infer<typeof showAccountOptionsSchema>;
 
 const getEVMAccountDetails = (
   keyData: EVMAccountData,
@@ -36,13 +48,11 @@ const getSolanaAccountDetails = (
   };
 };
 
-const main = (options: { json: boolean; name: string; type: string }): void => {
-  const { type, name, json } = options;
-
-  if (type !== "evm" && type !== "solana") {
-    console.error("Invalid account type. Must be either 'evm' or 'solana'");
-    process.exit(1);
-  }
+const main = (options: ShowAccountOptions): void => {
+  const { type, name, json } = validateTaskArgs(
+    options,
+    showAccountOptionsSchema
+  );
 
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
   const keyPath = path.join(baseDir, `${name}.json`);
