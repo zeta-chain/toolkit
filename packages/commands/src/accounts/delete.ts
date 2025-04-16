@@ -3,14 +3,21 @@ import { Command } from "commander";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { z } from "zod";
 
-const main = async (options: { name: string; type: string }) => {
-  const { type, name } = options;
+import { validateTaskArgs } from "../../../../utils";
 
-  if (type !== "evm" && type !== "solana") {
-    console.error("Invalid account type. Must be either 'evm' or 'solana'");
-    return;
-  }
+const deleteAccountOptionsSchema = z.object({
+  name: z.string().min(1, "Account name is required"),
+  type: z.enum(["evm", "solana"], {
+    errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
+  }),
+});
+
+type DeleteAccountOptions = z.infer<typeof deleteAccountOptionsSchema>;
+
+const main = async (options: DeleteAccountOptions) => {
+  const { type, name } = validateTaskArgs(options, deleteAccountOptionsSchema);
 
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
   const keyPath = path.join(baseDir, `${name}.json`);
