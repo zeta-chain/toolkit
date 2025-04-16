@@ -19,6 +19,9 @@ const formatZodError = (error: z.ZodError): string => {
  * @template U - The type of the Zod schema input
  * @param args - The unvalidated task arguments
  * @param schema - The Zod schema to validate against
+ * @param options - Optional configuration
+ * @param options.exitOnError - Whether to exit the process on validation failure (default: false)
+ * @param options.shouldLogError - Whether to log the error message to console (default: true)
  * @returns The validated and parsed arguments
  * @throws Error if validation fails
  */
