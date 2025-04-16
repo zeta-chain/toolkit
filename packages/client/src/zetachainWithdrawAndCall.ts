@@ -63,10 +63,7 @@ export const zetachainWithdrawAndCall = async function (
   ) as GatewayContract;
 
   const revertOptions = {
-    abortAddress: "0x0000000000000000000000000000000000000000",
-    callOnRevert: args.revertOptions.callOnRevert,
-    onRevertGasLimit: args.revertOptions.onRevertGasLimit,
-    revertAddress: args.revertOptions.revertAddress,
+    ...args.revertOptions,
     revertMessage: toHexString(args.revertOptions.revertMessage),
   };
 

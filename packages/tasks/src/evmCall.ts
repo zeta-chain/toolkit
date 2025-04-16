@@ -13,6 +13,7 @@ import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
 const evmCallArgsSchema = z.object({
+  abortAddress: evmAddressSchema,
   callOnRevert: z.boolean().optional(),
   gasLimit: bigNumberStringSchema,
   gasPrice: bigNumberStringSchema,
@@ -46,6 +47,7 @@ export const evmCall = async (
       gatewayEvm: parsedArgs.gatewayEvm,
       receiver: parsedArgs.receiver,
       revertOptions: {
+        abortAddress: parsedArgs.abortAddress,
         callOnRevert: parsedArgs.callOnRevert || false,
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
@@ -73,6 +75,11 @@ task("evm-call", "Call a universal app", evmCall)
   .addOptionalParam(
     "revertAddress",
     "Revert address",
+    "0x0000000000000000000000000000000000000000"
+  )
+  .addOptionalParam(
+    "abortAddress",
+    "Abort address",
     "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(
