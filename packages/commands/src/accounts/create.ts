@@ -5,8 +5,17 @@ import { ethers } from "ethers";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { z } from "zod";
 
 import { AccountData } from "../../../../types/accounts.types";
+import { validateTaskArgs } from "../../../../utils";
+
+const createAccountOptionsSchema = z.object({
+  name: z.string().min(1, "Account name is required"),
+  type: z.enum(["evm", "solana"]).optional(),
+});
+
+type CreateAccountOptions = z.infer<typeof createAccountOptionsSchema>;
 
 const createEVMAccount = (): AccountData => {
   const wallet = ethers.Wallet.createRandom();
@@ -56,13 +65,8 @@ const createAccountForType = async (
   }
 };
 
-const main = async (options: { name: string; type?: string }) => {
-  const { type, name } = options;
-
-  if (type && type !== "evm" && type !== "solana") {
-    console.error("Invalid account type. Must be either 'evm' or 'solana'");
-    return;
-  }
+const main = async (options: CreateAccountOptions) => {
+  const { type, name } = validateTaskArgs(options, createAccountOptionsSchema);
 
   if (type) {
     await createAccountForType(type, name);
