@@ -51,7 +51,8 @@ const getSolanaAccountDetails = (
 const main = (options: ShowAccountOptions): void => {
   const { type, name, json } = validateTaskArgs(
     options,
-    showAccountOptionsSchema
+    showAccountOptionsSchema,
+    { exitOnError: true }
   );
 
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);

@@ -17,7 +17,9 @@ const deleteAccountOptionsSchema = z.object({
 type DeleteAccountOptions = z.infer<typeof deleteAccountOptionsSchema>;
 
 const main = async (options: DeleteAccountOptions) => {
-  const { type, name } = validateTaskArgs(options, deleteAccountOptionsSchema);
+  const { type, name } = validateTaskArgs(options, deleteAccountOptionsSchema, {
+    exitOnError: true,
+  });
 
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
   const keyPath = path.join(baseDir, `${name}.json`);

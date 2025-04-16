@@ -47,7 +47,9 @@ const listChainAccounts = (
 type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
 
 const main = (options: ListAccountsOptions): void => {
-  const { json } = validateTaskArgs(options, listAccountsOptionsSchema);
+  const { json } = validateTaskArgs(options, listAccountsOptionsSchema, {
+    exitOnError: true,
+  });
   const baseDir = path.join(os.homedir(), ".zetachain", "keys");
   const accounts: AccountInfo[] = [];
 

@@ -70,7 +70,9 @@ const createAccountForType = async (
 };
 
 const main = async (options: CreateAccountOptions) => {
-  const { type, name } = validateTaskArgs(options, createAccountOptionsSchema);
+  const { type, name } = validateTaskArgs(options, createAccountOptionsSchema, {
+    exitOnError: true,
+  });
 
   if (type) {
     await createAccountForType(type, name);

@@ -31,7 +31,12 @@ describe("validateTaskArgs", () => {
       name: "Test User", // Type error: string instead of number
     };
 
-    expect(() => validateTaskArgs(args, schema)).to.throw(/Invalid arguments:/);
+    expect(() =>
+      validateTaskArgs(args, schema, {
+        exitOnError: false,
+        shouldLogError: false,
+      })
+    ).to.throw("age: Expected number, received string");
   });
 
   it("should handle optional fields correctly", () => {

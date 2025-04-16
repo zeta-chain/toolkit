@@ -24,14 +24,32 @@ const formatZodError = (error: z.ZodError): string => {
  */
 export const validateTaskArgs = <T, U = T>(
   args: unknown,
-  schema: z.ZodType<T, z.ZodTypeDef, U>
+  schema: z.ZodType<T, z.ZodTypeDef, U>,
+  options?: {
+    exitOnError?: boolean;
+    shouldLogError?: boolean;
+  }
 ): T => {
+  // Merge with defaults properly - this ensures partial options don't lose default values
+  const mergedOptions = {
+    exitOnError: false,
+    shouldLogError: true,
+    ...options,
+  };
+
   const result = schema.safeParse(args);
 
   if (!result.success) {
     const errorMessage = formatZodError(result.error);
-    console.error(`\x1b[31m${errorMessage}\x1b[0m`);
-    process.exit(1);
+    if (mergedOptions.shouldLogError) {
+      console.error(`\x1b[31m${errorMessage}\x1b[0m`);
+    }
+
+    if (mergedOptions.exitOnError) {
+      process.exit(1);
+    } else {
+      throw new Error(errorMessage);
+    }
   }
 
   return result.data;
