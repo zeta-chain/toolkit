@@ -1,6 +1,18 @@
 import { z } from "zod";
 
 /**
+ * Formats Zod validation errors into a user-friendly message
+ */
+const formatZodError = (error: z.ZodError): string => {
+  const errors = error.errors.map((err) => {
+    const path = err.path.join(".");
+    return path ? `${path}: ${err.message}` : err.message;
+  });
+
+  return errors.join("\n");
+};
+
+/**
  * Validates task arguments against a Zod schema
  *
  * @template T - The type of the Zod schema output
@@ -17,7 +29,9 @@ export const validateTaskArgs = <T, U = T>(
   const result = schema.safeParse(args);
 
   if (!result.success) {
-    throw new Error(`Invalid arguments: ${result.error.message}`);
+    const errorMessage = formatZodError(result.error);
+    console.error(`\x1b[31m${errorMessage}\x1b[0m`);
+    process.exit(1);
   }
 
   return result.data;
