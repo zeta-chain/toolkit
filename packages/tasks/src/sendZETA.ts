@@ -4,7 +4,7 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { z } from "zod";
 
-import { validateTaskArgs } from "../../../utils";
+import { validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 const sendZetaTaskArgsSchema = z.object({
   amount: z.string().refine((val) => !isNaN(Number(val)), {
@@ -28,7 +28,7 @@ const sendZetaTaskArgsSchema = z.object({
 type SendZetaTaskArgs = z.infer<typeof sendZetaTaskArgsSchema>;
 
 const main = async (args: SendZetaTaskArgs, hre: HardhatRuntimeEnvironment) => {
-  const parsedArgs = validateTaskArgs(args, sendZetaTaskArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, sendZetaTaskArgsSchema);
 
   const [signer] = await hre.ethers.getSigners();
   if (!signer) {

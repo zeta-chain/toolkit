@@ -10,7 +10,7 @@ import { z } from "zod";
  * @returns The validated and parsed arguments
  * @throws Error if validation fails
  */
-export const validateTaskArgs = <T, U = T>(
+export const validateAndParseSchema = <T, U = T>(
   args: unknown,
   schema: z.ZodType<T, z.ZodTypeDef, U>
 ): T => {
