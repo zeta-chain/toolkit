@@ -2,6 +2,7 @@ import { Command, Option } from "commander";
 import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json";
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import { ethers } from "ethers";
+import { DEFAULT_RPC, DEFAULT_FACTORY, DEFAULT_FEE } from "./constants";
 
 async function main(options: {
   rpc: string;
@@ -13,10 +14,6 @@ async function main(options: {
   try {
     // Initialize provider
     const provider = new ethers.JsonRpcProvider(options.rpc);
-
-    console.log("Fetching Uniswap V3 pool information...");
-    console.log("Network:", (await provider.getNetwork()).name);
-
     let poolAddress: string;
     if (options.pool) {
       poolAddress = options.pool;
@@ -83,11 +80,7 @@ async function main(options: {
 
 export const showCommand = new Command("show")
   .description("Show information about a Uniswap V3 pool")
-  .option(
-    "--rpc <rpc>",
-    "RPC URL for the network",
-    "https://zetachain-athens.g.allthatnode.com/archive/evm"
-  )
+  .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
   .addOption(
     new Option("--pool <pool>", "Pool contract address").conflicts("tokens")
   )
@@ -100,7 +93,11 @@ export const showCommand = new Command("show")
   .option(
     "--factory <factory>",
     "Uniswap V3 Factory contract address",
-    "0x7E032E349853178C233a2560d9Ea434ac82228e0"
+    DEFAULT_FACTORY
   )
-  .option("--fee <fee>", "Fee tier for the pool (3000 = 0.3%)", "3000")
+  .option(
+    "--fee <fee>",
+    "Fee tier for the pool (3000 = 0.3%)",
+    DEFAULT_FEE.toString()
+  )
   .action(main);

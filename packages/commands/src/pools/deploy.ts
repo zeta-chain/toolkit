@@ -4,6 +4,7 @@ import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Po
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import * as SwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
 import { ethers } from "ethers";
+import { DEFAULT_RPC, DEFAULT_WZETA } from "./constants";
 
 const deployOpts = {
   gasLimit: 8000000,
@@ -176,14 +177,6 @@ async function main(options: {
 export const deployCommand = new Command("deploy")
   .description("Deploy Uniswap V3 contracts")
   .requiredOption("--private-key <privateKey>", "Private key for deployment")
-  .option(
-    "--rpc <rpc>",
-    "RPC URL for the network",
-    "https://zetachain-athens.g.allthatnode.com/archive/evm"
-  )
-  .option(
-    "--wzeta <wzeta>",
-    "WZETA token address",
-    "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf"
-  )
+  .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
+  .option("--wzeta <wzeta>", "WZETA token address", DEFAULT_WZETA)
   .action(main);

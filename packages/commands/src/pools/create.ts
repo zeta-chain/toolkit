@@ -2,6 +2,7 @@ import { Command } from "commander";
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json";
 import { ethers } from "ethers";
+import { DEFAULT_RPC, DEFAULT_FACTORY, DEFAULT_FEE } from "./constants";
 
 async function main(options: {
   privateKey: string;
@@ -21,7 +22,6 @@ async function main(options: {
 
     console.log("Creating Uniswap V3 pool...");
     console.log("Signer address:", await signer.getAddress());
-    console.log("Network:", (await provider.getNetwork()).name);
     console.log(
       "Balance:",
       ethers.formatEther(await provider.getBalance(await signer.getAddress())),
@@ -82,19 +82,19 @@ export const createCommand = new Command("create")
     "--private-key <privateKey>",
     "Private key for signing transactions"
   )
-  .option(
-    "--rpc <rpc>",
-    "RPC URL for the network",
-    "https://zetachain-athens.g.allthatnode.com/archive/evm"
-  )
+  .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
   .option(
     "--factory <factory>",
     "Uniswap V3 Factory contract address",
-    "0x7E032E349853178C233a2560d9Ea434ac82228e0"
+    DEFAULT_FACTORY
   )
   .requiredOption(
     "--tokens <tokens...>",
     "Token addresses for the pool (exactly 2 required)"
   )
-  .option("--fee <fee>", "Fee tier for the pool (3000 = 0.3%)", "3000")
+  .option(
+    "--fee <fee>",
+    "Fee tier for the pool (3000 = 0.3%)",
+    DEFAULT_FEE.toString()
+  )
   .action(main);
