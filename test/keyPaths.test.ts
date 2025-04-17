@@ -7,6 +7,7 @@ import {
   jest,
 } from "@jest/globals";
 import os from "os";
+import path from "path";
 
 import {
   getAccountKeyPath,
@@ -34,7 +35,7 @@ describe("keyPaths", () => {
 
   describe("getKeysBaseDir", () => {
     it("should return the correct base directory path", () => {
-      const expected = `${mockHomedir}/.zetachain/keys`;
+      const expected = path.join(mockHomedir, ".zetachain", "keys");
       const result = getKeysBaseDir();
 
       expect(result).toBe(expected);
@@ -44,7 +45,7 @@ describe("keyPaths", () => {
 
   describe("getAccountTypeDir", () => {
     it("should return the correct directory for EVM account type", () => {
-      const expected = `${mockHomedir}/.zetachain/keys/evm`;
+      const expected = path.join(mockHomedir, ".zetachain", "keys", "evm");
       const result = getAccountTypeDir("evm");
 
       expect(result).toBe(expected);
@@ -52,7 +53,7 @@ describe("keyPaths", () => {
     });
 
     it("should return the correct directory for Solana account type", () => {
-      const expected = `${mockHomedir}/.zetachain/keys/solana`;
+      const expected = path.join(mockHomedir, ".zetachain", "keys", "solana");
       const result = getAccountTypeDir("solana");
 
       expect(result).toBe(expected);
@@ -63,7 +64,13 @@ describe("keyPaths", () => {
   describe("getAccountKeyPath", () => {
     it("should return the correct file path for an EVM account", () => {
       const accountName = "myaccount";
-      const expected = `${mockHomedir}/.zetachain/keys/evm/${accountName}.json`;
+      const expected = path.join(
+        mockHomedir,
+        ".zetachain",
+        "keys",
+        "evm",
+        `${accountName}.json`
+      );
       const result = getAccountKeyPath("evm", accountName);
 
       expect(result).toBe(expected);
@@ -72,7 +79,13 @@ describe("keyPaths", () => {
 
     it("should return the correct file path for a Solana account", () => {
       const accountName = "myaccount";
-      const expected = `${mockHomedir}/.zetachain/keys/solana/${accountName}.json`;
+      const expected = path.join(
+        mockHomedir,
+        ".zetachain",
+        "keys",
+        "solana",
+        `${accountName}.json`
+      );
       const result = getAccountKeyPath("solana", accountName);
 
       expect(result).toBe(expected);
