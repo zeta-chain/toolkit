@@ -20,3 +20,6 @@ changelog:
 
     - title: "🧹 Chores"
       labels: ["chore"]
+
+    - title: "📦 Dependencies"
+      labels: ["dependabot"]
