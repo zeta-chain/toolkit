@@ -1,12 +1,12 @@
 import confirm from "@inquirer/confirm";
 import { Command, Option } from "commander";
-import fs from "fs";
 import { z } from "zod";
 
 import {
   accountNameSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
+import { safeExists, safeUnlink } from "../../../../utils/fsUtils";
 import { handleError } from "../../../../utils/handleError";
 import { getAccountKeyPath } from "../../../../utils/keyPaths";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
@@ -25,7 +25,7 @@ const main = async (options: DeleteAccountOptions) => {
 
   const keyPath = getAccountKeyPath(type, name);
 
-  if (!fs.existsSync(keyPath)) {
+  if (!safeExists(keyPath)) {
     console.error(`Account ${name} of type ${type} not found at ${keyPath}`);
     return;
   }
@@ -41,7 +41,7 @@ const main = async (options: DeleteAccountOptions) => {
   }
 
   try {
-    fs.unlinkSync(keyPath);
+    safeUnlink(keyPath);
     console.log(`Account ${name} of type ${type} deleted successfully.`);
   } catch (error: unknown) {
     handleError({

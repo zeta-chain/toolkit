@@ -2,7 +2,6 @@ import confirm from "@inquirer/confirm";
 import { Keypair } from "@solana/web3.js";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
-import fs from "fs";
 import { z } from "zod";
 
 import {
@@ -10,6 +9,11 @@ import {
   accountNameSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
+import {
+  safeExists,
+  safeMkdir,
+  safeWriteFile,
+} from "../../../../utils/fsUtils";
 import { handleError } from "../../../../utils/handleError";
 import {
   getAccountKeyPath,
@@ -51,11 +55,11 @@ const createAccountForType = async (
 ): Promise<void> => {
   try {
     const baseDir = getAccountTypeDir(type);
-    fs.mkdirSync(baseDir, { recursive: true });
+    safeMkdir(baseDir);
 
     const keyPath = getAccountKeyPath(type, name);
 
-    if (fs.existsSync(keyPath)) {
+    if (safeExists(keyPath)) {
       const shouldOverwrite = await confirm({
         default: false,
         message: `File ${keyPath} already exists. Overwrite?`,
@@ -68,7 +72,7 @@ const createAccountForType = async (
 
     const keyData = type === "evm" ? createEVMAccount() : createSolanaAccount();
 
-    fs.writeFileSync(keyPath, JSON.stringify(keyData, null, 2));
+    safeWriteFile(keyPath, keyData);
     console.log(`${type.toUpperCase()} account created successfully!`);
     console.log(`Key saved to: ${keyPath}`);
     if (type === "evm") {

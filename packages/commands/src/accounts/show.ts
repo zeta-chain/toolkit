@@ -1,5 +1,4 @@
 import { Command, Option } from "commander";
-import fs from "fs";
 import { z } from "zod";
 
 import {
@@ -10,6 +9,7 @@ import {
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
+import { safeExists, safeReadFile } from "../../../../utils/fsUtils";
 import { getAccountKeyPath } from "../../../../utils/keyPaths";
 import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
@@ -56,15 +56,12 @@ const main = (options: ShowAccountOptions): void => {
 
   const keyPath = getAccountKeyPath(type, name);
 
-  if (!fs.existsSync(keyPath)) {
+  if (!safeExists(keyPath)) {
     console.error(`Account ${name} of type ${type} not found at ${keyPath}`);
     process.exit(1);
   }
 
-  const keyData = parseJson(
-    fs.readFileSync(keyPath, "utf-8"),
-    accountDataSchema
-  );
+  const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
   keyData.name = name; // Add name to keyData for display
 
   const accountDetails =

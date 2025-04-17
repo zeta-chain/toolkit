@@ -1,5 +1,4 @@
 import { Command } from "commander";
-import fs from "fs";
 import path from "path";
 import { z } from "zod";
 
@@ -10,6 +9,11 @@ import {
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
+import {
+  safeExists,
+  safeReadDir,
+  safeReadFile,
+} from "../../../../utils/fsUtils";
 import { getAccountTypeDir } from "../../../../utils/keyPaths";
 import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
@@ -23,18 +27,13 @@ const listChainAccounts = (
   accounts: AccountInfo[]
 ): void => {
   const chainDir = getAccountTypeDir(chainType);
-  if (!fs.existsSync(chainDir)) return;
+  if (!safeExists(chainDir)) return;
 
-  const files = fs
-    .readdirSync(chainDir)
-    .filter((file) => file.endsWith(".json"));
+  const files = safeReadDir(chainDir).filter((file) => file.endsWith(".json"));
 
   for (const file of files) {
     const keyPath = path.join(chainDir, file);
-    const keyData = parseJson(
-      fs.readFileSync(keyPath, "utf-8"),
-      accountDataSchema
-    );
+    const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
 
     accounts.push({
       address:
