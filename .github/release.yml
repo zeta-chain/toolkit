@@ -3,7 +3,7 @@ changelog:
     - title: "🚀 Features"
       labels: ["feat"]
 
-    - title: "🐛 Fixes"
+    - title: "🐞 Fixes"
       labels: ["fix"]
 
     - title: "📖 Documentation"
