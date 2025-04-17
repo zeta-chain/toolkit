@@ -58,7 +58,7 @@ const main = (options: ShowAccountOptions): void => {
 
   if (!safeExists(keyPath)) {
     console.error(`Account ${name} of type ${type} not found at ${keyPath}`);
-    process.exit(1);
+    return;
   }
 
   const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
