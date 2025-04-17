@@ -1,6 +1,5 @@
 import { Command } from "commander";
 import fs from "fs";
-import os from "os";
 import path from "path";
 import { z } from "zod";
 
@@ -11,6 +10,7 @@ import {
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
+import { getAccountTypeDir } from "../../../../utils/keyPaths";
 import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
@@ -19,11 +19,10 @@ const listAccountsOptionsSchema = z.object({
 });
 
 const listChainAccounts = (
-  baseDir: string,
   chainType: (typeof AvailableAccountTypes)[number],
   accounts: AccountInfo[]
 ): void => {
-  const chainDir = path.join(baseDir, chainType);
+  const chainDir = getAccountTypeDir(chainType);
   if (!fs.existsSync(chainDir)) return;
 
   const files = fs
@@ -52,11 +51,10 @@ type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
 
 const main = (options: ListAccountsOptions): void => {
   const { json } = options;
-  const baseDir = path.join(os.homedir(), ".zetachain", "keys");
   const accounts: AccountInfo[] = [];
 
-  listChainAccounts(baseDir, "evm", accounts);
-  listChainAccounts(baseDir, "solana", accounts);
+  listChainAccounts("evm", accounts);
+  listChainAccounts("solana", accounts);
 
   if (accounts.length === 0) {
     console.log("No accounts found.");

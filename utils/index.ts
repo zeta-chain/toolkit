@@ -4,6 +4,7 @@ export * from "./compareBigIntAndNumber";
 export * from "./formatting";
 export * from "./getHardhatConfig";
 export * from "./handleError";
+export * from "./keyPaths";
 export * from "./parseAbiValues";
 export * from "./parseJson";
 export * from "./safeAwait";

@@ -3,19 +3,22 @@ import { Keypair } from "@solana/web3.js";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import fs from "fs";
-import os from "os";
-import path from "path";
 import { z } from "zod";
 
 import {
   AccountData,
+  accountNameSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
 import { handleError } from "../../../../utils/handleError";
+import {
+  getAccountKeyPath,
+  getAccountTypeDir,
+} from "../../../../utils/keyPaths";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const createAccountOptionsSchema = z.object({
-  name: z.string().min(1, "Account name is required"),
+  name: accountNameSchema,
   type: z
     .enum(AvailableAccountTypes, {
       errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
@@ -43,37 +46,26 @@ const createSolanaAccount = (): AccountData => {
 };
 
 const createAccountForType = async (
-  type: string,
+  type: (typeof AvailableAccountTypes)[number],
   name: string
 ): Promise<void> => {
-  // Validate name doesn't contain path traversal characters
-  if (name.includes("/") || name.includes("\\") || name.includes("..")) {
-    handleError({
-      context: "Invalid account name",
-      error: new Error(
-        "Invalid account name. Name cannot contain path characters."
-      ),
-      shouldThrow: true,
-    });
-    return;
-  }
-
-  const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
-  fs.mkdirSync(baseDir, { recursive: true });
-
-  const keyPath = path.join(baseDir, `${name}.json`);
-  if (fs.existsSync(keyPath)) {
-    const shouldOverwrite = await confirm({
-      default: false,
-      message: `File ${keyPath} already exists. Overwrite?`,
-    });
-    if (!shouldOverwrite) {
-      console.log(`Operation cancelled for ${type} account.`);
-      return;
-    }
-  }
-
   try {
+    const baseDir = getAccountTypeDir(type);
+    fs.mkdirSync(baseDir, { recursive: true });
+
+    const keyPath = getAccountKeyPath(type, name);
+
+    if (fs.existsSync(keyPath)) {
+      const shouldOverwrite = await confirm({
+        default: false,
+        message: `File ${keyPath} already exists. Overwrite?`,
+      });
+      if (!shouldOverwrite) {
+        console.log(`Operation cancelled for ${type} account.`);
+        return;
+      }
+    }
+
     const keyData = type === "evm" ? createEVMAccount() : createSolanaAccount();
 
     fs.writeFileSync(keyPath, JSON.stringify(keyData, null, 2));

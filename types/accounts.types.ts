@@ -40,3 +40,8 @@ export const accountDataSchema = z.union([
   evmAccountDataSchema,
   solanaAccountDataSchema,
 ]);
+
+export const accountNameSchema = z
+  .string()
+  .min(1, "Account name is required")
+  .regex(/^[a-zA-Z0-9]+$/, "Account name can only contain letters and numbers");

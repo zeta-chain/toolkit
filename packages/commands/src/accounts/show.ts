@@ -1,22 +1,22 @@
 import { Command, Option } from "commander";
 import fs from "fs";
-import os from "os";
-import path from "path";
 import { z } from "zod";
 
 import {
   accountDataSchema,
   AccountDetails,
+  accountNameSchema,
   AvailableAccountTypes,
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
+import { getAccountKeyPath } from "../../../../utils/keyPaths";
 import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const showAccountOptionsSchema = z.object({
   json: z.boolean().default(false),
-  name: z.string().min(1, "Account name is required"),
+  name: accountNameSchema,
   type: z.enum(AvailableAccountTypes, {
     errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
   }),
@@ -54,8 +54,7 @@ const getSolanaAccountDetails = (
 const main = (options: ShowAccountOptions): void => {
   const { type, name, json } = options;
 
-  const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
-  const keyPath = path.join(baseDir, `${name}.json`);
+  const keyPath = getAccountKeyPath(type, name);
 
   if (!fs.existsSync(keyPath)) {
     console.error(`Account ${name} of type ${type} not found at ${keyPath}`);
