@@ -5,11 +5,13 @@ import path from "path";
 import { z } from "zod";
 
 import {
+  accountDataSchema,
   AccountInfo,
   AvailableAccountTypes,
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
+import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const listAccountsOptionsSchema = z.object({
@@ -30,9 +32,10 @@ const listChainAccounts = (
 
   for (const file of files) {
     const keyPath = path.join(chainDir, file);
-    const keyData = JSON.parse(fs.readFileSync(keyPath, "utf-8")) as
-      | EVMAccountData
-      | SolanaAccountData;
+    const keyData = parseJson(
+      fs.readFileSync(keyPath, "utf-8"),
+      accountDataSchema
+    );
 
     accounts.push({
       address:

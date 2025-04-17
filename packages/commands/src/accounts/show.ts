@@ -5,11 +5,13 @@ import path from "path";
 import { z } from "zod";
 
 import {
+  accountDataSchema,
   AccountDetails,
   AvailableAccountTypes,
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
+import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const showAccountOptionsSchema = z.object({
@@ -60,9 +62,10 @@ const main = (options: ShowAccountOptions): void => {
     process.exit(1);
   }
 
-  const keyData = JSON.parse(fs.readFileSync(keyPath, "utf-8")) as
-    | EVMAccountData
-    | SolanaAccountData;
+  const keyData = parseJson(
+    fs.readFileSync(keyPath, "utf-8"),
+    accountDataSchema
+  );
   keyData.name = name; // Add name to keyData for display
 
   const accountDetails =
