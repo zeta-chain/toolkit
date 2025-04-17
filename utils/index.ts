@@ -12,5 +12,5 @@ export * from "./toHexString";
 export * from "./trackCCTX";
 export * from "./transactions";
 export * from "./uniswap";
+export * from "./validateAndParseSchema";
 export * from "./validateSigner";
-export * from "./validateTaskArgs";

@@ -8,7 +8,7 @@ import path from "path";
 import { z } from "zod";
 
 import { AccountData } from "../../../../types/accounts.types";
-import { validateTaskArgs } from "../../../../utils";
+import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const createAccountOptionsSchema = z.object({
   name: z.string().min(1, "Account name is required"),
@@ -70,9 +70,13 @@ const createAccountForType = async (
 };
 
 const main = async (options: CreateAccountOptions) => {
-  const { type, name } = validateTaskArgs(options, createAccountOptionsSchema, {
-    exitOnError: true,
-  });
+  const { type, name } = validateAndParseSchema(
+    options,
+    createAccountOptionsSchema,
+    {
+      exitOnError: true,
+    }
+  );
 
   if (type) {
     await createAccountForType(type, name);

@@ -7,7 +7,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getFullyQualifiedName } from "hardhat/utils/contract-names";
 import { z } from "zod";
 
-import { validateTaskArgs } from "../../../utils";
+import { validateAndParseSchema } from "../../../utils";
 
 interface AxiosErrorResponse {
   error: string; // Define the expected structure of `data`
@@ -24,7 +24,7 @@ type VerifyTaskArgs = z.infer<typeof verifyTaskArgsSchema>;
 const URL = "https://sourcify.dev/server";
 
 const main = async (args: VerifyTaskArgs, hre: HardhatRuntimeEnvironment) => {
-  const parsedArgs = validateTaskArgs(args, verifyTaskArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, verifyTaskArgsSchema);
 
   const checkURL = `${URL}/check-by-addresses`;
   const params = {

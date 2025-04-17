@@ -9,7 +9,7 @@ import {
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
-import { validateTaskArgs } from "../../../../utils";
+import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const showAccountOptionsSchema = z.object({
   json: z.boolean().default(false),
@@ -49,7 +49,7 @@ const getSolanaAccountDetails = (
 };
 
 const main = (options: ShowAccountOptions): void => {
-  const { type, name, json } = validateTaskArgs(
+  const { type, name, json } = validateAndParseSchema(
     options,
     showAccountOptionsSchema,
     { exitOnError: true }

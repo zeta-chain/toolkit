@@ -7,7 +7,7 @@ import ora from "ora";
 import { z } from "zod";
 
 import { numberArraySchema } from "../../../types/shared.schema";
-import { parseJson, validateTaskArgs } from "../../../utils";
+import { parseJson, validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 import { bitcoinAddress } from "./bitcoinAddress";
 
@@ -48,7 +48,7 @@ const balancesArgsSchema = z.object({
 type BalancesArgs = z.infer<typeof balancesArgsSchema>;
 
 const main = async (args: BalancesArgs) => {
-  const parsedArgs = validateTaskArgs(args, balancesArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, balancesArgsSchema);
 
   const client = new ZetaChainClient({
     network: parsedArgs.mainnet ? "mainnet" : "testnet",

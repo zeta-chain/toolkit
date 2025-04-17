@@ -5,7 +5,7 @@ import os from "os";
 import path from "path";
 import { z } from "zod";
 
-import { validateTaskArgs } from "../../../../utils";
+import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const deleteAccountOptionsSchema = z.object({
   name: z.string().min(1, "Account name is required"),
@@ -17,9 +17,13 @@ const deleteAccountOptionsSchema = z.object({
 type DeleteAccountOptions = z.infer<typeof deleteAccountOptionsSchema>;
 
 const main = async (options: DeleteAccountOptions) => {
-  const { type, name } = validateTaskArgs(options, deleteAccountOptionsSchema, {
-    exitOnError: true,
-  });
+  const { type, name } = validateAndParseSchema(
+    options,
+    deleteAccountOptionsSchema,
+    {
+      exitOnError: true,
+    }
+  );
 
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
   const keyPath = path.join(baseDir, `${name}.json`);

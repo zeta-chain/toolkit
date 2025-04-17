@@ -9,7 +9,7 @@ import {
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
-import { validateTaskArgs } from "../../../../utils";
+import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const listAccountsOptionsSchema = z.object({
   json: z.boolean().default(false),
@@ -47,7 +47,7 @@ const listChainAccounts = (
 type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
 
 const main = (options: ListAccountsOptions): void => {
-  const { json } = validateTaskArgs(options, listAccountsOptionsSchema, {
+  const { json } = validateAndParseSchema(options, listAccountsOptionsSchema, {
     exitOnError: true,
   });
   const baseDir = path.join(os.homedir(), ".zetachain", "keys");

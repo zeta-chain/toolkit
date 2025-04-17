@@ -10,6 +10,11 @@
       "require": "./dist/packages/client/src/index.js",
       "types": "./dist/packages/client/src/index.d.ts"
     },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
+    },
     "./test": {
       "import": "./dist/packages/test/src/index.js",
       "require": "./dist/packages/test/src/index.js",

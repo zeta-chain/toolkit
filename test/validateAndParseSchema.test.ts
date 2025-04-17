@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { z } from "zod";
 
-import { validateTaskArgs } from "../utils/validateTaskArgs";
+import { validateAndParseSchema } from "../utils/validateAndParseSchema";
 
-describe("validateTaskArgs", () => {
+describe("validateAndParseSchema", () => {
   it("should return parsed data when validation succeeds", () => {
     const schema = z.object({
       age: z.number(),
@@ -16,7 +16,7 @@ describe("validateTaskArgs", () => {
       name: "Test User",
     };
 
-    const result = validateTaskArgs(args, schema);
+    const result = validateAndParseSchema(args, schema);
 
     expect(result).to.deep.equal(args);
   });
@@ -32,7 +32,7 @@ describe("validateTaskArgs", () => {
     };
 
     expect(() =>
-      validateTaskArgs(args, schema, {
+      validateAndParseSchema(args, schema, {
         exitOnError: false,
         shouldLogError: false,
       })
@@ -48,7 +48,7 @@ describe("validateTaskArgs", () => {
       name: "Test User",
     };
 
-    const result = validateTaskArgs(args, schema);
+    const result = validateAndParseSchema(args, schema);
 
     expect(result).to.deep.equal(args);
   });
@@ -63,7 +63,7 @@ describe("validateTaskArgs", () => {
       tags: ["developer", "tester"],
     };
 
-    const result = validateTaskArgs(args, schema);
+    const result = validateAndParseSchema(args, schema);
 
     expect(result).to.deep.equal(args);
   });
