@@ -11,6 +11,7 @@ import {
   AccountData,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
+import { handleError } from "../../../../utils/handleError";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const createAccountOptionsSchema = z.object({
@@ -45,6 +46,18 @@ const createAccountForType = async (
   type: string,
   name: string
 ): Promise<void> => {
+  // Validate name doesn't contain path traversal characters
+  if (name.includes("/") || name.includes("\\") || name.includes("..")) {
+    handleError({
+      context: "Invalid account name",
+      error: new Error(
+        "Invalid account name. Name cannot contain path characters."
+      ),
+      shouldThrow: true,
+    });
+    return;
+  }
+
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
   fs.mkdirSync(baseDir, { recursive: true });
 
@@ -60,15 +73,23 @@ const createAccountForType = async (
     }
   }
 
-  const keyData = type === "evm" ? createEVMAccount() : createSolanaAccount();
+  try {
+    const keyData = type === "evm" ? createEVMAccount() : createSolanaAccount();
 
-  fs.writeFileSync(keyPath, JSON.stringify(keyData, null, 2));
-  console.log(`${type.toUpperCase()} account created successfully!`);
-  console.log(`Key saved to: ${keyPath}`);
-  if (type === "evm") {
-    console.log(`Address: ${keyData.address}`);
-  } else {
-    console.log(`Public Key: ${keyData.publicKey}`);
+    fs.writeFileSync(keyPath, JSON.stringify(keyData, null, 2));
+    console.log(`${type.toUpperCase()} account created successfully!`);
+    console.log(`Key saved to: ${keyPath}`);
+    if (type === "evm") {
+      console.log(`Address: ${keyData.address}`);
+    } else {
+      console.log(`Public Key: ${keyData.publicKey}`);
+    }
+  } catch (error: unknown) {
+    handleError({
+      context: "Failed to create or save account",
+      error,
+      shouldThrow: true,
+    });
   }
 };
 

@@ -6,6 +6,7 @@ import path from "path";
 import { z } from "zod";
 
 import { AvailableAccountTypes } from "../../../../types/accounts.types";
+import { handleError } from "../../../../utils/handleError";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const deleteAccountOptionsSchema = z.object({
@@ -38,8 +39,16 @@ const main = async (options: DeleteAccountOptions) => {
     return;
   }
 
-  fs.unlinkSync(keyPath);
-  console.log(`Account ${name} of type ${type} deleted successfully.`);
+  try {
+    fs.unlinkSync(keyPath);
+    console.log(`Account ${name} of type ${type} deleted successfully.`);
+  } catch (error: unknown) {
+    handleError({
+      context: "Failed to delete account",
+      error,
+      shouldThrow: true,
+    });
+  }
 };
 
 export const deleteAccountsCommand = new Command("delete")
