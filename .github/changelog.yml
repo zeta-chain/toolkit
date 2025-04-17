@@ -15,7 +15,7 @@ changelog:
     - title: "🔁 Continuous Integration"
       labels: ["ci"]
 
-    - title: "📦 Refactors"
+    - title: "🛠️ Refactors"
       labels: ["refactor"]
 
     - title: "🧹 Chores"
