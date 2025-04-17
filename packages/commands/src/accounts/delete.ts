@@ -1,15 +1,16 @@
 import confirm from "@inquirer/confirm";
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import fs from "fs";
 import os from "os";
 import path from "path";
 import { z } from "zod";
 
+import { AvailableAccountTypes } from "../../../../types/accounts.types";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const deleteAccountOptionsSchema = z.object({
   name: z.string().min(1, "Account name is required"),
-  type: z.enum(["evm", "solana"], {
+  type: z.enum(AvailableAccountTypes, {
     errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
   }),
 });
@@ -17,13 +18,7 @@ const deleteAccountOptionsSchema = z.object({
 type DeleteAccountOptions = z.infer<typeof deleteAccountOptionsSchema>;
 
 const main = async (options: DeleteAccountOptions) => {
-  const { type, name } = validateAndParseSchema(
-    options,
-    deleteAccountOptionsSchema,
-    {
-      exitOnError: true,
-    }
-  );
+  const { type, name } = options;
 
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
   const keyPath = path.join(baseDir, `${name}.json`);
@@ -49,6 +44,15 @@ const main = async (options: DeleteAccountOptions) => {
 
 export const deleteAccountsCommand = new Command("delete")
   .description("Delete an existing account")
-  .requiredOption("--type <type>", "Account type (evm or solana)")
+  .addOption(
+    new Option("--type <type>", "Account type (evm or solana)").choices(
+      AvailableAccountTypes
+    )
+  )
   .requiredOption("--name <name>", "Account name")
-  .action(main);
+  .action(async (opts) => {
+    const validated = validateAndParseSchema(opts, deleteAccountOptionsSchema, {
+      exitOnError: true,
+    });
+    await main(validated);
+  });

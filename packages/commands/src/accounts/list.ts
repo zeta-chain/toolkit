@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import {
   AccountInfo,
+  AvailableAccountTypes,
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
@@ -17,7 +18,7 @@ const listAccountsOptionsSchema = z.object({
 
 const listChainAccounts = (
   baseDir: string,
-  chainType: "evm" | "solana",
+  chainType: (typeof AvailableAccountTypes)[number],
   accounts: AccountInfo[]
 ): void => {
   const chainDir = path.join(baseDir, chainType);
@@ -47,9 +48,7 @@ const listChainAccounts = (
 type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
 
 const main = (options: ListAccountsOptions): void => {
-  const { json } = validateAndParseSchema(options, listAccountsOptionsSchema, {
-    exitOnError: true,
-  });
+  const { json } = options;
   const baseDir = path.join(os.homedir(), ".zetachain", "keys");
   const accounts: AccountInfo[] = [];
 
@@ -72,4 +71,9 @@ const main = (options: ListAccountsOptions): void => {
 export const listAccountsCommand = new Command("list")
   .description("List all available accounts")
   .option("--json", "Output in JSON format")
-  .action(main);
+  .action((opts) => {
+    const validated = validateAndParseSchema(opts, listAccountsOptionsSchema, {
+      exitOnError: true,
+    });
+    main(validated);
+  });

@@ -1,19 +1,22 @@
 import confirm from "@inquirer/confirm";
 import { Keypair } from "@solana/web3.js";
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import fs from "fs";
 import os from "os";
 import path from "path";
 import { z } from "zod";
 
-import { AccountData } from "../../../../types/accounts.types";
+import {
+  AccountData,
+  AvailableAccountTypes,
+} from "../../../../types/accounts.types";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const createAccountOptionsSchema = z.object({
   name: z.string().min(1, "Account name is required"),
   type: z
-    .enum(["evm", "solana"], {
+    .enum(AvailableAccountTypes, {
       errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
     })
     .optional(),
@@ -70,13 +73,7 @@ const createAccountForType = async (
 };
 
 const main = async (options: CreateAccountOptions) => {
-  const { type, name } = validateAndParseSchema(
-    options,
-    createAccountOptionsSchema,
-    {
-      exitOnError: true,
-    }
-  );
+  const { type, name } = options;
 
   if (type) {
     await createAccountForType(type, name);
@@ -89,6 +86,15 @@ const main = async (options: CreateAccountOptions) => {
 
 export const createAccountsCommand = new Command("create")
   .description("Create a new account")
-  .option("--type <type>", "Account type (evm or solana)")
+  .addOption(
+    new Option("--type <type>", "Account type (evm or solana)").choices(
+      AvailableAccountTypes
+    )
+  )
   .requiredOption("--name <name>", "Account name")
-  .action(main);
+  .action(async (opts) => {
+    const validated = validateAndParseSchema(opts, createAccountOptionsSchema, {
+      exitOnError: true,
+    });
+    await main(validated);
+  });

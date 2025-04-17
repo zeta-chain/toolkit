@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import {
   AccountDetails,
+  AvailableAccountTypes,
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
@@ -14,7 +15,7 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 const showAccountOptionsSchema = z.object({
   json: z.boolean().default(false),
   name: z.string().min(1, "Account name is required"),
-  type: z.enum(["evm", "solana"], {
+  type: z.enum(AvailableAccountTypes, {
     errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
   }),
 });
@@ -49,11 +50,7 @@ const getSolanaAccountDetails = (
 };
 
 const main = (options: ShowAccountOptions): void => {
-  const { type, name, json } = validateAndParseSchema(
-    options,
-    showAccountOptionsSchema,
-    { exitOnError: true }
-  );
+  const { type, name, json } = options;
 
   const baseDir = path.join(os.homedir(), ".zetachain", "keys", type);
   const keyPath = path.join(baseDir, `${name}.json`);
@@ -83,7 +80,16 @@ const main = (options: ShowAccountOptions): void => {
 
 export const showAccountsCommand = new Command("show")
   .description("Show details of an existing account")
-  .requiredOption("--type <type>", "Account type (evm or solana)")
+  .addOption(
+    new Option("--type <type>", "Account type (evm or solana)").choices(
+      AvailableAccountTypes
+    )
+  )
   .requiredOption("--name <name>", "Account name")
   .option("--json", "Output in JSON format")
-  .action(main);
+  .action((opts) => {
+    const validated = validateAndParseSchema(opts, showAccountOptionsSchema, {
+      exitOnError: true,
+    });
+    main(validated);
+  });

@@ -23,3 +23,5 @@ export interface SolanaAccountData {
 export interface AccountDetails {
   [key: string]: string;
 }
+
+export const AvailableAccountTypes = ["evm", "solana"] as const;
