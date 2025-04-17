@@ -6,7 +6,7 @@ import {
   bigNumberStringSchema,
   evmAddressSchema,
 } from "../../../types/shared.schema";
-import { validateTaskArgs } from "../../../utils";
+import { validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 const zetachainWithdrawArgsSchema = z.object({
@@ -28,7 +28,7 @@ export const zetachainWithdraw = async (
   args: ZetachainWithdrawArgs,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const parsedArgs = validateTaskArgs(args, zetachainWithdrawArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, zetachainWithdrawArgsSchema);
 
   try {
     const [signer] = await hre.ethers.getSigners();

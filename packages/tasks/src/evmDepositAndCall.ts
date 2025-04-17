@@ -8,7 +8,7 @@ import {
   stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
-import { parseJson, validateTaskArgs } from "../../../utils";
+import { parseJson, validateAndParseSchema } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
@@ -33,7 +33,7 @@ export const evmDepositAndCall = async (
   args: EvmDepositAndCallArgs,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const parsedArgs = validateTaskArgs(args, evmDepositAndCallArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, evmDepositAndCallArgsSchema);
 
   try {
     const [signer] = await hre.ethers.getSigners();

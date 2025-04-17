@@ -8,7 +8,7 @@ import {
   stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
-import { parseJson, validateTaskArgs } from "../../../utils";
+import { parseJson, validateAndParseSchema } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
@@ -35,7 +35,7 @@ export const zetachainCall = async (
   args: ZetachainCallArgs,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const parsedArgs = validateTaskArgs(args, zetachainCallArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, zetachainCallArgsSchema);
 
   const callOptions = {
     gasLimit: parsedArgs.callOptionsGasLimit,

@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { z } from "zod";
 
-import { validateTaskArgs } from "../utils/validateTaskArgs";
+import { validateAndParseSchema } from "../utils/validateAndParseSchema";
 
-describe("validateTaskArgs", () => {
+describe("validateAndParseSchema", () => {
   it("should return parsed data when validation succeeds", () => {
     const schema = z.object({
       age: z.number(),
@@ -16,7 +16,7 @@ describe("validateTaskArgs", () => {
       name: "Test User",
     };
 
-    const result = validateTaskArgs(args, schema);
+    const result = validateAndParseSchema(args, schema);
 
     expect(result).to.deep.equal(args);
   });
@@ -31,7 +31,9 @@ describe("validateTaskArgs", () => {
       name: "Test User", // Type error: string instead of number
     };
 
-    expect(() => validateTaskArgs(args, schema)).to.throw(/Invalid arguments:/);
+    expect(() => validateAndParseSchema(args, schema)).to.throw(
+      /Invalid arguments:/
+    );
   });
 
   it("should handle optional fields correctly", () => {
@@ -43,7 +45,7 @@ describe("validateTaskArgs", () => {
       name: "Test User",
     };
 
-    const result = validateTaskArgs(args, schema);
+    const result = validateAndParseSchema(args, schema);
 
     expect(result).to.deep.equal(args);
   });
@@ -58,7 +60,7 @@ describe("validateTaskArgs", () => {
       tags: ["developer", "tester"],
     };
 
-    const result = validateTaskArgs(args, schema);
+    const result = validateAndParseSchema(args, schema);
 
     expect(result).to.deep.equal(args);
   });

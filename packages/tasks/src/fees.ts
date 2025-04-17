@@ -1,7 +1,7 @@
 import { task, types } from "hardhat/config";
 import { z } from "zod";
 
-import { validateTaskArgs } from "../../../utils";
+import { validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 const feesArgsSchema = z.object({
@@ -13,7 +13,7 @@ const feesArgsSchema = z.object({
 type FeesArgs = z.infer<typeof feesArgsSchema>;
 
 const main = async (args: FeesArgs) => {
-  const parsedArgs = validateTaskArgs(args, feesArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, feesArgsSchema);
 
   const client = new ZetaChainClient({
     network: parsedArgs.mainnet ? "mainnet" : "testnet",

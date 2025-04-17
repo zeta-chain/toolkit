@@ -6,7 +6,7 @@ import { task } from "hardhat/config";
 import { z } from "zod";
 
 import { evmAddressSchema } from "../../../types/shared.schema";
-import { validateTaskArgs } from "../../../utils";
+import { validateAndParseSchema } from "../../../utils";
 import { walletError } from "./balances";
 
 dotenv.config();
@@ -37,7 +37,7 @@ const faucetArgsSchema = z.object({
 type FaucetArgs = z.infer<typeof faucetArgsSchema>;
 
 const main = async (args: FaucetArgs) => {
-  const parsedArgs = validateTaskArgs(args, faucetArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, faucetArgsSchema);
 
   try {
     const address = getRecipientAddress(parsedArgs.address);
