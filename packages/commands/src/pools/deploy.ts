@@ -179,7 +179,7 @@ export const deployCommand = new Command("deploy")
   .option(
     "--rpc <rpc>",
     "RPC URL for the network",
-    "https://zetachain-athens-evm.blockpi.network/v1/rpc/public"
+    "https://zetachain-athens.g.allthatnode.com/archive/evm"
   )
   .option(
     "--wzeta <wzeta>",
