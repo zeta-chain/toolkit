@@ -11,12 +11,12 @@ import {
 interface AddLiquidityOptions {
   amounts: string[];
   pool?: string;
-  tokens?: string[];
   privateKey: string;
   recipient?: string;
   rpc: string;
   tickLower?: number;
   tickUpper?: number;
+  tokens?: string[];
 }
 
 interface MintParams {
