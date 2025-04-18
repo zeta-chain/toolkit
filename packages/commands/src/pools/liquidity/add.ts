@@ -1,9 +1,11 @@
+import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import { Command } from "commander";
 import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
 import inquirer from "inquirer";
 
 import {
+  DEFAULT_FACTORY,
   DEFAULT_FEE,
   DEFAULT_POSITION_MANAGER,
   DEFAULT_RPC,
@@ -67,23 +69,39 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     );
 
     // Get token decimals and symbols
-    const [decimals0, decimals1, symbol0, symbol1]: [
-      number,
-      number,
-      string,
-      string
-    ] = await Promise.all([
+    const [decimals0, decimals1, symbol0, symbol1] = (await Promise.all([
       token0Contract.decimals(),
       token1Contract.decimals(),
       token0Contract.symbol(),
       token1Contract.symbol(),
-    ]);
+    ])) as [number, number, string, string];
 
     // Convert human-readable amounts to BigInt
-    const [amount0, amount1]: [bigint, bigint] = [
+    const [amount0, amount1] = [
       ethers.parseUnits(options.amounts[0], decimals0),
       ethers.parseUnits(options.amounts[1], decimals1),
-    ];
+    ] as [bigint, bigint];
+
+    // Initialize factory contract to check if pool exists
+    const factory = new Contract(
+      DEFAULT_FACTORY,
+      UniswapV3Factory.abi,
+      provider
+    );
+
+    // Check if pool exists
+    const poolAddress = (await factory.getPool(
+      token0,
+      token1,
+      DEFAULT_FEE
+    )) as string;
+    if (poolAddress === ethers.ZeroAddress) {
+      throw new Error(
+        `No pool exists for token pair ${symbol0}/${symbol1} with fee ${
+          DEFAULT_FEE / 10000
+        }%`
+      );
+    }
 
     // Use signer's address as recipient if not provided
     const recipient = options.recipient ?? (await signer.getAddress());
@@ -96,18 +114,19 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log("\nTransaction Details:");
     console.log(`Token0 (${symbol0}): ${options.amounts[0]} (${token0})`);
     console.log(`Token1 (${symbol1}): ${options.amounts[1]} (${token1})`);
+    console.log(`Pool Address: ${poolAddress}`);
     console.log(`Recipient: ${recipient}`);
     console.log(`Tick Range: [${tickLower}, ${tickUpper}]`);
     console.log(`Fee: ${DEFAULT_FEE / 10000}%`);
 
-    const { confirm } = await inquirer.prompt([
+    const { confirm } = (await inquirer.prompt([
       {
         default: false,
         message: "Do you want to proceed with the transaction?",
         name: "confirm",
         type: "confirm",
       },
-    ]);
+    ])) as { confirm: boolean };
 
     if (!confirm) {
       console.log("Transaction cancelled by user");
@@ -206,7 +225,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
   } catch (error) {
     console.error("\nFailed to add liquidity:");
     console.error(
-      "Error message:",
+      "Error:",
       error instanceof Error ? error.message : String(error)
     );
     process.exit(1);
