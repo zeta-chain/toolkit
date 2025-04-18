@@ -1,5 +1,5 @@
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
 
 import {
@@ -10,7 +10,8 @@ import {
 
 interface AddLiquidityOptions {
   amounts: string[];
-  pool: string;
+  pool?: string;
+  tokens?: string[];
   privateKey: string;
   recipient?: string;
   rpc: string;
@@ -38,21 +39,33 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     const provider = new JsonRpcProvider(options.rpc);
     const signer = new Wallet(options.privateKey, provider);
 
-    // Initialize pool contract to get token addresses
-    const pool = new Contract(
-      options.pool,
-      [
-        "function token0() view returns (address)",
-        "function token1() view returns (address)",
-      ],
-      provider
-    );
+    let token0: string;
+    let token1: string;
 
-    // Get token addresses
-    const [token0, token1] = (await Promise.all([
-      pool.token0(),
-      pool.token1(),
-    ])) as [string, string];
+    if (options.pool) {
+      // Initialize pool contract to get token addresses
+      const pool = new Contract(
+        options.pool,
+        [
+          "function token0() view returns (address)",
+          "function token1() view returns (address)",
+        ],
+        provider
+      );
+
+      // Get token addresses from pool
+      [token0, token1] = (await Promise.all([
+        pool.token0(),
+        pool.token1(),
+      ])) as [string, string];
+    } else if (options.tokens && options.tokens.length === 2) {
+      // Use provided token addresses
+      [token0, token1] = options.tokens;
+    } else {
+      throw new Error(
+        "Either pool address or two token addresses must be provided"
+      );
+    }
 
     // Initialize token contracts to get decimals
     const token0Contract = new Contract(
@@ -175,7 +188,13 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
 export const addCommand = new Command("add")
   .description("Add liquidity to a Uniswap V3 pool")
   .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
-  .requiredOption("--pool <pool>", "Pool contract address")
+  .option("--pool <pool>", "Pool contract address")
+  .addOption(
+    new Option(
+      "--tokens <tokens...>",
+      "Token addresses for the pool (exactly 2 required)"
+    ).conflicts("pool")
+  )
   .requiredOption(
     "--amounts <amounts...>",
     "Amounts of tokens to add (in human-readable format, e.g. 0.1 5)"
