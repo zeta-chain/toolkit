@@ -1,5 +1,5 @@
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
-import { Command, Option } from "commander";
+import { Command } from "commander";
 import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
 
 import {
@@ -10,13 +10,12 @@ import {
 
 interface AddLiquidityOptions {
   amounts: string[];
-  pool?: string;
   privateKey: string;
   recipient?: string;
   rpc: string;
   tickLower?: number;
   tickUpper?: number;
-  tokens?: string[];
+  tokens: string[];
 }
 
 interface MintParams {
@@ -39,50 +38,19 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     const provider = new JsonRpcProvider(options.rpc);
     const signer = new Wallet(options.privateKey, provider);
 
-    let token0: string;
-    let token1: string;
-
-    if (options.pool) {
-      // Initialize pool contract to get token addresses
-      const pool = new Contract(
-        options.pool,
-        [
-          "function token0() view returns (address)",
-          "function token1() view returns (address)",
-        ],
-        provider
-      );
-
-      // Get token addresses from pool
-      [token0, token1] = (await Promise.all([
-        pool.token0(),
-        pool.token1(),
-      ])) as [string, string];
-    } else if (options.tokens && options.tokens.length === 2) {
-      // Use provided token addresses
-      [token0, token1] = options.tokens;
-    } else {
-      throw new Error(
-        "Either pool address or two token addresses must be provided"
-      );
-    }
+    // Get token addresses
+    const [token0, token1] = options.tokens;
 
     // Initialize token contracts to get decimals
     const token0Contract = new Contract(
       token0,
-      [
-        "function approve(address spender, uint256 amount) returns (bool)",
-        "function decimals() view returns (uint8)",
-      ],
-      signer
+      ["function decimals() view returns (uint8)"],
+      provider
     );
     const token1Contract = new Contract(
       token1,
-      [
-        "function approve(address spender, uint256 amount) returns (bool)",
-        "function decimals() view returns (uint8)",
-      ],
-      signer
+      ["function decimals() view returns (uint8)"],
+      provider
     );
 
     // Get token decimals
@@ -95,6 +63,18 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     const amount0 = ethers.parseUnits(options.amounts[0], decimals0);
     const amount1 = ethers.parseUnits(options.amounts[1], decimals1);
 
+    // Initialize token contracts for approval
+    const token0ContractForApproval = new Contract(
+      token0,
+      ["function approve(address spender, uint256 amount) returns (bool)"],
+      signer
+    );
+    const token1ContractForApproval = new Contract(
+      token1,
+      ["function approve(address spender, uint256 amount) returns (bool)"],
+      signer
+    );
+
     // Initialize position manager contract
     const positionManager = new Contract(
       DEFAULT_POSITION_MANAGER,
@@ -104,11 +84,11 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
 
     // Approve tokens
     console.log("Approving tokens...");
-    const approve0Tx = (await token0Contract.approve(
+    const approve0Tx = (await token0ContractForApproval.approve(
       positionManager.target,
       amount0
     )) as ethers.TransactionResponse;
-    const approve1Tx = (await token1Contract.approve(
+    const approve1Tx = (await token1ContractForApproval.approve(
       positionManager.target,
       amount1
     )) as ethers.TransactionResponse;
@@ -175,6 +155,10 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log("Transaction Hash:", tx.hash);
     console.log("Position NFT ID:", tokenId.toString());
     console.log("Recipient Address:", recipient);
+    console.log("Token0 Address:", token0);
+    console.log("Token1 Address:", token1);
+    console.log("Amount0:", options.amounts[0]);
+    console.log("Amount1:", options.amounts[1]);
   } catch (error) {
     console.error("\nFailed to add liquidity:");
     console.error(
@@ -188,12 +172,9 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
 export const addCommand = new Command("add")
   .description("Add liquidity to a Uniswap V3 pool")
   .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
-  .option("--pool <pool>", "Pool contract address")
-  .addOption(
-    new Option(
-      "--tokens <tokens...>",
-      "Token addresses for the pool (exactly 2 required)"
-    ).conflicts("pool")
+  .requiredOption(
+    "--tokens <tokens...>",
+    "Token addresses for the pool (exactly 2 required)"
   )
   .requiredOption(
     "--amounts <amounts...>",
