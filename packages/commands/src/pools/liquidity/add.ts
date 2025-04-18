@@ -1,6 +1,7 @@
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import { Command } from "commander";
 import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
+import inquirer from "inquirer";
 
 import {
   DEFAULT_FEE,
@@ -39,29 +40,79 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     const signer = new Wallet(options.privateKey, provider);
 
     // Get token addresses
-    const [token0, token1] = options.tokens;
+    if (options.tokens.length !== 2) {
+      throw new Error("Exactly 2 token addresses must be provided");
+    }
+    const [token0, token1]: [string, string] = [
+      options.tokens[0],
+      options.tokens[1],
+    ];
 
-    // Initialize token contracts to get decimals
+    // Initialize token contracts to get decimals and symbols
     const token0Contract = new Contract(
       token0,
-      ["function decimals() view returns (uint8)"],
+      [
+        "function decimals() view returns (uint8)",
+        "function symbol() view returns (string)",
+      ],
       provider
     );
     const token1Contract = new Contract(
       token1,
-      ["function decimals() view returns (uint8)"],
+      [
+        "function decimals() view returns (uint8)",
+        "function symbol() view returns (string)",
+      ],
       provider
     );
 
-    // Get token decimals
-    const [decimals0, decimals1] = (await Promise.all([
+    // Get token decimals and symbols
+    const [decimals0, decimals1, symbol0, symbol1]: [
+      number,
+      number,
+      string,
+      string
+    ] = await Promise.all([
       token0Contract.decimals(),
       token1Contract.decimals(),
-    ])) as [number, number];
+      token0Contract.symbol(),
+      token1Contract.symbol(),
+    ]);
 
     // Convert human-readable amounts to BigInt
-    const amount0 = ethers.parseUnits(options.amounts[0], decimals0);
-    const amount1 = ethers.parseUnits(options.amounts[1], decimals1);
+    const [amount0, amount1]: [bigint, bigint] = [
+      ethers.parseUnits(options.amounts[0], decimals0),
+      ethers.parseUnits(options.amounts[1], decimals1),
+    ];
+
+    // Use signer's address as recipient if not provided
+    const recipient = options.recipient ?? (await signer.getAddress());
+
+    // Set default tick range if not provided
+    const tickLower = options.tickLower ?? -887220;
+    const tickUpper = options.tickUpper ?? 887220;
+
+    // Show transaction details and get confirmation
+    console.log("\nTransaction Details:");
+    console.log(`Token0 (${symbol0}): ${options.amounts[0]} (${token0})`);
+    console.log(`Token1 (${symbol1}): ${options.amounts[1]} (${token1})`);
+    console.log(`Recipient: ${recipient}`);
+    console.log(`Tick Range: [${tickLower}, ${tickUpper}]`);
+    console.log(`Fee: ${DEFAULT_FEE / 10000}%`);
+
+    const { confirm } = await inquirer.prompt([
+      {
+        default: false,
+        message: "Do you want to proceed with the transaction?",
+        name: "confirm",
+        type: "confirm",
+      },
+    ]);
+
+    if (!confirm) {
+      console.log("Transaction cancelled by user");
+      process.exit(0);
+    }
 
     // Initialize token contracts for approval
     const token0ContractForApproval = new Contract(
@@ -83,7 +134,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     );
 
     // Approve tokens
-    console.log("Approving tokens...");
+    console.log("\nApproving tokens...");
     const approve0Tx = (await token0ContractForApproval.approve(
       positionManager.target,
       amount0
@@ -96,13 +147,6 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log("Waiting for approvals...");
     await Promise.all([approve0Tx.wait(), approve1Tx.wait()]);
     console.log("Tokens approved successfully");
-
-    // Set default tick range if not provided
-    const tickLower = options.tickLower ?? -887220;
-    const tickUpper = options.tickUpper ?? 887220;
-
-    // Use signer's address as recipient if not provided
-    const recipient = options.recipient ?? (await signer.getAddress());
 
     // Prepare parameters for minting
     const params: MintParams = {
@@ -120,7 +164,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     };
 
     // Send transaction
-    console.log("Adding liquidity...");
+    console.log("\nAdding liquidity...");
     const tx = (await positionManager.mint(
       params
     )) as ethers.TransactionResponse;
@@ -155,8 +199,8 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log("Transaction Hash:", tx.hash);
     console.log("Position NFT ID:", tokenId.toString());
     console.log("Recipient Address:", recipient);
-    console.log("Token0 Address:", token0);
-    console.log("Token1 Address:", token1);
+    console.log("Token 0 Address:", token0);
+    console.log("Token 1 Address:", token1);
     console.log("Amount0:", options.amounts[0]);
     console.log("Amount1:", options.amounts[1]);
   } catch (error) {
