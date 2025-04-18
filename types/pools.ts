@@ -48,7 +48,10 @@ export const evmAddressSchema = z
 
 export const showPoolOptionsSchema = z.object({
   factory: z.string().default(DEFAULT_FACTORY),
-  fee: z.number().default(DEFAULT_FEE),
+  fee: z
+    .string()
+    .transform((val) => Number(val))
+    .default(DEFAULT_FEE.toString()),
   pool: z.string().optional(),
   rpc: z.string().default(DEFAULT_RPC),
   tokens: z.array(z.string()).optional(),
