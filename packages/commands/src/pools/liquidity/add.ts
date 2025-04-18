@@ -103,8 +103,42 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
       );
     }
 
+    // Check token balances
+    const token0ContractForBalance = new Contract(
+      token0,
+      ["function balanceOf(address) view returns (uint256)"],
+      provider
+    );
+    const token1ContractForBalance = new Contract(
+      token1,
+      ["function balanceOf(address) view returns (uint256)"],
+      provider
+    );
+
+    const signerAddress = await signer.getAddress();
+    const [balance0, balance1] = (await Promise.all([
+      token0ContractForBalance.balanceOf(signerAddress),
+      token1ContractForBalance.balanceOf(signerAddress),
+    ])) as [bigint, bigint];
+
+    if (balance0 < amount0) {
+      throw new Error(
+        `Insufficient ${symbol0} balance. Required: ${
+          options.amounts[0]
+        }, Available: ${ethers.formatUnits(balance0, decimals0)}`
+      );
+    }
+
+    if (balance1 < amount1) {
+      throw new Error(
+        `Insufficient ${symbol1} balance. Required: ${
+          options.amounts[1]
+        }, Available: ${ethers.formatUnits(balance1, decimals1)}`
+      );
+    }
+
     // Use signer's address as recipient if not provided
-    const recipient = options.recipient ?? (await signer.getAddress());
+    const recipient = options.recipient ?? signerAddress;
 
     // Set default tick range if not provided
     const tickLower = options.tickLower ?? -887220;
@@ -118,6 +152,9 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log(`Recipient: ${recipient}`);
     console.log(`Tick Range: [${tickLower}, ${tickUpper}]`);
     console.log(`Fee: ${DEFAULT_FEE / 10000}%`);
+    console.log("\nBalances:");
+    console.log(`${symbol0}: ${ethers.formatUnits(balance0, decimals0)}`);
+    console.log(`${symbol1}: ${ethers.formatUnits(balance1, decimals1)}`);
 
     const { confirm } = (await inquirer.prompt([
       {
