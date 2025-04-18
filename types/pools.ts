@@ -59,8 +59,14 @@ export const addLiquidityOptionsSchema = z.object({
   privateKey: z.string(),
   recipient: z.string().optional(),
   rpc: z.string().default(DEFAULT_RPC),
-  tickLower: z.number().optional(),
-  tickUpper: z.number().optional(),
+  tickLower: z
+    .string()
+    .transform((val) => Number(val))
+    .optional(),
+  tickUpper: z
+    .string()
+    .transform((val) => Number(val))
+    .optional(),
   tokens: z.array(z.string()).min(2).max(2),
 });
 

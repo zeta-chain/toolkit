@@ -217,7 +217,16 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
 
     // Parse transaction receipt to get token ID
     const iface = positionManager.interface;
+    const positionManagerAddress = ethers.getAddress(
+      String(positionManager.target)
+    );
     const transferEvent = receipt.logs
+      .filter((log: Log) => {
+        // Only try to parse logs from the position manager contract
+        return (
+          ethers.getAddress(log.address.toString()) === positionManagerAddress
+        );
+      })
       .map((log: Log) => {
         try {
           return iface.parseLog({
