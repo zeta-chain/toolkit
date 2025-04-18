@@ -152,9 +152,6 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log(`Recipient: ${recipient}`);
     console.log(`Tick Range: [${tickLower}, ${tickUpper}]`);
     console.log(`Fee: ${DEFAULT_FEE / 10000}%`);
-    console.log("\nBalances:");
-    console.log(`${symbol0}: ${ethers.formatUnits(balance0, decimals0)}`);
-    console.log(`${symbol1}: ${ethers.formatUnits(balance1, decimals1)}`);
 
     const { confirm } = (await inquirer.prompt([
       {
