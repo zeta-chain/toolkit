@@ -31,9 +31,12 @@ describe("validateAndParseSchema", () => {
       name: "Test User", // Type error: string instead of number
     };
 
-    expect(() => validateAndParseSchema(args, schema)).to.throw(
-      /Invalid arguments:/
-    );
+    expect(() =>
+      validateAndParseSchema(args, schema, {
+        exitOnError: false,
+        shouldLogError: false,
+      })
+    ).to.throw("age: Expected number, received string");
   });
 
   it("should handle optional fields correctly", () => {

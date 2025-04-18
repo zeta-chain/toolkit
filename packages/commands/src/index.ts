@@ -1,5 +1,6 @@
 import { Command } from "commander";
 
+import { accountsCommand } from "./accounts";
 import { solanaEncodeCommand } from "./solanaEncode";
 
 export const toolkitCommand = new Command("toolkit")
@@ -7,3 +8,4 @@ export const toolkitCommand = new Command("toolkit")
   .helpCommand(false);
 
 toolkitCommand.addCommand(solanaEncodeCommand);
+toolkitCommand.addCommand(accountsCommand);
