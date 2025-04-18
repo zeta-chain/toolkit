@@ -1,4 +1,5 @@
 import { Command } from "commander";
+
 import { addCommand } from "./add";
 
 export const liquidityCommand = new Command("liquidity")

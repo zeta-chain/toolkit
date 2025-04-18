@@ -1,29 +1,45 @@
-import { Command, Option } from "commander";
-import { ethers } from "ethers";
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
+import { Command } from "commander";
+import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
+
 import {
-  DEFAULT_RPC,
-  DEFAULT_FACTORY,
   DEFAULT_FEE,
   DEFAULT_POSITION_MANAGER,
+  DEFAULT_RPC,
 } from "../constants";
 
-async function main(options: {
-  rpc: string;
-  pool: string;
+interface AddLiquidityOptions {
   amounts: string[];
+  pool: string;
+  privateKey: string;
   recipient?: string;
+  rpc: string;
   tickLower?: number;
   tickUpper?: number;
-  privateKey: string;
-}) {
+}
+
+interface MintParams {
+  amount0Desired: bigint;
+  amount0Min: bigint;
+  amount1Desired: bigint;
+  amount1Min: bigint;
+  deadline: number;
+  fee: number;
+  recipient: string;
+  tickLower: number;
+  tickUpper: number;
+  token0: string;
+  token1: string;
+}
+
+const main = async (options: AddLiquidityOptions): Promise<void> => {
   try {
     // Initialize provider and signer
-    const provider = new ethers.JsonRpcProvider(options.rpc);
-    const signer = new ethers.Wallet(options.privateKey, provider);
+    const provider = new JsonRpcProvider(options.rpc);
+    const signer = new Wallet(options.privateKey, provider);
 
     // Initialize pool contract to get token addresses
-    const pool = new ethers.Contract(
+    const pool = new Contract(
       options.pool,
       [
         "function token0() view returns (address)",
@@ -33,10 +49,13 @@ async function main(options: {
     );
 
     // Get token addresses
-    const [token0, token1] = await Promise.all([pool.token0(), pool.token1()]);
+    const [token0, token1] = (await Promise.all([
+      pool.token0(),
+      pool.token1(),
+    ])) as [string, string];
 
     // Initialize token contracts to get decimals
-    const token0Contract = new ethers.Contract(
+    const token0Contract = new Contract(
       token0,
       [
         "function approve(address spender, uint256 amount) returns (bool)",
@@ -44,7 +63,7 @@ async function main(options: {
       ],
       signer
     );
-    const token1Contract = new ethers.Contract(
+    const token1Contract = new Contract(
       token1,
       [
         "function approve(address spender, uint256 amount) returns (bool)",
@@ -54,17 +73,17 @@ async function main(options: {
     );
 
     // Get token decimals
-    const [decimals0, decimals1] = await Promise.all([
+    const [decimals0, decimals1] = (await Promise.all([
       token0Contract.decimals(),
       token1Contract.decimals(),
-    ]);
+    ])) as [number, number];
 
     // Convert human-readable amounts to BigInt
     const amount0 = ethers.parseUnits(options.amounts[0], decimals0);
     const amount1 = ethers.parseUnits(options.amounts[1], decimals1);
 
     // Initialize position manager contract
-    const positionManager = new ethers.Contract(
+    const positionManager = new Contract(
       DEFAULT_POSITION_MANAGER,
       NonfungiblePositionManager.abi,
       signer
@@ -72,14 +91,14 @@ async function main(options: {
 
     // Approve tokens
     console.log("Approving tokens...");
-    const approve0Tx = await token0Contract.approve(
+    const approve0Tx = (await token0Contract.approve(
       positionManager.target,
       amount0
-    );
-    const approve1Tx = await token1Contract.approve(
+    )) as ethers.TransactionResponse;
+    const approve1Tx = (await token1Contract.approve(
       positionManager.target,
       amount1
-    );
+    )) as ethers.TransactionResponse;
 
     console.log("Waiting for approvals...");
     await Promise.all([approve0Tx.wait(), approve1Tx.wait()]);
@@ -93,56 +112,65 @@ async function main(options: {
     const recipient = options.recipient ?? (await signer.getAddress());
 
     // Prepare parameters for minting
-    const params = {
-      token0,
-      token1,
+    const params: MintParams = {
+      amount0Desired: amount0,
+      amount0Min: 0n,
+      amount1Desired: amount1,
+      amount1Min: 0n,
+      deadline: Math.floor(Date.now() / 1000) + 60 * 20,
       fee: DEFAULT_FEE,
+      recipient,
       tickLower,
       tickUpper,
-      amount0Desired: amount0,
-      amount1Desired: amount1,
-      amount0Min: 0n,
-      amount1Min: 0n,
-      recipient,
-      deadline: Math.floor(Date.now() / 1000) + 60 * 20, // 20 minutes from now
+      token0,
+      token1,
     };
 
     // Send transaction
     console.log("Adding liquidity...");
-    const tx = await positionManager.mint(params);
+    const tx = (await positionManager.mint(
+      params
+    )) as ethers.TransactionResponse;
     const receipt = await tx.wait();
+
+    if (!receipt) {
+      throw new Error("Transaction receipt is null");
+    }
 
     // Parse transaction receipt to get token ID
     const iface = positionManager.interface;
     const transferEvent = receipt.logs
-      .map((log: any) => {
+      .map((log: Log) => {
         try {
           return iface.parseLog({
             data: log.data,
             topics: log.topics,
           });
-        } catch (e) {
+        } catch {
           return null;
         }
       })
-      .find((event: any) => event?.name === "Transfer");
+      .find((event) => event?.name === "Transfer");
 
     if (!transferEvent) {
       throw new Error("Could not find Transfer event in transaction receipt");
     }
 
-    const tokenId = transferEvent.args[2];
+    const tokenId = transferEvent.args[2] as bigint;
 
     console.log("\nLiquidity Added Successfully:");
     console.log("Transaction Hash:", tx.hash);
     console.log("Position NFT ID:", tokenId.toString());
     console.log("Recipient Address:", recipient);
-  } catch (error: any) {
+  } catch (error) {
     console.error("\nFailed to add liquidity:");
-    console.error("Error message:", error.message);
+    console.error(
+      "Error message:",
+      error instanceof Error ? error.message : String(error)
+    );
     process.exit(1);
   }
-}
+};
 
 export const addCommand = new Command("add")
   .description("Add liquidity to a Uniswap V3 pool")

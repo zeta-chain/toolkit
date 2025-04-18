@@ -1,41 +1,48 @@
-import { Command } from "commander";
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
-import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json";
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import * as SwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
-import { ethers } from "ethers";
+import { Command } from "commander";
+import { ContractFactory, ethers, JsonRpcProvider, Wallet } from "ethers";
+
 import { DEFAULT_RPC, DEFAULT_WZETA } from "./constants";
+
+interface DeployOptions {
+  privateKey: string;
+  rpc: string;
+  wzeta: string;
+}
+
+interface DeploymentError extends Error {
+  receipt?: ethers.TransactionReceipt;
+  transaction?: ethers.TransactionResponse;
+}
 
 const deployOpts = {
   gasLimit: 8000000,
 };
 
-async function estimateGas(
-  contractFactory: ethers.ContractFactory,
-  args: any[] = []
-) {
+const estimateGas = async (
+  contractFactory: ContractFactory,
+  args: unknown[] = []
+): Promise<bigint | null> => {
   try {
     const deployment = await contractFactory.getDeployTransaction(...args);
     const gasEstimate = await contractFactory.runner?.provider?.estimateGas(
       deployment
     );
     console.log("Estimated gas:", gasEstimate?.toString());
-    return gasEstimate;
+    return gasEstimate ?? null;
   } catch (error) {
     console.error("Gas estimation failed:", error);
     return null;
   }
-}
+};
 
-async function main(options: {
-  privateKey: string;
-  rpc: string;
-  wzeta: string;
-}) {
+const main = async (options: DeployOptions): Promise<void> => {
   try {
     // Initialize provider and signer
-    const provider = new ethers.JsonRpcProvider(options.rpc);
-    const signer = new ethers.Wallet(options.privateKey, provider);
+    const provider = new JsonRpcProvider(options.rpc);
+    const signer = new Wallet(options.privateKey, provider);
 
     console.log("Deploying Uniswap V3 contracts...");
     console.log("Deployer address:", await signer.getAddress());
@@ -48,7 +55,7 @@ async function main(options: {
 
     // Deploy Uniswap V3 Factory
     console.log("\nDeploying Uniswap V3 Factory...");
-    const uniswapV3Factory = new ethers.ContractFactory(
+    const uniswapV3Factory = new ContractFactory(
       UniswapV3Factory.abi,
       UniswapV3Factory.bytecode,
       signer
@@ -76,7 +83,7 @@ async function main(options: {
 
     // Deploy Swap Router
     console.log("\nDeploying Swap Router...");
-    const swapRouter = new ethers.ContractFactory(
+    const swapRouter = new ContractFactory(
       SwapRouter.abi,
       SwapRouter.bytecode,
       signer
@@ -111,7 +118,7 @@ async function main(options: {
 
     // Deploy Nonfungible Position Manager
     console.log("\nDeploying Nonfungible Position Manager...");
-    const nonfungiblePositionManager = new ethers.ContractFactory(
+    const nonfungiblePositionManager = new ContractFactory(
       NonfungiblePositionManager.abi,
       NonfungiblePositionManager.bytecode,
       signer
@@ -161,18 +168,19 @@ async function main(options: {
       "Nonfungible Position Manager:",
       await nonfungiblePositionManagerInstance.getAddress()
     );
-  } catch (error: any) {
+  } catch (error) {
+    const deploymentError = error as DeploymentError;
     console.error("\nDeployment failed with error:");
-    console.error("Error message:", error.message);
-    if (error.receipt) {
-      console.error("Transaction receipt:", error.receipt);
+    console.error("Error message:", deploymentError.message);
+    if (deploymentError.receipt) {
+      console.error("Transaction receipt:", deploymentError.receipt);
     }
-    if (error.transaction) {
-      console.error("Transaction details:", error.transaction);
+    if (deploymentError.transaction) {
+      console.error("Transaction details:", deploymentError.transaction);
     }
     process.exit(1);
   }
-}
+};
 
 export const deployCommand = new Command("deploy")
   .description("Deploy Uniswap V3 contracts")
