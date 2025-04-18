@@ -66,10 +66,11 @@ export const addLiquidityOptionsSchema = z.object({
 
 export const createPoolOptionsSchema = z.object({
   factory: z.string().default(DEFAULT_FACTORY),
-  fee: z.number().default(DEFAULT_FEE),
+  fee: z.string().default(DEFAULT_FEE.toString()),
+  initialPrice: z.string().optional(),
   privateKey: z.string(),
   rpc: z.string().default(DEFAULT_RPC),
-  tokens: z.array(z.string()).min(2).max(2),
+  tokens: z.array(evmAddressSchema).length(2),
 });
 
 export const deployOptionsSchema = z.object({

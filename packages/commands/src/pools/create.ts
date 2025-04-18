@@ -59,7 +59,20 @@ const main = async (options: CreatePoolOptions): Promise<void> => {
 
     // Initialize the pool
     const pool = new Contract(poolAddress, UniswapV3Pool.abi, signer);
-    const sqrtPriceX96 = ethers.toBigInt("79228162514264337593543950336"); // sqrt(1) * 2^96
+
+    // Default sqrt price represents 1:1 ratio
+    let sqrtPriceX96 = ethers.toBigInt("79228162514264337593543950336"); // sqrt(1) * 2^96
+
+    // If initial price was provided, calculate the sqrtPriceX96
+    if (validatedOptions.initialPrice) {
+      const price = parseFloat(validatedOptions.initialPrice);
+      if (price <= 0)
+        throw new Error("Initial price must be greater than zero");
+      sqrtPriceX96 = ethers.toBigInt(
+        Math.floor(Math.sqrt(price) * 2 ** 96).toString()
+      );
+    }
+
     const initTx = (await pool.initialize(
       sqrtPriceX96
     )) as ethers.TransactionResponse;
@@ -103,4 +116,5 @@ export const createCommand = new Command("create")
     "Fee tier for the pool (3000 = 0.3%)",
     DEFAULT_FEE.toString()
   )
+  .option("--initial-price <initialPrice>", "Initial price for the pool")
   .action(main);
