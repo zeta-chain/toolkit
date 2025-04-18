@@ -6,13 +6,12 @@ import {
   DEFAULT_FACTORY,
   DEFAULT_FEE,
   DEFAULT_POSITION_MANAGER,
-} from "./constants";
+} from "../constants";
 
 async function main(options: {
   rpc: string;
   pool: string;
-  amount0: string;
-  amount1: string;
+  amounts: string[];
   recipient?: string;
   tickLower?: number;
   tickUpper?: number;
@@ -61,8 +60,8 @@ async function main(options: {
     ]);
 
     // Convert human-readable amounts to BigInt
-    const amount0 = ethers.parseUnits(options.amount0, decimals0);
-    const amount1 = ethers.parseUnits(options.amount1, decimals1);
+    const amount0 = ethers.parseUnits(options.amounts[0], decimals0);
+    const amount1 = ethers.parseUnits(options.amounts[1], decimals1);
 
     // Initialize position manager contract
     const positionManager = new ethers.Contract(
@@ -150,12 +149,8 @@ export const addCommand = new Command("add")
   .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
   .requiredOption("--pool <pool>", "Pool contract address")
   .requiredOption(
-    "--amount0 <amount0>",
-    "Amount of token0 to add (in human-readable format)"
-  )
-  .requiredOption(
-    "--amount1 <amount1>",
-    "Amount of token1 to add (in human-readable format)"
+    "--amounts <amounts...>",
+    "Amounts of tokens to add (in human-readable format, e.g. 0.1 5)"
   )
   .option(
     "--recipient <recipient>",
