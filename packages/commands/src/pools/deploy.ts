@@ -4,18 +4,12 @@ import * as SwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRoute
 import { Command } from "commander";
 import { ContractFactory, ethers, JsonRpcProvider, Wallet } from "ethers";
 
+import {
+  DeploymentError,
+  type DeployOptions,
+  deployOptionsSchema,
+} from "../../../../types/pools";
 import { DEFAULT_RPC, DEFAULT_WZETA } from "./constants";
-
-interface DeployOptions {
-  privateKey: string;
-  rpc: string;
-  wzeta: string;
-}
-
-interface DeploymentError extends Error {
-  receipt?: ethers.TransactionReceipt;
-  transaction?: ethers.TransactionResponse;
-}
 
 const deployOpts = {
   gasLimit: 8000000,
@@ -40,9 +34,12 @@ const estimateGas = async (
 
 const main = async (options: DeployOptions): Promise<void> => {
   try {
+    // Validate options
+    const validatedOptions = deployOptionsSchema.parse(options);
+
     // Initialize provider and signer
-    const provider = new JsonRpcProvider(options.rpc);
-    const signer = new Wallet(options.privateKey, provider);
+    const provider = new JsonRpcProvider(validatedOptions.rpc);
+    const signer = new Wallet(validatedOptions.privateKey, provider);
 
     console.log("Deploying Uniswap V3 contracts...");
     console.log("Deployer address:", await signer.getAddress());
@@ -92,7 +89,7 @@ const main = async (options: DeployOptions): Promise<void> => {
     // Estimate gas for router deployment
     const routerGasEstimate = await estimateGas(swapRouter, [
       await uniswapV3FactoryInstance.getAddress(),
-      options.wzeta,
+      validatedOptions.wzeta,
     ]);
     if (routerGasEstimate) {
       deployOpts.gasLimit = Number(routerGasEstimate * 2n);
@@ -102,7 +99,7 @@ const main = async (options: DeployOptions): Promise<void> => {
 
     const swapRouterInstance = await swapRouter.deploy(
       await uniswapV3FactoryInstance.getAddress(),
-      options.wzeta,
+      validatedOptions.wzeta,
       deployOpts
     );
     console.log(
@@ -129,7 +126,7 @@ const main = async (options: DeployOptions): Promise<void> => {
       nonfungiblePositionManager,
       [
         await uniswapV3FactoryInstance.getAddress(),
-        options.wzeta,
+        validatedOptions.wzeta,
         await swapRouterInstance.getAddress(),
       ]
     );
@@ -142,7 +139,7 @@ const main = async (options: DeployOptions): Promise<void> => {
     const nonfungiblePositionManagerInstance =
       await nonfungiblePositionManager.deploy(
         await uniswapV3FactoryInstance.getAddress(),
-        options.wzeta,
+        validatedOptions.wzeta,
         await swapRouterInstance.getAddress(),
         deployOpts
       );

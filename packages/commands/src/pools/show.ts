@@ -3,50 +3,40 @@ import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Po
 import { Command, Option } from "commander";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 
+import {
+  type ShowPoolOptions,
+  showPoolOptionsSchema,
+  Slot0Result,
+} from "../../../../types/pools";
 import { DEFAULT_FACTORY, DEFAULT_FEE, DEFAULT_RPC } from "./constants";
-
-interface ShowPoolOptions {
-  factory?: string;
-  fee?: number;
-  pool?: string;
-  rpc: string;
-  tokens?: string[];
-}
-
-interface Slot0Result {
-  feeProtocol: number;
-  observationCardinality: number;
-  observationCardinalityNext: number;
-  observationIndex: number;
-  sqrtPriceX96: bigint;
-  tick: number;
-  unlocked: boolean;
-}
 
 const main = async (options: ShowPoolOptions): Promise<void> => {
   try {
+    // Validate options
+    const validatedOptions = showPoolOptionsSchema.parse(options);
+
     // Initialize provider
-    const provider = new JsonRpcProvider(options.rpc);
+    const provider = new JsonRpcProvider(validatedOptions.rpc);
     let poolAddress: string;
-    if (options.pool) {
-      poolAddress = options.pool;
-    } else if (options.tokens) {
-      if (options.tokens.length !== 2) {
+    if (validatedOptions.pool) {
+      poolAddress = validatedOptions.pool;
+    } else if (validatedOptions.tokens) {
+      if (validatedOptions.tokens.length !== 2) {
         throw new Error("Exactly 2 token addresses must be provided");
       }
 
       // Initialize factory contract
       const factory = new Contract(
-        options.factory ?? DEFAULT_FACTORY,
+        validatedOptions.factory,
         UniswapV3Factory.abi,
         provider
       );
 
       // Get pool address from factory
-      const fee = options.fee ?? 3000; // Default to 0.3% fee tier
+      const fee = validatedOptions.fee;
       poolAddress = (await factory.getPool(
-        options.tokens[0],
-        options.tokens[1],
+        validatedOptions.tokens[0],
+        validatedOptions.tokens[1],
         fee
       )) as string;
 

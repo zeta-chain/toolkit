@@ -5,49 +5,33 @@ import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
 import inquirer from "inquirer";
 
 import {
+  type AddLiquidityOptions,
+  addLiquidityOptionsSchema,
+  MintParams,
+} from "../../../../../types/pools";
+import {
   DEFAULT_FACTORY,
   DEFAULT_FEE,
   DEFAULT_POSITION_MANAGER,
   DEFAULT_RPC,
 } from "../constants";
 
-interface AddLiquidityOptions {
-  amounts: string[];
-  privateKey: string;
-  recipient?: string;
-  rpc: string;
-  tickLower?: number;
-  tickUpper?: number;
-  tokens: string[];
-}
-
-interface MintParams {
-  amount0Desired: bigint;
-  amount0Min: bigint;
-  amount1Desired: bigint;
-  amount1Min: bigint;
-  deadline: number;
-  fee: number;
-  recipient: string;
-  tickLower: number;
-  tickUpper: number;
-  token0: string;
-  token1: string;
-}
-
 const main = async (options: AddLiquidityOptions): Promise<void> => {
   try {
+    // Validate options
+    const validatedOptions = addLiquidityOptionsSchema.parse(options);
+
     // Initialize provider and signer
-    const provider = new JsonRpcProvider(options.rpc);
-    const signer = new Wallet(options.privateKey, provider);
+    const provider = new JsonRpcProvider(validatedOptions.rpc);
+    const signer = new Wallet(validatedOptions.privateKey, provider);
 
     // Get token addresses
-    if (options.tokens.length !== 2) {
+    if (validatedOptions.tokens.length !== 2) {
       throw new Error("Exactly 2 token addresses must be provided");
     }
     const [token0, token1]: [string, string] = [
-      options.tokens[0],
-      options.tokens[1],
+      validatedOptions.tokens[0],
+      validatedOptions.tokens[1],
     ];
 
     // Initialize token contracts to get decimals and symbols
@@ -78,8 +62,8 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
 
     // Convert human-readable amounts to BigInt
     const [amount0, amount1] = [
-      ethers.parseUnits(options.amounts[0], decimals0),
-      ethers.parseUnits(options.amounts[1], decimals1),
+      ethers.parseUnits(validatedOptions.amounts[0], decimals0),
+      ethers.parseUnits(validatedOptions.amounts[1], decimals1),
     ] as [bigint, bigint];
 
     // Initialize factory contract to check if pool exists
@@ -124,7 +108,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     if (balance0 < amount0) {
       throw new Error(
         `Insufficient ${symbol0} balance. Required: ${
-          options.amounts[0]
+          validatedOptions.amounts[0]
         }, Available: ${ethers.formatUnits(balance0, decimals0)}`
       );
     }
@@ -132,22 +116,26 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     if (balance1 < amount1) {
       throw new Error(
         `Insufficient ${symbol1} balance. Required: ${
-          options.amounts[1]
+          validatedOptions.amounts[1]
         }, Available: ${ethers.formatUnits(balance1, decimals1)}`
       );
     }
 
     // Use signer's address as recipient if not provided
-    const recipient = options.recipient ?? signerAddress;
+    const recipient = validatedOptions.recipient ?? signerAddress;
 
     // Set default tick range if not provided
-    const tickLower = options.tickLower ?? -887220;
-    const tickUpper = options.tickUpper ?? 887220;
+    const tickLower = validatedOptions.tickLower ?? -887220;
+    const tickUpper = validatedOptions.tickUpper ?? 887220;
 
     // Show transaction details and get confirmation
     console.log("\nTransaction Details:");
-    console.log(`Token0 (${symbol0}): ${options.amounts[0]} (${token0})`);
-    console.log(`Token1 (${symbol1}): ${options.amounts[1]} (${token1})`);
+    console.log(
+      `Token0 (${symbol0}): ${validatedOptions.amounts[0]} (${token0})`
+    );
+    console.log(
+      `Token1 (${symbol1}): ${validatedOptions.amounts[1]} (${token1})`
+    );
     console.log(`Pool Address: ${poolAddress}`);
     console.log(`Recipient: ${recipient}`);
     console.log(`Tick Range: [${tickLower}, ${tickUpper}]`);
@@ -254,8 +242,8 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log("Recipient Address:", recipient);
     console.log("Token 0 Address:", token0);
     console.log("Token 1 Address:", token1);
-    console.log("Amount0:", options.amounts[0]);
-    console.log("Amount1:", options.amounts[1]);
+    console.log("Amount0:", validatedOptions.amounts[0]);
+    console.log("Amount1:", validatedOptions.amounts[1]);
   } catch (error) {
     console.error("\nFailed to add liquidity:");
     console.error(

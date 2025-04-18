@@ -3,30 +3,25 @@ import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Po
 import { Command } from "commander";
 import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
 
+import {
+  type CreatePoolOptions,
+  createPoolOptionsSchema,
+  PoolCreationError,
+} from "../../../../types/pools";
 import { DEFAULT_FACTORY, DEFAULT_FEE, DEFAULT_RPC } from "./constants";
-
-interface CreatePoolOptions {
-  factory: string;
-  fee?: number;
-  privateKey: string;
-  rpc: string;
-  tokens: string[];
-}
-
-interface PoolCreationError extends Error {
-  receipt?: ethers.TransactionReceipt;
-  transaction?: ethers.TransactionResponse;
-}
 
 const main = async (options: CreatePoolOptions): Promise<void> => {
   try {
-    if (options.tokens.length !== 2) {
+    // Validate options
+    const validatedOptions = createPoolOptionsSchema.parse(options);
+
+    if (validatedOptions.tokens.length !== 2) {
       throw new Error("Exactly 2 token addresses must be provided");
     }
 
     // Initialize provider and signer
-    const provider = new JsonRpcProvider(options.rpc);
-    const signer = new Wallet(options.privateKey, provider);
+    const provider = new JsonRpcProvider(validatedOptions.rpc);
+    const signer = new Wallet(validatedOptions.privateKey, provider);
 
     console.log("Creating Uniswap V3 pool...");
     console.log("Signer address:", await signer.getAddress());
@@ -38,17 +33,17 @@ const main = async (options: CreatePoolOptions): Promise<void> => {
 
     // Initialize factory contract
     const uniswapV3FactoryInstance = new Contract(
-      options.factory,
+      validatedOptions.factory,
       UniswapV3Factory.abi,
       signer
     );
 
     // Create the pool
     console.log("\nCreating pool...");
-    const fee = options.fee || 3000; // Default to 0.3% fee tier
+    const fee = validatedOptions.fee;
     const createPoolTx = (await uniswapV3FactoryInstance.createPool(
-      options.tokens[0],
-      options.tokens[1],
+      validatedOptions.tokens[0],
+      validatedOptions.tokens[1],
       fee
     )) as ethers.TransactionResponse;
     console.log("Pool creation transaction hash:", createPoolTx.hash);
@@ -56,8 +51,8 @@ const main = async (options: CreatePoolOptions): Promise<void> => {
 
     // Get the pool address
     const poolAddress = (await uniswapV3FactoryInstance.getPool(
-      options.tokens[0],
-      options.tokens[1],
+      validatedOptions.tokens[0],
+      validatedOptions.tokens[1],
       fee
     )) as string;
     console.log("Pool deployed at:", poolAddress);
