@@ -11,5 +11,4 @@ export const toolkitCommand = new Command("toolkit")
 toolkitCommand
   .addCommand(solanaEncodeCommand)
   .addCommand(poolsCommand)
-  .addCommand(solanaEncodeCommand)
   .addCommand(accountsCommand);
