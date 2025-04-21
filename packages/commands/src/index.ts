@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { evmDepositCommand } from "./evmDeposit";
+import { evmCommand } from "./evm/";
 import { accountsCommand } from "./accounts";
 import { solanaEncodeCommand } from "./solanaEncode";
 
@@ -9,5 +9,5 @@ export const toolkitCommand = new Command("toolkit")
   .helpCommand(false);
 
 toolkitCommand.addCommand(solanaEncodeCommand);
-toolkitCommand.addCommand(evmDepositCommand);
+toolkitCommand.addCommand(evmCommand);
 toolkitCommand.addCommand(accountsCommand);

@@ -3,7 +3,7 @@ import { type NetworksSchema } from "@zetachain/networks/dist/src/types";
 import { Command } from "commander";
 import { ethers } from "ethers";
 
-import { ZetaChainClient } from "../../client/src/client";
+import { ZetaChainClient } from "../../../client/src/client";
 
 const main = async (options: {
   amount: string;
@@ -93,7 +93,7 @@ const getRpcUrl = (chainId: number): string => {
   return evmRpc.url;
 };
 
-export const evmDepositCommand = new Command("evm-deposit")
+export const depositCommand = new Command("deposit")
   .description("Deposit tokens to ZetaChain from an EVM-compatible chain")
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
   .requiredOption("--network <network>", "Chain ID of the network")
