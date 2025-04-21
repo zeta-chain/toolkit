@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { EncodeOptions, suiEncode } from "../../client/src/suiEncode";
+import { EncodeOptions, suiEncode } from "../../../client/src/suiEncode";
 
 const main = (options: EncodeOptions) => {
   try {
@@ -15,7 +15,7 @@ const main = (options: EncodeOptions) => {
   }
 };
 
-export const suiEncodeCommand = new Command("encode")
+export const encodeCommand = new Command("encode")
   .description("Encode payload data for SUI")
   .requiredOption("--data <data>", "Data to encode")
   .option(

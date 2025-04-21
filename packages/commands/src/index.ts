@@ -1,7 +1,7 @@
 import { Command } from "commander";
 
 import { solanaEncodeCommand } from "./solanaEncode";
-import { suiEncodeCommand } from "./suiEncode";
+import { suiCommand } from "./sui";
 
 export const toolkitCommand = new Command("toolkit")
   .description("Local development environment")
@@ -9,10 +9,8 @@ export const toolkitCommand = new Command("toolkit")
 
 const solanaCommand = new Command("solana").description("Solana commands");
 
-const suiCommand = new Command("sui").description("Sui commands");
-
 solanaCommand.addCommand(solanaEncodeCommand);
-suiCommand.addCommand(suiEncodeCommand);
+suiCommand.addCommand(suiCommand);
 
 toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(suiCommand);
