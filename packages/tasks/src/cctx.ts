@@ -3,7 +3,7 @@ import { task, types } from "hardhat/config";
 import Spinnies from "spinnies";
 import { z } from "zod";
 
-import { validateTaskArgs } from "../../../utils";
+import { validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 interface EmitterArgs {
@@ -99,7 +99,7 @@ const cctxArgsSchema = z.object({
 type CctxArgs = z.infer<typeof cctxArgsSchema>;
 
 const main = async (args: CctxArgs) => {
-  const parsedArgs = validateTaskArgs(args, cctxArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, cctxArgsSchema);
 
   const network = parsedArgs.mainnet ? "mainnet" : "testnet";
   console.log(`Tracking transaction on ${network}`);
