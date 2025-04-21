@@ -10,7 +10,7 @@ import {
   stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
-import { handleError, parseJson, validateTaskArgs } from "../../../utils";
+import { handleError, parseJson, validateAndParseSchema } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src";
 
@@ -26,7 +26,10 @@ const solanaDepositAndCallArgsSchema = z.object({
 type SolanaDepositAndCallArgs = z.infer<typeof solanaDepositAndCallArgsSchema>;
 
 export const solanaDepositAndCall = async (args: SolanaDepositAndCallArgs) => {
-  const parsedArgs = validateTaskArgs(args, solanaDepositAndCallArgsSchema);
+  const parsedArgs = validateAndParseSchema(
+    args,
+    solanaDepositAndCallArgsSchema
+  );
 
   const values = parseAbiValues(parsedArgs.types, parsedArgs.values);
 

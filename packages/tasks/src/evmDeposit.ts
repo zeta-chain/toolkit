@@ -6,7 +6,7 @@ import {
   bigNumberStringSchema,
   evmAddressSchema,
 } from "../../../types/shared.schema";
-import { validateTaskArgs } from "../../../utils";
+import { validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 const evmDepositArgsSchema = z.object({
@@ -29,7 +29,7 @@ export const evmDeposit = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   try {
-    const parsedArgs = validateTaskArgs(args, evmDepositArgsSchema);
+    const parsedArgs = validateAndParseSchema(args, evmDepositArgsSchema);
 
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
