@@ -108,7 +108,7 @@ export const createAccountsCommand = new Command("create")
       AvailableAccountTypes
     )
   )
-  .option("--name <name>", "Account name", "default")
+  .option("--name <name>", "Account name", "testnet")
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, createAccountOptionsSchema, {
       exitOnError: true,
