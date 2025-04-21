@@ -45,7 +45,32 @@ const main = async (options: {
 
     const client = new ZetaChainClient({ network: networkType, signer });
 
-    // Show transaction details
+    let balance;
+    let decimals = 18;
+    if (options.erc20) {
+      const erc20Contract = new ethers.Contract(
+        options.erc20,
+        [
+          "function balanceOf(address) view returns (uint256)",
+          "function decimals() view returns (uint8)",
+        ],
+        provider
+      );
+      balance = await erc20Contract.balanceOf(signer.address);
+      decimals = await erc20Contract.decimals();
+    } else {
+      balance = await provider.getBalance(signer.address);
+    }
+
+    const amount = ethers.parseUnits(options.amount, decimals);
+    if (balance < amount) {
+      throw new Error(
+        `Insufficient balance. Required: ${
+          options.amount
+        }, Available: ${ethers.formatUnits(balance, decimals)}`
+      );
+    }
+
     console.log(`
 Transaction Details:
 From:   ${signer.address} on ${getChainName(chainId)}
