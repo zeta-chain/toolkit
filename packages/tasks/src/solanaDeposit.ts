@@ -6,7 +6,7 @@ import { task } from "hardhat/config";
 import { z } from "zod";
 
 import { numberArraySchema } from "../../../types/shared.schema";
-import { handleError, parseJson, validateTaskArgs } from "../../../utils";
+import { handleError, parseJson, validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src";
 
 const solanaDepositArgsSchema = z.object({
@@ -19,7 +19,7 @@ const solanaDepositArgsSchema = z.object({
 type SolanaDepositArgs = z.infer<typeof solanaDepositArgsSchema>;
 
 export const solanaDeposit = async (args: SolanaDepositArgs) => {
-  const parsedArgs = validateTaskArgs(args, solanaDepositArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, solanaDepositArgsSchema);
 
   const keypair = await getKeypairFromFile(parsedArgs.idPath);
   const wallet = new Wallet(keypair);
