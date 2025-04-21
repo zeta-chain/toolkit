@@ -54,7 +54,6 @@ const printTransactionDetails = (
   }
 ): void => {
   console.log(`
-Transaction Details:
 From:   ${signer.address} on ${getChainName(chainId)}
 To:     ${options.receiver} on ZetaChain
 Amount: ${options.amount} ${options.erc20 ? "ERC-20 tokens" : "native tokens"}${
