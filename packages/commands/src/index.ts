@@ -1,7 +1,7 @@
 import { Command } from "commander";
 
-import { bitcoinCommand } from "./bitcoin";
 import { accountsCommand } from "./accounts";
+import { bitcoinCommand } from "./bitcoin";
 import { solanaEncodeCommand } from "./solanaEncode";
 
 export const toolkitCommand = new Command("toolkit")
