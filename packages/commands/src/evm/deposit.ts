@@ -1,8 +1,8 @@
+import confirm from "@inquirer/confirm";
 import { networks } from "@zetachain/networks";
 import { type NetworksSchema } from "@zetachain/networks/dist/src/types";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
-import confirm from "@inquirer/confirm";
 
 import { readKeyFromStore } from "../../../../utils";
 import { ZetaChainClient } from "../../../client/src/client";
@@ -64,8 +64,8 @@ Call on revert: ${options.callOnRevert ? "true" : "false"}${
     let confirmed;
     try {
       confirmed = await confirm({
-        message: "Proceed with the transaction?",
         default: true,
+        message: "Proceed with the transaction?",
       });
     } catch (error) {
       console.log("\nTransaction cancelled");
