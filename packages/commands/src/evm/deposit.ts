@@ -44,31 +44,37 @@ const main = async (options: {
 
     const client = new ZetaChainClient({ network: networkType, signer });
 
-    // Show confirmation prompt
-    const revertAddress = signer.address;
-    const confirmed = await confirm({
-      message: `\nTransaction Details:
-From:   ${signer.address} on ${networkType} (${chainId})
-To:     ${options.receiver}
+    // Show transaction details
+    console.log(`
+Transaction Details:
+From:   ${signer.address} on ${getChainName(chainId)}
+To:     ${options.receiver} on ZetaChain
 Amount: ${options.amount} ${options.erc20 ? "ERC-20 tokens" : "native tokens"}${
-        !options.callOnRevert ? `\nRefund: ${revertAddress}` : ""
-      }
-Call on revert: ${options.callOnRevert ? "Enabled" : "Disabled"}
-${
-  options.callOnRevert
-    ? `  Revert To: ${revertAddress}
+      !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
+    }
+Call on revert: ${options.callOnRevert ? "Enabled" : "Disabled"}${
+      options.callOnRevert
+        ? `\n  Revert To: ${signer.address}
   Gas Limit: ${options.onRevertGasLimit}
   Message:   "${options.revertMessage}"`
-    : ""
-}
+        : ""
+    }\n`);
 
-Proceed with the transaction?`,
-      default: false,
-    });
+    // Show confirmation prompt
+    let confirmed;
+    try {
+      confirmed = await confirm({
+        message: "Proceed with the transaction?",
+        default: true,
+      });
+    } catch (error) {
+      console.log("\nTransaction cancelled");
+      process.exit(0);
+    }
 
     if (!confirmed) {
-      console.log("Transaction cancelled");
-      return;
+      console.log("\nTransaction cancelled");
+      process.exit(0);
     }
 
     const tx = await client.evmDeposit({
@@ -78,7 +84,7 @@ Proceed with the transaction?`,
       revertOptions: {
         callOnRevert: options.callOnRevert,
         onRevertGasLimit: options.onRevertGasLimit,
-        revertAddress: revertAddress,
+        revertAddress: signer.address,
         revertMessage: options.revertMessage,
       },
       txOptions: {
@@ -104,6 +110,19 @@ const getNetworkType = (chainId: number): "testnet" | "mainnet" => {
   }
 
   return network.type;
+};
+
+const getChainName = (chainId: number): string => {
+  const typedNetworks = networks as NetworksSchema;
+  const network = Object.values(typedNetworks).find(
+    (n) => n.chain_id === chainId
+  );
+
+  if (!network) {
+    throw new Error(`Network with chain ID ${chainId} not found`);
+  }
+
+  return network.chain_name;
 };
 
 const getRpcUrl = (chainId: number): string => {
