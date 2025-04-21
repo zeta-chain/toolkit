@@ -7,6 +7,68 @@ import { ethers } from "ethers";
 import { readKeyFromStore } from "../../../../utils";
 import { ZetaChainClient } from "../../../client/src/client";
 
+const checkBalance = async (
+  provider: ethers.Provider,
+  signer: ethers.Wallet,
+  amount: string,
+  erc20?: string
+): Promise<void> => {
+  let balance: bigint;
+  let decimals = 18;
+  if (erc20) {
+    const erc20Contract = new ethers.Contract(
+      erc20,
+      [
+        "function balanceOf(address) view returns (uint256)",
+        "function decimals() view returns (uint8)",
+      ],
+      provider
+    );
+    balance = (await erc20Contract.balanceOf(signer.address)) as bigint;
+    decimals = (await erc20Contract.decimals()) as number;
+  } else {
+    balance = await provider.getBalance(signer.address);
+  }
+
+  const parsedAmount = ethers.parseUnits(amount, decimals);
+  if (balance < parsedAmount) {
+    throw new Error(
+      `Insufficient balance. Required: ${amount}, Available: ${ethers.formatUnits(
+        balance,
+        decimals
+      )}`
+    );
+  }
+};
+
+const printTransactionDetails = (
+  signer: ethers.Wallet,
+  chainId: number,
+  options: {
+    amount: string;
+    callOnRevert: boolean;
+    erc20?: string;
+    onRevertGasLimit: string;
+    receiver: string;
+    revertMessage: string;
+  }
+): void => {
+  console.log(`
+Transaction Details:
+From:   ${signer.address} on ${getChainName(chainId)}
+To:     ${options.receiver} on ZetaChain
+Amount: ${options.amount} ${options.erc20 ? "ERC-20 tokens" : "native tokens"}${
+    !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
+  }
+Call on revert: ${options.callOnRevert ? "true" : "false"}${
+    options.callOnRevert
+      ? `\n  Revert Address:      ${signer.address}
+  On Revert Gas Limit: ${options.onRevertGasLimit}
+  Revert Message:      "${options.revertMessage}"`
+      : ""
+  }\n`);
+};
+
 const main = async (options: {
   amount: string;
   callOnRevert: boolean;
@@ -45,46 +107,16 @@ const main = async (options: {
 
     const client = new ZetaChainClient({ network: networkType, signer });
 
-    let balance;
-    let decimals = 18;
-    if (options.erc20) {
-      const erc20Contract = new ethers.Contract(
-        options.erc20,
-        [
-          "function balanceOf(address) view returns (uint256)",
-          "function decimals() view returns (uint8)",
-        ],
-        provider
-      );
-      balance = await erc20Contract.balanceOf(signer.address);
-      decimals = await erc20Contract.decimals();
-    } else {
-      balance = await provider.getBalance(signer.address);
-    }
+    await checkBalance(provider, signer, options.amount, options.erc20);
 
-    const amount = ethers.parseUnits(options.amount, decimals);
-    if (balance < amount) {
-      throw new Error(
-        `Insufficient balance. Required: ${
-          options.amount
-        }, Available: ${ethers.formatUnits(balance, decimals)}`
-      );
-    }
-
-    console.log(`
-Transaction Details:
-From:   ${signer.address} on ${getChainName(chainId)}
-To:     ${options.receiver} on ZetaChain
-Amount: ${options.amount} ${options.erc20 ? "ERC-20 tokens" : "native tokens"}${
-      !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
-    }
-Call on revert: ${options.callOnRevert ? "true" : "false"}${
-      options.callOnRevert
-        ? `\n  Revert Address:      ${signer.address}
-  On Revert Gas Limit: ${options.onRevertGasLimit}
-  Revert Message:      "${options.revertMessage}"`
-        : ""
-    }\n`);
+    printTransactionDetails(signer, chainId, {
+      amount: options.amount,
+      callOnRevert: options.callOnRevert,
+      erc20: options.erc20,
+      onRevertGasLimit: options.onRevertGasLimit,
+      receiver: options.receiver,
+      revertMessage: options.revertMessage,
+    });
 
     if (options.yes) {
       console.log("Proceeding with transaction (--yes flag set)");
@@ -92,8 +124,8 @@ Call on revert: ${options.callOnRevert ? "true" : "false"}${
       let confirmed;
       try {
         confirmed = await confirm({
-          message: "Proceed with the transaction?",
           default: true,
+          message: "Proceed with the transaction?",
         });
       } catch (error) {
         console.log("\nTransaction cancelled");
@@ -200,7 +232,7 @@ export const depositCommand = new Command("deposit")
   .option("--gateway <address>", "EVM Gateway address")
   .option(
     "--revert-address <address>",
-    "Address to revert to in case of failure (defaults to sender address)"
+    "Address to revert to in case of failure (default: signer address)"
   )
   .option(
     "--call-on-revert",
