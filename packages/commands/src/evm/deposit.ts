@@ -22,6 +22,7 @@ const main = async (options: {
   revertAddress: string;
   revertMessage: string;
   rpc: string;
+  yes: boolean;
 }) => {
   try {
     const chainId = parseInt(options.network);
@@ -60,21 +61,24 @@ Call on revert: ${options.callOnRevert ? "true" : "false"}${
         : ""
     }\n`);
 
-    // Show confirmation prompt
-    let confirmed;
-    try {
-      confirmed = await confirm({
-        default: true,
-        message: "Proceed with the transaction?",
-      });
-    } catch (error) {
-      console.log("\nTransaction cancelled");
-      process.exit(0);
-    }
+    if (options.yes) {
+      console.log("Proceeding with transaction (--yes flag set)");
+    } else {
+      let confirmed;
+      try {
+        confirmed = await confirm({
+          message: "Proceed with the transaction?",
+          default: true,
+        });
+      } catch (error) {
+        console.log("\nTransaction cancelled");
+        process.exit(0);
+      }
 
-    if (!confirmed) {
-      console.log("\nTransaction cancelled");
-      process.exit(0);
+      if (!confirmed) {
+        console.log("\nTransaction cancelled");
+        process.exit(0);
+      }
     }
 
     const tx = await client.evmDeposit({
@@ -186,4 +190,5 @@ export const depositCommand = new Command("deposit")
   .option("--revert-message <message>", "Message to include in revert", "")
   .option("--gas-limit <limit>", "Gas limit for the transaction")
   .option("--gas-price <price>", "Gas price for the transaction")
+  .option("--yes", "Skip confirmation prompt", false)
   .action(main);
