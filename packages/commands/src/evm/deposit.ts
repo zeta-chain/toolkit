@@ -41,7 +41,7 @@ const checkBalance = async (
   }
 };
 
-const printTransactionDetails = (
+const printTransactionDetails = async (
   signer: ethers.Wallet,
   chainId: number,
   options: {
@@ -52,11 +52,21 @@ const printTransactionDetails = (
     receiver: string;
     revertMessage: string;
   }
-): void => {
+): Promise<void> => {
+  let tokenSymbol = "native tokens";
+  if (options.erc20) {
+    const erc20Contract = new ethers.Contract(
+      options.erc20,
+      ["function symbol() view returns (string)"],
+      signer.provider
+    );
+    tokenSymbol = await erc20Contract.symbol();
+  }
+
   console.log(`
 From:   ${signer.address} on ${getChainName(chainId)}
 To:     ${options.receiver} on ZetaChain
-Amount: ${options.amount} ${options.erc20 ? "ERC-20 tokens" : "native tokens"}${
+Amount: ${options.amount} ${tokenSymbol}${
     !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
   }
 Call on revert: ${options.callOnRevert ? "true" : "false"}${
@@ -108,7 +118,7 @@ const main = async (options: {
 
     await checkBalance(provider, signer, options.amount, options.erc20);
 
-    printTransactionDetails(signer, chainId, {
+    await printTransactionDetails(signer, chainId, {
       amount: options.amount,
       callOnRevert: options.callOnRevert,
       erc20: options.erc20,
