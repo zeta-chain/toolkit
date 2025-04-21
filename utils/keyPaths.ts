@@ -35,12 +35,18 @@ export const getAccountKeyPath = (
   return path.join(getAccountTypeDir(type), `${name}.json`);
 };
 
+interface KeyData {
+  privateKey: string;
+}
+
 export const readKeyFromStore = (keyName: string): string => {
   const keyPath = getAccountKeyPath("evm", keyName);
   if (!fs.existsSync(keyPath)) {
     throw new Error(`Key file not found at ${keyPath}`);
   }
-  const keyData = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
+  const keyData: KeyData = JSON.parse(
+    fs.readFileSync(keyPath, "utf-8")
+  ) as KeyData;
   if (!keyData.privateKey) {
     throw new Error(`Private key not found in key file ${keyPath}`);
   }
