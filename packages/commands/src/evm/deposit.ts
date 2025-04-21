@@ -60,7 +60,7 @@ const printTransactionDetails = async (
       ["function symbol() view returns (string)"],
       signer.provider
     );
-    tokenSymbol = await erc20Contract.symbol();
+    tokenSymbol = (await erc20Contract.symbol()) as string;
   }
 
   console.log(`
