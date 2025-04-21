@@ -2,6 +2,7 @@ import { networks } from "@zetachain/networks";
 import { type NetworksSchema } from "@zetachain/networks/dist/src/types";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
+import confirm from "@inquirer/confirm";
 
 import { readKeyFromStore } from "../../../../utils";
 import { ZetaChainClient } from "../../../client/src/client";
@@ -40,7 +41,36 @@ const main = async (options: {
         `Failed to create signer from private key: ${errorMessage}`
       );
     }
+
     const client = new ZetaChainClient({ network: networkType, signer });
+
+    // Show confirmation prompt
+    const revertAddress = signer.address;
+    const confirmed = await confirm({
+      message: `\nTransaction Details:
+From:   ${signer.address} on ${networkType} (${chainId})
+To:     ${options.receiver}
+Amount: ${options.amount} ${options.erc20 ? "ERC-20 tokens" : "native tokens"}${
+        !options.callOnRevert ? `\nRefund: ${revertAddress}` : ""
+      }
+Call on revert: ${options.callOnRevert ? "Enabled" : "Disabled"}
+${
+  options.callOnRevert
+    ? `  Revert To: ${revertAddress}
+  Gas Limit: ${options.onRevertGasLimit}
+  Message:   "${options.revertMessage}"`
+    : ""
+}
+
+Proceed with the transaction?`,
+      default: false,
+    });
+
+    if (!confirmed) {
+      console.log("Transaction cancelled");
+      return;
+    }
+
     const tx = await client.evmDeposit({
       amount: options.amount,
       erc20: options.erc20,
@@ -48,7 +78,7 @@ const main = async (options: {
       revertOptions: {
         callOnRevert: options.callOnRevert,
         onRevertGasLimit: options.onRevertGasLimit,
-        revertAddress: options.revertAddress,
+        revertAddress: revertAddress,
         revertMessage: options.revertMessage,
       },
       txOptions: {
@@ -122,8 +152,7 @@ export const depositCommand = new Command("deposit")
   .option("--gateway <address>", "EVM Gateway address")
   .option(
     "--revert-address <address>",
-    "Address to revert to in case of failure",
-    ethers.ZeroAddress
+    "Address to revert to in case of failure (defaults to sender address)"
   )
   .option(
     "--call-on-revert",
@@ -133,7 +162,7 @@ export const depositCommand = new Command("deposit")
   .option(
     "--on-revert-gas-limit <limit>",
     "Gas limit for revert operation",
-    "0"
+    "200000"
   )
   .option("--revert-message <message>", "Message to include in revert", "")
   .option("--gas-limit <limit>", "Gas limit for the transaction")
