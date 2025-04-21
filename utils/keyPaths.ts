@@ -1,3 +1,4 @@
+import fs from "fs";
 import os from "os";
 import path from "path";
 
@@ -32,4 +33,16 @@ export const getAccountKeyPath = (
   name: string
 ): string => {
   return path.join(getAccountTypeDir(type), `${name}.json`);
+};
+
+export const readKeyFromStore = (keyName: string): string => {
+  const keyPath = getAccountKeyPath("evm", keyName);
+  if (!fs.existsSync(keyPath)) {
+    throw new Error(`Key file not found at ${keyPath}`);
+  }
+  const keyData = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
+  if (!keyData.privateKey) {
+    throw new Error(`Private key not found in key file ${keyPath}`);
+  }
+  return keyData.privateKey;
 };

@@ -1,8 +1,9 @@
 import { networks } from "@zetachain/networks";
 import { type NetworksSchema } from "@zetachain/networks/dist/src/types";
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { ethers } from "ethers";
 
+import { readKeyFromStore } from "../../../../utils";
 import { ZetaChainClient } from "../../../client/src/client";
 
 const main = async (options: {
@@ -12,7 +13,8 @@ const main = async (options: {
   gasLimit: string;
   gasPrice: string;
   gateway?: string;
-  keyRaw: string;
+  key: string;
+  keyRaw?: string;
   network: string;
   onRevertGasLimit: string;
   receiver: string;
@@ -25,9 +27,12 @@ const main = async (options: {
     const networkType = getNetworkType(chainId);
     const rpcUrl = options.rpc || getRpcUrl(chainId);
     const provider = new ethers.JsonRpcProvider(rpcUrl);
+
+    const privateKey = options.keyRaw || readKeyFromStore(options.key);
+
     let signer;
     try {
-      signer = new ethers.Wallet(options.keyRaw, provider);
+      signer = new ethers.Wallet(privateKey, provider);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
@@ -98,7 +103,17 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
   .requiredOption("--network <network>", "Chain ID of the network")
   .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
-  .requiredOption("--key-raw <key>", "Private key for signing transactions")
+  .addOption(
+    new Option("--key <key>", "Key name to be used from the key store")
+      .default("default")
+      .conflicts(["key-raw"])
+  )
+  .addOption(
+    new Option(
+      "--key-raw <key>",
+      "Private key for signing transactions"
+    ).conflicts(["key"])
+  )
   .option("--rpc <url>", "RPC URL for the source chain")
   .option(
     "--erc20 <address>",
