@@ -224,7 +224,7 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
   .addOption(
     new Option("--key <key>", "Key name to be used from the key store")
-      .default("default")
+      .default("testnet")
       .conflicts(["key-raw"])
   )
   .addOption(
