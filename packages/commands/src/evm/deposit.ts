@@ -52,11 +52,11 @@ To:     ${options.receiver} on ZetaChain
 Amount: ${options.amount} ${options.erc20 ? "ERC-20 tokens" : "native tokens"}${
       !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
     }
-Call on revert: ${options.callOnRevert ? "Enabled" : "Disabled"}${
+Call on revert: ${options.callOnRevert ? "true" : "false"}${
       options.callOnRevert
-        ? `\n  Revert To: ${signer.address}
-  Gas Limit: ${options.onRevertGasLimit}
-  Message:   "${options.revertMessage}"`
+        ? `\n  Revert Address:      ${signer.address}
+  On Revert Gas Limit: ${options.onRevertGasLimit}
+  Revert Message:      "${options.revertMessage}"`
         : ""
     }\n`);
 
