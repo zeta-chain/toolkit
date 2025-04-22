@@ -4,19 +4,15 @@ import { z } from "zod";
 
 import {
   AccountData,
-  AvailableAccountTypes,
   accountDataSchema,
+  AvailableAccountTypes,
 } from "../../../../types/accounts.types";
 import {
   safeExists,
   safeReadDir,
   safeReadFile,
 } from "../../../../utils/fsUtils";
-import { handleError } from "../../../../utils/handleError";
-import {
-  getAccountKeyPath,
-  getAccountTypeDir,
-} from "../../../../utils/keyPaths";
+import { getAccountTypeDir } from "../../../../utils/keyPaths";
 import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
@@ -27,8 +23,8 @@ const listAccountsOptionsSchema = z.object({
 type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
 
 interface TableAccountData {
-  Name: string;
   Address: string;
+  Name: string;
   Type: string;
 }
 
@@ -77,8 +73,8 @@ const main = (options: ListAccountsOptions): void => {
   } else {
     console.log("\nAvailable Accounts:");
     const tableData: TableAccountData[] = accounts.map((account) => ({
-      Name: account.name || "Unnamed",
       Address: account.address,
+      Name: account.name || "Unnamed",
       Type:
         account.privateKeyScheme === "ed25519" &&
         account.keyScheme === "ed25519"

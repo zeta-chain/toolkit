@@ -2,9 +2,8 @@ import { Command } from "commander";
 import { z } from "zod";
 
 import {
-  AccountData,
-  AvailableAccountTypes,
   accountDataSchema,
+  AvailableAccountTypes,
 } from "../../../../types/accounts.types";
 import { safeReadFile } from "../../../../utils/fsUtils";
 import { handleError } from "../../../../utils/handleError";

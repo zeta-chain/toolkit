@@ -1,9 +1,9 @@
 import confirm from "@inquirer/confirm";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Keypair } from "@solana/web3.js";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 import {
   AccountData,
@@ -59,11 +59,11 @@ const createSUIAccount = (): AccountData => {
   const secretKey = keypair.getSecretKey();
   return {
     address: keypair.toSuiAddress(),
+    keyScheme: "ed25519",
     privateKey: `0x${Buffer.from(secretKey).toString("hex")}`,
-    publicKey: keypair.getPublicKey().toBase64(),
     privateKeyEncoding: "hex",
     privateKeyScheme: "ed25519",
-    keyScheme: "ed25519",
+    publicKey: keypair.getPublicKey().toBase64(),
   };
 };
 
