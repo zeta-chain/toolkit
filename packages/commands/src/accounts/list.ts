@@ -3,28 +3,38 @@ import path from "path";
 import { z } from "zod";
 
 import {
-  accountDataSchema,
-  AccountInfo,
+  AccountData,
   AvailableAccountTypes,
-  EVMAccountData,
-  SolanaAccountData,
+  accountDataSchema,
 } from "../../../../types/accounts.types";
 import {
   safeExists,
   safeReadDir,
   safeReadFile,
 } from "../../../../utils/fsUtils";
-import { getAccountTypeDir } from "../../../../utils/keyPaths";
+import { handleError } from "../../../../utils/handleError";
+import {
+  getAccountKeyPath,
+  getAccountTypeDir,
+} from "../../../../utils/keyPaths";
 import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const listAccountsOptionsSchema = z.object({
-  json: z.boolean().default(false),
+  json: z.boolean().optional(),
 });
+
+type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
+
+interface TableAccountData {
+  Name: string;
+  Address: string;
+  Type: string;
+}
 
 const listChainAccounts = (
   chainType: (typeof AvailableAccountTypes)[number],
-  accounts: AccountInfo[]
+  accounts: AccountData[]
 ): void => {
   const chainDir = getAccountTypeDir(chainType);
   if (!safeExists(chainDir)) return;
@@ -33,24 +43,25 @@ const listChainAccounts = (
 
   for (const file of files) {
     const keyPath = path.join(chainDir, file);
-    const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
-
-    accounts.push({
-      address:
-        chainType === "evm"
-          ? (keyData as EVMAccountData).address
-          : (keyData as SolanaAccountData).publicKey,
-      name: file.replace(".json", ""),
-      type: chainType,
-    });
+    try {
+      const keyData = safeReadFile(keyPath);
+      const parsedData = parseJson(keyData, accountDataSchema);
+      if (parsedData.address && parsedData.privateKey) {
+        accounts.push({
+          ...parsedData,
+          name: file.replace(".json", ""),
+        });
+      }
+    } catch (error: unknown) {
+      // Skip invalid files
+      continue;
+    }
   }
 };
 
-type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
-
 const main = (options: ListAccountsOptions): void => {
   const { json } = options;
-  const accounts: AccountInfo[] = [];
+  const accounts: AccountData[] = [];
 
   listChainAccounts("evm", accounts);
   listChainAccounts("solana", accounts);
@@ -64,7 +75,12 @@ const main = (options: ListAccountsOptions): void => {
     console.log(JSON.stringify(accounts, null, 2));
   } else {
     console.log("\nAvailable Accounts:");
-    console.table(accounts);
+    const tableData: TableAccountData[] = accounts.map((account) => ({
+      Name: account.name || "Unnamed",
+      Address: account.address,
+      Type: account.address.startsWith("0x") ? "EVM" : "SOLANA",
+    }));
+    console.table(tableData);
   }
 };
 

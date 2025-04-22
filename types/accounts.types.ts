@@ -2,10 +2,6 @@ import { z } from "zod";
 
 import { evmAddressSchema } from "../types/shared.schema";
 
-export interface AccountData {
-  [key: string]: string | undefined;
-}
-
 export interface AccountInfo {
   address: string;
   name: string;
@@ -18,28 +14,17 @@ export interface AccountDetails {
 
 export const AvailableAccountTypes = ["evm", "solana"] as const;
 
-// Define schemas for account data types
-const evmAccountDataSchema = z.object({
-  address: evmAddressSchema,
+// Define unified schema for all account types
+export const accountDataSchema = z.object({
+  address: z.string(),
   mnemonic: z.string().optional(),
-  name: z.string().optional(),
   privateKey: z.string(),
-});
-
-const solanaAccountDataSchema = z.object({
+  privateKeyEncoding: z.string().optional(),
+  privateKeyScheme: z.string().optional(),
   name: z.string().optional(),
-  publicKey: z.string(),
-  secretKey: z.string(),
 });
 
-export type EVMAccountData = z.infer<typeof evmAccountDataSchema>;
-export type SolanaAccountData = z.infer<typeof solanaAccountDataSchema>;
-
-// Union schema for both account types
-export const accountDataSchema = z.union([
-  evmAccountDataSchema,
-  solanaAccountDataSchema,
-]);
+export type AccountData = z.infer<typeof accountDataSchema>;
 
 export const accountNameSchema = z
   .string()

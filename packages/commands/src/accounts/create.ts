@@ -35,17 +35,21 @@ type CreateAccountOptions = z.infer<typeof createAccountOptionsSchema>;
 const createEVMAccount = (): AccountData => {
   const wallet = ethers.Wallet.createRandom();
   return {
-    address: wallet.address,
+    address: wallet.address.toLowerCase(),
     mnemonic: wallet.mnemonic?.phrase,
     privateKey: wallet.privateKey,
+    privateKeyEncoding: "hex",
+    privateKeyScheme: "secp256k1",
   };
 };
 
 const createSolanaAccount = (): AccountData => {
   const keypair = Keypair.generate();
   return {
-    publicKey: keypair.publicKey.toBase58(),
-    secretKey: Buffer.from(keypair.secretKey).toString("hex"),
+    address: keypair.publicKey.toBase58(),
+    privateKey: `0x${Buffer.from(keypair.secretKey).toString("hex")}`,
+    privateKeyEncoding: "hex",
+    privateKeyScheme: "ed25519",
   };
 };
 
@@ -78,7 +82,7 @@ const createAccountForType = async (
     if (type === "evm") {
       console.log(`Address: ${keyData.address}`);
     } else {
-      console.log(`Public Key: ${keyData.publicKey}`);
+      console.log(`Public Key: ${keyData.address}`);
     }
   } catch (error: unknown) {
     handleError({

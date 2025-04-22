@@ -1,91 +1,45 @@
-import { Command, Option } from "commander";
+import { Command } from "commander";
 import { z } from "zod";
 
 import {
-  accountDataSchema,
-  AccountDetails,
-  accountNameSchema,
+  AccountData,
   AvailableAccountTypes,
-  EVMAccountData,
-  SolanaAccountData,
+  accountDataSchema,
 } from "../../../../types/accounts.types";
-import { safeExists, safeReadFile } from "../../../../utils/fsUtils";
+import { safeReadFile } from "../../../../utils/fsUtils";
+import { handleError } from "../../../../utils/handleError";
 import { getAccountKeyPath } from "../../../../utils/keyPaths";
 import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const showAccountOptionsSchema = z.object({
-  json: z.boolean().default(false),
-  name: accountNameSchema,
-  type: z.enum(AvailableAccountTypes, {
-    errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
-  }),
+  name: z.string(),
+  type: z.enum(AvailableAccountTypes),
 });
 
 type ShowAccountOptions = z.infer<typeof showAccountOptionsSchema>;
 
-const getEVMAccountDetails = (
-  keyData: EVMAccountData,
-  keyPath: string
-): AccountDetails => {
-  return {
-    address: keyData.address,
-    fileLocation: keyPath,
-    mnemonic: keyData.mnemonic || "N/A",
-    name: keyData.name || "N/A",
-    privateKey: keyData.privateKey,
-    type: "evm",
-  };
-};
-
-const getSolanaAccountDetails = (
-  keyData: SolanaAccountData,
-  keyPath: string
-): AccountDetails => {
-  return {
-    fileLocation: keyPath,
-    name: keyData.name || "N/A",
-    publicKey: keyData.publicKey,
-    secretKey: keyData.secretKey,
-    type: "solana",
-  };
-};
-
 const main = (options: ShowAccountOptions): void => {
-  const { type, name, json } = options;
-
+  const { name, type } = options;
   const keyPath = getAccountKeyPath(type, name);
 
-  if (!safeExists(keyPath)) {
-    console.error(`Account ${name} of type ${type} not found at ${keyPath}`);
-    return;
-  }
-
-  const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
-  keyData.name = name; // Add name to keyData for display
-
-  const accountDetails =
-    type === "evm"
-      ? getEVMAccountDetails(keyData as EVMAccountData, keyPath)
-      : getSolanaAccountDetails(keyData as SolanaAccountData, keyPath);
-
-  if (json) {
-    console.log(JSON.stringify(accountDetails, null, 2));
-  } else {
-    console.log("\nAccount Details:");
-    console.table(accountDetails);
+  try {
+    const keyData = safeReadFile(keyPath);
+    const parsedData = parseJson(keyData, accountDataSchema);
+    console.log(JSON.stringify(parsedData, null, 2));
+  } catch (error: unknown) {
+    handleError({
+      context: "Failed to read account data",
+      error,
+      shouldThrow: true,
+    });
   }
 };
 
-export const showAccountsCommand = new Command("show")
-  .description("Show details of an existing account")
-  .addOption(
-    new Option("--type <type>", "Account type (evm or solana)").choices(
-      AvailableAccountTypes
-    )
-  )
+export const showAccountCommand = new Command("show")
+  .description("Show account details")
   .requiredOption("--name <name>", "Account name")
-  .option("--json", "Output in JSON format")
+  .requiredOption("--type <type>", "Account type")
   .action((opts) => {
     const validated = validateAndParseSchema(opts, showAccountOptionsSchema, {
       exitOnError: true,
