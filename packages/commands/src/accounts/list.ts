@@ -76,8 +76,7 @@ const main = (options: ListAccountsOptions): void => {
       Address: account.address,
       Name: account.name || "Unnamed",
       Type:
-        account.privateKeyScheme === "ed25519" &&
-        account.keyScheme === "ed25519"
+        account.privateKeyScheme === "ed25519"
           ? "SUI"
           : account.address.startsWith("0x")
           ? "EVM"

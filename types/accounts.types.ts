@@ -20,7 +20,6 @@ export const accountNameSchema = z
 // Define unified schema for all account types
 export const accountDataSchema = z.object({
   address: z.string(),
-  keyScheme: z.string().optional(),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
   privateKey: z.string(),

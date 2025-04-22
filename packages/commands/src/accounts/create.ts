@@ -59,7 +59,6 @@ const createSUIAccount = (): AccountData => {
   const secretKey = keypair.getSecretKey();
   return {
     address: keypair.toSuiAddress(),
-    keyScheme: "ed25519",
     privateKey: `0x${Buffer.from(secretKey).toString("hex")}`,
     privateKeyEncoding: "hex",
     privateKeyScheme: "ed25519",
@@ -122,8 +121,9 @@ const main = async (options: CreateAccountOptions) => {
     await createAccountForType(type, name);
   } else {
     console.log("Creating accounts for all supported types...");
-    await createAccountForType("evm", name);
-    await createAccountForType("solana", name);
+    for (const accountType of AvailableAccountTypes) {
+      await createAccountForType(accountType, name);
+    }
   }
 };
 
