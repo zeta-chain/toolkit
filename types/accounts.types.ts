@@ -25,9 +25,7 @@ export const accountDataSchema = z.object({
   name: z.string().optional(),
   privateKey: z.string(),
   privateKeyEncoding: z.string().optional(),
-
   privateKeyScheme: z.string().optional(),
-  // SUI specific fields
   publicKey: z.string().optional(),
 });
 
