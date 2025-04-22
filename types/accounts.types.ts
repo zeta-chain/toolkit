@@ -13,7 +13,7 @@ export interface AccountInfo {
 }
 
 export interface AccountDetails {
-  [key: string]: string;
+  [key: string]: string | number[] | undefined;
 }
 
 export const AvailableAccountTypes = ["evm", "solana"] as const;
@@ -29,7 +29,7 @@ const evmAccountDataSchema = z.object({
 const solanaAccountDataSchema = z.object({
   name: z.string().optional(),
   publicKey: z.string(),
-  secretKey: z.string(),
+  secretKey: z.array(z.number()),
 });
 
 export type EVMAccountData = z.infer<typeof evmAccountDataSchema>;

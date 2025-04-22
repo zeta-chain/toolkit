@@ -41,12 +41,9 @@ const createEVMAccount = (): AccountData => {
   };
 };
 
-const createSolanaAccount = (): AccountData => {
+const createSolanaAccount = (): number[] => {
   const keypair = Keypair.generate();
-  return {
-    publicKey: keypair.publicKey.toBase58(),
-    secretKey: Buffer.from(keypair.secretKey).toString("hex"),
-  };
+  return Array.from(keypair.secretKey);
 };
 
 const createAccountForType = async (
@@ -76,9 +73,13 @@ const createAccountForType = async (
     console.log(`${type.toUpperCase()} account created successfully!`);
     console.log(`Key saved to: ${keyPath}`);
     if (type === "evm") {
-      console.log(`Address: ${keyData.address}`);
+      console.log(`Address: ${(keyData as AccountData).address}`);
     } else {
-      console.log(`Public Key: ${keyData.publicKey}`);
+      console.log(
+        `Public Key: ${Keypair.fromSecretKey(
+          new Uint8Array(keyData as number[])
+        ).publicKey.toBase58()}`
+      );
     }
   } catch (error: unknown) {
     handleError({
