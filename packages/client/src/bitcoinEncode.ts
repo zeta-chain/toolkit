@@ -71,7 +71,7 @@ export const bitcoinEncode = (
 };
 
 // Main Encoding Function
-const encodeToBytes = (header: Header, fields: FieldsV0): Uint8Array => {
+export const encodeToBytes = (header: Header, fields: FieldsV0): Uint8Array => {
   if (!header || !fields) {
     throw new Error("Header and fields are required");
   }
