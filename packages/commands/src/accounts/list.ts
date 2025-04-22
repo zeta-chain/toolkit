@@ -65,6 +65,7 @@ const main = (options: ListAccountsOptions): void => {
 
   listChainAccounts("evm", accounts);
   listChainAccounts("solana", accounts);
+  listChainAccounts("sui", accounts);
 
   if (accounts.length === 0) {
     console.log("No accounts found.");
@@ -78,7 +79,13 @@ const main = (options: ListAccountsOptions): void => {
     const tableData: TableAccountData[] = accounts.map((account) => ({
       Name: account.name || "Unnamed",
       Address: account.address,
-      Type: account.address.startsWith("0x") ? "EVM" : "SOLANA",
+      Type:
+        account.privateKeyScheme === "ed25519" &&
+        account.keyScheme === "ed25519"
+          ? "SUI"
+          : account.address.startsWith("0x")
+          ? "EVM"
+          : "SOLANA",
     }));
     console.table(tableData);
   }

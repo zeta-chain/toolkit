@@ -3,6 +3,7 @@ import { Keypair } from "@solana/web3.js";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 import {
   AccountData,
@@ -53,6 +54,19 @@ const createSolanaAccount = (): AccountData => {
   };
 };
 
+const createSUIAccount = (): AccountData => {
+  const keypair = new Ed25519Keypair();
+  const secretKey = keypair.getSecretKey();
+  return {
+    address: keypair.toSuiAddress(),
+    privateKey: `0x${Buffer.from(secretKey).toString("hex")}`,
+    publicKey: keypair.getPublicKey().toBase64(),
+    privateKeyEncoding: "hex",
+    privateKeyScheme: "ed25519",
+    keyScheme: "ed25519",
+  };
+};
+
 const createAccountForType = async (
   type: (typeof AvailableAccountTypes)[number],
   name: string
@@ -74,15 +88,23 @@ const createAccountForType = async (
       }
     }
 
-    const keyData = type === "evm" ? createEVMAccount() : createSolanaAccount();
+    const keyData =
+      type === "evm"
+        ? createEVMAccount()
+        : type === "solana"
+        ? createSolanaAccount()
+        : createSUIAccount();
 
     safeWriteFile(keyPath, keyData);
     console.log(`${type.toUpperCase()} account created successfully!`);
     console.log(`Key saved to: ${keyPath}`);
     if (type === "evm") {
       console.log(`Address: ${keyData.address}`);
-    } else {
+    } else if (type === "solana") {
       console.log(`Public Key: ${keyData.address}`);
+    } else {
+      console.log(`Address: ${keyData.address}`);
+      console.log(`Public Key: ${keyData.publicKey}`);
     }
   } catch (error: unknown) {
     handleError({

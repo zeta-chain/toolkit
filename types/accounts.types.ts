@@ -12,7 +12,7 @@ export interface AccountDetails {
   [key: string]: string;
 }
 
-export const AvailableAccountTypes = ["evm", "solana"] as const;
+export const AvailableAccountTypes = ["evm", "solana", "sui"] as const;
 
 // Define unified schema for all account types
 export const accountDataSchema = z.object({
@@ -22,6 +22,9 @@ export const accountDataSchema = z.object({
   privateKeyEncoding: z.string().optional(),
   privateKeyScheme: z.string().optional(),
   name: z.string().optional(),
+  // SUI specific fields
+  publicKey: z.string().optional(),
+  keyScheme: z.string().optional(),
 });
 
 export type AccountData = z.infer<typeof accountDataSchema>;
