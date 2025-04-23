@@ -12,7 +12,9 @@ const createAccountOptionsSchema = z.object({
   name: accountNameSchema,
   type: z
     .enum(AvailableAccountTypes, {
-      errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
+      errorMap: () => ({
+        message: "Type must be either 'evm', 'solana', or 'bitcoin'",
+      }),
     })
     .optional(),
 });
@@ -28,15 +30,17 @@ const main = async (options: CreateAccountOptions) => {
     console.log("Creating accounts for all supported types...");
     await createAccountForType("evm", name);
     await createAccountForType("solana", name);
+    await createAccountForType("bitcoin", name);
   }
 };
 
 export const createAccountsCommand = new Command("create")
   .description("Create a new account")
   .addOption(
-    new Option("--type <type>", "Account type (evm or solana)").choices(
-      AvailableAccountTypes
-    )
+    new Option(
+      "--type <type>",
+      "Account type (evm, solana, or bitcoin)"
+    ).choices(AvailableAccountTypes)
   )
   .requiredOption("--name <name>", "Account name")
   .action(async (opts) => {

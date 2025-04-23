@@ -6,6 +6,7 @@ import {
   accountDataSchema,
   AccountInfo,
   AvailableAccountTypes,
+  BitcoinAccountData,
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
@@ -34,15 +35,33 @@ const listChainAccounts = (
   for (const file of files) {
     const keyPath = path.join(chainDir, file);
     const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
+    const name = file.replace(".json", "");
 
-    accounts.push({
-      address:
-        chainType === "evm"
-          ? (keyData as EVMAccountData).address
-          : (keyData as SolanaAccountData).publicKey,
-      name: file.replace(".json", ""),
-      type: chainType,
-    });
+    if (chainType === "evm") {
+      accounts.push({
+        address: (keyData as EVMAccountData).address,
+        name,
+        type: chainType,
+      });
+    } else if (chainType === "solana") {
+      accounts.push({
+        address: (keyData as SolanaAccountData).publicKey,
+        name,
+        type: chainType,
+      });
+    } else if (chainType === "bitcoin") {
+      // Add both mainnet and testnet addresses as separate entries
+      accounts.push({
+        address: (keyData as BitcoinAccountData).mainnetAddress,
+        name,
+        type: "bitcoin",
+      });
+      accounts.push({
+        address: (keyData as BitcoinAccountData).testnetAddress,
+        name,
+        type: "bitcoin",
+      });
+    }
   }
 };
 
@@ -54,6 +73,7 @@ const main = (options: ListAccountsOptions): void => {
 
   listChainAccounts("evm", accounts);
   listChainAccounts("solana", accounts);
+  listChainAccounts("bitcoin", accounts);
 
   if (accounts.length === 0) {
     console.log("No accounts found.");

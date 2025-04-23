@@ -16,7 +16,7 @@ export interface AccountDetails {
   [key: string]: string;
 }
 
-export const AvailableAccountTypes = ["evm", "solana"] as const;
+export const AvailableAccountTypes = ["evm", "solana", "bitcoin"] as const;
 
 // Define schemas for account data types
 const evmAccountDataSchema = z.object({
@@ -32,13 +32,24 @@ const solanaAccountDataSchema = z.object({
   secretKey: z.string(),
 });
 
+const bitcoinAccountDataSchema = z.object({
+  mainnetAddress: z.string(),
+  mainnetWIF: z.string(),
+  name: z.string().optional(),
+  privateKeyBytes: z.string(),
+  testnetAddress: z.string(),
+  testnetWIF: z.string(),
+});
+
 export type EVMAccountData = z.infer<typeof evmAccountDataSchema>;
 export type SolanaAccountData = z.infer<typeof solanaAccountDataSchema>;
+export type BitcoinAccountData = z.infer<typeof bitcoinAccountDataSchema>;
 
-// Union schema for both account types
+// Union schema for all account types
 export const accountDataSchema = z.union([
   evmAccountDataSchema,
   solanaAccountDataSchema,
+  bitcoinAccountDataSchema,
 ]);
 
 export const accountNameSchema = z
