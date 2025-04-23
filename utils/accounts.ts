@@ -3,17 +3,25 @@ import { Keypair } from "@solana/web3.js";
 import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
+import path from "path";
 import * as ecc from "tiny-secp256k1";
 
 import {
   AccountData,
   accountDataSchema,
+  AccountInfo,
   AvailableAccountTypes,
   BitcoinAccountData,
   EVMAccountData,
   SolanaAccountData,
 } from "../types/accounts.types";
-import { safeExists, safeMkdir, safeReadFile, safeWriteFile } from "./fsUtils";
+import {
+  safeExists,
+  safeMkdir,
+  safeReadDir,
+  safeReadFile,
+  safeWriteFile,
+} from "./fsUtils";
 import { handleError } from "./handleError";
 import { getAccountKeyPath, getAccountTypeDir } from "./keyPaths";
 import { parseJson } from "./parseJson";
@@ -173,4 +181,55 @@ export const createAccountForType = async (
       shouldThrow: true,
     });
   }
+};
+
+export const listChainAccounts = (
+  chainType: (typeof AvailableAccountTypes)[number]
+): AccountInfo[] => {
+  const chainDir = getAccountTypeDir(chainType);
+  if (!safeExists(chainDir)) return [];
+
+  const files = safeReadDir(chainDir).filter((file) => file.endsWith(".json"));
+
+  const accounts = files.flatMap((file) => {
+    const keyPath = path.join(chainDir, file);
+    const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
+    const name = file.replace(".json", "");
+
+    if (chainType === "evm") {
+      return [
+        {
+          address: (keyData as EVMAccountData).address,
+          name,
+          type: chainType,
+        },
+      ];
+    } else if (chainType === "solana") {
+      return [
+        {
+          address: (keyData as SolanaAccountData).publicKey,
+          name,
+          type: chainType,
+        },
+      ];
+    } else if (chainType === "bitcoin") {
+      // Return both mainnet and testnet addresses as separate entries
+      return [
+        {
+          address: (keyData as BitcoinAccountData).mainnetAddress,
+          name,
+          type: "bitcoin",
+        },
+        {
+          address: (keyData as BitcoinAccountData).testnetAddress,
+          name,
+          type: "bitcoin",
+        },
+      ];
+    }
+
+    return [];
+  });
+
+  return accounts;
 };
