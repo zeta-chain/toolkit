@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
   accountNameSchema,
+  accountTypeSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
 import { createAccountForType } from "../../../../utils/accounts";
@@ -10,13 +11,7 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 
 const createAccountOptionsSchema = z.object({
   name: accountNameSchema,
-  type: z
-    .enum(AvailableAccountTypes, {
-      errorMap: () => ({
-        message: "Type must be either 'evm', 'solana', or 'bitcoin'",
-      }),
-    })
-    .optional(),
+  type: accountTypeSchema.optional(),
 });
 
 type CreateAccountOptions = z.infer<typeof createAccountOptionsSchema>;
@@ -37,10 +32,7 @@ const main = async (options: CreateAccountOptions) => {
 export const createAccountsCommand = new Command("create")
   .description("Create a new account")
   .addOption(
-    new Option(
-      "--type <type>",
-      "Account type (evm, solana, or bitcoin)"
-    ).choices(AvailableAccountTypes)
+    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
   .requiredOption("--name <name>", "Account name")
   .action(async (opts) => {

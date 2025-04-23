@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import {
   accountNameSchema,
+  accountTypeSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
 import { safeExists, safeUnlink } from "../../../../utils/fsUtils";
@@ -13,11 +14,7 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 
 const deleteAccountOptionsSchema = z.object({
   name: accountNameSchema,
-  type: z.enum(AvailableAccountTypes, {
-    errorMap: () => ({
-      message: "Type must be either 'evm', 'solana', or 'bitcoin'",
-    }),
-  }),
+  type: accountTypeSchema,
 });
 
 type DeleteAccountOptions = z.infer<typeof deleteAccountOptionsSchema>;
@@ -57,10 +54,7 @@ const main = async (options: DeleteAccountOptions) => {
 export const deleteAccountsCommand = new Command("delete")
   .description("Delete an existing account")
   .addOption(
-    new Option(
-      "--type <type>",
-      "Account type (evm, solana, or bitcoin)"
-    ).choices(AvailableAccountTypes)
+    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
   .requiredOption("--name <name>", "Account name")
   .action(async (opts) => {

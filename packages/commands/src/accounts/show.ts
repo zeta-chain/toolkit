@@ -5,6 +5,7 @@ import {
   accountDataSchema,
   AccountDetails,
   accountNameSchema,
+  accountTypeSchema,
   AvailableAccountTypes,
   BitcoinAccountData,
   EVMAccountData,
@@ -18,11 +19,7 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 const showAccountOptionsSchema = z.object({
   json: z.boolean().default(false),
   name: accountNameSchema,
-  type: z.enum(AvailableAccountTypes, {
-    errorMap: () => ({
-      message: "Type must be either 'evm', 'solana', or 'bitcoin'",
-    }),
-  }),
+  type: accountTypeSchema,
 });
 
 type ShowAccountOptions = z.infer<typeof showAccountOptionsSchema>;
@@ -113,10 +110,7 @@ const main = (options: ShowAccountOptions): void => {
 export const showAccountsCommand = new Command("show")
   .description("Show details of an existing account")
   .addOption(
-    new Option(
-      "--type <type>",
-      "Account type (evm, solana, or bitcoin)"
-    ).choices(AvailableAccountTypes)
+    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
   .requiredOption("--name <name>", "Account name")
   .option("--json", "Output in JSON format")
