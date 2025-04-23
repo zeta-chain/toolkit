@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 
@@ -23,29 +16,38 @@ jest.mock("../utils/generateBitcoinAddress", () => ({
     }),
 }));
 
+// Mock file system functions
+jest.mock("../utils/fsUtils", () => ({
+  safeExists: jest.fn(),
+  safeReadFile: jest.fn(),
+}));
+
+// Mock account data functions
+jest.mock("../utils/keyPaths", () => ({
+  getAccountKeyPath: jest.fn().mockReturnValue("/mock/path/account.json"),
+}));
+
 import {
   resolveBitcoinAddress,
   resolveEvmAddress,
   resolveSolanaAddress,
 } from "../utils/addressResolver";
-
-// Mock environment variable access
-const originalEnv = process.env;
+import { safeExists, safeReadFile } from "../utils/fsUtils";
 
 // Sample addresses for testing
 const VALID_EVM_ADDRESS = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
 const INVALID_EVM_ADDRESS = "0xINVALID";
 const VALID_EVM_PRIVATE_KEY =
   "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+// Derived address from the private key above
+const DERIVED_EVM_ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
 const VALID_SOLANA_ADDRESS = "CgngE9RF1W3FyNP3HEP9WM5wQFGQLdaXywSEAV4YHxxw";
 const INVALID_SOLANA_ADDRESS = "INVALID_SOLANA_ADDRESS";
 // Create a sample Solana keypair for testing
 const solanaKeypair = Keypair.generate();
 const VALID_SOLANA_PRIVATE_KEY = bs58.encode(solanaKeypair.secretKey);
-const VALID_SOLANA_PRIVATE_KEY_ARRAY = JSON.stringify(
-  Array.from(solanaKeypair.secretKey)
-);
+const SOLANA_PUBLIC_KEY = solanaKeypair.publicKey.toString();
 
 const VALID_BTC_MAINNET_ADDRESS = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"; // Bitcoin genesis address
 const VALID_BTC_TESTNET_ADDRESS = "tb1ql7w62elx9ucw4pj5lgw4l028hmuw80sndtntxt"; // Random testnet address
@@ -58,17 +60,13 @@ describe("Address Resolver Utils", () => {
   // Setup and teardown
   beforeEach(() => {
     jest.resetModules();
-    process.env = { ...originalEnv };
+    jest.clearAllMocks();
 
-    // Clear environment variables we'll test
-    delete process.env.EVM_PRIVATE_KEY;
-    delete process.env.PRIVATE_KEY;
-    delete process.env.SOLANA_PRIVATE_KEY;
-    delete process.env.BTC_PRIVATE_KEY;
-  });
+    // Mock safeExists to return false by default (no files exist)
+    (safeExists as jest.Mock).mockReturnValue(false);
 
-  afterEach(() => {
-    process.env = originalEnv;
+    // Mock safeReadFile to return empty string by default
+    (safeReadFile as jest.Mock).mockReturnValue("{}");
   });
 
   describe("resolveEvmAddress", () => {
@@ -82,29 +80,46 @@ describe("Address Resolver Utils", () => {
       expect(result).toBeUndefined();
     });
 
-    it("should derive address from EVM_PRIVATE_KEY", () => {
-      process.env.EVM_PRIVATE_KEY = VALID_EVM_PRIVATE_KEY;
-      const result = resolveEvmAddress({});
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
+    it("should derive address from account name", () => {
+      // Setup mocks for account data
+      (safeExists as jest.Mock).mockReturnValue(true);
+      (safeReadFile as jest.Mock).mockReturnValue(
+        JSON.stringify({
+          address: DERIVED_EVM_ADDRESS,
+          privateKey: VALID_EVM_PRIVATE_KEY,
+        })
+      );
+
+      const result = resolveEvmAddress({ accountName: "testAccount" });
+      expect(result).toBe(DERIVED_EVM_ADDRESS);
     });
 
-    it("should derive address from PRIVATE_KEY", () => {
-      process.env.PRIVATE_KEY = VALID_EVM_PRIVATE_KEY;
-      const result = resolveEvmAddress({});
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
+    it("should return undefined if account file doesn't exist", () => {
+      // File doesn't exist
+      (safeExists as jest.Mock).mockReturnValue(false);
+
+      const result = resolveEvmAddress({ accountName: "nonExistentAccount" });
+      expect(result).toBeUndefined();
     });
 
-    it("should return undefined if no address and no private key", () => {
+    it("should return undefined if no address and no account name", () => {
       const result = resolveEvmAddress({});
       expect(result).toBeUndefined();
     });
 
-    it("should call error handler if private key is invalid", () => {
-      process.env.EVM_PRIVATE_KEY = "invalid";
+    it("should call error handler if account data is invalid", () => {
+      // Setup mocks for invalid account data
+      (safeExists as jest.Mock).mockReturnValue(true);
+      (safeReadFile as jest.Mock).mockImplementation(() => {
+        throw new Error("Invalid data");
+      });
+
       const mockErrorHandler = jest.fn();
-      const result = resolveEvmAddress({ handleError: mockErrorHandler });
+      const result = resolveEvmAddress({
+        accountName: "invalidAccount",
+        handleError: mockErrorHandler,
+      });
+
       expect(result).toBeUndefined();
       expect(mockErrorHandler).toHaveBeenCalled();
     });
@@ -125,29 +140,48 @@ describe("Address Resolver Utils", () => {
       expect(result).toBeUndefined();
     });
 
-    it("should derive address from base58 encoded SOLANA_PRIVATE_KEY", () => {
-      process.env.SOLANA_PRIVATE_KEY = VALID_SOLANA_PRIVATE_KEY;
-      const result = resolveSolanaAddress({});
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
+    it("should derive address from account name", () => {
+      // Setup mocks for account data
+      (safeExists as jest.Mock).mockReturnValue(true);
+      (safeReadFile as jest.Mock).mockReturnValue(
+        JSON.stringify({
+          publicKey: SOLANA_PUBLIC_KEY,
+          secretKey: VALID_SOLANA_PRIVATE_KEY,
+        })
+      );
+
+      const result = resolveSolanaAddress({ accountName: "testAccount" });
+      expect(result).toBe(SOLANA_PUBLIC_KEY);
     });
 
-    it("should derive address from JSON array SOLANA_PRIVATE_KEY", () => {
-      process.env.SOLANA_PRIVATE_KEY = VALID_SOLANA_PRIVATE_KEY_ARRAY;
-      const result = resolveSolanaAddress({});
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
+    it("should return undefined if account file doesn't exist", () => {
+      // File doesn't exist
+      (safeExists as jest.Mock).mockReturnValue(false);
+
+      const result = resolveSolanaAddress({
+        accountName: "nonExistentAccount",
+      });
+      expect(result).toBeUndefined();
     });
 
-    it("should return undefined if no address and no private key", () => {
+    it("should return undefined if no address and no account name", () => {
       const result = resolveSolanaAddress({});
       expect(result).toBeUndefined();
     });
 
-    it("should call error handler if private key is invalid", () => {
-      process.env.SOLANA_PRIVATE_KEY = "invalid";
+    it("should call error handler if account data is invalid", () => {
+      // Setup mocks for invalid account data
+      (safeExists as jest.Mock).mockReturnValue(true);
+      (safeReadFile as jest.Mock).mockImplementation(() => {
+        throw new Error("Invalid data");
+      });
+
       const mockErrorHandler = jest.fn();
-      const result = resolveSolanaAddress({ handleError: mockErrorHandler });
+      const result = resolveSolanaAddress({
+        accountName: "invalidAccount",
+        handleError: mockErrorHandler,
+      });
+
       expect(result).toBeUndefined();
       expect(mockErrorHandler).toHaveBeenCalled();
     });
@@ -197,6 +231,7 @@ describe("Address Resolver Utils", () => {
       process.env.BTC_PRIVATE_KEY = VALID_BTC_PRIVATE_KEY;
       const result = resolveBitcoinAddress({ isMainnet: true });
       expect(result).toBe(VALID_BTC_MAINNET_ADDRESS);
+      delete process.env.BTC_PRIVATE_KEY;
     });
 
     it("should return undefined if no address and no private key", () => {
@@ -210,6 +245,7 @@ describe("Address Resolver Utils", () => {
       const result = resolveBitcoinAddress({ handleError: mockErrorHandler });
       expect(result).toBeUndefined();
       expect(mockErrorHandler).toHaveBeenCalled();
+      delete process.env.BTC_PRIVATE_KEY;
     });
   });
 });

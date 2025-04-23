@@ -42,6 +42,7 @@ interface BalancesOptions {
   evm?: string;
   json?: boolean;
   mainnet?: boolean;
+  name?: string;
   solana?: string;
 }
 
@@ -50,18 +51,30 @@ const main = async (options: BalancesOptions) => {
 
   try {
     const evmAddress = resolveEvmAddress({
+      accountName: options.name,
       evmAddress: options.evm,
-      handleError: () => spinner.warn("Error parsing EVM private key"),
+      handleError: () =>
+        spinner.warn(
+          `Error resolving EVM address ${
+            !options.evm && options.name ? `for user ${options.name}` : ""
+          }`
+        ),
     });
 
     const solanaAddress = resolveSolanaAddress({
-      handleError: () => spinner.warn("Error parsing Solana private key"),
+      accountName: options.name,
+      handleError: () =>
+        spinner.warn(
+          `Error resolving Solana address ${
+            !options.solana && options.name ? `for user ${options.name}` : ""
+          }`
+        ),
       solanaAddress: options.solana,
     });
 
     const btcAddress = resolveBitcoinAddress({
       bitcoinAddress: options.bitcoin,
-      handleError: () => spinner.warn("Error deriving Bitcoin address"),
+      handleError: () => spinner.warn("Error resolving Bitcoin address"),
       isMainnet: options.mainnet,
     });
 
@@ -122,6 +135,7 @@ export const balancesCommand = new Command("balances")
     "--bitcoin <address>",
     "Fetch balances for a specific Bitcoin address"
   )
+  .option("--name <name>", "Account name")
   .option("--mainnet", "Run the command on mainnet")
   .option("--json", "Output balances as JSON")
   .action(main);
