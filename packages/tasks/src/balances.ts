@@ -3,7 +3,7 @@ import { task } from "hardhat/config";
 import ora from "ora";
 import { z } from "zod";
 
-import { validateTaskArgs } from "../../../utils";
+import { validateAndParseSchema } from "../../../utils";
 import {
   resolveBitcoinAddress,
   resolveEvmAddress,
@@ -49,7 +49,7 @@ const balancesArgsSchema = z.object({
 type BalancesArgs = z.infer<typeof balancesArgsSchema>;
 
 const main = async (args: BalancesArgs) => {
-  const parsedArgs = validateTaskArgs(args, balancesArgsSchema);
+  const parsedArgs = validateAndParseSchema(args, balancesArgsSchema);
 
   const client = new ZetaChainClient({
     network: parsedArgs.mainnet ? "mainnet" : "testnet",

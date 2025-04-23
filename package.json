@@ -10,6 +10,11 @@
       "require": "./dist/packages/client/src/index.js",
       "types": "./dist/packages/client/src/index.d.ts"
     },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
+    },
     "./test": {
       "import": "./dist/packages/test/src/index.js",
       "require": "./dist/packages/test/src/index.js",
@@ -33,7 +38,8 @@
     "copy-types": "npx cpx './typechain-types/**/*' ./dist/typechain-types",
     "test": "jest",
     "test:watch": "jest --watch",
-    "toolkit": "yarn build && node dist/packages/commands/src/program.js"
+    "zetachain:build": "yarn build && node dist/packages/commands/src/program.js",
+    "zetachain": "npx ts-node packages/commands/src/program.ts"
   },
   "keywords": [],
   "author": "ZetaChain",
