@@ -1,8 +1,9 @@
 import chalk from "chalk";
-import { Command } from "commander";
-import * as dotenv from "dotenv";
+import { Command, Option } from "commander";
 import ora from "ora";
+import { z } from "zod";
 
+import { accountNameSchema } from "../../../types/accounts.types";
 import {
   resolveBitcoinAddress,
   resolveEvmAddress,
@@ -10,8 +11,6 @@ import {
 } from "../../../utils/addressResolver";
 import { formatAddresses, formatBalances } from "../../../utils/formatting";
 import { ZetaChainClient } from "../../client/src/client";
-
-dotenv.config();
 
 /**
  * @todo (Hernan): We need to change this to the account command once we have it.
@@ -37,14 +36,16 @@ To resolve this issue, please choose one of these options:
    npx hardhat account --save
 `;
 
-interface BalancesOptions {
-  bitcoin?: string;
-  evm?: string;
-  json?: boolean;
-  mainnet?: boolean;
-  name?: string;
-  solana?: string;
-}
+const balancesOptionsSchema = z.object({
+  bitcoin: z.string().optional(),
+  evm: z.string().optional(),
+  json: z.boolean().default(false),
+  name: accountNameSchema,
+  network: z.enum(["mainnet", "testnet"]).default("testnet"),
+  solana: z.string().optional(),
+});
+
+type BalancesOptions = z.infer<typeof balancesOptionsSchema>;
 
 const main = async (options: BalancesOptions) => {
   const spinner = ora("Connecting to network...").start();
@@ -75,7 +76,7 @@ const main = async (options: BalancesOptions) => {
     const btcAddress = resolveBitcoinAddress({
       bitcoinAddress: options.bitcoin,
       handleError: () => spinner.warn("Error resolving Bitcoin address"),
-      isMainnet: options.mainnet,
+      isMainnet: options.network === "mainnet",
     });
 
     if (!evmAddress && !btcAddress && !solanaAddress) {
@@ -86,12 +87,10 @@ const main = async (options: BalancesOptions) => {
 
     spinner.text = "Initializing client...";
     const client = new ZetaChainClient({
-      network: options.mainnet ? "mainnet" : "testnet",
+      network: options.network,
     });
 
-    spinner.text = `Fetching balances on ${
-      options.mainnet ? "mainnet" : "testnet"
-    }...`;
+    spinner.text = `Fetching balances on ${options.network}...`;
     const balances = await client.getBalances({
       btcAddress,
       evmAddress,
@@ -136,6 +135,13 @@ export const balancesCommand = new Command("balances")
     "Fetch balances for a specific Bitcoin address"
   )
   .option("--name <name>", "Account name")
-  .option("--mainnet", "Run the command on mainnet")
+  .addOption(
+    new Option("--network <network>", "Network to use")
+      .choices(["mainnet", "testnet"])
+      .default("testnet")
+  )
   .option("--json", "Output balances as JSON")
-  .action(main);
+  .action(async (options: BalancesOptions) => {
+    const validatedOptions = balancesOptionsSchema.parse(options);
+    await main(validatedOptions);
+  });
