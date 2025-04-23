@@ -52,9 +52,6 @@ const SOLANA_PUBLIC_KEY = solanaKeypair.publicKey.toString();
 const VALID_BTC_MAINNET_ADDRESS = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"; // Bitcoin genesis address
 const VALID_BTC_TESTNET_ADDRESS = "tb1ql7w62elx9ucw4pj5lgw4l028hmuw80sndtntxt"; // Random testnet address
 const INVALID_BTC_ADDRESS = "INVALID_BTC_ADDRESS";
-// WIF-formatted Bitcoin private key (for testing only, not a real key with funds)
-const VALID_BTC_PRIVATE_KEY =
-  "5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss";
 
 describe("Address Resolver Utils", () => {
   // Setup and teardown
@@ -227,25 +224,68 @@ describe("Address Resolver Utils", () => {
       expect(resultTestnetOnMainnet).toBeUndefined();
     });
 
-    it("should derive address from BTC_PRIVATE_KEY", () => {
-      process.env.BTC_PRIVATE_KEY = VALID_BTC_PRIVATE_KEY;
-      const result = resolveBitcoinAddress({ isMainnet: true });
-      expect(result).toBe(VALID_BTC_MAINNET_ADDRESS);
-      delete process.env.BTC_PRIVATE_KEY;
-    });
-
-    it("should return undefined if no address and no private key", () => {
+    it("should return undefined if no address and no account name", () => {
       const result = resolveBitcoinAddress({});
       expect(result).toBeUndefined();
     });
 
-    it("should call error handler if private key is invalid", () => {
-      process.env.BTC_PRIVATE_KEY = "invalid";
+    it("should resolve mainnet address from account data", () => {
+      // Setup mocks for account data
+      (safeExists as jest.Mock).mockReturnValue(true);
+      (safeReadFile as jest.Mock).mockReturnValue(
+        JSON.stringify({
+          mainnetAddress: VALID_BTC_MAINNET_ADDRESS,
+          mainnetWIF: "L1YYZngaKvau5egL8WSMnB9qoxoVGnkh1qVxe3SEsLWGpLCEMgpV",
+          privateKeyBytes:
+            "1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd",
+          testnetAddress: VALID_BTC_TESTNET_ADDRESS,
+          testnetWIF: "cVVvUsNHhbrgd7aW3gnuGo2qJM45LhHhTCVXrDSJDDcNGE6qmyCs",
+        })
+      );
+
+      const result = resolveBitcoinAddress({
+        accountName: "testAccount",
+        isMainnet: true,
+      });
+      expect(result).toBe(VALID_BTC_MAINNET_ADDRESS);
+    });
+
+    it("should resolve testnet address from account data", () => {
+      // Setup mocks for account data
+      (safeExists as jest.Mock).mockReturnValue(true);
+      (safeReadFile as jest.Mock).mockReturnValue(
+        JSON.stringify({
+          mainnetAddress: VALID_BTC_MAINNET_ADDRESS,
+          mainnetWIF: "L1YYZngaKvau5egL8WSMnB9qoxoVGnkh1qVxe3SEsLWGpLCEMgpV",
+          privateKeyBytes:
+            "1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd",
+          testnetAddress: VALID_BTC_TESTNET_ADDRESS,
+          testnetWIF: "cVVvUsNHhbrgd7aW3gnuGo2qJM45LhHhTCVXrDSJDDcNGE6qmyCs",
+        })
+      );
+
+      const result = resolveBitcoinAddress({
+        accountName: "testAccount",
+        isMainnet: false,
+      });
+      expect(result).toBe(VALID_BTC_TESTNET_ADDRESS);
+    });
+
+    it("should return undefined if account data is invalid", () => {
+      // Setup mocks for invalid account data
+      (safeExists as jest.Mock).mockReturnValue(true);
+      (safeReadFile as jest.Mock).mockImplementation(() => {
+        throw new Error("Invalid data");
+      });
+
       const mockErrorHandler = jest.fn();
-      const result = resolveBitcoinAddress({ handleError: mockErrorHandler });
+      const result = resolveBitcoinAddress({
+        accountName: "invalidAccount",
+        handleError: mockErrorHandler,
+      });
+
       expect(result).toBeUndefined();
       expect(mockErrorHandler).toHaveBeenCalled();
-      delete process.env.BTC_PRIVATE_KEY;
     });
   });
 });
