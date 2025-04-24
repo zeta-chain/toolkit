@@ -1,13 +1,15 @@
 import { CCTXs, Emitter } from "../../../types/trackCCTX.types";
 import {
+  pollTransactions,
+  type TransactionState,
+} from "../../../utils/trackCCTX";
+import {
   getCctxByHash,
   getCctxByInboundHash,
   getTSS,
-  handleError,
-  pollTransactions,
-  type TransactionState,
-  validateTransactionHash,
-} from "../../../utils";
+} from "../../../utils/api";
+import { handleError } from "../../../utils/handleError";
+import { validateTransactionHash } from "../../../utils/transactions";
 import type { ZetaChainClient } from "./client";
 
 /**

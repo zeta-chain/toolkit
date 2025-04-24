@@ -8,7 +8,8 @@ import {
   RevertOptions,
   TxOptions,
 } from "../../../types/contracts.types";
-import { toHexString, validateSigner } from "../../../utils";
+import { toHexString } from "../../../utils/toHexString";
+import { validateSigner } from "../../../utils/validateSigner";
 import { ZetaChainClient } from "./client";
 
 /**

@@ -2,7 +2,8 @@ import * as anchor from "@coral-xyz/anchor";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { ethers } from "ethers";
 
-import { parseSolanaAccounts, safeAwait } from "../../../utils";
+import { parseSolanaAccounts } from "../../../utils/solanaAccounts";
+import { safeAwait } from "../../../utils/safeAwait";
 
 export interface EncodeOptions {
   accounts?: string[];

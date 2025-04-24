@@ -9,7 +9,8 @@ import {
   TxOptions,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
-import { toHexString, validateSigner } from "../../../utils";
+import { toHexString } from "../../../utils/toHexString";
+import { validateSigner } from "../../../utils/validateSigner";
 import { ZetaChainClient } from "./client";
 
 /**
