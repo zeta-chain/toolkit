@@ -30,7 +30,7 @@ const balancesOptionsSchema = z.object({
   bitcoin: z.string().optional(),
   evm: z.string().optional(),
   json: z.boolean().default(false),
-  name: accountNameSchema,
+  name: accountNameSchema.optional(),
   network: z.enum(["mainnet", "testnet"]).default("testnet"),
   solana: z.string().optional(),
 });
