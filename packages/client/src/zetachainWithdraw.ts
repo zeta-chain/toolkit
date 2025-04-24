@@ -8,8 +8,8 @@ import {
   TxOptions,
   ZRC20Contract,
 } from "../../../types/contracts.types";
-import { validateSigner } from "../../../utils/validateSigner";
 import { toHexString } from "../../../utils/toHexString";
+import { validateSigner } from "../../../utils/validateSigner";
 import { ZetaChainClient } from "./client";
 
 /**
