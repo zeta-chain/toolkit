@@ -9,6 +9,7 @@ import {
   accountNameSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import {
   safeExists,
   safeMkdir,
@@ -20,7 +21,6 @@ import {
   getAccountTypeDir,
 } from "../../../../utils/keyPaths";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-import { DEFAULT_ACCOUNT_NAME } from "../constants";
 
 const createAccountOptionsSchema = z.object({
   name: accountNameSchema,
