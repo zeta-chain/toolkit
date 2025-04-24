@@ -9,7 +9,7 @@ import {
   pollTransactions,
   type TransactionState,
 } from "../../../utils/trackCCTX";
-import { validateTransactionHash } from "../../../utils/transactions";
+import { isValidTxHash } from "../../../utils/transactions";
 import type { ZetaChainClient } from "./client";
 
 /**
@@ -34,7 +34,7 @@ export const trackCCTX = async function (
   }
 
   // Validate transaction hash format
-  if (!validateTransactionHash(hash)) {
+  if (!isValidTxHash(hash)) {
     if (emitter) {
       emitter.emit("search-add", {
         text: "Invalid transaction hash format",
@@ -44,12 +44,10 @@ export const trackCCTX = async function (
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       emitter.emit("search-fail", {
-        text: "Invalid transaction hash format. Expected 0x followed by 64 hex characters",
+        text: "Invalid transaction hash format.",
       });
     }
-    throw new Error(
-      "Invalid transaction hash format. Expected 0x followed by 64 hex characters"
-    );
+    throw new Error("Invalid transaction hash format.");
   }
 
   // Get the API endpoint for the current network
