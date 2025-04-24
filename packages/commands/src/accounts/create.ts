@@ -20,6 +20,7 @@ import {
   getAccountTypeDir,
 } from "../../../../utils/keyPaths";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { DEFAULT_ACCOUNT_NAME } from "../constants";
 
 const createAccountOptionsSchema = z.object({
   name: accountNameSchema,
@@ -108,7 +109,7 @@ export const createAccountsCommand = new Command("create")
       AvailableAccountTypes
     )
   )
-  .option("--name <name>", "Account name", "testnet")
+  .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, createAccountOptionsSchema, {
       exitOnError: true,
