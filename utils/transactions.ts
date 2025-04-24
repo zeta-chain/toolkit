@@ -205,11 +205,11 @@ export const isValidSolanaTxHash = (txHash: string): boolean => {
 };
 
 /**
- * @description Check if the input hash matches a valid TON transaction hash
+ * @description TON transaction hashes have the same format as Bitcoin transaction hashes
+ * but are kept as a separate function for clarity and future-proofing
  */
-export const isValidTonTxHash = (hash: string): boolean => {
-  return /^[0-9a-fA-F]{64}$/.test(hash);
-};
+export const isValidTonTxHash = (hash: string): boolean =>
+  isValidBitcoinTxHash(hash);
 
 /**
  * Validate transaction hash format for multiple blockchains

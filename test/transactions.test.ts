@@ -396,7 +396,6 @@ describe("isValidEVMTxHash", () => {
       "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", // Missing 0x prefix
       "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcde", // Too short
       "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefg", // Too long
-      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefg", // Invalid characters
       "0x1234567890QWERTY1234567890abcdef1234567890abcdef1234567890abcdef", // Invalid characters
       "", // Empty string
       "not a hash",
