@@ -9,6 +9,7 @@ import {
   accountNameSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import {
   safeExists,
   safeMkdir,
@@ -108,7 +109,7 @@ export const createAccountsCommand = new Command("create")
       AvailableAccountTypes
     )
   )
-  .requiredOption("--name <name>", "Account name")
+  .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, createAccountOptionsSchema, {
       exitOnError: true,
