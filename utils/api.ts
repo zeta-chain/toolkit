@@ -7,7 +7,7 @@ import {
   PendingNoncesResponse,
   TssResponse,
 } from "../types/trackCCTX.types";
-import { handleError } from "../utils";
+import { handleError } from "./handleError";
 
 /**
  * Generic API fetch function with error handling

@@ -8,7 +8,7 @@ import { getEndpoints } from "@zetachain/networks";
 import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
 import { ethers } from "ethers";
 
-import { handleError } from "../../../utils";
+import { handleError } from "../../../utils/handleError";
 import { ZetaChainClient } from "./client";
 
 const SEED = "meta";
