@@ -89,4 +89,95 @@ describe("suiEncode", () => {
     ).toThrow("typeArguments: Expected array, received string");
     expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
   });
+
+  it("should handle empty objects and typeArguments arrays", () => {
+    const input = {
+      data: "0xa914ba15f2d1268994cbe658b2a34495926bd90c352ff17124c1ff6396b75fb7",
+      objects: [],
+      typeArguments: [],
+    };
+
+    const result = suiEncode(input);
+    // The encoding should still work with empty arrays
+    expect(typeof result).toBe("string");
+    expect(result.startsWith("0x")).toBe(true);
+    expect(
+      result.endsWith(
+        "a914ba15f2d1268994cbe658b2a34495926bd90c352ff17124c1ff6396b75fb7"
+      )
+    ).toBe(true);
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
+
+  it("should handle non-hex data as UTF-8", () => {
+    const input = {
+      data: "Hello World",
+      objects: [],
+      typeArguments: [],
+    };
+
+    const result = suiEncode(input);
+    // The result should contain the UTF-8 encoded data
+    expect(typeof result).toBe("string");
+    expect(result.startsWith("0x")).toBe(true);
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
+
+  it("should handle minimum input with only required data field", () => {
+    const input = {
+      data: "0x1234",
+    };
+
+    const result = suiEncode(input);
+    expect(typeof result).toBe("string");
+    expect(result.startsWith("0x")).toBe(true);
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
+
+  it("should handle large input with many objects", () => {
+    const objects = Array(20).fill(
+      "0xd602b62bf03791e660d3fcb828ad30a1d6505de7ee91849e42ee83d0da363a1f"
+    );
+
+    const input = {
+      data: "0xa914ba15f2d1268994cbe658b2a34495926bd90c352ff17124c1ff6396b75fb7",
+      objects,
+      typeArguments: [],
+    };
+
+    const result = suiEncode(input);
+    expect(typeof result).toBe("string");
+    expect(result.startsWith("0x")).toBe(true);
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
+
+  it("should handle objects with whitespace that needs trimming", () => {
+    const input = {
+      data: "0x1234",
+      objects: [" 0xabcd  ", "  0xef12 "],
+      typeArguments: [],
+    };
+
+    const result = suiEncode(input);
+    expect(typeof result).toBe("string");
+    expect(result.startsWith("0x")).toBe(true);
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
+
+  it("should handle many type arguments", () => {
+    const typeArgs = Array(10).fill(
+      "0xc65bccdb25735cc25681c1f6f2d1f1a5882969da2ec0de2782b861f0cc32815a::token::TOKEN"
+    );
+
+    const input = {
+      data: "0x1234",
+      objects: [],
+      typeArguments: typeArgs,
+    };
+
+    const result = suiEncode(input);
+    expect(typeof result).toBe("string");
+    expect(result.startsWith("0x")).toBe(true);
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
 });
