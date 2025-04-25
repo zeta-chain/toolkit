@@ -7,6 +7,7 @@ import {
   EVMAccountData,
   SolanaAccountData,
 } from "../types/accounts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { accountExists, getAccountData } from "./accounts";
 
 /**
@@ -73,7 +74,7 @@ export interface ResolveEvmAddressArgs {
  */
 export const resolveEvmAddress = ({
   evmAddress,
-  accountName,
+  accountName = DEFAULT_ACCOUNT_NAME,
   handleError,
 }: ResolveEvmAddressArgs): string | undefined => {
   // If valid address provided, return it
@@ -109,7 +110,7 @@ export interface ResolveSolanaAddressArgs {
  */
 export const resolveSolanaAddress = ({
   solanaAddress,
-  accountName,
+  accountName = DEFAULT_ACCOUNT_NAME,
   handleError,
 }: ResolveSolanaAddressArgs): string | undefined => {
   // If valid address provided, return it
@@ -151,7 +152,7 @@ export interface ResolveBitcoinAddressArgs {
  */
 export const resolveBitcoinAddress = ({
   bitcoinAddress,
-  accountName,
+  accountName = DEFAULT_ACCOUNT_NAME,
   isMainnet = false,
   handleError,
 }: ResolveBitcoinAddressArgs): string | undefined => {
