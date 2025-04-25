@@ -5,6 +5,7 @@
   "main": "",
   "exports": {
     "./tasks": "./dist/packages/tasks/src/index.js",
+    "./commands": "./dist/packages/commands/src/index.js",
     "./client": {
       "import": "./dist/packages/client/src/index.js",
       "require": "./dist/packages/client/src/index.js",
