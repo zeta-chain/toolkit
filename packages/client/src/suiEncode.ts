@@ -10,7 +10,7 @@ export const suiEncode = ({
   data,
   typeArguments = [],
   objects = [],
-}: EncodeOptions) => {
+}: EncodeOptions): string => {
   const paddedObjects = objects.map((obj) =>
     ethers.zeroPadValue(obj.trim(), 32)
   );
