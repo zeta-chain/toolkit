@@ -6,6 +6,15 @@ export interface EncodeOptions {
   typeArguments?: string[];
 }
 
+/**
+ * Encodes data for Sui blockchain transactions using ethers.js
+ *
+ * @param {EncodeOptions} options - The encoding options
+ * @param {string} options.data - The data to encode
+ * @param {string[]} [options.typeArguments=[]] - Type arguments for generic functions
+ * @param {string[]} [options.objects=[]] - Object references to include
+ * @returns {string} The ABI-encoded data suitable for Sui transactions
+ */
 export const suiEncode = ({
   data,
   typeArguments = [],
