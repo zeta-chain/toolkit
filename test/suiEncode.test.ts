@@ -1,29 +1,33 @@
-import { ZodSchema, ZodTypeDef } from "zod";
+import { ZodIssue, ZodSchema, ZodTypeDef } from "zod";
 
 import { suiEncode } from "../packages/client/src/suiEncode";
 import * as validateUtils from "../utils/validateAndParseSchema";
 
 // Mock validateAndParseSchema to prevent console logs during tests
-jest.mock("../utils/validateAndParseSchema", () => ({
-  validateAndParseSchema: jest
-    .fn()
-    .mockImplementation(
-      <T, U = T>(args: unknown, schema: ZodSchema<T, ZodTypeDef, U>) => {
-        const result = schema.safeParse(args);
-        if (!result.success) {
-          throw new Error(
-            result.error.errors
-              .map((err) => {
-                const path = err.path.join(".");
-                return path ? `${path}: ${err.message}` : err.message;
-              })
-              .join("\n")
-          );
+jest.mock("../utils/validateAndParseSchema", () => {
+  const formatValidationErrors = (errors: ZodIssue[]) => {
+    return errors
+      .map((err) => {
+        const path = err.path.join(".");
+        return path ? `${path}: ${err.message}` : err.message;
+      })
+      .join("\n");
+  };
+
+  return {
+    validateAndParseSchema: jest
+      .fn()
+      .mockImplementation(
+        <T, U = T>(args: unknown, schema: ZodSchema<T, ZodTypeDef, U>) => {
+          const result = schema.safeParse(args);
+          if (!result.success) {
+            throw new Error(formatValidationErrors(result.error.errors));
+          }
+          return result.data;
         }
-        return result.data;
-      }
-    ),
-}));
+      ),
+  };
+});
 
 describe("suiEncode", () => {
   beforeEach(() => {
