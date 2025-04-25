@@ -2,7 +2,7 @@ import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZetaToken from "@zetachain/protocol-contracts/abi/Zeta.non-eth.sol/ZetaNonEth.json";
 import { ethers } from "ethers";
 
-import { validateSigner } from "../../../utils";
+import { validateSigner } from "../../../utils/validateSigner";
 import { ZetaChainClient } from "./client";
 import type {
   ZetaConnectorContract,

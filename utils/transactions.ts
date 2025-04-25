@@ -1,3 +1,8 @@
+import { isValidTransactionDigest as isValidSuiTransactionDigest } from "@mysten/sui/utils";
+import bs58 from "bs58";
+import { ethers } from "ethers";
+import { isString } from "lodash";
+
 import {
   CCTX,
   CCTXs,
@@ -175,8 +180,68 @@ export const checkCompletionStatus = (
 };
 
 /**
- * Validate transaction hash format
+ * @description Check if the input hash matches a valid EVM transaction hash
  */
-export const validateTransactionHash = (hash: string): boolean => {
-  return /^0x[0-9a-fA-F]{64}$/.test(hash);
+export const isValidEVMTxHash = (txHash: string): boolean =>
+  ethers.isHexString(txHash, 32);
+
+/**
+ * @description Check if the input hash matches a valid Bitcoin transaction hash
+ */
+export const isValidBitcoinTxHash = (txHash: string): boolean =>
+  /^[a-fA-F0-9]{64}$/.test(txHash);
+
+/**
+ * @description Solana transaction signatures (hashes) are base58-encoded strings.
+ *              To validate a transaction hash, we can check if it’s a valid base58 string of a reasonable length.
+ */
+export const isValidSolanaTxHash = (txHash: string): boolean => {
+  try {
+    const decoded = bs58.decode(txHash);
+    return decoded.length === 64; // Solana transaction signatures are 64 bytes long
+  } catch (error) {
+    return false;
+  }
+};
+
+/**
+ * @description TON transaction hashes have the same format as Bitcoin transaction hashes
+ * but are kept as a separate function for clarity and future-proofing
+ */
+export const isValidTonTxHash = (hash: string): boolean =>
+  isValidBitcoinTxHash(hash);
+
+/**
+ * Validate transaction hash format for multiple blockchains
+ * Supports: EVM (Ethereum), Bitcoin (mainnet/testnet), Solana, SUI, TON
+ */
+export const isValidTxHash = (hash: string): boolean => {
+  if (!hash || !isString(hash)) return false;
+
+  // EVM chains (Ethereum, etc) - 0x prefix with 64 hex chars
+  if (isValidEVMTxHash(hash)) {
+    return true;
+  }
+
+  // Bitcoin - 64 hex chars (no prefix)
+  if (isValidBitcoinTxHash(hash)) {
+    return true;
+  }
+
+  // Solana - Base58 encoded string
+  if (isValidSolanaTxHash(hash)) {
+    return true;
+  }
+
+  // SUI - Transaction digest encoding
+  if (isValidSuiTransactionDigest(hash)) {
+    return true;
+  }
+
+  // TON - 64 hex chars (similar to Bitcoin)
+  if (isValidTonTxHash(hash)) {
+    return true;
+  }
+
+  return false;
 };
