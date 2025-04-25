@@ -65,7 +65,7 @@ describe("suiEncode", () => {
 
   it("should throw an error when data is not a string", () => {
     expect(() => suiEncode({ data: 123 as unknown as string })).toThrow(
-      "data: Data must be a string"
+      "data: Expected string, received number"
     );
     expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
   });

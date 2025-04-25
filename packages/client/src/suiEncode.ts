@@ -5,12 +5,32 @@ import { stringArraySchema } from "../../../types/shared.schema";
 import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 
 const encodeOptionsSchema = z.object({
-  data: z.string({
-    invalid_type_error: "Data must be a string",
-    required_error: "Data is required",
-  }),
-  objects: stringArraySchema.optional(),
-  typeArguments: stringArraySchema.optional(),
+  data: z
+    .string({
+      required_error: "Data is required",
+    })
+    .refine((str) => !str.startsWith("0x") || /^0x[0-9a-fA-F]+$/.test(str), {
+      message: "Hex data must be a valid hex string",
+    }),
+  objects: stringArraySchema
+    .optional()
+    .refine(
+      (arr) => !arr || arr.every((obj) => /^0x[0-9a-fA-F]+$/.test(obj.trim())),
+      { message: "Objects must be valid hex strings starting with 0x" }
+    ),
+  typeArguments: stringArraySchema
+    .optional()
+    .refine(
+      (arr) =>
+        !arr ||
+        arr.every((type) =>
+          /^0x[0-9a-fA-F]+(::[a-zA-Z_][a-zA-Z0-9_]*)+$/.test(type.trim())
+        ),
+      {
+        message:
+          "Type arguments must follow the format 0x{address}::{module}::{name}",
+      }
+    ),
 });
 
 export type EncodeOptions = z.infer<typeof encodeOptionsSchema>;
