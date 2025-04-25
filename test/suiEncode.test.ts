@@ -1,6 +1,35 @@
+import { ZodSchema, ZodTypeDef } from "zod";
+
 import { suiEncode } from "../packages/client/src/suiEncode";
+import * as validateUtils from "../utils/validateAndParseSchema";
+
+// Mock validateAndParseSchema to prevent console logs during tests
+jest.mock("../utils/validateAndParseSchema", () => ({
+  validateAndParseSchema: jest
+    .fn()
+    .mockImplementation(
+      <T, U = T>(args: unknown, schema: ZodSchema<T, ZodTypeDef, U>) => {
+        const result = schema.safeParse(args);
+        if (!result.success) {
+          throw new Error(
+            result.error.errors
+              .map((err) => {
+                const path = err.path.join(".");
+                return path ? `${path}: ${err.message}` : err.message;
+              })
+              .join("\n")
+          );
+        }
+        return result.data;
+      }
+    ),
+}));
 
 describe("suiEncode", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("should encode type arguments, objects and message correctly", () => {
     const input = {
       data: "0xa914ba15f2d1268994cbe658b2a34495926bd90c352ff17124c1ff6396b75fb7",
@@ -20,5 +49,40 @@ describe("suiEncode", () => {
 
     const result = suiEncode(input);
     expect(result).toBe(expected);
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw an error when data is missing", () => {
+    expect(() => suiEncode({} as { data: string })).toThrow(
+      "data: Data is required"
+    );
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw an error when data is not a string", () => {
+    expect(() => suiEncode({ data: 123 as unknown as string })).toThrow(
+      "data: Data must be a string"
+    );
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw an error when objects is not an array", () => {
+    expect(() =>
+      suiEncode({
+        data: "test",
+        objects: "not-an-array" as unknown as string[],
+      })
+    ).toThrow("objects: Expected array, received string");
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw an error when typeArguments is not an array", () => {
+    expect(() =>
+      suiEncode({
+        data: "test",
+        typeArguments: "not-an-array" as unknown as string[],
+      })
+    ).toThrow("typeArguments: Expected array, received string");
+    expect(validateUtils.validateAndParseSchema).toHaveBeenCalledTimes(1);
   });
 });

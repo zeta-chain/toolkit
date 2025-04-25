@@ -1,10 +1,19 @@
 import { ethers } from "ethers";
+import { z } from "zod";
 
-export interface EncodeOptions {
-  data: string;
-  objects?: string[];
-  typeArguments?: string[];
-}
+import { stringArraySchema } from "../../../types/shared.schema";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
+
+const encodeOptionsSchema = z.object({
+  data: z.string({
+    invalid_type_error: "Data must be a string",
+    required_error: "Data is required",
+  }),
+  objects: stringArraySchema.optional(),
+  typeArguments: stringArraySchema.optional(),
+});
+
+export type EncodeOptions = z.infer<typeof encodeOptionsSchema>;
 
 /**
  * Encodes data for Sui blockchain transactions using ethers.js
@@ -15,11 +24,13 @@ export interface EncodeOptions {
  * @param {string[]} [options.objects=[]] - Object references to include
  * @returns {string} The ABI-encoded data suitable for Sui transactions
  */
-export const suiEncode = ({
-  data,
-  typeArguments = [],
-  objects = [],
-}: EncodeOptions): string => {
+export const suiEncode = (options: EncodeOptions): string => {
+  const {
+    data,
+    typeArguments = [],
+    objects = [],
+  } = validateAndParseSchema(options, encodeOptionsSchema);
+
   const paddedObjects = objects.map((obj) =>
     ethers.zeroPadValue(obj.trim(), 32)
   );
