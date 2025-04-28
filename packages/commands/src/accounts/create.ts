@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
   accountNameSchema,
+  accountTypeSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
@@ -11,11 +12,7 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 
 const createAccountOptionsSchema = z.object({
   name: accountNameSchema,
-  type: z
-    .enum(AvailableAccountTypes, {
-      errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
-    })
-    .optional(),
+  type: accountTypeSchema.optional(),
 });
 
 type CreateAccountOptions = z.infer<typeof createAccountOptionsSchema>;
@@ -29,15 +26,14 @@ const main = async (options: CreateAccountOptions) => {
     console.log("Creating accounts for all supported types...");
     await createAccountForType("evm", name);
     await createAccountForType("solana", name);
+    await createAccountForType("bitcoin", name);
   }
 };
 
 export const createAccountsCommand = new Command("create")
   .description("Create a new account")
   .addOption(
-    new Option("--type <type>", "Account type (evm or solana)").choices(
-      AvailableAccountTypes
-    )
+    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
   .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
   .action(async (opts) => {

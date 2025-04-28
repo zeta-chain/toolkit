@@ -12,9 +12,6 @@ import {
 import { formatAddresses, formatBalances } from "../../../../utils/formatting";
 import { ZetaChainClient } from "../../../client/src/client";
 
-/**
- * @todo (Hernan): We need to change this to the account command once we have it.
- */
 const WALLET_ERROR = `
 ❌ Error: Wallet addresses not found.
 
@@ -24,16 +21,9 @@ To resolve this issue, please choose one of these options:
    --evm <address>
    --solana <address>
    --bitcoin <address>
-
-2. Use existing wallets by setting their private keys in environment variables:
-   Add these to a .env file in the root of your project:
-
-   EVM_PRIVATE_KEY=123... (without the 0x prefix)
-   BTC_PRIVATE_KEY=123... (without the 0x prefix)
-   SOLANA_PRIVATE_KEY=123.. (base58 encoded or json array)
    
-3. Generate new wallets automatically by running:
-   npx hardhat account --save
+2. Generate new wallets automatically by running:
+   npx zetachain accounts create --name <name>
 `;
 
 const balancesOptionsSchema = z.object({
@@ -57,7 +47,7 @@ const main = async (options: BalancesOptions) => {
       handleError: () =>
         spinner.warn(
           `Error resolving EVM address ${
-            !options.evm && options.name ? `for user ${options.name}` : ""
+            !options.evm && options.name ? `for user '${options.name}'` : ""
           }`
         ),
     });
@@ -67,20 +57,28 @@ const main = async (options: BalancesOptions) => {
       handleError: () =>
         spinner.warn(
           `Error resolving Solana address ${
-            !options.solana && options.name ? `for user ${options.name}` : ""
+            !options.solana && options.name ? `for user '${options.name}'` : ""
           }`
         ),
       solanaAddress: options.solana,
     });
 
     const btcAddress = resolveBitcoinAddress({
+      accountName: options.name,
       bitcoinAddress: options.bitcoin,
-      handleError: () => spinner.warn("Error resolving Bitcoin address"),
+      handleError: () =>
+        spinner.warn(
+          `Error resolving Bitcoin ${options.network} address${
+            !options.bitcoin && options.name
+              ? ` for account '${options.name}'`
+              : ""
+          }`
+        ),
       isMainnet: options.network === "mainnet",
     });
 
     if (!evmAddress && !btcAddress && !solanaAddress) {
-      spinner.fail("No addresses provided or derivable from private keys");
+      spinner.fail("No addresses provided or derivable from account name");
       console.error(chalk.red(WALLET_ERROR));
       return;
     }

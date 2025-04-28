@@ -1,15 +1,27 @@
 import confirm from "@inquirer/confirm";
 import { Keypair } from "@solana/web3.js";
+import * as bitcoin from "bitcoinjs-lib";
+import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
+import path from "path";
+import * as ecc from "tiny-secp256k1";
 
 import {
   AccountData,
   accountDataSchema,
+  AccountInfo,
   AvailableAccountTypes,
+  BitcoinAccountData,
   EVMAccountData,
   SolanaAccountData,
 } from "../types/accounts.types";
-import { safeExists, safeMkdir, safeReadFile, safeWriteFile } from "./fsUtils";
+import {
+  safeExists,
+  safeMkdir,
+  safeReadDir,
+  safeReadFile,
+  safeWriteFile,
+} from "./fsUtils";
 import { handleError } from "./handleError";
 import { getAccountKeyPath, getAccountTypeDir } from "./keyPaths";
 import { parseJson } from "./parseJson";
@@ -30,7 +42,9 @@ export const accountExists = (
  * Get account data by account name and type
  * @typeparam T The expected account data type
  */
-export const getAccountData = <T extends EVMAccountData | SolanaAccountData>(
+export const getAccountData = <
+  T extends EVMAccountData | SolanaAccountData | BitcoinAccountData
+>(
   accountType: (typeof AvailableAccountTypes)[number],
   accountName: string
 ): T | undefined => {
@@ -65,6 +79,54 @@ const createSolanaAccount = (): AccountData => {
   };
 };
 
+const createBitcoinAccount = (): AccountData => {
+  const ECPair = ECPairFactory(ecc);
+
+  // Generate a random keypair
+  const keyPair = ECPair.makeRandom();
+
+  // Store the raw private key bytes (hex encoded for storage)
+  const privateKeyBytes = keyPair.privateKey?.toString("hex") || "";
+  if (!privateKeyBytes) {
+    throw new Error("Failed to generate Bitcoin private key");
+  }
+
+  // Create testnet WIF
+  const testnetWIF = ECPair.fromPrivateKey(
+    Buffer.from(privateKeyBytes, "hex"),
+    { network: bitcoin.networks.testnet }
+  ).toWIF();
+
+  // Create mainnet WIF
+  const mainnetWIF = ECPair.fromPrivateKey(
+    Buffer.from(privateKeyBytes, "hex"),
+    { network: bitcoin.networks.bitcoin }
+  ).toWIF();
+
+  // Generate a SegWit (P2WPKH) address for mainnet
+  const { address: mainnetAddress } = bitcoin.payments.p2wpkh({
+    network: bitcoin.networks.bitcoin,
+    pubkey: keyPair.publicKey,
+  });
+
+  // Generate a SegWit (P2WPKH) address for testnet
+  const { address: testnetAddress } = bitcoin.payments.p2wpkh({
+    network: bitcoin.networks.testnet,
+    pubkey: keyPair.publicKey,
+  });
+
+  if (!mainnetAddress || !testnetAddress)
+    throw new Error("Unable to generate Bitcoin addresses");
+
+  return {
+    mainnetAddress,
+    mainnetWIF,
+    privateKeyBytes,
+    testnetAddress,
+    testnetWIF,
+  };
+};
+
 export const createAccountForType = async (
   type: (typeof AvailableAccountTypes)[number],
   name: string
@@ -86,15 +148,31 @@ export const createAccountForType = async (
       }
     }
 
-    const keyData = type === "evm" ? createEVMAccount() : createSolanaAccount();
+    let keyData: AccountData;
+
+    if (type === "evm") {
+      keyData = createEVMAccount();
+    } else if (type === "solana") {
+      keyData = createSolanaAccount();
+    } else if (type === "bitcoin") {
+      // Default to testnet for Bitcoin
+      keyData = createBitcoinAccount();
+    } else {
+      // Type assertion to help TypeScript understand this isn't 'never'
+      throw new Error(`Unsupported account type: ${type as string}`);
+    }
 
     safeWriteFile(keyPath, keyData);
     console.log(`${type.toUpperCase()} account created successfully!`);
     console.log(`Key saved to: ${keyPath}`);
+
     if (type === "evm") {
       console.log(`Address: ${keyData.address}`);
-    } else {
+    } else if (type === "solana") {
       console.log(`Public Key: ${keyData.publicKey}`);
+    } else if (type === "bitcoin") {
+      console.log(`Address: ${keyData.mainnetAddress}`);
+      console.log(`Testnet Address: ${keyData.testnetAddress}`);
     }
   } catch (error: unknown) {
     handleError({
@@ -103,4 +181,55 @@ export const createAccountForType = async (
       shouldThrow: true,
     });
   }
+};
+
+export const listChainAccounts = (
+  chainType: (typeof AvailableAccountTypes)[number]
+): AccountInfo[] => {
+  const chainDir = getAccountTypeDir(chainType);
+  if (!safeExists(chainDir)) return [];
+
+  const files = safeReadDir(chainDir).filter((file) => file.endsWith(".json"));
+
+  const accounts = files.flatMap((file) => {
+    const keyPath = path.join(chainDir, file);
+    const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
+    const name = file.replace(".json", "");
+
+    if (chainType === "evm") {
+      return [
+        {
+          address: (keyData as EVMAccountData).address,
+          name,
+          type: chainType,
+        },
+      ];
+    } else if (chainType === "solana") {
+      return [
+        {
+          address: (keyData as SolanaAccountData).publicKey,
+          name,
+          type: chainType,
+        },
+      ];
+    } else if (chainType === "bitcoin") {
+      // Return both mainnet and testnet addresses as separate entries
+      return [
+        {
+          address: (keyData as BitcoinAccountData).mainnetAddress,
+          name,
+          type: "bitcoin",
+        },
+        {
+          address: (keyData as BitcoinAccountData).testnetAddress,
+          name,
+          type: "bitcoin",
+        },
+      ];
+    }
+
+    return [];
+  });
+
+  return accounts;
 };

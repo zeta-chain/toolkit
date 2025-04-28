@@ -2,9 +2,13 @@ import { PublicKey } from "@solana/web3.js";
 import * as bitcoin from "bitcoinjs-lib";
 import { ethers } from "ethers";
 
-import { EVMAccountData, SolanaAccountData } from "../types/accounts.types";
+import {
+  BitcoinAccountData,
+  EVMAccountData,
+  SolanaAccountData,
+} from "../types/accounts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { accountExists, getAccountData } from "./accounts";
-import { generateBitcoinAddress } from "./generateBitcoinAddress";
 
 /**
  * Check if a string is a valid EVM address
@@ -70,7 +74,7 @@ export interface ResolveEvmAddressArgs {
  */
 export const resolveEvmAddress = ({
   evmAddress,
-  accountName,
+  accountName = DEFAULT_ACCOUNT_NAME,
   handleError,
 }: ResolveEvmAddressArgs): string | undefined => {
   // If valid address provided, return it
@@ -79,7 +83,7 @@ export const resolveEvmAddress = ({
   // Otherwise, try to derive from account name
   if (accountName && accountExists("evm", accountName)) {
     const accountData = getAccountData<EVMAccountData>("evm", accountName);
-    if (accountData && accountData.address) {
+    if (accountData?.address) {
       return accountData.address;
     }
   }
@@ -106,7 +110,7 @@ export interface ResolveSolanaAddressArgs {
  */
 export const resolveSolanaAddress = ({
   solanaAddress,
-  accountName,
+  accountName = DEFAULT_ACCOUNT_NAME,
   handleError,
 }: ResolveSolanaAddressArgs): string | undefined => {
   // If valid address provided, return it
@@ -119,7 +123,7 @@ export const resolveSolanaAddress = ({
       "solana",
       accountName
     );
-    if (accountData && accountData.publicKey) {
+    if (accountData?.publicKey) {
       return accountData.publicKey;
     }
   }
@@ -144,11 +148,11 @@ export interface ResolveBitcoinAddressArgs {
 }
 
 /**
- * Resolve a Bitcoin address from either a direct input or environment variables
- * @todo: Implement account name resolution and remove the need for environment variables
+ * Resolve a Bitcoin address from a direct input or account name
  */
 export const resolveBitcoinAddress = ({
   bitcoinAddress,
+  accountName = DEFAULT_ACCOUNT_NAME,
   isMainnet = false,
   handleError,
 }: ResolveBitcoinAddressArgs): string | undefined => {
@@ -157,18 +161,22 @@ export const resolveBitcoinAddress = ({
     return bitcoinAddress;
   }
 
-  // Otherwise, try to derive from private key
-  const btcKey = process.env.BTC_PRIVATE_KEY;
-  if (!btcKey) return undefined;
-
-  try {
-    const address = generateBitcoinAddress(
-      btcKey,
-      isMainnet ? "mainnet" : "testnet"
+  // Check if we have an account name
+  if (accountName && accountExists("bitcoin", accountName)) {
+    // Try to get the account data
+    const accountData = getAccountData<BitcoinAccountData>(
+      "bitcoin",
+      accountName
     );
-    return address;
-  } catch {
-    if (handleError) handleError();
-    return undefined;
+
+    if (accountData) {
+      // Return the appropriate address based on the network flag
+      return isMainnet
+        ? accountData.mainnetAddress
+        : accountData.testnetAddress;
+    }
   }
+
+  if (handleError) handleError();
+  return undefined;
 };
