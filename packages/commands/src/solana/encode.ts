@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { EncodeOptions, solanaEncode } from "../../client/src/solanaEncode";
+import { EncodeOptions, solanaEncode } from "../../../client/src/solanaEncode";
 
 const main = async (options: EncodeOptions) => {
   try {
@@ -12,7 +12,7 @@ const main = async (options: EncodeOptions) => {
   }
 };
 
-export const solanaEncodeCommand = new Command("encode")
+export const encodeCommand = new Command("encode")
   .description("Encode payload data for Solana")
   .requiredOption("--connected <address>", "Connected PDA account address")
   .requiredOption("--data <data>", "Data to encode")
