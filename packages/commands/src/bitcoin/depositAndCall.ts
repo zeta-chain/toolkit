@@ -258,7 +258,9 @@ Raw Inscription Data: ${inscriptionData.toString("hex")}
 
 export const depositAndCallCommand = new Command()
   .name("deposit-and-call")
-  .description("Deposit BTC and call a contract on ZetaChain")
+  .description(
+    "Deposit BTC and call a contract on ZetaChain (using inscriptions)"
+  )
   .requiredOption("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
