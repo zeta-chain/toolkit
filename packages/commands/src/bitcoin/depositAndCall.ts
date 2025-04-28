@@ -45,7 +45,7 @@ const buildRevealWitness = (leafScript: Buffer, controlBlock: Buffer) => {
   return Buffer.concat(parts);
 };
 
-interface InscriptionOptions {
+interface depositAndCallOptions {
   receiver: string;
   gateway: string;
   revertAddress: string;
@@ -175,7 +175,7 @@ const makeRevealTransaction = async (
   return psbt.extractTransaction(true).toHex();
 };
 
-const main = async (options: InscriptionOptions) => {
+const main = async (options: depositAndCallOptions) => {
   const ECPair = ECPairFactory(ecc);
   const pk = options.privateKey;
   if (!pk) throw new Error("missing private key");
@@ -256,9 +256,9 @@ Raw Inscription Data: ${inscriptionData.toString("hex")}
   console.log("Reveal TXID:", revealTxid);
 };
 
-export const inscriptionCommand = new Command()
-  .name("inscription")
-  .description("Send Bitcoin Inscription transaction for ZetaChain")
+export const depositAndCallCommand = new Command()
+  .name("deposit-and-call")
+  .description("Deposit BTC and call a contract on ZetaChain")
   .requiredOption("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
