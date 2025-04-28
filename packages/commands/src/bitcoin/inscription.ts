@@ -179,9 +179,9 @@ async function makeRevealTransaction(
   return psbt.extractTransaction(true).toHex();
 }
 
-async function main(opts: InscriptionOptions) {
+async function main(options: InscriptionOptions) {
   const ECPair = ECPairFactory(ecc);
-  const pk = opts.privateKey || process.env.BTC_PRIVATE_KEY;
+  const pk = options.privateKey || process.env.BTC_PRIVATE_KEY;
   if (!pk) throw new Error("missing private key");
   const key = ECPair.fromPrivateKey(Buffer.from(pk, "hex"), {
     network: SIGNET,
@@ -191,21 +191,29 @@ async function main(opts: InscriptionOptions) {
     pubkey: key.publicKey,
   });
 
-  const utxos = (await axios.get(`${opts.api}/address/${address}/utxo`)).data;
-  const encodedPayload = new ethers.AbiCoder().encode(opts.types, opts.values);
+  const utxos = (await axios.get(`${options.api}/address/${address}/utxo`))
+    .data;
+  const encodedPayload = new ethers.AbiCoder().encode(
+    options.types,
+    options.values
+  );
   const inscriptionData = Buffer.from(
     bitcoinEncode(
-      opts.receiver,
+      options.receiver,
       Buffer.from(trimOx(encodedPayload), "hex"),
-      opts.revertAddress,
+      options.revertAddress,
       OpCode.DepositAndCall,
       EncodingFormat.EncodingFmtABI
     ),
     "hex"
   );
-  const amountSat = Number(ethers.toNumber(ethers.parseUnits(opts.amount, 8)));
+  const amountSat = Number(
+    ethers.toNumber(ethers.parseUnits(options.amount, 8))
+  );
 
-  console.log(`Preparing inscription of ${opts.amount} BTC → ${opts.gateway}`);
+  console.log(
+    `Preparing inscription of ${options.amount} BTC → ${options.gateway}`
+  );
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 
   const commit = await makeCommitTransaction(
@@ -213,11 +221,11 @@ async function main(opts: InscriptionOptions) {
     utxos,
     address!,
     inscriptionData,
-    opts.api,
+    options.api,
     amountSat
   );
   const commitTxid = (
-    await axios.post(`${opts.api}/tx`, commit.txHex, {
+    await axios.post(`${options.api}/tx`, commit.txHex, {
       headers: { "Content-Type": "text/plain" },
     })
   ).data;
@@ -227,7 +235,7 @@ async function main(opts: InscriptionOptions) {
     commitTxid,
     0,
     amountSat,
-    opts.gateway,
+    options.gateway,
     10,
     {
       internalKey: commit.internalKey,
@@ -237,7 +245,7 @@ async function main(opts: InscriptionOptions) {
     key
   );
   const revealTxid = (
-    await axios.post(`${opts.api}/tx`, revealHex, {
+    await axios.post(`${options.api}/tx`, revealHex, {
       headers: { "Content-Type": "text/plain" },
     })
   ).data;
