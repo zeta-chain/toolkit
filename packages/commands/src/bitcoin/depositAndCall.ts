@@ -1,23 +1,25 @@
-import { Command } from "commander";
-import { ethers } from "ethers";
-import * as bitcoin from "bitcoinjs-lib";
-import axios from "axios";
-import ECPairFactory from "ecpair";
-import * as ecc from "tiny-secp256k1";
 import confirm from "@inquirer/confirm";
+import axios from "axios";
+import * as bitcoin from "bitcoinjs-lib";
+import { Command } from "commander";
+import ECPairFactory from "ecpair";
+import { ethers } from "ethers";
+import * as ecc from "tiny-secp256k1";
+
+import { Transaction, UTXO } from "../../../../types/bitcoin.types";
 import {
-  trimOx,
-  OpCode,
-  EncodingFormat,
   bitcoinEncode,
+  EncodingFormat,
+  OpCode,
+  trimOx,
 } from "../../../client/src/bitcoinEncode";
 
 bitcoin.initEccLib(ecc);
 
 const SIGNET = {
-  messagePrefix: "\x18Bitcoin Signed Message:\n",
   bech32: "tb",
-  bip32: { public: 0x043587cf, private: 0x04358394 },
+  bip32: { private: 0x04358394, public: 0x043587cf },
+  messagePrefix: "\x18Bitcoin Signed Message:\n",
   pubKeyHash: 0x6f,
   scriptHash: 0xc4,
   wif: 0xef,
@@ -46,19 +48,19 @@ const buildRevealWitness = (leafScript: Buffer, controlBlock: Buffer) => {
 };
 
 interface depositAndCallOptions {
-  receiver: string;
+  amount: string;
+  api: string;
   gateway: string;
+  privateKey: string;
+  receiver: string;
   revertAddress: string;
   types: string[];
   values: string[];
-  amount: string;
-  api: string;
-  privateKey: string;
 }
 
 const makeCommitTransaction = async (
   key: bitcoin.Signer,
-  utxos: any[],
+  utxos: UTXO[],
   changeAddress: string,
   inscriptionData: Buffer,
   api: string,
@@ -71,7 +73,7 @@ const makeCommitTransaction = async (
   /* pick utxos */
   utxos.sort((a, b) => a.value - b.value);
   let inTotal = 0;
-  const picks: any[] = [];
+  const picks: UTXO[] = [];
   for (const u of utxos) {
     inTotal += u.value;
     picks.push(u);
@@ -93,9 +95,9 @@ const makeCommitTransaction = async (
   /* p2tr */
   const { output: commitScript, witness } = bitcoin.payments.p2tr({
     internalPubkey: key.publicKey.slice(1, 33),
-    scriptTree: { output: leafScript },
-    redeem: { output: leafScript, redeemVersion: LEAF_VERSION_TAPSCRIPT },
     network: SIGNET,
+    redeem: { output: leafScript, redeemVersion: LEAF_VERSION_TAPSCRIPT },
+    scriptTree: { output: leafScript },
   });
   if (!commitScript || !witness) throw new Error("taproot build failed");
 
@@ -104,7 +106,7 @@ const makeCommitTransaction = async (
   if (changeSat > 0)
     psbt.addOutput({ address: changeAddress, value: changeSat });
   for (const u of picks) {
-    const tx = (await axios.get(`${api}/tx/${u.txid}`)).data;
+    const tx = (await axios.get<Transaction>(`${api}/tx/${u.txid}`)).data;
     psbt.addInput({
       hash: u.txid,
       index: u.vout,
@@ -118,39 +120,39 @@ const makeCommitTransaction = async (
   psbt.finalizeAllInputs();
 
   return {
-    txHex: psbt.extractTransaction().toHex(),
+    controlBlock: witness[witness.length - 1],
     internalKey: key.publicKey.slice(1, 33),
     leafScript,
-    controlBlock: witness[witness.length - 1],
+    txHex: psbt.extractTransaction().toHex(),
   };
 };
 
-const makeRevealTransaction = async (
+const makeRevealTransaction = (
   commitTxId: string,
   commitVout: number,
   commitValue: number,
   to: string,
   feeRate: number,
-  commitData: { internalKey: Buffer; leafScript: Buffer; controlBlock: Buffer },
+  commitData: { controlBlock: Buffer; internalKey: Buffer; leafScript: Buffer },
   key: bitcoin.Signer
 ) => {
   const psbt = new bitcoin.Psbt({ network: SIGNET });
   const { output: commitScript } = bitcoin.payments.p2tr({
     internalPubkey: commitData.internalKey,
-    scriptTree: { output: commitData.leafScript },
     network: SIGNET,
+    scriptTree: { output: commitData.leafScript },
   });
   psbt.addInput({
     hash: commitTxId,
     index: commitVout,
-    witnessUtxo: { script: commitScript!, value: commitValue },
     tapLeafScript: [
       {
+        controlBlock: commitData.controlBlock,
         leafVersion: LEAF_VERSION_TAPSCRIPT,
         script: commitData.leafScript,
-        controlBlock: commitData.controlBlock,
       },
     ],
+    witnessUtxo: { script: commitScript!, value: commitValue },
   });
 
   const witness = buildRevealWitness(
@@ -187,8 +189,9 @@ const main = async (options: depositAndCallOptions) => {
     pubkey: key.publicKey,
   });
 
-  const utxos = (await axios.get(`${options.api}/address/${address}/utxo`))
-    .data;
+  const utxos = (
+    await axios.get<UTXO[]>(`${options.api}/address/${address}/utxo`)
+  ).data;
   const encodedPayload = new ethers.AbiCoder().encode(
     options.types,
     options.values
@@ -229,27 +232,27 @@ Raw Inscription Data: ${inscriptionData.toString("hex")}
     amountSat
   );
   const commitTxid = (
-    await axios.post(`${options.api}/tx`, commit.txHex, {
+    await axios.post<string>(`${options.api}/tx`, commit.txHex, {
       headers: { "Content-Type": "text/plain" },
     })
   ).data;
   console.log("Commit TXID:", commitTxid);
 
-  const revealHex = await makeRevealTransaction(
+  const revealHex = makeRevealTransaction(
     commitTxid,
     0,
     amountSat,
     options.gateway,
     10,
     {
+      controlBlock: commit.controlBlock,
       internalKey: commit.internalKey,
       leafScript: commit.leafScript,
-      controlBlock: commit.controlBlock,
     },
     key
   );
   const revealTxid = (
-    await axios.post(`${options.api}/tx`, revealHex, {
+    await axios.post<string>(`${options.api}/tx`, revealHex, {
       headers: { "Content-Type": "text/plain" },
     })
   ).data;
