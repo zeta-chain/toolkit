@@ -3,14 +3,14 @@ import { Command, Option } from "commander";
 import ora from "ora";
 import { z } from "zod";
 
-import { accountNameSchema } from "../../../types/accounts.types";
+import { accountNameSchema } from "../../../../types/accounts.types";
 import {
   resolveBitcoinAddress,
   resolveEvmAddress,
   resolveSolanaAddress,
-} from "../../../utils/addressResolver";
-import { formatAddresses, formatBalances } from "../../../utils/formatting";
-import { ZetaChainClient } from "../../client/src/client";
+} from "../../../../utils/addressResolver";
+import { formatAddresses, formatBalances } from "../../../../utils/formatting";
+import { ZetaChainClient } from "../../../client/src/client";
 
 const WALLET_ERROR = `
 ❌ Error: Wallet addresses not found.
