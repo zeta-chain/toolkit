@@ -2,7 +2,6 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import * as bitcoin from "bitcoinjs-lib";
 import axios from "axios";
-import * as dotenv from "dotenv";
 import ECPairFactory from "ecpair";
 import * as ecc from "tiny-secp256k1";
 import confirm from "@inquirer/confirm";
@@ -13,7 +12,6 @@ import {
   bitcoinEncode,
 } from "../../../client/src/bitcoinEncode";
 
-dotenv.config();
 bitcoin.initEccLib(ecc);
 
 const SIGNET = {
@@ -27,7 +25,6 @@ const SIGNET = {
 
 const LEAF_VERSION_TAPSCRIPT = 0xc0;
 
-/** helper to encode CompactSize */
 const compactSize = (n: number) => {
   if (n < 0xfd) return Buffer.from([n]);
   const buf = Buffer.alloc(3);
@@ -36,7 +33,7 @@ const compactSize = (n: number) => {
   return buf;
 };
 
-function buildRevealWitness(leafScript: Buffer, controlBlock: Buffer) {
+const buildRevealWitness = (leafScript: Buffer, controlBlock: Buffer) => {
   const sig = Buffer.alloc(64);
 
   const stack = [sig, leafScript, controlBlock];
@@ -46,7 +43,7 @@ function buildRevealWitness(leafScript: Buffer, controlBlock: Buffer) {
     parts.push(item);
   }
   return Buffer.concat(parts);
-}
+};
 
 interface InscriptionOptions {
   receiver: string;
@@ -59,7 +56,7 @@ interface InscriptionOptions {
   privateKey?: string;
 }
 
-async function makeCommitTransaction(
+const makeCommitTransaction = async (
   key: bitcoin.Signer,
   utxos: any[],
   changeAddress: string,
@@ -67,7 +64,7 @@ async function makeCommitTransaction(
   api: string,
   amountSat: number,
   feeSat = 15000
-) {
+) => {
   const DUST_THRESHOLD_P2TR = 330;
   if (amountSat < DUST_THRESHOLD_P2TR) throw new Error("Amount below dust");
 
@@ -126,9 +123,9 @@ async function makeCommitTransaction(
     leafScript,
     controlBlock: witness[witness.length - 1],
   };
-}
+};
 
-async function makeRevealTransaction(
+const makeRevealTransaction = async (
   commitTxId: string,
   commitVout: number,
   commitValue: number,
@@ -136,7 +133,7 @@ async function makeRevealTransaction(
   feeRate: number,
   commitData: { internalKey: Buffer; leafScript: Buffer; controlBlock: Buffer },
   key: bitcoin.Signer
-) {
+) => {
   const psbt = new bitcoin.Psbt({ network: SIGNET });
   const { output: commitScript } = bitcoin.payments.p2tr({
     internalPubkey: commitData.internalKey,
@@ -156,7 +153,6 @@ async function makeRevealTransaction(
     ],
   });
 
-  /* estimate fee: assume final witness size */
   const witness = buildRevealWitness(
     commitData.leafScript,
     commitData.controlBlock
@@ -177,11 +173,11 @@ async function makeRevealTransaction(
   psbt.finalizeAllInputs();
 
   return psbt.extractTransaction(true).toHex();
-}
+};
 
-async function main(options: InscriptionOptions) {
+const main = async (options: InscriptionOptions) => {
   const ECPair = ECPairFactory(ecc);
-  const pk = options.privateKey || process.env.BTC_PRIVATE_KEY;
+  const pk = options.privateKey;
   if (!pk) throw new Error("missing private key");
   const key = ECPair.fromPrivateKey(Buffer.from(pk, "hex"), {
     network: SIGNET,
@@ -250,7 +246,7 @@ async function main(options: InscriptionOptions) {
     })
   ).data;
   console.log("Reveal TXID:", revealTxid);
-}
+};
 
 export const inscriptionCommand = new Command()
   .name("inscription")
@@ -258,7 +254,7 @@ export const inscriptionCommand = new Command()
   .requiredOption("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
-    "Bitcoin gateway address",
+    "Bitcoin gateway (TSS) address",
     "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
   )
   .requiredOption("-t, --types <types...>", "ABI types")
