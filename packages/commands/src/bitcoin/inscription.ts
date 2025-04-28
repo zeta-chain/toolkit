@@ -13,11 +13,9 @@ import {
   bitcoinEncode,
 } from "../../../client/src/bitcoinEncode";
 
-// Initialize environment and ECC
 dotenv.config();
 bitcoin.initEccLib(ecc);
 
-// Define Signet network
 const SIGNET = {
   messagePrefix: "\x18Bitcoin Signed Message:\n",
   bech32: "tb",
@@ -38,9 +36,10 @@ const compactSize = (n: number) => {
   return buf;
 };
 
-/** build witness for OP_FALSE OP_IF <data> OP_ENDIF leaf */
 function buildRevealWitness(leafScript: Buffer, controlBlock: Buffer) {
-  const stack = [Buffer.from("01", "hex"), leafScript, controlBlock];
+  const sig = Buffer.alloc(64);
+
+  const stack = [sig, leafScript, controlBlock];
   const parts = [compactSize(stack.length)];
   for (const item of stack) {
     parts.push(compactSize(item.length));
@@ -60,7 +59,6 @@ interface InscriptionOptions {
   privateKey?: string;
 }
 
-/* ---------------- COMMIT ---------------- */
 async function makeCommitTransaction(
   key: bitcoin.Signer,
   utxos: any[],
@@ -87,6 +85,8 @@ async function makeCommitTransaction(
 
   /* leaf script */
   const leafScript = bitcoin.script.compile([
+    key.publicKey.slice(1, 33),
+    bitcoin.opcodes.OP_CHECKSIG,
     bitcoin.opcodes.OP_FALSE,
     bitcoin.opcodes.OP_IF,
     inscriptionData,
@@ -128,14 +128,14 @@ async function makeCommitTransaction(
   };
 }
 
-/* ---------------- REVEAL ---------------- */
 async function makeRevealTransaction(
   commitTxId: string,
   commitVout: number,
   commitValue: number,
   to: string,
   feeRate: number,
-  commitData: { internalKey: Buffer; leafScript: Buffer; controlBlock: Buffer }
+  commitData: { internalKey: Buffer; leafScript: Buffer; controlBlock: Buffer },
+  key: bitcoin.Signer
 ) {
   const psbt = new bitcoin.Psbt({ network: SIGNET });
   const { output: commitScript } = bitcoin.payments.p2tr({
@@ -173,13 +173,12 @@ async function makeRevealTransaction(
 
   psbt.addOutput({ address: to, value: commitValue - feeSat });
 
-  // finalize with custom witness (no signature)
-  psbt.finalizeInput(0, () => ({ finalScriptWitness: witness }));
+  psbt.signInput(0, key);
+  psbt.finalizeAllInputs();
 
   return psbt.extractTransaction(true).toHex();
 }
 
-/* ---------------- CLI ---------------- */
 async function main(opts: InscriptionOptions) {
   const ECPair = ECPairFactory(ecc);
   const pk = opts.privateKey || process.env.BTC_PRIVATE_KEY;
@@ -234,7 +233,8 @@ async function main(opts: InscriptionOptions) {
       internalKey: commit.internalKey,
       leafScript: commit.leafScript,
       controlBlock: commit.controlBlock,
-    }
+    },
+    key
   );
   const revealTxid = (
     await axios.post(`${opts.api}/tx`, revealHex, {
