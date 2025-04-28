@@ -53,7 +53,7 @@ interface InscriptionOptions {
   values: string[];
   amount: string;
   api: string;
-  privateKey?: string;
+  privateKey: string;
 }
 
 const makeCommitTransaction = async (
@@ -207,9 +207,17 @@ const main = async (options: InscriptionOptions) => {
     ethers.toNumber(ethers.parseUnits(options.amount, 8))
   );
 
-  console.log(
-    `Preparing inscription of ${options.amount} BTC → ${options.gateway}`
-  );
+  console.log(`
+Network: Signet
+Amount: ${options.amount} BTC
+Gateway: ${options.gateway}
+Universal Contract: ${options.receiver}
+Revert Address: ${options.revertAddress}
+Operation: DepositAndCall
+Encoded Message: ${encodedPayload}
+Encoding Format: ABI
+Raw Inscription Data: ${inscriptionData.toString("hex")}
+`);
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 
   const commit = await makeCommitTransaction(
@@ -262,5 +270,5 @@ export const inscriptionCommand = new Command()
   .requiredOption("-a, --revert-address <address>", "Revert address")
   .requiredOption("--amount <btcAmount>", "BTC amount to inscribe (in BTC)")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
-  .option("--private-key <key>", "Bitcoin private key")
+  .requiredOption("--private-key <key>", "Bitcoin private key")
   .action(main);
