@@ -2,8 +2,8 @@
 import { Command } from "commander";
 
 import { accountsCommand } from "./accounts";
-import { solanaCommand } from "./solana";
 import { bitcoinCommand } from "./bitcoin";
+import { solanaCommand } from "./solana";
 
 export const toolkitCommand = new Command("toolkit")
   .description("Local development environment")
