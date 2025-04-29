@@ -5,8 +5,10 @@ import { z } from "zod";
 import {
   bigNumberStringSchema,
   evmAddressSchema,
+  stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
+import { parseJson, validateAndParseSchema } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
@@ -31,15 +33,7 @@ export const evmDepositAndCall = async (
   args: EvmDepositAndCallArgs,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const {
-    success,
-    error,
-    data: parsedArgs,
-  } = evmDepositAndCallArgsSchema.safeParse(args);
-
-  if (!success) {
-    throw new Error(`Invalid arguments: ${error?.message}`);
-  }
+  const parsedArgs = validateAndParseSchema(args, evmDepositAndCallArgsSchema);
 
   try {
     const [signer] = await hre.ethers.getSigners();
@@ -63,7 +57,7 @@ export const evmDepositAndCall = async (
         gasLimit: parsedArgs.gasLimit,
         gasPrice: parsedArgs.gasPrice,
       },
-      types: JSON.parse(parsedArgs.types) as string[],
+      types: parseJson(parsedArgs.types, stringArraySchema),
       values,
     });
     if (tx) {

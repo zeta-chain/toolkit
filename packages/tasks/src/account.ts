@@ -10,6 +10,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as os from "os";
 import * as path from "path";
 
+import { numberArraySchema } from "../../../types/shared.schema";
+import { handleError, parseJson } from "../../../utils";
 import { bitcoinAddress } from "./bitcoinAddress";
 
 export const hexToBech32Address = (
@@ -43,10 +45,7 @@ export const getWalletFromRecoveryInput = async (
         );
       }
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-
-      console.error(`❌ Invalid mnemonic or private key: ${errorMessage}`);
+      handleError({ context: "Invalid mnemonic or private key", error });
       continue;
     }
   }
@@ -67,13 +66,14 @@ export const getSolanaWalletFromLocalFileOrInput =
           solanaConfigPath,
           "utf-8"
         );
-        const secretKey = JSON.parse(fileContent) as number[];
+        const secretKey = parseJson(fileContent, numberArraySchema);
         return Keypair.fromSecretKey(Uint8Array.from(secretKey));
-      } catch (error) {
-        console.error("Failed to load Solana private key:", error);
-        throw new Error(
-          `Failed to load Solana wallet from ${solanaConfigPath}`
-        );
+      } catch (error: unknown) {
+        handleError({
+          context: "Failed to load Solana private key",
+          error,
+          shouldThrow: true,
+        });
       }
     }
 
@@ -89,10 +89,7 @@ export const getSolanaWalletFromLocalFileOrInput =
       try {
         return Keypair.fromSecretKey(bs58.decode(solanaPrivateKey));
       } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-
-        console.error(`❌ Invalid Solana private key: ${errorMessage}`);
+        handleError({ context: "Invalid Solana private key", error });
       }
     }
   };

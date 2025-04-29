@@ -6,7 +6,10 @@ export interface Emitter {
     event: "succeed" | "fail" | "update",
     payload: { hash: string; text: string }
   ): void;
-  emit(event: "search-add" | "search-end", payload: { text: string }): void;
+  emit(
+    event: "search-add" | "search-end" | "search-fail" | "search-update",
+    payload: { text: string }
+  ): void;
   emit(event: "mined-fail" | "mined-success", payload: { cctxs: CCTXs }): void;
 }
 
@@ -40,7 +43,7 @@ export interface PendingNoncesResponse {
   pending_nonces: PendingNonce[];
 }
 
-export const InboundHashToCctxResponseSchema = z.object({
+const InboundHashToCctxResponseSchema = z.object({
   inboundHashToCctx: z.object({
     cctx_index: z.array(z.string()),
     inbound_hash: z.string(),
@@ -50,23 +53,6 @@ export const InboundHashToCctxResponseSchema = z.object({
 export type InboundHashToCctxResponseReturnType = z.infer<
   typeof InboundHashToCctxResponseSchema
 >;
-
-export const CCTXResponseSchema = z.object({
-  CrossChainTx: z.object({
-    cctx_status: z.object({
-      status: z.string(),
-      status_message: z.string(),
-    }),
-    outbound_params: z.array(
-      z.object({
-        outbound_tx_hash: z.string(),
-        outbound_tx_tss_nonce: z.number(),
-        receiver_chainId: z.string(),
-        sender_chain_id: z.string(),
-      })
-    ),
-  }),
-});
 
 export interface CrossChainTxResponse {
   CrossChainTx: {

@@ -5,10 +5,16 @@
   "main": "",
   "exports": {
     "./tasks": "./dist/packages/tasks/src/index.js",
+    "./commands": "./dist/packages/commands/src/index.js",
     "./client": {
       "import": "./dist/packages/client/src/index.js",
       "require": "./dist/packages/client/src/index.js",
       "types": "./dist/packages/client/src/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
     },
     "./test": {
       "import": "./dist/packages/test/src/index.js",
@@ -32,7 +38,9 @@
     "copy-templates": "npx cpx './packages/tasks/templates/**/*' ./dist/packages/tasks/templates",
     "copy-types": "npx cpx './typechain-types/**/*' ./dist/typechain-types",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "zetachain:build": "yarn build && node dist/packages/commands/src/program.js",
+    "zetachain": "npx ts-node packages/commands/src/program.ts"
   },
   "keywords": [],
   "author": "ZetaChain",
@@ -58,7 +66,6 @@
     "@types/mocha": ">=9.1.0",
     "@types/node": ">=12.0.0",
     "@types/spinnies": "^0.5.3",
-    "@types/ws": "^8.5.5",
     "@typescript-eslint/eslint-plugin": "^7.8.0",
     "@typescript-eslint/parser": "^7.8.0",
     "@uniswap/v2-core": "^1.0.1",
@@ -97,13 +104,15 @@
   ],
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
+    "@ethersproject/units": "^5.8.0",
     "@inquirer/prompts": "^2.1.1",
     "@inquirer/select": "1.1.3",
+    "@mysten/sui": "^1.28.2",
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@openzeppelin/contracts": "^5.0.2",
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
     "@solana/wallet-adapter-react": "^0.15.35",
-    "@solana/web3.js": "^1.95.3",
+    "@solana/web3.js": "1.95.8",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@uniswap/v3-periphery": "^1.4.4",
     "@zetachain/faucet-cli": "^4.1.1",
@@ -115,6 +124,7 @@
     "bip39": "^3.1.0",
     "bitcoinjs-lib": "^6.1.7",
     "bs58": "^6.0.0",
+    "commander": "^13.1.0",
     "dotenv": "16.0.3",
     "ecpair": "^2.1.0",
     "envfile": "^6.18.0",
@@ -124,12 +134,10 @@
     "handlebars": "4.7.7",
     "hardhat": "^2.22.8",
     "lodash": "^4.17.21",
-    "moment": "^2.29.4",
     "ora": "5.4.1",
     "spinnies": "^0.5.1",
     "tiny-secp256k1": "^2.2.3",
     "web3": "^4.15.0",
-    "ws": "^8.17.1",
     "zod": "^3.24.2"
   },
   "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"

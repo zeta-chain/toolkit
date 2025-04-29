@@ -8,6 +8,7 @@ import { task } from "hardhat/config";
 import * as ecc from "tiny-secp256k1";
 import { z } from "zod";
 
+import { validateAndParseSchema } from "../../../utils";
 dotenv.config();
 
 interface BtcUtxo {
@@ -127,15 +128,10 @@ type BtcDepositAndCallArgs = z.infer<typeof bitcoinDepositAndCallArgsSchema>;
 const main = async (args: BtcDepositAndCallArgs) => {
   const TESTNET = bitcoin.networks.testnet;
 
-  const {
-    success,
-    error,
-    data: parsedArgs,
-  } = bitcoinDepositAndCallArgsSchema.safeParse(args);
-
-  if (!success) {
-    throw new Error(`Invalid arguments: ${error?.message}`);
-  }
+  const parsedArgs = validateAndParseSchema(
+    args,
+    bitcoinDepositAndCallArgsSchema
+  );
 
   const pk = parsedArgs.privateKey || process.env.BTC_PRIVATE_KEY;
 

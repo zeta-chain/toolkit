@@ -5,6 +5,8 @@ import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 
+import { numberArraySchema } from "../../../types/shared.schema";
+import { handleError, parseJson, validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src";
 
 const solanaDepositArgsSchema = z.object({
@@ -17,15 +19,7 @@ const solanaDepositArgsSchema = z.object({
 type SolanaDepositArgs = z.infer<typeof solanaDepositArgsSchema>;
 
 export const solanaDeposit = async (args: SolanaDepositArgs) => {
-  const {
-    success,
-    error,
-    data: parsedArgs,
-  } = solanaDepositArgsSchema.safeParse(args);
-
-  if (!success) {
-    throw new Error(`Invalid arguments: ${error?.message}`);
-  }
+  const parsedArgs = validateAndParseSchema(args, solanaDepositArgsSchema);
 
   const keypair = await getKeypairFromFile(parsedArgs.idPath);
   const wallet = new Wallet(keypair);
@@ -72,13 +66,13 @@ export const getKeypairFromFile = async (filepath: string) => {
   // Parse contents of file
   let parsedFileContents;
   try {
-    const parsedFileContentsResult = z
-      .array(z.number())
-      .parse(JSON.parse(fileContents));
+    const parsedFileContentsResult = parseJson(fileContents, numberArraySchema);
     parsedFileContents = Uint8Array.from(parsedFileContentsResult);
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = handleError({
+      context: `Invalid secret key file at '${filepath}'!`,
+      error,
+    });
 
     if (!errorMessage.includes("Unexpected token")) {
       throw new Error(errorMessage);
@@ -86,6 +80,7 @@ export const getKeypairFromFile = async (filepath: string) => {
 
     throw new Error(`Invalid secret key file at '${filepath}'!`);
   }
+
   return Keypair.fromSecretKey(parsedFileContents);
 };
 

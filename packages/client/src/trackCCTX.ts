@@ -1,296 +1,182 @@
-import axios from "axios";
-
+import { CCTXs, Emitter } from "../../../types/trackCCTX.types";
 import {
-  CCTXs,
-  CrossChainTxResponse,
-  Emitter,
-  InboundHashToCctxResponseReturnType,
-  PendingNonce,
-  PendingNoncesResponse,
-  Spinners,
-  TssResponse,
-} from "../../../types/trackCCTX.types";
+  getCctxByHash,
+  getCctxByInboundHash,
+  getTSS,
+} from "../../../utils/api";
+import { handleError } from "../../../utils/handleError";
+import {
+  pollTransactions,
+  type TransactionState,
+} from "../../../utils/trackCCTX";
+import { isValidTxHash } from "../../../utils/transactions";
 import type { ZetaChainClient } from "./client";
 
-const apiFetch = async <T>(url: string) => {
-  const response = await axios.get<T>(url);
-  const isResponseOk = response.status >= 200 && response.status < 300;
-  if (!isResponseOk) {
-    throw new Error(`Fetch failed with status: ${response.status}`);
-  }
-  return response.data;
-};
-
-const fetchCCTXByInbound = async (
-  hash: string,
-  emitter: Emitter | null,
-  spinners: Spinners,
-  API: string,
-  cctxs: CCTXs,
-  json: boolean
-) => {
-  try {
-    const url = `${API}/zeta-chain/crosschain/inTxHashToCctx/${hash}`;
-    const apiResponseData = await apiFetch<InboundHashToCctxResponseReturnType>(
-      url
-    );
-    const cctxIndex = apiResponseData?.inboundHashToCctx?.cctx_index;
-
-    cctxIndex.forEach((hash) => {
-      if (hash && !cctxs[hash] && !spinners[hash]) {
-        cctxs[hash] = [];
-        if (!json && emitter) {
-          emitter?.emit("add", { hash, text: hash });
-          spinners[hash] = true;
-        }
-      }
-    });
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    console.error(
-      `Something failed fetching CCTX By Inbound hash: ${errorMessage}`
-    );
-  }
-};
-
-const getCCTX = async (hash: string, API: string) => {
-  try {
-    const url = `${API}/zeta-chain/crosschain/cctx/${hash}`;
-    const apiResponseData = await apiFetch<CrossChainTxResponse>(url);
-    return apiResponseData?.CrossChainTx;
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    console.error(`Something failed fetching CCTX: ${errorMessage}`);
-  }
-};
-
-const fetchNonces = async (API: string, TSS: string) => {
-  try {
-    const url = `${API}/zeta-chain/observer/pendingNonces`;
-    const apiResponseData = await apiFetch<PendingNoncesResponse>(url);
-    const nonces = apiResponseData?.pending_nonces;
-    return nonces.filter((n) => n.tss === TSS);
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    console.error(`Something failed fetching Nonces: ${errorMessage}`);
-  }
-};
-
-const fetchTSS = async (API: string) => {
-  try {
-    const url = `${API}/zeta-chain/observer/TSS`;
-    const apiResponseData = await apiFetch<TssResponse>(url);
-    return apiResponseData?.TSS.tss_pubkey;
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    console.error(`Something failed fetching TSS: ${errorMessage}`);
-  }
-};
-
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-const fetchCCTXData = async function (
-  this: ZetaChainClient,
-  hash: string,
-  emitter: Emitter | null,
-  spinners: Spinners,
-  API: string,
-  cctxs: CCTXs,
-  pendingNonces: PendingNonce[],
-  json: boolean
-) {
-  const cctx = await getCCTX(hash, API);
-
-  if (!cctx) {
-    throw new Error(`CCTX not found for hash: ${hash}`);
-  }
-
-  const receiver_chainId = cctx.outbound_params[0].receiver_chainId;
-  const outbound_tx_hash = cctx.outbound_params[0].outbound_tx_hash;
-  const confirmed_on_destination = false;
-
-  const tx = {
-    confirmed_on_destination,
-    outbound_tx_hash,
-    outbound_tx_tss_nonce: cctx.outbound_params[0].outbound_tx_tss_nonce,
-    receiver_chainId,
-    sender_chain_id: cctx.inbound_params.sender_chain_id,
-    status: cctx.cctx_status.status,
-    status_message: cctx.cctx_status.status_message,
-  };
-
-  const lastCCTX = cctxs[hash][cctxs[hash].length - 1];
-  const isEmpty = cctxs[hash].length === 0;
-  const statusDefined =
-    tx.status !== undefined && tx.status_message !== undefined;
-
-  if (isEmpty || (statusDefined && lastCCTX.status !== tx.status)) {
-    cctxs[hash].push(tx);
-    const sender = cctxs[hash]?.[0].sender_chain_id;
-    const receiver = cctxs[hash]?.[0].receiver_chainId;
-    let queue;
-    if (pendingNonces) {
-      const pending =
-        pendingNonces.find((n) => n.chain_id === tx.receiver_chainId)
-          ?.nonce_low || "0";
-      const current = tx.outbound_tx_tss_nonce;
-      const diff = current - Number(pending);
-      queue = diff > 0 ? ` (${diff} in queue)` : "";
-    }
-    const path = cctxs[hash]
-      .map(
-        (x) => `${x.status} ${x.status_message && "(" + x.status_message + ")"}`
-      )
-      .join(" → ");
-    const text = `${hash}: ${sender} → ${receiver}${queue}: ${path}`;
-
-    if (!json && spinners[hash] && emitter) {
-      const s = tx.status;
-      if (s == "OutboundMined" || s == "Reverted") {
-        emitter.emit("succeed", { hash, text });
-        spinners[hash] = false;
-      } else if (s == "Aborted") {
-        emitter.emit("fail", { hash, text });
-        spinners[hash] = false;
-      } else {
-        emitter.emit("update", { hash, text });
-      }
-    }
-  }
-};
-
+/**
+ * Main entry point for tracking cross-chain transactions
+ */
 export const trackCCTX = async function (
   this: ZetaChainClient,
   {
     hash,
     json = false,
     emitter = null,
-  }: { emitter: Emitter | null; hash: string; json: boolean }
+    timeoutSeconds = 60,
+  }: {
+    emitter: Emitter | null;
+    hash: string;
+    json: boolean;
+    timeoutSeconds?: number;
+  }
 ): Promise<CCTXs> {
-  const spinners: Spinners = {};
+  if (timeoutSeconds <= 0) {
+    throw new Error("timeoutSeconds must be a positive number");
+  }
 
-  const API = this.getEndpoint("cosmos-http", `zeta_${this.network}`);
-  const TSS = await fetchTSS(API);
+  // Validate transaction hash format
+  if (!isValidTxHash(hash)) {
+    if (emitter) {
+      emitter.emit("search-add", {
+        text: "Invalid transaction hash format",
+      });
 
-  if (!TSS) {
+      // Allow time for the UI to update before failing
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      emitter.emit("search-fail", {
+        text: "Invalid transaction hash format.",
+      });
+    }
+    throw new Error("Invalid transaction hash format.");
+  }
+
+  // Get the API endpoint for the current network
+  const apiEndpoint = this.getEndpoint("cosmos-http", `zeta_${this.network}`);
+
+  // Get TSS public key
+  const tss = await getTSS(apiEndpoint);
+
+  if (!tss) {
+    if (emitter) {
+      emitter.emit("search-fail", {
+        text: "TSS not found. Network may be unavailable",
+      });
+    }
     throw new Error("TSS not found");
   }
 
-  return new Promise((resolve, reject) => {
-    const cctxs: CCTXs = {};
-    let pendingNonces: PendingNonce[] | undefined = [];
+  // Do a quick check for transaction existence and network status
+  if (emitter) {
+    emitter.emit("search-add", {
+      text: `Checking transaction... (${timeoutSeconds}s timeout)`,
+    });
+  }
 
-    const intervalID = setInterval(() => {
-      void (async () => {
-        try {
-          pendingNonces = await fetchNonces(API, TSS);
-          if (Object.keys(cctxs).length === 0) {
-            if (!json && emitter) {
-              const text = `Looking for cross-chain transactions (CCTXs) on ZetaChain...\n`;
-              emitter.emit("search-add", { text });
-              spinners["search"] = true;
-            }
-            await fetchCCTXByInbound(hash, emitter, spinners, API, cctxs, json);
-          }
-          if (
-            Object.keys(cctxs).length === 0 &&
-            !cctxs[hash] &&
-            (await getCCTX(hash, API)) &&
-            !cctxs[hash]
-          ) {
-            cctxs[hash] = [];
-            if (!spinners[hash] && !json && emitter) {
-              spinners[hash] = true;
-              emitter.emit("add", { hash, text: hash });
-              spinners[hash] = true;
-            }
-          }
-          for (const txHash in cctxs) {
-            await fetchCCTXByInbound(
-              txHash,
-              emitter,
-              spinners,
-              API,
-              cctxs,
-              json
-            );
-          }
-          if (Object.keys(cctxs).length > 0 && pendingNonces) {
-            if (spinners["search"] && !json && emitter) {
-              emitter.emit("search-end", {
-                text: `CCTXs on ZetaChain found.\n`,
-              });
-              spinners["search"] = false;
-            }
-
-            for (const hash in cctxs) {
-              try {
-                await fetchCCTXData.call(
-                  this,
-                  hash,
-                  emitter,
-                  spinners,
-                  API,
-                  cctxs,
-                  pendingNonces,
-                  json
-                );
-              } catch (error: unknown) {
-                const errorMessage =
-                  error instanceof Error ? error.message : "Unknown error";
-
-                console.error(
-                  `Something failed on Fetch CCTX call: ${errorMessage}`
-                );
-              }
-            }
-          }
-          if (
-            Object.keys(cctxs).length > 0 &&
-            Object.keys(cctxs)
-              .map((c) => {
-                const last = cctxs[c][cctxs[c].length - 1];
-                return last?.status;
-              })
-              .filter(
-                (s) => !["OutboundMined", "Aborted", "Reverted"].includes(s)
-              ).length === 0
-          ) {
-            const allOutboundMined = Object.keys(cctxs)
-              .map((c) => {
-                const last = cctxs[c][cctxs[c].length - 1];
-                return last?.status;
-              })
-              .every((s) => s === "OutboundMined");
-
-            clearInterval(intervalID);
-
-            if (!allOutboundMined) {
-              emitter?.emit("mined-fail", {
-                cctxs,
-              });
-              reject(new Error("CCTX aborted or reverted"));
-            } else {
-              emitter?.emit("mined-success", {
-                cctxs,
-              });
-              if (json) console.log(JSON.stringify(cctxs, null, 2));
-              resolve(cctxs);
-            }
-          }
-        } catch (error: unknown) {
-          console.error("Error in interval:", error);
-          clearInterval(intervalID);
-          reject(new Error("Error in interval"));
+  // Try a quick check to see if the transaction exists
+  try {
+    // Try to check transaction existence directly
+    const directCheck = await getCctxByHash(apiEndpoint, hash);
+    if (!directCheck) {
+      // Try by inbound hash
+      const inboundCheck = await getCctxByInboundHash(apiEndpoint, hash);
+      if (inboundCheck.length === 0) {
+        // Not found by either method, let the user know we'll keep looking
+        if (emitter) {
+          emitter.emit("search-update", {
+            text: "Transaction not found immediately. Continuing to monitor...",
+          });
         }
-      })();
-    }, 3000);
+      }
+    }
+  } catch (error) {
+    // Handle network errors and unexpected API errors
+    if (emitter) {
+      emitter.emit("search-update", {
+        text: "Network error during initial check. Continuing to monitor...",
+      });
+    }
+    // Log the error for debugging but don't fail the whole process
+    handleError({
+      context: "Error during initial transaction check",
+      error,
+    });
+  }
+
+  // Initialize state
+  const initialState: TransactionState = {
+    cctxs: {},
+    pendingNonces: [],
+    pollCount: 0,
+    spinners: {},
+  };
+
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  // Create the polling promise
+  const pollingPromise = new Promise<CCTXs>((resolve, reject) => {
+    const intervalId = setInterval(() => {
+      initialState.pollCount++;
+
+      // Check for timeout after a reasonable number of attempts
+      if (
+        timeoutSeconds > 0 &&
+        initialState.pollCount * 3 >= timeoutSeconds &&
+        Object.keys(initialState.cctxs).length === 0
+      ) {
+        clearInterval(intervalId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        if (emitter) {
+          emitter.emit("search-fail", {
+            text: `No transaction found after ${timeoutSeconds} seconds. Please verify the transaction hash.`,
+          });
+        }
+
+        // Instead of rejecting, resolve with empty CCTXs to indicate timeout
+        resolve({});
+      }
+
+      pollTransactions({
+        api: apiEndpoint,
+        emitter,
+        hash,
+        intervalId,
+        json,
+        reject,
+        resolve,
+        state: initialState,
+        timeoutId,
+        timeoutSeconds,
+        tss,
+      }).catch((error) => {
+        clearInterval(intervalId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        handleError({
+          context: "Error in transaction tracking interval",
+          error,
+        });
+        reject(new Error("Error in transaction tracking interval"));
+      });
+    }, 3000); // Poll API every 3 seconds
+
+    // Set global timeout
+    if (timeoutSeconds > 0) {
+      timeoutId = setTimeout(() => {
+        clearInterval(intervalId);
+        if (emitter) {
+          emitter.emit("search-fail", {
+            text: `Operation timed out after ${timeoutSeconds} seconds. No transaction found.`,
+          });
+        }
+        // Instead of rejecting, resolve with empty CCTXs to indicate timeout
+        resolve({});
+      }, timeoutSeconds * 1000);
+    }
   });
+
+  return pollingPromise;
 };

@@ -5,8 +5,10 @@ import { z } from "zod";
 import {
   bigNumberStringSchema,
   evmAddressSchema,
+  stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
+import { parseJson, validateAndParseSchema } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
@@ -36,15 +38,10 @@ export const zetachainWithdrawAndCall = async (
   args: ZetachainWithdrawAndCallArgs,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const {
-    success,
-    error,
-    data: parsedArgs,
-  } = zetachainWithdrawAndCallArgsSchema.safeParse(args);
-
-  if (!success) {
-    throw new Error(`Invalid arguments: ${error?.message}`);
-  }
+  const parsedArgs = validateAndParseSchema(
+    args,
+    zetachainWithdrawAndCallArgsSchema
+  );
 
   const callOptions = {
     gasLimit: parsedArgs.callOptionsGasLimit,
@@ -56,7 +53,7 @@ export const zetachainWithdrawAndCall = async (
     const [signer] = await hre.ethers.getSigners();
     const network = hre.network.name;
     const client = new ZetaChainClient({ network, signer });
-    const parsedTypes = z.array(z.string()).parse(JSON.parse(parsedArgs.types));
+    const parsedTypes = parseJson(parsedArgs.types, stringArraySchema);
 
     const response = await client.zetachainWithdrawAndCall({
       amount: parsedArgs.amount,

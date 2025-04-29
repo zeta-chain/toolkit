@@ -4,8 +4,8 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { z } from "zod";
 
+import { validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
-
 const sendZetaTaskArgsSchema = z.object({
   amount: z.string().refine((val) => !isNaN(Number(val)), {
     message: "Amount must be a valid number",
@@ -28,15 +28,7 @@ const sendZetaTaskArgsSchema = z.object({
 type SendZetaTaskArgs = z.infer<typeof sendZetaTaskArgsSchema>;
 
 const main = async (args: SendZetaTaskArgs, hre: HardhatRuntimeEnvironment) => {
-  const {
-    success: argsParseSuccess,
-    error: argsParseError,
-    data: parsedArgs,
-  } = sendZetaTaskArgsSchema.safeParse(args);
-
-  if (!argsParseSuccess) {
-    throw new Error(`❌ Invalid arguments: ${argsParseError.message}`);
-  }
+  const parsedArgs = validateAndParseSchema(args, sendZetaTaskArgsSchema);
 
   const [signer] = await hre.ethers.getSigners();
   if (!signer) {

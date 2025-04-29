@@ -10,7 +10,8 @@ import has from "lodash/has";
 import merge from "lodash/merge";
 
 import { Chains } from "../../../types/client.types";
-import { compareBigIntAndNumber } from "../../../utils";
+import { compareBigIntAndNumber } from "../../../utils/compareBigIntAndNumber";
+import { handleError } from "../../../utils/handleError";
 import {
   evmCall,
   evmDeposit,
@@ -36,13 +37,13 @@ import {
   zetachainWithdrawAndCall,
 } from ".";
 
-export interface ZetaChainClientParamsBase {
+interface ZetaChainClientParamsBase {
   chains?: Chains;
   contracts?: LocalnetAddress[] | MainnetTestnetAddress[];
   network?: string;
 }
 
-export type ZetaChainClientParams = ZetaChainClientParamsBase &
+type ZetaChainClientParams = ZetaChainClientParamsBase &
   (
     | {
         signer: Signer | SignerWithAddress;
@@ -204,11 +205,11 @@ export class ZetaChainClient {
             return isSameChainId && item.type === "gateway";
           });
         } catch (error: unknown) {
-          throw new Error(
-            `Failed to get gateway address. ${
-              typeof error === "string" ? error : ""
-            }`
-          );
+          handleError({
+            context: "Failed to get gateway address",
+            error,
+            shouldThrow: true,
+          });
         }
       } else {
         try {
@@ -231,11 +232,11 @@ export class ZetaChainClient {
             return isSameChainId && item.type === "gateway";
           });
         } catch (error: unknown) {
-          throw new Error(
-            `Failed to get gateway address. ${
-              typeof error === "string" ? error : ""
-            }`
-          );
+          handleError({
+            context: "Failed to get gateway address",
+            error,
+            shouldThrow: true,
+          });
         }
       }
 

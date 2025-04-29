@@ -9,6 +9,7 @@ import {
   ConvertGasToZetaResponse,
   FeeItem,
 } from "../../../types/getFees.types";
+import { handleError } from "../../../utils/handleError";
 import { ZetaChainClient } from "./client";
 
 const fetchZEVMFees = async (
@@ -25,7 +26,12 @@ const fetchZEVMFees = async (
   let withdrawGasFee: BigNumberish;
   try {
     [, withdrawGasFee] = await contract.withdrawGasFee();
-  } catch {
+  } catch (error: unknown) {
+    handleError({
+      context: "Something went wrong fetching withdraw gas fee",
+      error,
+    });
+
     return;
   }
 
@@ -40,6 +46,7 @@ const fetchZEVMFees = async (
   });
 
   if (!gasToken) {
+    console.error("Gas token not found");
     return;
   }
 
@@ -88,14 +95,10 @@ const fetchCCMFees = async function (
       totalFee: ethers.formatUnits(gasFee + protocolFee, 18),
     };
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : error?.toString() || "Unknown Error";
-
-    console.error(
-      `Something failed fetching CCTX By Inbound hash: ${errorMessage}`
-    );
+    handleError({
+      context: "Something failed fetching CCTX By Inbound hash",
+      error,
+    });
   }
 };
 
@@ -120,8 +123,11 @@ export const getFees = async function (this: ZetaChainClient, gas: number) {
       try {
         const fee = await fetchCCMFees.call(this, n.chain_id, gas);
         if (fee) fees.messaging.push(fee);
-      } catch (err) {
-        console.log(err);
+      } catch (error: unknown) {
+        handleError({
+          context: "Something went wrong fetching CCM fees",
+          error,
+        });
       }
     })
   );
@@ -132,8 +138,11 @@ export const getFees = async function (this: ZetaChainClient, gas: number) {
         const rpcUrl = this.getEndpoint("evm", `zeta_${this.network}`);
         const fee = await fetchZEVMFees(zrc20, rpcUrl, foreignCoins);
         if (fee) fees.omnichain.push(fee);
-      } catch (err) {
-        console.log(err);
+      } catch (error: unknown) {
+        handleError({
+          context: "Something went wrong fetching ZEVM fees",
+          error,
+        });
       }
     })
   );

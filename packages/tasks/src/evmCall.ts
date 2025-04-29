@@ -5,8 +5,10 @@ import { z } from "zod";
 import {
   bigNumberStringSchema,
   evmAddressSchema,
+  stringArraySchema,
   validJsonStringSchema,
 } from "../../../types/shared.schema";
+import { parseJson, validateAndParseSchema } from "../../../utils";
 import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
@@ -30,15 +32,7 @@ export const evmCall = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   try {
-    const {
-      success,
-      error,
-      data: parsedArgs,
-    } = evmCallArgsSchema.safeParse(args);
-
-    if (!success) {
-      throw new Error(`Invalid arguments: ${error?.message}`);
-    }
+    const parsedArgs = validateAndParseSchema(args, evmCallArgsSchema);
 
     // Parse the ABI values
     const values = parseAbiValues(parsedArgs.types, parsedArgs.values);
@@ -61,7 +55,7 @@ export const evmCall = async (
         gasLimit: parsedArgs.gasLimit,
         gasPrice: parsedArgs.gasPrice,
       },
-      types: JSON.parse(parsedArgs.types) as string[],
+      types: parseJson(parsedArgs.types, stringArraySchema),
       values,
     });
 
