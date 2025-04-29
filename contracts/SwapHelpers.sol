@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 library SwapLibrary {
-    uint24 constant POOL_FEE = 3000; // 0.3% fee tier
-
     /**
      * @notice Swaps an exact amount of input tokens for as many output tokens as possible
      * @param inputToken Address of the token being sold
@@ -14,6 +12,7 @@ library SwapLibrary {
      * @param outputToken Address of the token being bought
      * @param uniswapRouter Address of the Uniswap V3 Router
      * @param wzeta Address of Wrapped ZETA token for multi-hop routing
+     * @param poolFee The fee tier for the Uniswap V3 pool (e.g., 3000 for 0.3%)
      * @return amountOut Amount of output tokens received
      * @dev First attempts a direct swap, falls back to a multi-hop swap through WZETA if direct swap fails
      */
@@ -22,7 +21,8 @@ library SwapLibrary {
         uint256 amountIn,
         address outputToken,
         address uniswapRouter,
-        address wzeta
+        address wzeta,
+        uint24 poolFee
     ) internal returns (uint256) {
         // Approve router to spend input tokens
         IERC20(inputToken).approve(uniswapRouter, amountIn);
@@ -33,7 +33,7 @@ library SwapLibrary {
                 ISwapRouter.ExactInputSingleParams({
                     tokenIn: inputToken,
                     tokenOut: outputToken,
-                    fee: POOL_FEE,
+                    fee: poolFee,
                     recipient: address(this),
                     deadline: block.timestamp + 15 minutes,
                     amountIn: amountIn,
@@ -50,9 +50,9 @@ library SwapLibrary {
             // The path is encoded as (tokenIn, fee, WZETA, fee, tokenOut)
             bytes memory path = abi.encodePacked(
                 inputToken,
-                POOL_FEE,
+                poolFee,
                 wzeta,
-                POOL_FEE,
+                poolFee,
                 outputToken
             );
 
@@ -78,15 +78,17 @@ library SwapLibrary {
      * @param outputToken Address of the token being bought
      * @param uniswapRouter Address of the Uniswap V3 Router
      * @param wzeta Address of Wrapped ZETA token for multi-hop routing
+     * @param poolFee The fee tier for the Uniswap V3 pool (e.g., 3000 for 0.3%)
      * @return amountIn Amount of input tokens spent
      * @dev First attempts a direct swap, falls back to a multi-hop swap through WZETA if direct swap fails
      */
-    function swapExactInputAmount(
+    function swapExactOutputAmount(
         address inputToken,
         uint256 amountOut,
         address outputToken,
         address uniswapRouter,
-        address wzeta
+        address wzeta,
+        uint24 poolFee
     ) internal returns (uint256) {
         // Approve router to spend input tokens
         IERC20(inputToken).approve(uniswapRouter, type(uint256).max);
@@ -97,7 +99,7 @@ library SwapLibrary {
                 ISwapRouter.ExactOutputSingleParams({
                     tokenIn: inputToken,
                     tokenOut: outputToken,
-                    fee: POOL_FEE,
+                    fee: poolFee,
                     recipient: address(this),
                     deadline: block.timestamp + 15 minutes,
                     amountOut: amountOut,
@@ -113,9 +115,9 @@ library SwapLibrary {
             // The path is encoded as (tokenOut, fee, WZETA, fee, tokenIn) in reverse order
             bytes memory path = abi.encodePacked(
                 outputToken,
-                POOL_FEE,
+                poolFee,
                 wzeta,
-                POOL_FEE,
+                poolFee,
                 inputToken
             );
 
