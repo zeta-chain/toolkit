@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 library SwapLibrary {
+    error SwapFailed();
+
     /**
      * @notice Swaps an exact amount of input tokens for as many output tokens as possible
      * @param inputToken Address of the token being sold
@@ -24,7 +26,6 @@ library SwapLibrary {
         address wzeta,
         uint24 poolFee
     ) internal returns (uint256) {
-        // Approve router to spend input tokens
         IERC20(inputToken).approve(uniswapRouter, amountIn);
 
         // Try direct swap first
@@ -42,7 +43,6 @@ library SwapLibrary {
                 })
             )
         returns (uint256 amountOut) {
-            // Reset approval after successful swap
             IERC20(inputToken).approve(uniswapRouter, 0);
             return amountOut;
         } catch {
@@ -65,9 +65,14 @@ library SwapLibrary {
                     amountOutMinimum: 0 // Let Uniswap handle slippage
                 });
 
-            uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
-            IERC20(inputToken).approve(uniswapRouter, 0);
-            return amountOut;
+            try ISwapRouter(uniswapRouter).exactInput(params) returns (
+                uint256 amountOut
+            ) {
+                IERC20(inputToken).approve(uniswapRouter, 0);
+                return amountOut;
+            } catch {
+                revert SwapFailed();
+            }
         }
     }
 
@@ -90,7 +95,6 @@ library SwapLibrary {
         address wzeta,
         uint24 poolFee
     ) internal returns (uint256) {
-        // Approve router to spend input tokens
         IERC20(inputToken).approve(uniswapRouter, type(uint256).max);
 
         // Try direct swap first
@@ -130,9 +134,14 @@ library SwapLibrary {
                     amountInMaximum: type(uint256).max // Let Uniswap handle slippage
                 });
 
-            uint256 amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
-            IERC20(inputToken).approve(uniswapRouter, 0);
-            return amountIn;
+            try ISwapRouter(uniswapRouter).exactOutput(params) returns (
+                uint256 amountIn
+            ) {
+                IERC20(inputToken).approve(uniswapRouter, 0);
+                return amountIn;
+            } catch {
+                revert SwapFailed();
+            }
         }
     }
 }
