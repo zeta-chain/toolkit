@@ -42,6 +42,8 @@ library SwapLibrary {
                 })
             )
         returns (uint256 amountOut) {
+            // Reset approval after successful swap
+            IERC20(inputToken).approve(uniswapRouter, 0);
             return amountOut;
         } catch {
             // If direct swap fails, try through WZETA using exactInput for multi-hop
@@ -63,7 +65,9 @@ library SwapLibrary {
                     amountOutMinimum: 0 // Let Uniswap handle slippage
                 });
 
-            return ISwapRouter(uniswapRouter).exactInput(params);
+            uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
+            IERC20(inputToken).approve(uniswapRouter, 0);
+            return amountOut;
         }
     }
 
@@ -102,6 +106,7 @@ library SwapLibrary {
                 })
             )
         returns (uint256 amountIn) {
+            IERC20(inputToken).approve(uniswapRouter, 0);
             return amountIn;
         } catch {
             // If direct swap fails, try through WZETA using exactOutput for multi-hop
@@ -123,7 +128,9 @@ library SwapLibrary {
                     amountInMaximum: type(uint256).max // Let Uniswap handle slippage
                 });
 
-            return ISwapRouter(uniswapRouter).exactOutput(params);
+            uint256 amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
+            IERC20(inputToken).approve(uniswapRouter, 0);
+            return amountIn;
         }
     }
 }
