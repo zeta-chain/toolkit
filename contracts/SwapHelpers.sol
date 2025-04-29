@@ -8,9 +8,16 @@ library SwapLibrary {
     uint24 constant POOL_FEE = 3000; // 0.3% fee tier
 
     /**
-     * @notice Swap exact tokens for tokens using Uniswap V3
+     * @notice Swaps an exact amount of input tokens for as many output tokens as possible
+     * @param inputToken Address of the token being sold
+     * @param amountIn Amount of input tokens to swap
+     * @param outputToken Address of the token being bought
+     * @param uniswapRouter Address of the Uniswap V3 Router
+     * @param wzeta Address of Wrapped ZETA token for multi-hop routing
+     * @return amountOut Amount of output tokens received
+     * @dev First attempts a direct swap, falls back to a multi-hop swap through WZETA if direct swap fails
      */
-    function swapExactTokensForTokens(
+    function swapExactInputAmount(
         address inputToken,
         uint256 amountIn,
         address outputToken,
@@ -61,9 +68,16 @@ library SwapLibrary {
     }
 
     /**
-     * @notice Swap tokens for exact tokens using Uniswap V3
+     * @notice Swaps as many input tokens as needed to receive an exact amount of output tokens
+     * @param inputToken Address of the token being sold
+     * @param amountOut Exact amount of output tokens desired
+     * @param outputToken Address of the token being bought
+     * @param uniswapRouter Address of the Uniswap V3 Router
+     * @param wzeta Address of Wrapped ZETA token for multi-hop routing
+     * @return amountIn Amount of input tokens spent
+     * @dev First attempts a direct swap, falls back to a multi-hop swap through WZETA if direct swap fails
      */
-    function swapTokensForExactTokens(
+    function swapExactInputAmount(
         address inputToken,
         uint256 amountOut,
         address outputToken,
