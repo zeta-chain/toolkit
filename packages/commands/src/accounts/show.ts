@@ -5,7 +5,9 @@ import {
   accountDataSchema,
   AccountDetails,
   accountNameSchema,
+  accountTypeSchema,
   AvailableAccountTypes,
+  BitcoinAccountData,
   EVMAccountData,
   SolanaAccountData,
 } from "../../../../types/accounts.types";
@@ -17,9 +19,7 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 const showAccountOptionsSchema = z.object({
   json: z.boolean().default(false),
   name: accountNameSchema,
-  type: z.enum(AvailableAccountTypes, {
-    errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
-  }),
+  type: accountTypeSchema,
 });
 
 type ShowAccountOptions = z.infer<typeof showAccountOptionsSchema>;
@@ -51,6 +51,22 @@ const getSolanaAccountDetails = (
   };
 };
 
+const getBitcoinAccountDetails = (
+  keyData: BitcoinAccountData,
+  keyPath: string
+): AccountDetails => {
+  return {
+    fileLocation: keyPath,
+    mainnetAddress: keyData.mainnetAddress,
+    mainnetWIF: keyData.mainnetWIF,
+    name: keyData.name || "N/A",
+    privateKeyBytes: keyData.privateKeyBytes,
+    testnetAddress: keyData.testnetAddress,
+    testnetWIF: keyData.testnetWIF,
+    type: "bitcoin",
+  };
+};
+
 const main = (options: ShowAccountOptions): void => {
   const { type, name, json } = options;
 
@@ -64,10 +80,24 @@ const main = (options: ShowAccountOptions): void => {
   const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
   keyData.name = name; // Add name to keyData for display
 
-  const accountDetails =
-    type === "evm"
-      ? getEVMAccountDetails(keyData as EVMAccountData, keyPath)
-      : getSolanaAccountDetails(keyData as SolanaAccountData, keyPath);
+  let accountDetails: AccountDetails;
+
+  if (type === "evm") {
+    accountDetails = getEVMAccountDetails(keyData as EVMAccountData, keyPath);
+  } else if (type === "solana") {
+    accountDetails = getSolanaAccountDetails(
+      keyData as SolanaAccountData,
+      keyPath
+    );
+  } else if (type === "bitcoin") {
+    accountDetails = getBitcoinAccountDetails(
+      keyData as BitcoinAccountData,
+      keyPath
+    );
+  } else {
+    console.error(`Unsupported account type: ${type as string}`);
+    return;
+  }
 
   if (json) {
     console.log(JSON.stringify(accountDetails, null, 2));
@@ -80,9 +110,7 @@ const main = (options: ShowAccountOptions): void => {
 export const showAccountsCommand = new Command("show")
   .description("Show details of an existing account")
   .addOption(
-    new Option("--type <type>", "Account type (evm or solana)").choices(
-      AvailableAccountTypes
-    )
+    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
   .requiredOption("--name <name>", "Account name")
   .option("--json", "Output in JSON format")

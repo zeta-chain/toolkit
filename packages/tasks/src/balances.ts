@@ -8,8 +8,8 @@ import { z } from "zod";
 
 import { numberArraySchema } from "../../../types/shared.schema";
 import { parseJson, validateAndParseSchema } from "../../../utils";
+import { generateBitcoinAddress } from "../../../utils/generateBitcoinAddress";
 import { ZetaChainClient } from "../../client/src/";
-import { bitcoinAddress } from "./bitcoinAddress";
 
 dotenv.config();
 
@@ -106,7 +106,7 @@ const main = async (args: BalancesArgs) => {
       }
     }
     if (btcKey) {
-      btcAddress = bitcoinAddress(
+      btcAddress = generateBitcoinAddress(
         btcKey,
         parsedArgs.mainnet ? "mainnet" : "testnet"
       );
