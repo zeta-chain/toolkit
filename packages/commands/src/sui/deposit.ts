@@ -1,20 +1,21 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import {
-  getKeypairFromMnemonic,
-  getCoin,
-  GAS_BUDGET,
-} from "../../../../utils/sui";
-import z from "zod";
 import { Command } from "commander";
+import { z } from "zod";
+
+import {
+  GAS_BUDGET,
+  getCoin,
+  getKeypairFromMnemonic,
+} from "../../../../utils/sui";
 
 const depositOptionsSchema = z.object({
-  mnemonic: z.string(),
-  gatewayObject: z.string(),
-  gatewayPackage: z.string(),
-  receiver: z.string(),
   amount: z.string(),
   coinType: z.string().optional(),
+  gatewayObject: z.string(),
+  gatewayPackage: z.string(),
+  mnemonic: z.string(),
+  receiver: z.string(),
 });
 
 export type DepositOptions = z.infer<typeof depositOptionsSchema>;
