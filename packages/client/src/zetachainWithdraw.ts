@@ -53,12 +53,10 @@ export const zetachainWithdraw = async function (
   ) as GatewayContract;
 
   const revertOptions = {
-    abortAddress: "0x0000000000000000000000000000000000000000",
-    callOnRevert: args.revertOptions.callOnRevert,
-    onRevertGasLimit: args.revertOptions.onRevertGasLimit,
-    revertAddress: args.revertOptions.revertAddress,
+    ...args.revertOptions,
     revertMessage: toHexString(args.revertOptions.revertMessage),
   };
+
   const zrc20 = new ethers.Contract(
     args.zrc20,
     ZRC20ABI.abi,

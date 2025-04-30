@@ -50,18 +50,10 @@ export const evmDeposit = async function (
   ) as GatewayContract;
 
   const revertOptions = {
-    abortAddress: "0x0000000000000000000000000000000000000000", // not used
-    callOnRevert: args.revertOptions.callOnRevert,
-    onRevertGasLimit: args.revertOptions.onRevertGasLimit,
-    revertAddress: args.revertOptions.revertAddress,
-    // not used
+    ...args.revertOptions,
     revertMessage: toHexString(args.revertOptions.revertMessage),
   };
 
-  const txOptions = {
-    gasLimit: args.txOptions.gasLimit,
-    gasPrice: args.txOptions.gasPrice,
-  };
   let tx;
   if (args.erc20) {
     const erc20Contract = new ethers.Contract(
@@ -88,7 +80,7 @@ export const evmDeposit = async function (
       value,
       args.erc20,
       revertOptions,
-      txOptions
+      args.txOptions
     );
   } else {
     const depositAbiSignature =
@@ -99,7 +91,7 @@ export const evmDeposit = async function (
     const value = ethers.parseEther(args.amount);
 
     tx = await gatewayDepositFunction(args.receiver, revertOptions, {
-      ...txOptions,
+      ...args.txOptions,
       value,
     });
   }

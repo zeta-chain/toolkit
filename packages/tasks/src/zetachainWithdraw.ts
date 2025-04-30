@@ -10,6 +10,7 @@ import { validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 const zetachainWithdrawArgsSchema = z.object({
+  abortAddress: evmAddressSchema,
   amount: z.string(),
   callOnRevert: z.boolean().optional(),
   gatewayZetaChain: evmAddressSchema.optional(),
@@ -39,6 +40,7 @@ export const zetachainWithdraw = async (
       gatewayZetaChain: parsedArgs.gatewayZetaChain,
       receiver: parsedArgs.receiver,
       revertOptions: {
+        abortAddress: parsedArgs.abortAddress,
         callOnRevert: parsedArgs.callOnRevert || false,
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
@@ -68,6 +70,11 @@ task("zetachain-withdraw", "Withdraw tokens from ZetaChain", zetachainWithdraw)
   .addOptionalParam(
     "revertAddress",
     "Revert address",
+    "0x0000000000000000000000000000000000000000"
+  )
+  .addOptionalParam(
+    "abortAddress",
+    "Abort address",
     "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(
