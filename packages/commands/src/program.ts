@@ -3,6 +3,7 @@ import { Command } from "commander";
 
 import { accountsCommand } from "./accounts";
 import { bitcoinCommand } from "./bitcoin";
+import { balancesCommand } from "./balances";
 import { solanaCommand } from "./solana";
 import { suiCommand } from "./sui";
 
@@ -11,6 +12,7 @@ export const toolkitCommand = new Command("toolkit")
   .helpCommand(false);
 
 toolkitCommand.addCommand(accountsCommand);
+toolkitCommand.addCommand(balancesCommand);
 toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(bitcoinCommand);
 toolkitCommand.addCommand(suiCommand);
