@@ -17,6 +17,12 @@ import {
 import { ForeignCoin } from "../types/foreignCoins.types";
 import { ObserverSupportedChain } from "../types/supportedChains.types";
 
+export interface UTXO {
+  txid: string;
+  value: number;
+  vout: number;
+}
+
 /**
  * Parses a token ID from chain ID and symbol
  */
@@ -414,7 +420,7 @@ export const getBtcBalances = async (
   getEndpoint: (type: string, chainName: string) => string
 ): Promise<TokenBalance[]> => {
   const balances: TokenBalance[] = [];
-  const btcChainNames = ["btc_testnet", "btc_mainnet"];
+  const btcChainNames = ["btc_testnet4", "btc_signet_testnet", "btc_mainnet"];
 
   const btcTokens = tokens.filter(
     (token) =>
@@ -423,30 +429,51 @@ export const getBtcBalances = async (
       btcChainNames.includes(token.chain_name)
   );
 
+  console.log(tokens);
+
   for (const token of btcTokens) {
     try {
-      const API = getEndpoint("esplora", token.chain_name || "");
+      if (token.chain_name === "btc_mainnet") {
+        const API = getEndpoint("esplora", token.chain_name || "");
 
-      if (!API) {
-        console.error(`No API endpoint found for ${token.chain_name}`);
-        continue;
+        if (!API) {
+          console.error(`No API endpoint found for ${token.chain_name}`);
+          continue;
+        }
+
+        const { data } = await axios.get<EsploraResponse>(
+          `${API}/address/${btcAddress}`
+        );
+
+        const { funded_txo_sum, spent_txo_sum } = data.chain_stats;
+        const balance = (
+          (BigInt(funded_txo_sum) - BigInt(spent_txo_sum)) /
+          BigInt(100000000)
+        ).toString();
+        balances.push({
+          ...token,
+          balance,
+          id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
+        });
+      } else if (token.chain_name === "btc_signet_testnet") {
+        const API = "https://mempool.space/signet/api";
+        const utxos = (
+          await axios.get<UTXO[]>(`${API}/address/${btcAddress}/utxo`)
+        ).data;
+        utxos.sort((a: UTXO, b: UTXO) => a.value - b.value);
+        let inTotal = 0;
+        const picks = [];
+        for (const u of utxos) {
+          inTotal += u.value;
+          picks.push(u);
+        }
+        const balance = inTotal.toString();
+        balances.push({
+          ...token,
+          balance,
+          id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
+        });
       }
-
-      const { data } = await axios.get<EsploraResponse>(
-        `${API}/address/${btcAddress}`
-      );
-
-      const { funded_txo_sum, spent_txo_sum } = data.chain_stats;
-      const balance = (
-        (BigInt(funded_txo_sum) - BigInt(spent_txo_sum)) /
-        BigInt(100000000)
-      ).toString();
-
-      balances.push({
-        ...token,
-        balance,
-        id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
-      });
     } catch (error) {
       console.error(
         `Failed to get BTC balance for ${token.chain_name}:`,
