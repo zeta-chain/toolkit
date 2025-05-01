@@ -17,9 +17,9 @@ const depositOptionsSchema = z
     gatewayObject: z.string(),
     gatewayPackage: z.string(),
     mnemonic: z.string().optional(),
+    network: z.enum(["localnet", "testnet", "mainnet"]),
     privateKey: z.string().optional(),
     receiver: z.string(),
-    network: z.enum(["localnet", "testnet", "mainnet"]),
   })
   .refine((data) => data.mnemonic || data.privateKey, {
     message: "Either mnemonic or private key must be provided",
