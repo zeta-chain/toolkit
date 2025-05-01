@@ -38,3 +38,18 @@ export const getKeypairFromMnemonic = (mnemonic: string): Ed25519Keypair => {
   const derivedKey = hdKey.derive("m/44'/784'/0'/0'/0'");
   return Ed25519Keypair.fromSecretKey(derivedKey.privateKey!);
 };
+
+export const getKeypairFromPrivateKey = (
+  privateKey: string
+): Ed25519Keypair => {
+  try {
+    // Remove 0x prefix if present
+    const cleanKey = privateKey.startsWith("0x")
+      ? privateKey.slice(2)
+      : privateKey;
+    const keyBytes = Uint8Array.from(Buffer.from(cleanKey, "hex"));
+    return Ed25519Keypair.fromSecretKey(keyBytes);
+  } catch (error) {
+    throw new Error("Invalid private key format");
+  }
+};

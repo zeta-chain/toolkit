@@ -1,28 +1,35 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { z } from "zod";
 
 import {
   GAS_BUDGET,
   getCoin,
   getKeypairFromMnemonic,
+  getKeypairFromPrivateKey,
 } from "../../../../utils/sui";
 
-const depositOptionsSchema = z.object({
-  amount: z.string(),
-  coinType: z.string().optional(),
-  gatewayObject: z.string(),
-  gatewayPackage: z.string(),
-  mnemonic: z.string(),
-  receiver: z.string(),
-});
+const depositOptionsSchema = z
+  .object({
+    amount: z.string(),
+    coinType: z.string().optional(),
+    gatewayObject: z.string(),
+    gatewayPackage: z.string(),
+    mnemonic: z.string().optional(),
+    privateKey: z.string().optional(),
+    receiver: z.string(),
+  })
+  .refine((data) => data.mnemonic || data.privateKey, {
+    message: "Either mnemonic or private key must be provided",
+  });
 
 export type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   const {
     mnemonic,
+    privateKey,
     gatewayObject,
     gatewayPackage,
     receiver,
@@ -37,8 +44,11 @@ const main = async (options: DepositOptions) => {
     );
   }
 
-  const keypair = getKeypairFromMnemonic(mnemonic);
+  const keypair = mnemonic
+    ? getKeypairFromMnemonic(mnemonic)
+    : getKeypairFromPrivateKey(privateKey!);
   const address = keypair.toSuiAddress();
+  console.log(`Using Address: ${address}`);
 
   const fullCoinType = coinType || "0x2::sui::SUI";
   console.log(`Using Coin Type: ${fullCoinType}`);
@@ -149,7 +159,17 @@ const main = async (options: DepositOptions) => {
 
 export const depositCommand = new Command("deposit")
   .description("Deposit tokens from Sui")
-  .requiredOption("--mnemonic <mnemonic>", "Mnemonic for the account")
+  .addOption(
+    new Option("--mnemonic <mnemonic>", "Mnemonic for the account").conflicts(
+      "private-key"
+    )
+  )
+  .addOption(
+    new Option(
+      "--private-key <privateKey>",
+      "Private key for the account"
+    ).conflicts("mnemonic")
+  )
   .requiredOption("--gateway-object <gatewayObject>", "Gateway object ID")
   .requiredOption("--gateway-package <gatewayPackage>", "Gateway package ID")
   .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
