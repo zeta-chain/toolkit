@@ -46,6 +46,7 @@ const createSolanaAccount = (): AccountData => {
   const keypair = Keypair.generate();
   return {
     address: keypair.publicKey.toBase58(),
+    publicKey: keypair.publicKey.toBase58(),
     privateKey: `0x${Buffer.from(keypair.secretKey).toString("hex")}`,
     privateKeyEncoding: "hex",
     privateKeyScheme: "ed25519",
@@ -107,9 +108,6 @@ const createAccountForType = async (
       console.log(`Address: ${keyData.address}`);
     } else if (type === "solana") {
       console.log(`Public Key: ${keyData.address}`);
-    } else {
-      console.log(`Address: ${keyData.address}`);
-      console.log(`Public Key: ${keyData.publicKey}`);
     }
   } catch (error: unknown) {
     handleError({
