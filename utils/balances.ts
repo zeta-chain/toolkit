@@ -6,7 +6,6 @@ import { AbiCoder, ethers } from "ethers";
 
 import {
   Call,
-  EsploraResponse,
   MULTICALL3_ABI,
   MulticallContract,
   RpcSolTokenByAccountResponse,
