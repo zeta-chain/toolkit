@@ -1,17 +1,18 @@
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { z } from "zod";
 
 import {
   accountDataSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
-import { safeReadFile } from "../../../../utils/fsUtils";
+import { safeExists, safeReadFile } from "../../../../utils/fsUtils";
 import { handleError } from "../../../../utils/handleError";
 import { getAccountKeyPath } from "../../../../utils/keyPaths";
 import { parseJson } from "../../../../utils/parseJson";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const showAccountOptionsSchema = z.object({
+  json: z.boolean().default(false),
   name: z.string(),
   type: z.enum(AvailableAccountTypes),
 });
@@ -35,10 +36,12 @@ const main = (options: ShowAccountOptions): void => {
   }
 };
 
-export const showAccountCommand = new Command("show")
-  .description("Show account details")
+export const showAccountsCommand = new Command("show")
+  .description("Show details of an existing account")
+  .addOption(
+    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
+  )
   .requiredOption("--name <name>", "Account name")
-  .requiredOption("--type <type>", "Account type")
   .action((opts) => {
     const validated = validateAndParseSchema(opts, showAccountOptionsSchema, {
       exitOnError: true,

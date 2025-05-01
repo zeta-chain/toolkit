@@ -8,8 +8,11 @@ import { z } from "zod";
 import {
   AccountData,
   accountNameSchema,
+  accountTypeSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
+import { createBitcoinAccount } from "../../../../utils/accounts";
 import {
   safeExists,
   safeMkdir,
@@ -21,14 +24,9 @@ import {
   getAccountTypeDir,
 } from "../../../../utils/keyPaths";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-
 const createAccountOptionsSchema = z.object({
   name: accountNameSchema,
-  type: z
-    .enum(AvailableAccountTypes, {
-      errorMap: () => ({ message: "Type must be either 'evm' or 'solana'" }),
-    })
-    .optional(),
+  type: accountTypeSchema.optional(),
 });
 
 type CreateAccountOptions = z.infer<typeof createAccountOptionsSchema>;
@@ -87,13 +85,21 @@ const createAccountForType = async (
       }
     }
 
-    const keyData =
-      type === "evm"
-        ? createEVMAccount()
-        : type === "solana"
-        ? createSolanaAccount()
-        : createSUIAccount();
+    let keyData: AccountData;
 
+    if (type === "evm") {
+      keyData = createEVMAccount();
+    } else if (type === "solana") {
+      keyData = createSolanaAccount();
+    } else if (type === "sui") {
+      keyData = createSUIAccount();
+    } else if (type === "bitcoin") {
+      // Default to testnet for Bitcoin
+      keyData = createBitcoinAccount();
+    } else {
+      // Type assertion to help TypeScript understand this isn't 'never'
+      throw new Error(`Unsupported account type: ${type as string}`);
+    }
     safeWriteFile(keyPath, keyData);
     console.log(`${type.toUpperCase()} account created successfully!`);
     console.log(`Key saved to: ${keyPath}`);
@@ -130,11 +136,9 @@ const main = async (options: CreateAccountOptions) => {
 export const createAccountsCommand = new Command("create")
   .description("Create a new account")
   .addOption(
-    new Option("--type <type>", "Account type (evm or solana)").choices(
-      AvailableAccountTypes
-    )
+    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
-  .option("--name <name>", "Account name", "testnet")
+  .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, createAccountOptionsSchema, {
       exitOnError: true,

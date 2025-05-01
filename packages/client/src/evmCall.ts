@@ -7,7 +7,8 @@ import {
   TxOptions,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
-import { toHexString, validateSigner } from "../../../utils";
+import { toHexString } from "../../../utils/toHexString";
+import { validateSigner } from "../../../utils/validateSigner";
 import { ZetaChainClient } from "./client";
 
 /**
@@ -47,6 +48,11 @@ export const evmCall = async function (
     signer
   ) as GatewayContract;
 
+  const revertOptions = {
+    ...args.revertOptions,
+    revertMessage: toHexString(args.revertOptions.revertMessage),
+  };
+
   const abiCoder = AbiCoder.defaultAbiCoder();
   const encodedParameters = abiCoder.encode(args.types, args.values);
 
@@ -59,17 +65,8 @@ export const evmCall = async function (
   const tx = await gatewayCallFunction(
     args.receiver,
     encodedParameters,
-    {
-      abortAddress: "0x0000000000000000000000000000000000000000", // not used
-      callOnRevert: args.revertOptions.callOnRevert,
-      onRevertGasLimit: args.revertOptions.onRevertGasLimit,
-      revertAddress: args.revertOptions.revertAddress,
-      revertMessage: toHexString(args.revertOptions.revertMessage),
-    },
-    {
-      gasLimit: args.txOptions.gasLimit,
-      gasPrice: args.txOptions.gasPrice,
-    }
+    revertOptions,
+    args.txOptions
   );
 
   return tx;

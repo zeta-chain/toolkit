@@ -13,6 +13,7 @@ import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
 const zetachainCallArgsSchema = z.object({
+  abortAddress: evmAddressSchema,
   callOnRevert: z.boolean().optional(),
   callOptionsGasLimit: bigNumberStringSchema,
   callOptionsIsArbitraryCall: z.boolean().optional(),
@@ -20,7 +21,7 @@ const zetachainCallArgsSchema = z.object({
   gatewayZetaChain: evmAddressSchema.optional(),
   onRevertGasLimit: bigNumberStringSchema,
   receiver: z.string(),
-  revertAddress: z.string(),
+  revertAddress: evmAddressSchema,
   revertMessage: z.string(),
   txOptionsGasLimit: bigNumberStringSchema,
   txOptionsGasPrice: bigNumberStringSchema,
@@ -56,6 +57,7 @@ export const zetachainCall = async (
       gatewayZetaChain: parsedArgs.gatewayZetaChain,
       receiver: parsedArgs.receiver,
       revertOptions: {
+        abortAddress: parsedArgs.abortAddress,
         callOnRevert: parsedArgs.callOnRevert || false,
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
@@ -86,6 +88,11 @@ task("zetachain-call", "Call a contract on a connected chain", zetachainCall)
   .addOptionalParam(
     "revertAddress",
     "Revert address",
+    "0x0000000000000000000000000000000000000000"
+  )
+  .addOptionalParam(
+    "abortAddress",
+    "Abort address",
     "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(

@@ -13,6 +13,7 @@ import { parseAbiValues } from "../../../utils/parseAbiValues";
 import { ZetaChainClient } from "../../client/src/";
 
 const zetachainWithdrawAndCallArgsSchema = z.object({
+  abortAddress: evmAddressSchema,
   amount: z.string(),
   callOnRevert: z.boolean().optional(),
   callOptionsGasLimit: bigNumberStringSchema,
@@ -21,13 +22,13 @@ const zetachainWithdrawAndCallArgsSchema = z.object({
   gatewayZetaChain: evmAddressSchema.optional(),
   onRevertGasLimit: bigNumberStringSchema,
   receiver: z.string(),
-  revertAddress: z.string(),
+  revertAddress: evmAddressSchema,
   revertMessage: z.string(),
   txOptionsGasLimit: bigNumberStringSchema,
   txOptionsGasPrice: bigNumberStringSchema,
   types: validJsonStringSchema,
   values: z.array(z.string()).min(1, "At least one value is required"),
-  zrc20: z.string(),
+  zrc20: evmAddressSchema,
 });
 
 type ZetachainWithdrawAndCallArgs = z.infer<
@@ -62,6 +63,7 @@ export const zetachainWithdrawAndCall = async (
       gatewayZetaChain: parsedArgs.gatewayZetaChain,
       receiver: parsedArgs.receiver,
       revertOptions: {
+        abortAddress: parsedArgs.abortAddress,
         callOnRevert: parsedArgs.callOnRevert || false,
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
