@@ -106,7 +106,7 @@ export const getBalances = async function (
 
   // Step 4: Get BTC balances
   if (btcAddress) {
-    const btcBalances = await getBtcBalances(tokens, btcAddress, getEndpoint);
+    const btcBalances = await getBtcBalances(tokens, btcAddress);
     balances = balances.concat(btcBalances);
   }
 

@@ -416,8 +416,7 @@ export const getNativeEvmTokenBalances = async (
  */
 export const getBtcBalances = async (
   tokens: Token[],
-  btcAddress: string,
-  getEndpoint: (type: string, chainName: string) => string
+  btcAddress: string
 ): Promise<TokenBalance[]> => {
   const balances: TokenBalance[] = [];
   const btcChainNames = ["btc_testnet4", "btc_signet_testnet", "btc_mainnet"];
@@ -429,57 +428,31 @@ export const getBtcBalances = async (
       btcChainNames.includes(token.chain_name)
   );
 
-  console.log(tokens);
-
   for (const token of btcTokens) {
     try {
-      if (token.chain_name === "btc_mainnet") {
-        const API = getEndpoint("esplora", token.chain_name || "");
-
-        if (!API) {
-          console.error(`No API endpoint found for ${token.chain_name}`);
-          continue;
-        }
-
-        const { data } = await axios.get<EsploraResponse>(
-          `${API}/address/${btcAddress}`
-        );
-
-        const { funded_txo_sum, spent_txo_sum } = data.chain_stats;
-        const balance = (
-          (BigInt(funded_txo_sum) - BigInt(spent_txo_sum)) /
-          BigInt(100000000)
-        ).toString();
-        balances.push({
-          ...token,
-          balance,
-          id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
-        });
-      } else if (
-        token.chain_name === "btc_signet_testnet" ||
-        token.chain_name === "btc_testnet4"
-      ) {
-        const API =
-          token.chain_name === "btc_signet_testnet"
-            ? "https://mempool.space/signet/api"
-            : "https://mempool.space/testnet4/api";
-        const utxos = (
-          await axios.get<UTXO[]>(`${API}/address/${btcAddress}/utxo`)
-        ).data;
-        utxos.sort((a: UTXO, b: UTXO) => a.value - b.value);
-        let inTotal = 0;
-        const picks = [];
-        for (const u of utxos) {
-          inTotal += u.value;
-          picks.push(u);
-        }
-        const balance = (inTotal / 100000000).toFixed(8);
-        balances.push({
-          ...token,
-          balance,
-          id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
-        });
+      let network = "";
+      if (token.chain_name === "btc_signet_testnet") {
+        network = "signet";
+      } else if (token.chain_name === "btc_testnet4") {
+        network = "testnet4";
       }
+      const API = `https://mempool.space/${network}/api`;
+      const utxos = (
+        await axios.get<UTXO[]>(`${API}/address/${btcAddress}/utxo`)
+      ).data;
+      utxos.sort((a: UTXO, b: UTXO) => a.value - b.value);
+      let inTotal = 0;
+      const picks = [];
+      for (const u of utxos) {
+        inTotal += u.value;
+        picks.push(u);
+      }
+      const balance = (inTotal / 100000000).toFixed(8);
+      balances.push({
+        ...token,
+        balance,
+        id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
+      });
     } catch (error) {
       console.error(
         `Failed to get BTC balance for ${token.chain_name}:`,
