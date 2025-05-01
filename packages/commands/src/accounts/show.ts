@@ -5,7 +5,7 @@ import {
   accountDataSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
-import { safeExists, safeReadFile } from "../../../../utils/fsUtils";
+import { safeReadFile } from "../../../../utils/fsUtils";
 import { handleError } from "../../../../utils/handleError";
 import { getAccountKeyPath } from "../../../../utils/keyPaths";
 import { parseJson } from "../../../../utils/parseJson";

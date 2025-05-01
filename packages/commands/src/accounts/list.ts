@@ -11,12 +11,6 @@ const listAccountsOptionsSchema = z.object({
 
 type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
 
-interface TableAccountData {
-  Address: string;
-  Name: string;
-  Type: string;
-}
-
 const main = (options: ListAccountsOptions): void => {
   const { json } = options;
 
