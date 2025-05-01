@@ -37,18 +37,17 @@ const depositOptionsSchema = z
 
 export type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
-const main = async (options: DepositOptions) => {
-  const {
-    mnemonic,
-    privateKey,
-    gatewayObject,
-    gatewayPackage,
-    receiver,
-    amount,
-    coinType,
-    network,
-    gasBudget,
-  } = options;
+const main = async ({
+  mnemonic,
+  privateKey,
+  gatewayObject,
+  gatewayPackage,
+  receiver,
+  amount,
+  coinType,
+  network,
+  gasBudget,
+}: DepositOptions) => {
   const client = new SuiClient({ url: getFullnodeUrl(network) });
 
   // Convert gas budget to BigInt or use default
