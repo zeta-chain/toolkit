@@ -46,10 +46,10 @@ const createSolanaAccount = (): AccountData => {
   const keypair = Keypair.generate();
   return {
     address: keypair.publicKey.toBase58(),
-    publicKey: keypair.publicKey.toBase58(),
     privateKey: `0x${Buffer.from(keypair.secretKey).toString("hex")}`,
     privateKeyEncoding: "hex",
     privateKeyScheme: "ed25519",
+    publicKey: keypair.publicKey.toBase58(),
   };
 };
 
