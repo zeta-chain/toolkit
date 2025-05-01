@@ -432,11 +432,11 @@ export const getBtcBalances = async (
     try {
       let network = "";
       if (token.chain_name === "btc_signet_testnet") {
-        network = "signet";
+        network = "/signet";
       } else if (token.chain_name === "btc_testnet4") {
-        network = "testnet4";
+        network = "/testnet4";
       }
-      const API = `https://mempool.space/${network}/api`;
+      const API = `https://mempool.space${network}/api`;
       const utxos = (
         await axios.get<UTXO[]>(`${API}/address/${btcAddress}/utxo`)
       ).data;

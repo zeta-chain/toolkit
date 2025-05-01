@@ -515,8 +515,7 @@ describe("balances utility functions", () => {
 
       const result = await balancesUtils.getBtcBalances(
         mockTokens,
-        mockBtcAddress,
-        mockGetEndpoint
+        mockBtcAddress
       );
 
       expect(result).toHaveLength(1);
