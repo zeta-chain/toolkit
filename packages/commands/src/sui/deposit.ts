@@ -19,6 +19,7 @@ const depositOptionsSchema = z
     mnemonic: z.string().optional(),
     privateKey: z.string().optional(),
     receiver: z.string(),
+    network: z.enum(["localnet", "testnet", "mainnet"]),
   })
   .refine((data) => data.mnemonic || data.privateKey, {
     message: "Either mnemonic or private key must be provided",
@@ -35,8 +36,9 @@ const main = async (options: DepositOptions) => {
     receiver,
     amount,
     coinType,
+    network,
   } = options;
-  const client = new SuiClient({ url: getFullnodeUrl("localnet") });
+  const client = new SuiClient({ url: getFullnodeUrl(network) });
 
   if (!gatewayObject || !gatewayPackage) {
     throw new Error(
@@ -175,4 +177,5 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
   .requiredOption("--amount <amount>", "Amount to deposit")
   .option("--coin-type <coinType>", "Coin type to deposit")
+  .option("--network <network>", "Network to use", "testnet")
   .action(main);
