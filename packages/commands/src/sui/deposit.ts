@@ -87,12 +87,16 @@ const main = async (options: DepositOptions) => {
       owner: address,
     });
 
-    // Find a different SUI coin for gas payment
+    // Find a different SUI coin for gas payment with sufficient balance
     const gasCoin = coins.data.find(
-      (coin) => coin.coinObjectId !== coinObjectId
+      (coin) =>
+        coin.coinObjectId !== coinObjectId &&
+        BigInt(coin.balance) >= BigInt(GAS_BUDGET)
     );
     if (!gasCoin) {
-      throw new Error("No other SUI coins found for gas payment");
+      throw new Error(
+        "No SUI coins found with sufficient balance for gas payment"
+      );
     }
 
     tx.setGasPayment([
@@ -108,14 +112,22 @@ const main = async (options: DepositOptions) => {
       coinType: "0x2::sui::SUI",
       owner: address,
     });
-    if (!suiCoins.data.length) {
-      throw new Error("No SUI coins found for gas payment");
+
+    // Find a SUI coin with sufficient balance for gas
+    const gasCoin = suiCoins.data.find(
+      (coin) => BigInt(coin.balance) >= BigInt(GAS_BUDGET)
+    );
+    if (!gasCoin) {
+      throw new Error(
+        "No SUI coins found with sufficient balance for gas payment"
+      );
     }
+
     tx.setGasPayment([
       {
-        digest: suiCoins.data[0].digest,
-        objectId: suiCoins.data[0].coinObjectId,
-        version: suiCoins.data[0].version,
+        digest: gasCoin.digest,
+        objectId: gasCoin.coinObjectId,
+        version: gasCoin.version,
       },
     ]);
   }
