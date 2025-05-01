@@ -3,7 +3,7 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { mnemonicToSeedSync } from "bip39";
 import { HDKey } from "ethereum-cryptography/hdkey";
 
-export const GAS_BUDGET = 5_000_000_000;
+export const GAS_BUDGET = 100_000_000;
 
 export const getCoin = async (
   client: SuiClient,
