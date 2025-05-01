@@ -14,6 +14,7 @@ const depositOptionsSchema = z
   .object({
     amount: z.string(),
     coinType: z.string().optional(),
+    gasBudget: z.string(),
     gatewayObject: z.string(),
     gatewayPackage: z.string(),
     mnemonic: z.string().optional(),
@@ -37,8 +38,12 @@ const main = async (options: DepositOptions) => {
     amount,
     coinType,
     network,
+    gasBudget,
   } = options;
   const client = new SuiClient({ url: getFullnodeUrl(network) });
+
+  // Convert gas budget to BigInt or use default
+  const gasBudgetValue = BigInt(gasBudget);
 
   if (!gatewayObject || !gatewayPackage) {
     throw new Error(
@@ -94,15 +99,16 @@ const main = async (options: DepositOptions) => {
         } SUI)`
       );
     });
+
     console.log(
-      `Required gas budget: ${GAS_BUDGET} MIST (${
-        Number(GAS_BUDGET) / 1_000_000_000
+      `Required gas budget: ${gasBudgetValue} MIST (${
+        Number(gasBudgetValue) / 1_000_000_000
       } SUI)\n`
     );
 
     // Find a coin with sufficient balance for gas
     const gasCoin = coins.data.find(
-      (coin) => BigInt(coin.balance) >= BigInt(GAS_BUDGET)
+      (coin) => BigInt(coin.balance) >= gasBudgetValue
     );
     if (!gasCoin) {
       throw new Error(
@@ -155,15 +161,16 @@ const main = async (options: DepositOptions) => {
         } SUI)`
       );
     });
+
     console.log(
-      `Required gas budget: ${GAS_BUDGET} MIST (${
-        Number(GAS_BUDGET) / 1_000_000_000
+      `Required gas budget: ${gasBudgetValue} MIST (${
+        Number(gasBudgetValue) / 1_000_000_000
       } SUI)\n`
     );
 
     // Find a SUI coin with sufficient balance for gas
     const gasCoin = suiCoins.data.find(
-      (coin) => BigInt(coin.balance) >= BigInt(GAS_BUDGET)
+      (coin) => BigInt(coin.balance) >= gasBudgetValue
     );
     if (!gasCoin) {
       throw new Error(
@@ -193,7 +200,7 @@ const main = async (options: DepositOptions) => {
     });
   }
 
-  tx.setGasBudget(GAS_BUDGET);
+  tx.setGasBudget(gasBudgetValue);
 
   const result = await client.signAndExecuteTransaction({
     options: {
@@ -241,4 +248,9 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--amount <amount>", "Amount to deposit")
   .option("--coin-type <coinType>", "Coin type to deposit")
   .option("--network <network>", "Network to use", "testnet")
+  .option(
+    "--gas-budget <gasBudget>",
+    "Gas budget in MIST",
+    GAS_BUDGET.toString()
+  )
   .action(main);
