@@ -10,6 +10,15 @@ import {
   getKeypairFromPrivateKey,
 } from "../../../../utils/sui";
 
+// Convert decimal amount to smallest unit (e.g., SUI to MIST)
+const toSmallestUnit = (amount: string, decimals: number = 9): string => {
+  const value = parseFloat(amount);
+  if (isNaN(value)) {
+    throw new Error("Invalid amount");
+  }
+  return BigInt(Math.floor(value * Math.pow(10, decimals))).toString();
+};
+
 const depositOptionsSchema = z
   .object({
     amount: z.string(),
@@ -59,6 +68,10 @@ const main = async (options: DepositOptions) => {
 
   const fullCoinType = coinType || "0x2::sui::SUI";
   console.log(`Using Coin Type: ${fullCoinType}`);
+
+  // Convert amount to smallest unit (e.g., SUI to MIST)
+  const amountInSmallestUnit = toSmallestUnit(amount);
+  console.log(`Amount in smallest unit: ${amountInSmallestUnit}`);
 
   const coinObjectId = await getCoin(client, address, fullCoinType);
   console.log(`Using Coin Object: ${coinObjectId}`);
@@ -126,7 +139,7 @@ const main = async (options: DepositOptions) => {
 
     // Split the deposit coin if needed
     const [splitCoin] = tx.splitCoins(tx.object(depositCoin.coinObjectId), [
-      amount,
+      amountInSmallestUnit,
     ]);
 
     tx.setGasPayment([
@@ -187,7 +200,9 @@ const main = async (options: DepositOptions) => {
     ]);
 
     // Split the coin for deposit
-    const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [amount]);
+    const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
+      amountInSmallestUnit,
+    ]);
 
     tx.moveCall({
       arguments: [
@@ -218,6 +233,9 @@ const main = async (options: DepositOptions) => {
     return;
   }
 
+  console.log("\nTransaction successful!");
+  console.log(`Transaction hash: ${result.digest}`);
+
   const event = result.events?.find((evt) =>
     evt.type.includes("gateway::DepositEvent")
   );
@@ -245,7 +263,7 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--gateway-object <gatewayObject>", "Gateway object ID")
   .requiredOption("--gateway-package <gatewayPackage>", "Gateway package ID")
   .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
-  .requiredOption("--amount <amount>", "Amount to deposit")
+  .requiredOption("--amount <amount>", "Amount to deposit in decimal format")
   .option("--coin-type <coinType>", "Coin type to deposit")
   .option("--network <network>", "Network to use", "testnet")
   .option(
