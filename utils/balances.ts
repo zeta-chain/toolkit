@@ -455,8 +455,14 @@ export const getBtcBalances = async (
           balance,
           id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
         });
-      } else if (token.chain_name === "btc_signet_testnet") {
-        const API = "https://mempool.space/signet/api";
+      } else if (
+        token.chain_name === "btc_signet_testnet" ||
+        token.chain_name === "btc_testnet4"
+      ) {
+        const API =
+          token.chain_name === "btc_signet_testnet"
+            ? "https://mempool.space/signet/api"
+            : "https://mempool.space/testnet4/api";
         const utxos = (
           await axios.get<UTXO[]>(`${API}/address/${btcAddress}/utxo`)
         ).data;
@@ -467,7 +473,7 @@ export const getBtcBalances = async (
           inTotal += u.value;
           picks.push(u);
         }
-        const balance = inTotal.toString();
+        const balance = (inTotal / 100000000).toFixed(8);
         balances.push({
           ...token,
           balance,
