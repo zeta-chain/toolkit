@@ -487,14 +487,19 @@ describe("balances utility functions", () => {
 
   describe("getBtcBalances", () => {
     it("should fetch and calculate BTC balances", async () => {
-      // Setup axios mock for BTC balance
       axios.get.mockResolvedValue({
-        data: {
-          chain_stats: {
-            funded_txo_sum: "200000000", // 2 BTC
-            spent_txo_sum: "100000000", // 1 BTC
+        data: [
+          {
+            txid: "tx1",
+            value: 100000000, // 1 BTC
+            vout: 0,
           },
-        },
+          {
+            txid: "tx2",
+            value: 50000000, // 0.5 BTC
+            vout: 1,
+          },
+        ],
       });
 
       const mockTokens = [
@@ -509,17 +514,13 @@ describe("balances utility functions", () => {
 
       const mockBtcAddress = "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq";
 
-      const mockGetEndpoint = createMockGetEndpoint({
-        esplora: { btc_mainnet: "https://blockstream.info/api" },
-      });
-
       const result = await balancesUtils.getBtcBalances(
         mockTokens,
         mockBtcAddress
       );
 
       expect(result).toHaveLength(1);
-      expect(result[0].balance).toBe("1"); // 2 BTC - 1 BTC = 1 BTC
+      expect(result[0].balance).toBe("1.50000000"); // 1.5 BTC total
       expect(result[0].symbol).toBe("BTC");
     });
   });
