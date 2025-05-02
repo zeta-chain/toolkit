@@ -1,12 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Wallet } from "@coral-xyz/anchor";
-import { clusterApiUrl, Keypair } from "@solana/web3.js";
+import { clusterApiUrl, Keypair, PublicKey } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 import * as bip39 from "bip39";
 import bs58 from "bs58";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
+import { TOKEN_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
 
 const networks = ["devnet", "localnet", "mainnet"];
 
@@ -63,8 +64,10 @@ const main = async (options: DepositOptions) => {
     API = clusterApiUrl("mainnet-beta");
   }
 
+  const connection = new anchor.web3.Connection(API);
+
   const provider = new anchor.AnchorProvider(
-    new anchor.web3.Connection(API),
+    connection,
     new Wallet(keypair),
     {}
   );
@@ -73,7 +76,23 @@ const main = async (options: DepositOptions) => {
 
   const receiverBytes = ethers.getBytes(options.recipient);
 
-  if (options.mint && options.from && options.to) {
+  const tokenAccounts = await connection.getTokenAccountsByOwner(
+    provider.wallet.publicKey,
+    {
+      programId: TOKEN_PROGRAM_ID,
+    }
+  );
+
+  if (options.mint && options.to) {
+    const matchingTokenAccount = tokenAccounts.value.find(({ account }) => {
+      const data = AccountLayout.decode(account.data);
+      return new PublicKey(data.mint).toBase58() === options.mint;
+    });
+
+    if (!matchingTokenAccount) {
+      throw new Error(`No token account found for mint ${options.mint}`);
+    }
+
     const tx = await gatewayProgram.methods
       .depositSplToken(
         new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
@@ -81,7 +100,7 @@ const main = async (options: DepositOptions) => {
         null
       )
       .accounts({
-        from: options.from,
+        from: matchingTokenAccount.pubkey,
         mintAccount: options.mint,
         signer: keypair.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -111,7 +130,6 @@ export const depositCommand = new Command("deposit")
   .option("--mnemonic <mnemonic>", "Mnemonic")
   .option("--private-key <privateKey>", "Private key in base58 format")
   .option("--token-program <tokenProgram>", "Token program")
-  .option("--from <from>", "SPL token account from which tokens are withdrawn")
   .option("--to <to>", "SPL token account that belongs to the PDA")
   .option("--mint <mint>", "SPL token mint address")
   .addOption(
