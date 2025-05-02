@@ -77,7 +77,8 @@ const main = async (options: DepositOptions) => {
     const tx = await gatewayProgram.methods
       .depositSplToken(
         new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
-        receiverBytes
+        receiverBytes,
+        null
       )
       .accounts({
         from: options.from,
