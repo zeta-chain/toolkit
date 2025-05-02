@@ -74,7 +74,7 @@ const main = async (options: DepositOptions) => {
     new Wallet(keypair),
     {}
   );
-  console.log(provider.wallet.publicKey.toBase58());
+
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
 
   const receiverBytes = ethers.getBytes(options.recipient);
@@ -152,7 +152,11 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--recipient <recipient>", "Recipient address")
   .option("--mnemonic <mnemonic>", "Mnemonic")
   .option("--private-key <privateKey>", "Private key in base58 format")
-  .option("--token-program <tokenProgram>", "Token program")
+  .option(
+    "--token-program <tokenProgram>",
+    "Token program",
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+  )
   .option("--mint <mint>", "SPL token mint address")
   .addOption(
     new Option("--network <network>", "Solana network").choices(networks)
