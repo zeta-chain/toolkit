@@ -78,7 +78,7 @@ describe("Gateway EVM Utilities", () => {
 
       const result = prepareGatewayTx(
         TEST_GATEWAY,
-        "deposit",
+        "depositNative",
         [TEST_RECEIVER, DEFAULT_REVERT_OPTIONS],
         value
       );
