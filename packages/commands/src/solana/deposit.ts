@@ -1,5 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Keypair, clusterApiUrl } from "@solana/web3.js";
+import { Wallet } from "@coral-xyz/anchor";
+import { clusterApiUrl, Keypair } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 import * as bip39 from "bip39";
@@ -64,7 +65,7 @@ const main = async (options: DepositOptions) => {
 
   const provider = new anchor.AnchorProvider(
     new anchor.web3.Connection(API),
-    new anchor.Wallet(keypair),
+    new Wallet(keypair),
     {}
   );
 
