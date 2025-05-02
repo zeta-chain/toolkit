@@ -7,14 +7,17 @@ import * as bip39 from "bip39";
 import bs58 from "bs58";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
-import { TOKEN_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  AccountLayout,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 
 const networks = ["devnet", "localnet", "mainnet"];
 
 export interface DepositOptions {
   amount: string;
   from: string;
-  idPath: string;
   mint: string;
   mnemonic: string;
   network: string;
@@ -83,7 +86,8 @@ const main = async (options: DepositOptions) => {
     }
   );
 
-  if (options.mint && options.to) {
+  if (options.mint) {
+    // Find the token account that matches the mint
     const matchingTokenAccount = tokenAccounts.value.find(({ account }) => {
       const data = AccountLayout.decode(account.data);
       return new PublicKey(data.mint).toBase58() === options.mint;
@@ -93,6 +97,26 @@ const main = async (options: DepositOptions) => {
       throw new Error(`No token account found for mint ${options.mint}`);
     }
 
+    const from = matchingTokenAccount.pubkey;
+
+    // Find the TSS PDA (meta)
+    const [tssPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("meta", "utf-8")],
+      gatewayProgram.programId
+    );
+
+    // Find the TSS's ATA for the mint
+    const tssAta = await PublicKey.findProgramAddress(
+      [
+        tssPda.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        new PublicKey(options.mint).toBuffer(),
+      ],
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+    const to = tssAta[0].toBase58();
+
     const tx = await gatewayProgram.methods
       .depositSplToken(
         new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
@@ -100,11 +124,11 @@ const main = async (options: DepositOptions) => {
         null
       )
       .accounts({
-        from: matchingTokenAccount.pubkey,
+        from,
         mintAccount: options.mint,
         signer: keypair.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
-        to: options.to,
+        to,
         tokenProgram: options.tokenProgram,
       })
       .rpc();
@@ -126,11 +150,9 @@ export const depositCommand = new Command("deposit")
   .description("Deposit tokens from Solana")
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
   .requiredOption("--recipient <recipient>", "Recipient address")
-  .option("--id-path <idPath>", "Path to id.json")
   .option("--mnemonic <mnemonic>", "Mnemonic")
   .option("--private-key <privateKey>", "Private key in base58 format")
   .option("--token-program <tokenProgram>", "Token program")
-  .option("--to <to>", "SPL token account that belongs to the PDA")
   .option("--mint <mint>", "SPL token mint address")
   .addOption(
     new Option("--network <network>", "Solana network").choices(networks)
