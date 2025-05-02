@@ -1,5 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Wallet } from "@coral-xyz/anchor";
+import {
+  AccountLayout,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { clusterApiUrl, Keypair, PublicKey } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
@@ -7,11 +12,6 @@ import * as bip39 from "bip39";
 import bs58 from "bs58";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
-import {
-  TOKEN_PROGRAM_ID,
-  AccountLayout,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
 
 const networks = ["devnet", "localnet", "mainnet"];
 
