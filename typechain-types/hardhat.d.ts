@@ -90,6 +90,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.UniswapV2Router02__factory>;
     getContractFactory(
+      name: "IUniswapV3SwapCallback",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUniswapV3SwapCallback__factory>;
+    getContractFactory(
+      name: "ISwapRouter",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ISwapRouter__factory>;
+    getContractFactory(
       name: "Abortable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Abortable__factory>;
@@ -185,6 +193,10 @@ declare module "hardhat/types/runtime" {
       name: "SwapHelperLib",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SwapHelperLib__factory>;
+    getContractFactory(
+      name: "SwapLibrary",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SwapLibrary__factory>;
     getContractFactory(
       name: "SystemContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -302,6 +314,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.UniswapV2Router02>;
     getContractAt(
+      name: "IUniswapV3SwapCallback",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IUniswapV3SwapCallback>;
+    getContractAt(
+      name: "ISwapRouter",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ISwapRouter>;
+    getContractAt(
       name: "Abortable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -421,6 +443,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.SwapHelperLib>;
+    getContractAt(
+      name: "SwapLibrary",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SwapLibrary>;
     getContractAt(
       name: "SystemContract",
       address: string | ethers.Addressable,
@@ -524,6 +551,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.UniswapV2Router02>;
     deployContract(
+      name: "IUniswapV3SwapCallback",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IUniswapV3SwapCallback>;
+    deployContract(
+      name: "ISwapRouter",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ISwapRouter>;
+    deployContract(
       name: "Abortable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Abortable>;
@@ -619,6 +654,10 @@ declare module "hardhat/types/runtime" {
       name: "SwapHelperLib",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SwapHelperLib>;
+    deployContract(
+      name: "SwapLibrary",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SwapLibrary>;
     deployContract(
       name: "SystemContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -736,6 +775,16 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.UniswapV2Router02>;
     deployContract(
+      name: "IUniswapV3SwapCallback",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IUniswapV3SwapCallback>;
+    deployContract(
+      name: "ISwapRouter",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ISwapRouter>;
+    deployContract(
       name: "Abortable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -855,6 +904,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SwapHelperLib>;
+    deployContract(
+      name: "SwapLibrary",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SwapLibrary>;
     deployContract(
       name: "SystemContract",
       args: any[],

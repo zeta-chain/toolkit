@@ -3,6 +3,7 @@
 /* eslint-disable */
 export * as ethZetaMockSol from "./EthZetaMock.sol";
 export * as revertSol from "./Revert.sol";
+export * as swapHelpersSol from "./SwapHelpers.sol";
 export * as systemContractSol from "./SystemContract.sol";
 export * as universalContractSol from "./UniversalContract.sol";
 export * as shared from "./shared";

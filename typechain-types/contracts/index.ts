@@ -5,6 +5,8 @@ import type * as ethZetaMockSol from "./EthZetaMock.sol";
 export type { ethZetaMockSol };
 import type * as revertSol from "./Revert.sol";
 export type { revertSol };
+import type * as swapHelpersSol from "./SwapHelpers.sol";
+export type { swapHelpersSol };
 import type * as systemContractSol from "./SystemContract.sol";
 export type { systemContractSol };
 import type * as universalContractSol from "./UniversalContract.sol";
