@@ -68,7 +68,7 @@ const main = async (options: DepositOptions) => {
     new Wallet(keypair),
     {}
   );
-
+  console.log(provider.wallet.publicKey.toBase58());
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
 
   const receiverBytes = ethers.getBytes(options.recipient);
