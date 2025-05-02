@@ -5,7 +5,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { getEndpoints } from "@zetachain/networks";
-import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
+import Gateway_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import { AbiCoder, ethers } from "ethers";
 
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
