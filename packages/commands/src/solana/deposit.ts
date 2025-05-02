@@ -1,25 +1,21 @@
-import { Command } from "commander";
 import * as anchor from "@coral-xyz/anchor";
-import { TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
-import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
-import { ethers } from "ethers";
-import * as fs from "fs";
 import { Keypair } from "@solana/web3.js";
+import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import * as bip39 from "bip39";
-const SEED = "meta";
+import { Command } from "commander";
+import { ethers } from "ethers";
 
 export interface DepositOptions {
   amount: string;
-  recipient: string;
-  solanaNetwork: string;
+  from: string;
   idPath: string;
+  mint: string; // SPL token account that belongs to the PDA
   mnemonic: string;
   privateKey: string;
-  tokenProgram: string;
-  from: string; // SPL token account from which tokens are withdrawn
-  to: string; // SPL token account that belongs to the PDA
-  mint: string; // SPL token mint address
+  recipient: string;
+  solanaNetwork: string; // SPL token account from which tokens are withdrawn
+  to: string;
+  tokenProgram: string; // SPL token mint address
 }
 
 export const keypairFromMnemonic = async (
@@ -46,15 +42,6 @@ const main = async (options: DepositOptions) => {
     provider
   );
 
-  const SEED = "meta";
-  const programId = new anchor.web3.PublicKey(Gateway_IDL.address);
-
-  const seeds = [Buffer.from(SEED, "utf-8")];
-  const [pdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
-    seeds,
-    programId
-  );
-
   const receiverBytes = ethers.getBytes(options.recipient);
 
   if (options.mint && options.from && options.to) {
@@ -79,11 +66,7 @@ const main = async (options: DepositOptions) => {
         receiverBytes,
         null
       )
-      .accounts({
-        // pda: pdaAccount,
-        // signer: keypair.publicKey,
-        // systemProgram: anchor.web3.SystemProgram.programId,
-      })
+      .accounts({})
       .rpc();
   }
 };
