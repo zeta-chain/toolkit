@@ -1,22 +1,25 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
-import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
+import { Keypair, clusterApiUrl } from "@solana/web3.js";
+import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
+import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 import * as bip39 from "bip39";
-import { Command } from "commander";
-import { ethers } from "ethers";
 import bs58 from "bs58";
+import { Command, Option } from "commander";
+import { ethers } from "ethers";
+
+const networks = ["devnet", "localnet", "mainnet"];
 
 export interface DepositOptions {
   amount: string;
   from: string;
   idPath: string;
-  mint: string; // SPL token account that belongs to the PDA
+  mint: string;
   mnemonic: string;
+  network: string;
   privateKey: string;
   recipient: string;
-  solanaNetwork: string; // SPL token account from which tokens are withdrawn
   to: string;
-  tokenProgram: string; // SPL token mint address
+  tokenProgram: string;
 }
 
 export const keypairFromMnemonic = async (
@@ -29,7 +32,6 @@ export const keypairFromMnemonic = async (
 
 export const keypairFromPrivateKey = (privateKey: string): Keypair => {
   try {
-    // Decode the base58 private key
     const decodedKey = bs58.decode(privateKey);
     return Keypair.fromSecretKey(decodedKey);
   } catch (error) {
@@ -40,7 +42,9 @@ export const keypairFromPrivateKey = (privateKey: string): Keypair => {
 };
 
 const main = async (options: DepositOptions) => {
-  const Gateway_IDL = GATEWAY_DEV_IDL;
+  // Mainnet and devnet use the same IDL
+  const gatewayIDL =
+    options.network === "localnet" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
 
   let keypair: Keypair;
   if (options.privateKey) {
@@ -51,16 +55,20 @@ const main = async (options: DepositOptions) => {
     throw new Error("Either privateKey or mnemonic must be provided");
   }
 
+  let API = "http://localhost:8899";
+  if (options.network === "devnet") {
+    API = clusterApiUrl("devnet");
+  } else if (options.network === "mainnet") {
+    API = clusterApiUrl("mainnet-beta");
+  }
+
   const provider = new anchor.AnchorProvider(
-    new anchor.web3.Connection("https://api.devnet.solana.com"),
+    new anchor.web3.Connection(API),
     new anchor.Wallet(keypair),
     {}
   );
 
-  const gatewayProgram = new anchor.Program(
-    Gateway_IDL as anchor.Idl,
-    provider
-  );
+  const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
 
   const receiverBytes = ethers.getBytes(options.recipient);
 
@@ -104,4 +112,7 @@ export const depositCommand = new Command("deposit")
   .option("--from <from>", "SPL token account from which tokens are withdrawn")
   .option("--to <to>", "SPL token account that belongs to the PDA")
   .option("--mint <mint>", "SPL token mint address")
+  .addOption(
+    new Option("--network <network>", "Solana network").choices(networks)
+  )
   .action(main);
