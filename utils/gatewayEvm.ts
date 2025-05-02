@@ -1,8 +1,19 @@
-import { AbiCoder, ethers } from "ethers";
+import GatewayEvmAbi from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
+import { AbiCoder, ethers, InterfaceAbi } from "ethers";
 
 import { RevertOptions, TxOptions } from "../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../types/parseAbiValues.types";
 import { toHexString } from "./toHexString";
+
+/**
+ * Available gateway method names
+ */
+type GatewayMethodName =
+  | "call"
+  | "depositNative"
+  | "depositAndCallNative"
+  | "depositErc20"
+  | "depositAndCallErc20";
 
 /**
  * Creates a revert data object from revert options
@@ -16,39 +27,86 @@ export const createRevertData = (
   };
 };
 
+// Interface for gateway contract using the imported ABI
+const gatewayInterface = new ethers.Interface(
+  GatewayEvmAbi.abi as InterfaceAbi
+);
+
 /**
- * Gateway ABI fragments for common functions
+ * Retrieves a function fragment from the gateway interface by its name and optional input parameter name.
+ *
+ * @param {string} methodName - The name of the function to find in the gateway interface
+ * @returns {ethers.FunctionFragment[]} The function fragments from the gateway interface
+ * @throws {Error} Throws an error if the function is not found in the gateway interface
  */
-const GATEWAY_FRAGMENTS = {
-  call: "function call(address receiver, bytes data, tuple(address revertAddress, bool callOnRevert, address abortAddress, bytes revertMessage, uint256 onRevertGasLimit) revertOptions)",
-  deposit:
-    "function deposit(address receiver, tuple(address revertAddress, bool callOnRevert, address abortAddress, bytes revertMessage, uint256 onRevertGasLimit) revertOptions)",
-  depositAndCall:
-    "function depositAndCall(address receiver, bytes data, tuple(address revertAddress, bool callOnRevert, address abortAddress, bytes revertMessage, uint256 onRevertGasLimit) revertOptions)",
-  depositAndCallERC20:
-    "function depositAndCall(address receiver, uint256 amount, address asset, bytes data, tuple(address revertAddress, bool callOnRevert, address abortAddress, bytes revertMessage, uint256 onRevertGasLimit) revertOptions)",
-  depositERC20:
-    "function deposit(address receiver, uint256 amount, address asset, tuple(address revertAddress, bool callOnRevert, address abortAddress, bytes revertMessage, uint256 onRevertGasLimit) revertOptions)",
+export const getGatewayFunctionsByName = (
+  methodName: string
+): ethers.FunctionFragment[] => {
+  const gatewayInterfaceFragments =
+    gatewayInterface.fragments as ethers.FunctionFragment[];
+
+  const matchingFunctions = gatewayInterfaceFragments.filter(
+    (fragment) => fragment.type === "function" && fragment.name === methodName
+  );
+
+  return matchingFunctions;
+};
+
+/**
+ * Retrieves function signatures from the gateway interface
+ * @returns The requested function signature
+ */
+export const getGatewayFunctionSignatureByName = (
+  methodName: GatewayMethodName
+): ethers.FunctionFragment | undefined => {
+  // Get functions by type
+  const callFunctions = getGatewayFunctionsByName("call");
+  const depositFunctions = getGatewayFunctionsByName("deposit");
+  const depositAndCallFunctions = getGatewayFunctionsByName("depositAndCall");
+
+  // Map of function signatures
+  const signatures = {
+    // Regular function
+    call: callFunctions[0],
+
+    // ERC20 token functions (with asset parameter)
+    depositAndCallErc20: depositAndCallFunctions.find((f) =>
+      f.inputs.some((i) => i.name === "asset")
+    ),
+
+    depositAndCallNative: depositAndCallFunctions.find((f) =>
+      f.inputs.every((i) => i.name !== "asset")
+    ),
+
+    depositErc20: depositFunctions.find((f) =>
+      f.inputs.some((i) => i.name === "asset")
+    ),
+    // Native token functions (without asset parameter)
+    depositNative: depositFunctions.find((f) =>
+      f.inputs.every((i) => i.name !== "asset")
+    ),
+  };
+
+  return signatures[methodName];
 };
 
 /**
  * Generates calldata for a specific gateway method
  */
 export const generateGatewayCallData = (
-  methodName: keyof typeof GATEWAY_FRAGMENTS,
+  methodName: GatewayMethodName,
   args: unknown[]
 ): string => {
-  const fragment = GATEWAY_FRAGMENTS[methodName];
-  const iface = new ethers.Interface([fragment]);
-
-  // The method name from the fragment (before the opening parenthesis)
-  // Extract the function name from the ABI fragment by parsing the string
-  // Example: from "function deposit(address receiver, ...)" we extract "deposit"
-  const [, functionSignature] = fragment.split(" ");
-  const [functionName] = functionSignature.split("(");
-
   try {
-    return iface.encodeFunctionData(functionName, args);
+    const signature = getGatewayFunctionSignatureByName(methodName);
+
+    if (!signature) {
+      throw new Error(`Invalid method name: ${methodName}`);
+    }
+
+    const encodedData = gatewayInterface.encodeFunctionData(signature, args);
+
+    return encodedData;
   } catch (error) {
     console.error(`Error encoding calldata for ${methodName}:`, error);
     throw error;
@@ -60,7 +118,7 @@ export const generateGatewayCallData = (
  */
 export const prepareGatewayTx = (
   gatewayAddress: string,
-  methodName: keyof typeof GATEWAY_FRAGMENTS,
+  methodName: GatewayMethodName,
   args: unknown[],
   value?: string
 ): {
@@ -68,10 +126,10 @@ export const prepareGatewayTx = (
   to: string;
   value?: string;
 } => {
-  const data = generateGatewayCallData(methodName, args);
+  const gatewayCallData = generateGatewayCallData(methodName, args);
 
   return {
-    data,
+    data: gatewayCallData,
     to: gatewayAddress,
     ...(value ? { value } : {}),
   };
@@ -123,7 +181,7 @@ export const generateEvmDepositData = (args: {
     const decimals = args.decimals || 18; // Default to 18 if not specified
     const value = ethers.parseUnits(args.amount, decimals);
 
-    return prepareGatewayTx(args.gatewayEvm, "depositERC20", [
+    return prepareGatewayTx(args.gatewayEvm, "depositErc20", [
       args.receiver,
       value,
       args.erc20,
@@ -134,7 +192,7 @@ export const generateEvmDepositData = (args: {
 
     return prepareGatewayTx(
       args.gatewayEvm,
-      "deposit",
+      "depositNative",
       [args.receiver, revertData],
       value.toString()
     );
@@ -167,7 +225,7 @@ export const generateEvmDepositAndCallData = (args: {
   if (args.erc20) {
     const value = ethers.parseUnits(args.amount, decimals);
 
-    return prepareGatewayTx(args.gatewayEvm, "depositAndCallERC20", [
+    return prepareGatewayTx(args.gatewayEvm, "depositAndCallErc20", [
       args.receiver,
       value,
       args.erc20,
@@ -179,7 +237,7 @@ export const generateEvmDepositAndCallData = (args: {
 
     return prepareGatewayTx(
       args.gatewayEvm,
-      "depositAndCall",
+      "depositAndCallNative",
       [args.receiver, encodedParameters, revertData],
       value.toString()
     );
