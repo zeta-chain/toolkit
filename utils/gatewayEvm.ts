@@ -11,10 +11,7 @@ export const createRevertData = (
   revertOptions: RevertOptions
 ): RevertOptions => {
   return {
-    abortAddress: "0x0000000000000000000000000000000000000000", // not used
-    callOnRevert: revertOptions.callOnRevert,
-    onRevertGasLimit: revertOptions.onRevertGasLimit,
-    revertAddress: revertOptions.revertAddress,
+    ...revertOptions,
     revertMessage: toHexString(revertOptions.revertMessage),
   };
 };
