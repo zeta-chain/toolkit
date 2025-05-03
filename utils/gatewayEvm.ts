@@ -65,11 +65,11 @@ export const getGatewayFunctionSignatureByName = (
   const depositAndCallFunctions = getGatewayFunctionsByName("depositAndCall");
 
   // Map of function signatures
+  // Native token functions (without asset parameter)
+  // ERC20 token functions (with asset parameter)
   const signatures = {
-    // Regular function
     call: callFunctions[0],
 
-    // ERC20 token functions (with asset parameter)
     depositAndCallErc20: depositAndCallFunctions.find((f) =>
       f.inputs.some((i) => i.name === "asset")
     ),
@@ -81,7 +81,6 @@ export const getGatewayFunctionSignatureByName = (
     depositErc20: depositFunctions.find((f) =>
       f.inputs.some((i) => i.name === "asset")
     ),
-    // Native token functions (without asset parameter)
     depositNative: depositFunctions.find((f) =>
       f.inputs.every((i) => i.name !== "asset")
     ),
