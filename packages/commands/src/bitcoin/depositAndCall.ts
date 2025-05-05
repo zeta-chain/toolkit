@@ -12,7 +12,7 @@ import {
   makeCommitTransaction,
   makeRevealTransaction,
   SIGNET,
-} from "../../../../utils/bitcoin";
+} from "../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
   EncodingFormat,
