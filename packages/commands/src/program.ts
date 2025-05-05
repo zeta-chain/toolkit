@@ -13,8 +13,8 @@ export const toolkitCommand = new Command("toolkit")
 
 toolkitCommand.addCommand(accountsCommand);
 toolkitCommand.addCommand(balancesCommand);
-toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(bitcoinCommand);
+toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(suiCommand);
 
 toolkitCommand.parse(process.argv);
