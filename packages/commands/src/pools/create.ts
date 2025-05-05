@@ -65,12 +65,12 @@ const main = async (options: CreatePoolOptions): Promise<void> => {
 
     // If initial price was provided, calculate the sqrtPriceX96
     if (validatedOptions.initialPrice) {
-      const price = parseFloat(validatedOptions.initialPrice);
-      if (price <= 0)
-        throw new Error("Initial price must be greater than zero");
-      sqrtPriceX96 = ethers.toBigInt(
-        Math.floor(Math.sqrt(price) * 2 ** 96).toString()
-      );
+      const price = Number(validatedOptions.initialPrice);
+      if (isNaN(price) || price <= 0)
+        throw new Error("Initial price must be a positive number");
+
+      const sqrtPrice = Math.sqrt(price);
+      sqrtPriceX96 = BigInt(Math.floor(sqrtPrice * 2 ** 96));
     }
 
     const initTx = (await pool.initialize(
