@@ -3,6 +3,7 @@ export * from "./bitsize";
 export * from "./compareBigIntAndNumber";
 export * from "./formatting";
 export * from "./fsUtils";
+export * from "./gatewayEvm";
 export * from "./getHardhatConfig";
 export * from "./handleError";
 export * from "./keyPaths";
