@@ -6,7 +6,7 @@ import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
 
-import { Transaction, UTXO } from "../../../../types/bitcoin.types";
+import type { BtcTxById, BtcUtxo } from "../../../../types/bitcoin.types";
 import {
   bitcoinEncode,
   EncodingFormat,
@@ -60,7 +60,7 @@ interface depositAndCallOptions {
 
 const makeCommitTransaction = async (
   key: bitcoin.Signer,
-  utxos: UTXO[],
+  utxos: BtcUtxo[],
   changeAddress: string,
   inscriptionData: Buffer,
   api: string,
@@ -73,7 +73,7 @@ const makeCommitTransaction = async (
   /* pick utxos */
   utxos.sort((a, b) => a.value - b.value);
   let inTotal = 0;
-  const picks: UTXO[] = [];
+  const picks: BtcUtxo[] = [];
   for (const u of utxos) {
     inTotal += u.value;
     picks.push(u);
@@ -106,7 +106,7 @@ const makeCommitTransaction = async (
   if (changeSat > 0)
     psbt.addOutput({ address: changeAddress, value: changeSat });
   for (const u of picks) {
-    const tx = (await axios.get<Transaction>(`${api}/tx/${u.txid}`)).data;
+    const tx = (await axios.get<BtcTxById>(`${api}/tx/${u.txid}`)).data;
     psbt.addInput({
       hash: u.txid,
       index: u.vout,
@@ -190,7 +190,7 @@ const main = async (options: depositAndCallOptions) => {
   });
 
   const utxos = (
-    await axios.get<UTXO[]>(`${options.api}/address/${address}/utxo`)
+    await axios.get<BtcUtxo[]>(`${options.api}/address/${address}/BtcUtxo`)
   ).data;
   const encodedPayload = new ethers.AbiCoder().encode(
     options.types,
