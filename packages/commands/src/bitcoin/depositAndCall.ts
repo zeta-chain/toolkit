@@ -6,6 +6,13 @@ import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
 
+import {
+  BITCOIN_FEES,
+  BITCOIN_LIMITS,
+  BITCOIN_NETWORKS,
+  BITCOIN_SCRIPT,
+  BITCOIN_TX,
+} from "../../../../types/bitcoin.constants";
 import type { BtcTxById, BtcUtxo } from "../../../../types/bitcoin.types";
 import {
   bitcoinEncode,
@@ -17,20 +24,23 @@ import {
 bitcoin.initEccLib(ecc);
 
 const SIGNET = {
-  bech32: "tb",
-  bip32: { private: 0x04358394, public: 0x043587cf },
-  messagePrefix: "\x18Bitcoin Signed Message:\n",
-  pubKeyHash: 0x6f,
-  scriptHash: 0xc4,
-  wif: 0xef,
+  bech32: BITCOIN_NETWORKS.SIGNET.BECH32,
+  bip32: {
+    private: BITCOIN_NETWORKS.SIGNET.BIP32.PRIVATE,
+    public: BITCOIN_NETWORKS.SIGNET.BIP32.PUBLIC,
+  },
+  messagePrefix: BITCOIN_NETWORKS.SIGNET.MESSAGE_PREFIX,
+  pubKeyHash: BITCOIN_NETWORKS.SIGNET.PUBKEY_HASH,
+  scriptHash: BITCOIN_NETWORKS.SIGNET.SCRIPT_HASH,
+  wif: BITCOIN_NETWORKS.SIGNET.WIF,
 };
 
-const LEAF_VERSION_TAPSCRIPT = 0xc0;
+const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
 
 const compactSize = (n: number) => {
-  if (n < 0xfd) return Buffer.from([n]);
+  if (n < BITCOIN_TX.COMPACT_SIZE.MARKER_UINT16) return Buffer.from([n]);
   const buf = Buffer.alloc(3);
-  buf.writeUInt8(0xfd, 0);
+  buf.writeUInt8(BITCOIN_TX.COMPACT_SIZE.MARKER_UINT16, 0);
   buf.writeUInt16LE(n, 1);
   return buf;
 };
@@ -65,9 +75,9 @@ const makeCommitTransaction = async (
   inscriptionData: Buffer,
   api: string,
   amountSat: number,
-  feeSat = 15000
+  feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
 ) => {
-  const DUST_THRESHOLD_P2TR = 330;
+  const DUST_THRESHOLD_P2TR = BITCOIN_LIMITS.DUST_THRESHOLD.P2TR;
   if (amountSat < DUST_THRESHOLD_P2TR) throw new Error("Amount below dust");
 
   /* pick utxos */
@@ -159,13 +169,13 @@ const makeRevealTransaction = (
     commitData.leafScript,
     commitData.controlBlock
   );
-  const txOverhead = 10; // version+locktime
+  const txOverhead = BITCOIN_TX.TX_OVERHEAD;
   const inputVbytes = 36 + 1 + 43 + Math.ceil(witness.length / 4); // txin + marker+flag + varint scriptSig len (0) + sequence + witness weight/4
-  const outputVbytes = 31; // p2wpkh output (approx)
+  const outputVbytes = BITCOIN_TX.P2WPKH_OUTPUT_VBYTES;
   const vsize = txOverhead + inputVbytes + outputVbytes;
   const feeSat = Math.ceil(vsize * feeRate);
 
-  const DUST_THRESHOLD_P2WPKH = 294;
+  const DUST_THRESHOLD_P2WPKH = BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH;
   if (commitValue - feeSat < DUST_THRESHOLD_P2WPKH)
     throw new Error("reveal would be dust");
 
@@ -243,7 +253,7 @@ Raw Inscription Data: ${inscriptionData.toString("hex")}
     0,
     amountSat,
     options.gateway,
-    10,
+    BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE,
     {
       controlBlock: commit.controlBlock,
       internalKey: commit.internalKey,
