@@ -14,6 +14,7 @@ import {
   DEFAULT_FEE,
   DEFAULT_POSITION_MANAGER,
   DEFAULT_RPC,
+  DEFAULT_WZETA,
 } from "../constants";
 
 const main = async (options: AddLiquidityOptions): Promise<void> => {
@@ -60,11 +61,8 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
       token1Contract.symbol(),
     ])) as [number, number, string, string];
 
-    // Convert human-readable amounts to BigInt
-    const [amount0, amount1] = [
-      ethers.parseUnits(validatedOptions.amounts[0], decimals0),
-      ethers.parseUnits(validatedOptions.amounts[1], decimals1),
-    ] as [bigint, bigint];
+    const amount0 = ethers.parseUnits(validatedOptions.amounts[0], decimals0);
+    const amount1 = ethers.parseUnits(validatedOptions.amounts[1], decimals1);
 
     // Initialize factory contract to check if pool exists
     const factory = new Contract(
@@ -203,6 +201,14 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
       token0,
       token1,
     };
+
+    console.log("\nMint parameters:");
+    console.log("token0:", token0);
+    console.log("token1:", token1);
+    console.log("amount0Desired:", amount0.toString());
+    console.log("amount1Desired:", amount1.toString());
+    console.log("tickLower:", tickLower);
+    console.log("tickUpper:", tickUpper);
 
     // Send transaction
     console.log("\nAdding liquidity...");
