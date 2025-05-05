@@ -33,11 +33,10 @@ const gatewayInterface = new ethers.Interface(
 );
 
 /**
- * Retrieves a function fragment from the gateway interface by its name and optional input parameter name.
+ * Retrieves function fragments from the gateway interface by method name.
  *
  * @param {string} methodName - The name of the function to find in the gateway interface
  * @returns {ethers.FunctionFragment[]} The function fragments from the gateway interface
- * @throws {Error} Throws an error if the function is not found in the gateway interface
  */
 export const getGatewayFunctionsByName = (
   methodName: string
