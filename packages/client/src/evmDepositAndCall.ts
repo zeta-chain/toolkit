@@ -1,15 +1,16 @@
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
-import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
-import { AbiCoder, ethers } from "ethers";
+import { ethers } from "ethers";
 
 import {
   ERC20Contract,
-  GatewayContract,
   RevertOptions,
   TxOptions,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
-import { toHexString } from "../../../utils/toHexString";
+import {
+  broadcastGatewayTx,
+  generateEvmDepositAndCallData,
+} from "../../../utils/gatewayEvm";
 import { validateSigner } from "../../../utils/validateSigner";
 import { ZetaChainClient } from "./client";
 
@@ -46,23 +47,9 @@ export const evmDepositAndCall = async function (
   }
 ) {
   const signer = validateSigner(this.signer);
-
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
-  const gateway = new ethers.Contract(
-    gatewayEvmAddress,
-    GatewayABI.abi,
-    signer
-  ) as GatewayContract;
 
-  const revertOptions = {
-    ...args.revertOptions,
-    revertMessage: toHexString(args.revertOptions.revertMessage),
-  };
-
-  const abiCoder = AbiCoder.defaultAbiCoder();
-  const encodedParameters = abiCoder.encode(args.types, args.values);
-
-  let tx;
+  // If ERC20, we need to get decimals and approve the gateway
   if (args.erc20) {
     const erc20Contract = new ethers.Contract(
       args.erc20,
@@ -73,42 +60,50 @@ export const evmDepositAndCall = async function (
     const decimals = await erc20Contract.decimals();
     const value = ethers.parseUnits(args.amount, decimals);
 
-    const connectedContract = erc20Contract.connect(signer) as ERC20Contract;
+    // Approve the gateway to spend the tokens
+    await erc20Contract.approve(gatewayEvmAddress, value);
 
-    await connectedContract.approve(gatewayEvmAddress, value);
+    // Generate calldata for deposit and call
+    const callData = generateEvmDepositAndCallData({
+      amount: args.amount,
+      decimals: Number(decimals),
+      erc20: args.erc20,
+      receiver: args.receiver,
+      revertOptions: args.revertOptions,
+      types: args.types,
+      values: args.values,
+    });
 
-    const depositAndCallAbiSignature =
-      "depositAndCall(address,uint256,address,bytes,(address,bool,address,bytes,uint256))";
-    const gatewayDepositAndCallFunction = gateway[
-      depositAndCallAbiSignature
-    ] as GatewayContract["depositAndCall"];
-
-    tx = await gatewayDepositAndCallFunction(
-      args.receiver,
-      value,
-      args.erc20,
-      encodedParameters,
-      revertOptions,
-      args.txOptions
-    );
+    const tx = await broadcastGatewayTx({
+      signer,
+      txData: {
+        data: callData.data,
+        to: gatewayEvmAddress,
+        value: callData.value,
+      },
+      txOptions: args.txOptions,
+    });
+    return tx;
   } else {
-    const depositAndCallAbiSignature =
-      "depositAndCall(address,bytes,(address,bool,address,bytes,uint256))";
-    const depositAndCallFunction = gateway[
-      depositAndCallAbiSignature
-    ] as GatewayContract["depositAndCall"];
-    const value = ethers.parseEther(args.amount);
+    // Native token deposit and call
+    const callData = generateEvmDepositAndCallData({
+      amount: args.amount,
+      receiver: args.receiver,
+      revertOptions: args.revertOptions,
+      types: args.types,
+      values: args.values,
+    });
 
-    tx = await depositAndCallFunction(
-      args.receiver,
-      encodedParameters,
-      revertOptions,
-      {
-        ...args.txOptions,
-        value,
-      }
-    );
+    const tx = await broadcastGatewayTx({
+      signer,
+      txData: {
+        data: callData.data,
+        to: gatewayEvmAddress,
+        value: callData.value,
+      },
+      txOptions: args.txOptions,
+    });
+
+    return tx;
   }
-
-  return tx;
 };
