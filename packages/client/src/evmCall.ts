@@ -45,7 +45,14 @@ export const evmCall = async function (
     values: args.values,
   });
 
-  const tx = await broadcastGatewayTx(signer, callData, args.txOptions);
+  const tx = await broadcastGatewayTx({
+    signer,
+    txData: {
+      data: callData.data,
+      to: gatewayEvmAddress,
+    },
+    txOptions: args.txOptions,
+  });
 
   return tx;
 };

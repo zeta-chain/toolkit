@@ -75,8 +75,15 @@ export const evmDepositAndCall = async function (
       values: args.values,
     });
 
-    const tx = await broadcastGatewayTx(signer, callData, args.txOptions);
-
+    const tx = await broadcastGatewayTx({
+      signer,
+      txData: {
+        data: callData.data,
+        to: gatewayEvmAddress,
+        value: callData.value,
+      },
+      txOptions: args.txOptions,
+    });
     return tx;
   } else {
     // Native token deposit and call
@@ -89,7 +96,15 @@ export const evmDepositAndCall = async function (
       values: args.values,
     });
 
-    const tx = await broadcastGatewayTx(signer, callData, args.txOptions);
+    const tx = await broadcastGatewayTx({
+      signer,
+      txData: {
+        data: callData.data,
+        to: gatewayEvmAddress,
+        value: callData.value,
+      },
+      txOptions: args.txOptions,
+    });
 
     return tx;
   }

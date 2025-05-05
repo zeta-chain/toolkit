@@ -116,20 +116,17 @@ export const generateGatewayCallData = (
  * Prepares a gateway transaction for broadcasting
  */
 export const prepareGatewayTx = (
-  gatewayAddress: string,
   methodName: GatewayMethodName,
   args: unknown[],
   value?: string
 ): {
   data: string;
-  to: string;
   value?: string;
 } => {
   const gatewayCallData = generateGatewayCallData(methodName, args);
 
   return {
     data: gatewayCallData,
-    to: gatewayAddress,
     ...(value ? { value } : {}),
   };
 };
@@ -145,14 +142,13 @@ export const generateEvmCallData = (args: {
   values: ParseAbiValuesReturnType;
 }): {
   data: string;
-  to: string;
   value?: string;
 } => {
   const abiCoder = AbiCoder.defaultAbiCoder();
   const encodedParameters = abiCoder.encode(args.types, args.values);
   const revertData = createRevertData(args.revertOptions);
 
-  return prepareGatewayTx(args.gatewayEvm, "call", [
+  return prepareGatewayTx("call", [
     args.receiver,
     encodedParameters,
     revertData,
@@ -171,7 +167,6 @@ export const generateEvmDepositData = (args: {
   revertOptions: RevertOptions;
 }): {
   data: string;
-  to: string;
   value?: string;
 } => {
   const revertData = createRevertData(args.revertOptions);
@@ -180,7 +175,7 @@ export const generateEvmDepositData = (args: {
     const decimals = args.decimals || 18; // Default to 18 if not specified
     const value = ethers.parseUnits(args.amount, decimals);
 
-    return prepareGatewayTx(args.gatewayEvm, "depositErc20", [
+    return prepareGatewayTx("depositErc20", [
       args.receiver,
       value,
       args.erc20,
@@ -190,7 +185,6 @@ export const generateEvmDepositData = (args: {
     const value = ethers.parseEther(args.amount);
 
     return prepareGatewayTx(
-      args.gatewayEvm,
       "depositNative",
       [args.receiver, revertData],
       value.toString()
@@ -212,7 +206,6 @@ export const generateEvmDepositAndCallData = (args: {
   values: ParseAbiValuesReturnType;
 }): {
   data: string;
-  to: string;
   value?: string;
 } => {
   const abiCoder = AbiCoder.defaultAbiCoder();
@@ -224,7 +217,7 @@ export const generateEvmDepositAndCallData = (args: {
   if (args.erc20) {
     const value = ethers.parseUnits(args.amount, decimals);
 
-    return prepareGatewayTx(args.gatewayEvm, "depositAndCallErc20", [
+    return prepareGatewayTx("depositAndCallErc20", [
       args.receiver,
       value,
       args.erc20,
@@ -235,7 +228,6 @@ export const generateEvmDepositAndCallData = (args: {
     const value = ethers.parseEther(args.amount);
 
     return prepareGatewayTx(
-      args.gatewayEvm,
       "depositAndCallNative",
       [args.receiver, encodedParameters, revertData],
       value.toString()
@@ -243,18 +235,24 @@ export const generateEvmDepositAndCallData = (args: {
   }
 };
 
-/**
- * Broadcasts a gateway transaction
- */
-export const broadcastGatewayTx = async (
-  signer: ethers.Signer,
+interface BroadcastGatewayTxArgs {
+  signer: ethers.Signer;
   txData: {
     data: string;
     to: string;
     value?: string;
-  },
-  txOptions: TxOptions
-): Promise<ethers.ContractTransactionResponse> => {
+  };
+  txOptions: TxOptions;
+}
+
+/**
+ * Broadcasts a gateway transaction
+ */
+export const broadcastGatewayTx = async ({
+  signer,
+  txData,
+  txOptions,
+}: BroadcastGatewayTxArgs): Promise<ethers.ContractTransactionResponse> => {
   const options = {
     data: txData.data,
     gasLimit: txOptions.gasLimit,

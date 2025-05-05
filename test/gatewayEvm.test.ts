@@ -61,13 +61,12 @@ describe("Gateway EVM Utilities", () => {
 
   describe("prepareGatewayTx", () => {
     it("should prepare transaction data without value", () => {
-      const result = prepareGatewayTx(TEST_GATEWAY, "call", [
+      const result = prepareGatewayTx("call", [
         TEST_RECEIVER,
         "0x1234",
         DEFAULT_REVERT_OPTIONS,
       ]);
 
-      expect(result).to.have.property("to").equal(TEST_GATEWAY);
       expect(result).to.have.property("data").that.is.a("string");
       expect(result.data).to.match(/^0x[0-9a-f]+$/i);
       expect(result).to.not.have.property("value");
@@ -77,7 +76,6 @@ describe("Gateway EVM Utilities", () => {
       const value = ethers.parseEther("1.5").toString();
 
       const result = prepareGatewayTx(
-        TEST_GATEWAY,
         "depositNative",
         [TEST_RECEIVER, DEFAULT_REVERT_OPTIONS],
         value
@@ -86,7 +84,6 @@ describe("Gateway EVM Utilities", () => {
       const txData =
         "0x726ac97c0000000000000000000000008198f5d8f8cffe8f9c413d98a0a55aeb8ab9fbb7000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000006acfc00000000000000000000000000000000000000000000000000000000000000000";
 
-      expect(result).to.have.property("to").equal(TEST_GATEWAY);
       expect(result).to.have.property("data").that.is.a("string");
       expect(result).to.have.property("data").equal(txData);
       expect(result).to.have.property("value").equal(value);
@@ -135,12 +132,8 @@ describe("Gateway EVM Utilities", () => {
       });
 
       // Check structure of result
-      expect(result).to.have.property("to").equal(TEST_GATEWAY);
       expect(result).to.have.property("data").that.is.a("string");
       expect(result.data).to.match(/^0x[0-9a-f]+$/i);
-
-      // Verify the destination contract address is used
-      expect(result.to).to.equal(TEST_GATEWAY);
 
       // Function selector validation - should start with the call function selector
       const callSignature =
@@ -194,7 +187,6 @@ describe("Gateway EVM Utilities", () => {
         revertOptions: DEFAULT_REVERT_OPTIONS,
       });
 
-      expect(result).to.have.property("to").equal(TEST_GATEWAY);
       expect(result).to.have.property("data").that.is.a("string");
 
       // Should include value for native token
@@ -228,7 +220,6 @@ describe("Gateway EVM Utilities", () => {
         revertOptions: DEFAULT_REVERT_OPTIONS,
       });
 
-      expect(result).to.have.property("to").equal(TEST_GATEWAY);
       expect(result).to.have.property("data").that.is.a("string");
 
       // Should NOT include value for ERC20 token
@@ -288,7 +279,6 @@ describe("Gateway EVM Utilities", () => {
         values: ["hello"],
       });
 
-      expect(result).to.have.property("to").equal(TEST_GATEWAY);
       expect(result).to.have.property("data").that.is.a("string");
 
       // Should include value for native token
@@ -328,7 +318,6 @@ describe("Gateway EVM Utilities", () => {
         values: ["hello"],
       });
 
-      expect(result).to.have.property("to").equal(TEST_GATEWAY);
       expect(result).to.have.property("data").that.is.a("string");
 
       // Should NOT include value for ERC20 token
