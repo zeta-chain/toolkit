@@ -135,7 +135,6 @@ export const prepareGatewayTx = (
  * Generates calldata for EVM call without broadcasting the transaction
  */
 export const generateEvmCallData = (args: {
-  gatewayEvm: string;
   receiver: string;
   revertOptions: RevertOptions;
   types: string[];
@@ -162,7 +161,6 @@ export const generateEvmDepositData = (args: {
   amount: string;
   decimals?: number;
   erc20?: string;
-  gatewayEvm: string;
   receiver: string;
   revertOptions: RevertOptions;
 }): {
@@ -199,7 +197,6 @@ export const generateEvmDepositAndCallData = (args: {
   amount: string;
   decimals?: number;
   erc20?: string;
-  gatewayEvm: string;
   receiver: string;
   revertOptions: RevertOptions;
   types: string[];

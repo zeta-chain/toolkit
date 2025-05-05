@@ -38,7 +38,6 @@ export const evmCall = async function (
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
 
   const callData = generateEvmCallData({
-    gatewayEvm: gatewayEvmAddress,
     receiver: args.receiver,
     revertOptions: args.revertOptions,
     types: args.types,

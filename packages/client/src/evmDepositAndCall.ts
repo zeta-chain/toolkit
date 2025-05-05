@@ -68,7 +68,6 @@ export const evmDepositAndCall = async function (
       amount: args.amount,
       decimals: Number(decimals),
       erc20: args.erc20,
-      gatewayEvm: gatewayEvmAddress,
       receiver: args.receiver,
       revertOptions: args.revertOptions,
       types: args.types,
@@ -89,7 +88,6 @@ export const evmDepositAndCall = async function (
     // Native token deposit and call
     const callData = generateEvmDepositAndCallData({
       amount: args.amount,
-      gatewayEvm: gatewayEvmAddress,
       receiver: args.receiver,
       revertOptions: args.revertOptions,
       types: args.types,

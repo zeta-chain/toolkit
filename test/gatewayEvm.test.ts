@@ -124,7 +124,6 @@ describe("Gateway EVM Utilities", () => {
   describe("generateEvmCallData", () => {
     it("should generate valid calldata for EVM calls", () => {
       const result = generateEvmCallData({
-        gatewayEvm: TEST_GATEWAY,
         receiver: TEST_RECEIVER,
         revertOptions: DEFAULT_REVERT_OPTIONS,
         types: ["string"],
@@ -156,7 +155,6 @@ describe("Gateway EVM Utilities", () => {
 
     it("should support complex parameter types", () => {
       const result = generateEvmCallData({
-        gatewayEvm: TEST_GATEWAY,
         receiver: TEST_RECEIVER,
         revertOptions: DEFAULT_REVERT_OPTIONS,
         types: ["uint256", "address", "bool"],
@@ -182,7 +180,6 @@ describe("Gateway EVM Utilities", () => {
 
       const result = generateEvmDepositData({
         amount,
-        gatewayEvm: TEST_GATEWAY,
         receiver: TEST_RECEIVER,
         revertOptions: DEFAULT_REVERT_OPTIONS,
       });
@@ -215,7 +212,6 @@ describe("Gateway EVM Utilities", () => {
         amount,
         decimals,
         erc20: TEST_ERC20,
-        gatewayEvm: TEST_GATEWAY,
         receiver: TEST_RECEIVER,
         revertOptions: DEFAULT_REVERT_OPTIONS,
       });
@@ -254,7 +250,6 @@ describe("Gateway EVM Utilities", () => {
       const result = generateEvmDepositData({
         amount,
         erc20: TEST_ERC20,
-        gatewayEvm: TEST_GATEWAY,
         receiver: TEST_RECEIVER,
         revertOptions: DEFAULT_REVERT_OPTIONS,
       });
@@ -272,7 +267,6 @@ describe("Gateway EVM Utilities", () => {
 
       const result = generateEvmDepositAndCallData({
         amount,
-        gatewayEvm: TEST_GATEWAY,
         receiver: TEST_RECEIVER,
         revertOptions: DEFAULT_REVERT_OPTIONS,
         types: ["string"],
@@ -311,7 +305,6 @@ describe("Gateway EVM Utilities", () => {
         amount,
         decimals,
         erc20: TEST_ERC20,
-        gatewayEvm: TEST_GATEWAY,
         receiver: TEST_RECEIVER,
         revertOptions: DEFAULT_REVERT_OPTIONS,
         types: ["string"],
