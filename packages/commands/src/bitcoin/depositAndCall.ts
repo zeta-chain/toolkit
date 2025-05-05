@@ -78,9 +78,7 @@ const main = async (options: depositAndCallOptions) => {
   );
 
   // Convert BTC amount to satoshis
-  const amountSat = Number(
-    ethers.toNumber(ethers.parseUnits(options.amount, 8))
-  );
+  const amountSat = ethers.toNumber(ethers.parseUnits(options.amount, 8));
 
   // Display transaction information and confirm
   console.log(`
