@@ -15,6 +15,16 @@ export interface BtcVout {
   value: number; // The value of the output in satoshis
 }
 
+export interface BtcVin {
+  prevout?: BtcVout;
+  scriptsig: string;
+  scriptsig_asm?: string;
+  sequence: number;
+  txid: string;
+  vout: number;
+  witness?: string[];
+}
+
 export interface BtcTxById {
   fee: number;
   locktime: number;
@@ -27,7 +37,7 @@ export interface BtcTxById {
   };
   txid: string;
   version: number;
-  vin: [];
+  vin: BtcVin[];
   vout: BtcVout[];
   weight: number;
 }
