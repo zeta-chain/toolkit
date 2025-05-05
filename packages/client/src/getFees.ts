@@ -9,7 +9,7 @@ import {
   ConvertGasToZetaResponse,
   FeeItem,
 } from "../../../types/getFees.types";
-import { handleError } from "../../../utils";
+import { handleError } from "../../../utils/handleError";
 import { ZetaChainClient } from "./client";
 
 const fetchZEVMFees = async (

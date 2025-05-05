@@ -10,7 +10,8 @@ import has from "lodash/has";
 import merge from "lodash/merge";
 
 import { Chains } from "../../../types/client.types";
-import { compareBigIntAndNumber, handleError } from "../../../utils";
+import { compareBigIntAndNumber } from "../../../utils/compareBigIntAndNumber";
+import { handleError } from "../../../utils/handleError";
 import {
   evmCall,
   evmDeposit,

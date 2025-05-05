@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method */
+import { describe, expect, it } from "@jest/globals";
+
 import {
   CCTX,
   CCTXs,
@@ -8,9 +10,12 @@ import {
 } from "../types/trackCCTX.types";
 import {
   checkCompletionStatus,
+  isValidBitcoinTxHash,
+  isValidEVMTxHash,
+  isValidSolanaTxHash,
+  isValidTxHash,
   processNewCctxHashes,
   updateEmitter,
-  validateTransactionHash,
 } from "../utils/transactions";
 
 // Type for emit mock calls to address linter errors
@@ -18,7 +23,6 @@ type MockCall = [string, Record<string, unknown>];
 
 describe("processNewCctxHashes", () => {
   it("should process new hashes correctly", () => {
-    // Arrange
     const hashes = ["hash1", "hash2"];
     const cctxs: CCTXs = { hash3: [] };
     const spinners: Spinners = { hash3: true };
@@ -27,10 +31,8 @@ describe("processNewCctxHashes", () => {
     };
     const json = false;
 
-    // Act
     const result = processNewCctxHashes(hashes, cctxs, spinners, emitter, json);
 
-    // Assert
     expect(result.cctxs).toEqual({
       hash1: [],
       hash2: [],
@@ -58,17 +60,14 @@ describe("processNewCctxHashes", () => {
   });
 
   it("should handle existing entries", () => {
-    // Arrange
     const hashes = ["hash1", "hash2"];
     const cctxs: CCTXs = { hash1: [] };
     const spinners: Spinners = { hash2: true };
     const emitter = null;
     const json = false;
 
-    // Act
     const result = processNewCctxHashes(hashes, cctxs, spinners, emitter, json);
 
-    // Assert
     // hash1 should already exist in cctxs and be preserved
     // hash2 should be added to cctxs since it doesn't exist there
     // newCctxs[hash] is only set if the hash doesn't exist in newCctxs AND doesn't exist in newSpinners
@@ -86,7 +85,6 @@ describe("processNewCctxHashes", () => {
   });
 
   it("should not update anything in json mode", () => {
-    // Arrange
     const hashes = ["hash1", "hash2"];
     const cctxs: CCTXs = {};
     const spinners: Spinners = {};
@@ -95,10 +93,8 @@ describe("processNewCctxHashes", () => {
     };
     const json = true;
 
-    // Act
     const result = processNewCctxHashes(hashes, cctxs, spinners, emitter, json);
 
-    // Assert
     expect(result.cctxs).toEqual({
       hash1: [],
       hash2: [],
@@ -112,7 +108,6 @@ describe("processNewCctxHashes", () => {
 
 describe("updateEmitter", () => {
   it("should update emitter for success", () => {
-    // Arrange
     const hash = "hash1";
     const tx: CCTX = {
       confirmed_on_destination: false,
@@ -143,7 +138,6 @@ describe("updateEmitter", () => {
     };
     const json = false;
 
-    // Act
     const result = updateEmitter(
       hash,
       tx,
@@ -154,7 +148,6 @@ describe("updateEmitter", () => {
       json
     );
 
-    // Assert
     expect(result).toEqual({ hash1: false });
 
     const mockEmit = emitter.emit as jest.Mock;
@@ -164,7 +157,6 @@ describe("updateEmitter", () => {
   });
 
   it("should update emitter for failure", () => {
-    // Arrange
     const hash = "hash1";
     const tx: CCTX = {
       confirmed_on_destination: false,
@@ -195,7 +187,6 @@ describe("updateEmitter", () => {
     };
     const json = false;
 
-    // Act
     const result = updateEmitter(
       hash,
       tx,
@@ -206,7 +197,6 @@ describe("updateEmitter", () => {
       json
     );
 
-    // Assert
     expect(result).toEqual({ hash1: false });
 
     const mockEmit = emitter.emit as jest.Mock;
@@ -216,7 +206,6 @@ describe("updateEmitter", () => {
   });
 
   it("should update emitter for pending status", () => {
-    // Arrange
     const hash = "hash1";
     const tx: CCTX = {
       confirmed_on_destination: false,
@@ -247,7 +236,6 @@ describe("updateEmitter", () => {
     };
     const json = false;
 
-    // Act
     const result = updateEmitter(
       hash,
       tx,
@@ -258,7 +246,6 @@ describe("updateEmitter", () => {
       json
     );
 
-    // Assert
     expect(result).toEqual({ hash1: true });
 
     const mockEmit = emitter.emit as jest.Mock;
@@ -270,7 +257,6 @@ describe("updateEmitter", () => {
 
 describe("checkCompletionStatus", () => {
   it("should detect all transactions are complete and successful", () => {
-    // Arrange
     const cctxs: CCTXs = {
       hash1: [
         {
@@ -300,10 +286,8 @@ describe("checkCompletionStatus", () => {
     };
     const json = false;
 
-    // Act
     const result = checkCompletionStatus(cctxs, emitter, json);
 
-    // Assert
     expect(result).toEqual({ isComplete: true, isSuccessful: true });
 
     const mockEmit = emitter.emit as jest.Mock;
@@ -314,7 +298,6 @@ describe("checkCompletionStatus", () => {
   });
 
   it("should detect complete but failed transactions", () => {
-    // Arrange
     const cctxs: CCTXs = {
       hash1: [
         {
@@ -344,10 +327,8 @@ describe("checkCompletionStatus", () => {
     };
     const json = false;
 
-    // Act
     const result = checkCompletionStatus(cctxs, emitter, json);
 
-    // Assert
     expect(result).toEqual({ isComplete: true, isSuccessful: false });
 
     const mockEmit = emitter.emit as jest.Mock;
@@ -358,7 +339,6 @@ describe("checkCompletionStatus", () => {
   });
 
   it("should detect incomplete transactions", () => {
-    // Arrange
     const cctxs: CCTXs = {
       hash1: [
         {
@@ -388,10 +368,8 @@ describe("checkCompletionStatus", () => {
     };
     const json = false;
 
-    // Act
     const result = checkCompletionStatus(cctxs, emitter, json);
 
-    // Assert
     expect(result).toEqual({ isComplete: false, isSuccessful: false });
 
     const mockEmit = emitter.emit as jest.Mock;
@@ -400,33 +378,132 @@ describe("checkCompletionStatus", () => {
   });
 });
 
-describe("validateTransactionHash", () => {
-  it("should validate correct transaction hash", () => {
-    // Arrange
-    const hash =
-      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
-
-    // Act
-    const result = validateTransactionHash(hash);
-
-    // Assert
-    expect(result).toBe(true);
-  });
-
-  it("should reject invalid transaction hash formats", () => {
-    // Arrange
-    const invalidHashes = [
-      "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", // no 0x prefix
-      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcde", // too short
-      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefg", // invalid character
-      "0x1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234", // too long
-      "0xZZZZ567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", // invalid characters
-      "", // empty string
+describe("isValidEVMTxHash", () => {
+  it("should return true for valid EVM transaction hashes", () => {
+    const validHashes = [
+      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "0x0000000000000000000000000000000000000000000000000000000000000000",
     ];
 
-    // Act & Assert
+    validHashes.forEach((hash) => {
+      expect(isValidEVMTxHash(hash)).toBe(true);
+    });
+  });
+
+  it("should return false for invalid EVM transaction hashes", () => {
+    const invalidHashes = [
+      "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", // Missing 0x prefix
+      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcde", // Too short
+      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefg", // Too long
+      "0x1234567890QWERTY1234567890abcdef1234567890abcdef1234567890abcdef", // Invalid characters
+      "", // Empty string
+      "not a hash",
+    ];
+
     invalidHashes.forEach((hash) => {
-      expect(validateTransactionHash(hash)).toBe(false);
+      expect(isValidEVMTxHash(hash)).toBe(false);
+    });
+  });
+});
+
+describe("isValidBitcoinTxHash", () => {
+  it("should return true for valid Bitcoin transaction hashes", () => {
+    const validHashes = [
+      "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      "ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890",
+    ];
+
+    validHashes.forEach((hash) => {
+      expect(isValidBitcoinTxHash(hash)).toBe(true);
+    });
+  });
+
+  it("should return false for invalid Bitcoin transaction hashes", () => {
+    const invalidHashes = [
+      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", // Has 0x prefix
+      "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcde", // Too short
+      "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefgh", // Too long
+      "1234567890QWERTY1234567890abcdef1234567890abcdef1234567890abcdef", // Invalid characters
+      "", // Empty string
+      "not a hash",
+    ];
+
+    invalidHashes.forEach((hash) => {
+      expect(isValidBitcoinTxHash(hash)).toBe(false);
+    });
+  });
+});
+
+describe("isValidSolanaTxHash", () => {
+  it("should return true for valid Solana transaction hashes", () => {
+    // These are examples of base58 encoded strings with 64 bytes length when decoded
+    const validHashes = [
+      "5KtPn1LGuxhFqTWYNyxSFQJ6MBkpKwGgtJ5uPAKFyCcBz6uJQkQwjxpGzNBzE87J6YEBbZL3JWDEiXfFY6WXGx8p",
+      "3NQmDb8ijKy8KQgFKTZKsFFxcPD8wGj8YBeM7G8aDkLm9oCGgPxvnFfVK7K29n3rsE1bhT7zrQ7FS4b9oEELMbMc",
+      "3xbQrzp3GBw3PiocbGHN5NEpsaHVo45s8EuGA7p12AUL9bRfa34G84FPUEzFDfx5MQAnDAW1hijReN76wjFD2kbd",
+    ];
+
+    validHashes.forEach((hash) => {
+      expect(isValidSolanaTxHash(hash)).toBe(true);
+    });
+  });
+
+  it("should return false for invalid Solana transaction hashes", () => {
+    const invalidHashes = [
+      "invalid", // Too short
+      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", // EVM format
+      "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", // Bitcoin format
+      "", // Empty string
+      "abc123", // Too short base58 string
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ", // Invalid base58 characters
+      "IIIIIIIIOOOOOOOOLLLLLLL", // Invalid base58 characters (I, O, l are not used in base58)
+    ];
+
+    invalidHashes.forEach((hash) => {
+      expect(isValidSolanaTxHash(hash)).toBe(false);
+    });
+  });
+});
+
+describe("isValidTxHash", () => {
+  it("should return true for valid transaction hashes of various formats", () => {
+    const validHashes = [
+      // EVM
+      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      // Bitcoin/TON
+      "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      // Solana (base58 encoded)
+      "5KtPn1LGuxhFqTWYNyxSFQJ6MBkpKwGgtJ5uPAKFyCcBz6uJQkQwjxpGzNBzE87J6YEBbZL3JWDEiXfFY6WXGx8p",
+      // SUI - Transaction digest encoding
+      "ScuFyUm9FN3iaLAe1pdfSkYd63gQaNCmr1pmJhzsGrU",
+    ];
+
+    validHashes.forEach((hash) => {
+      expect(isValidTxHash(hash)).toBe(true);
+    });
+  });
+
+  it("should return false for invalid transaction hashes", () => {
+    const invalidHashes = [
+      "0x123", // Too short EVM
+      "123", // Too short Bitcoin/TON
+      "invalid", // Invalid format
+      null as unknown as string, // null
+      undefined as unknown as string, // undefined
+      [1, 2, 3] as unknown as string, // array
+      { a: 1 } as unknown as string, // object
+      100 as unknown as string, // number
+      false as unknown as string, // boolean
+      "", // Empty string
+      "0xZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", // Invalid characters
+      "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", // Invalid characters
+    ];
+
+    invalidHashes.forEach((hash) => {
+      expect(isValidTxHash(hash)).toBe(false);
     });
   });
 });
