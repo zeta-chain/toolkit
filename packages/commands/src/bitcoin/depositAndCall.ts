@@ -21,6 +21,7 @@ import {
   trimOx,
 } from "../../../client/src/bitcoinEncode";
 
+// Initialize Bitcoin library with ECC implementation
 bitcoin.initEccLib(ecc);
 
 const SIGNET = {
@@ -37,6 +38,13 @@ const SIGNET = {
 
 const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
 
+/**
+ * Encodes a number as a Bitcoin compact size.
+ * Bitcoin uses a custom variable-length integer format for script element counts and lengths.
+ *
+ * @param n - The number to encode
+ * @returns A Buffer containing the compact size representation
+ */
 const compactSize = (n: number) => {
   if (n < BITCOIN_TX.COMPACT_SIZE.MARKER_UINT16) return Buffer.from([n]);
   const buf = Buffer.alloc(3);
@@ -45,7 +53,16 @@ const compactSize = (n: number) => {
   return buf;
 };
 
+/**
+ * Builds a witness stack for the reveal transaction.
+ * The witness contains the data needed to reveal the inscribed data and spend the Taproot output.
+ *
+ * @param leafScript - The script containing the cross-chain message
+ * @param controlBlock - The Taproot control block needed to validate the script path
+ * @returns A Buffer containing the encoded witness data
+ */
 const buildRevealWitness = (leafScript: Buffer, controlBlock: Buffer) => {
+  // Empty signature - we don't need a real signature as we're using the script path
   const sig = Buffer.alloc(64);
 
   const stack = [sig, leafScript, controlBlock];
@@ -68,6 +85,19 @@ interface depositAndCallOptions {
   values: string[];
 }
 
+/**
+ * Creates a commit transaction that embeds cross-chain message data in a Taproot output.
+ * The commit transaction creates a special UTXO that can be spent later to reveal the inscription.
+ *
+ * @param key - Bitcoin signer (private key)
+ * @param utxos - Available UTXOs to spend
+ * @param changeAddress - Address to send change to
+ * @param inscriptionData - Cross-chain message data to inscribe
+ * @param api - Bitcoin API endpoint for fetching transaction data
+ * @param amountSat - Amount to inscribe in satoshis
+ * @param feeSat - Fee for the transaction in satoshis
+ * @returns Object containing transaction data and Taproot script details
+ */
 const makeCommitTransaction = async (
   key: bitcoin.Signer,
   utxos: BtcUtxo[],
@@ -137,6 +167,19 @@ const makeCommitTransaction = async (
   };
 };
 
+/**
+ * Creates a reveal transaction that spends the commit transaction output and reveals the inscription.
+ * This transaction sends funds to the ZetaChain gateway while exposing the cross-chain message.
+ *
+ * @param commitTxId - Transaction ID of the commit transaction
+ * @param commitVout - Output index in the commit transaction to spend (typically 0)
+ * @param commitValue - Value of the commit output in satoshis
+ * @param to - Gateway address to send funds to
+ * @param feeRate - Fee rate in satoshis per vbyte
+ * @param commitData - Data from the commit transaction needed to spend it
+ * @param key - Bitcoin signer (private key)
+ * @returns Hex-encoded transaction ready for broadcast
+ */
 const makeRevealTransaction = (
   commitTxId: string,
   commitVout: number,
@@ -199,9 +242,12 @@ const main = async (options: depositAndCallOptions) => {
     pubkey: key.publicKey,
   });
 
+  // Get available UTXOs
   const utxos = (
     await axios.get<BtcUtxo[]>(`${options.api}/address/${address}/utxo`)
   ).data;
+
+  // Encode contract call data for inscription
   const encodedPayload = new ethers.AbiCoder().encode(
     options.types,
     options.values
@@ -216,10 +262,13 @@ const main = async (options: depositAndCallOptions) => {
     ),
     "hex"
   );
+
+  // Convert BTC amount to satoshis
   const amountSat = Number(
     ethers.toNumber(ethers.parseUnits(options.amount, 8))
   );
 
+  // Display transaction information and confirm
   console.log(`
 Network: Signet
 Amount: ${options.amount} BTC
@@ -233,6 +282,7 @@ Raw Inscription Data: ${inscriptionData.toString("hex")}
 `);
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 
+  // Create and broadcast commit transaction
   const commit = await makeCommitTransaction(
     key,
     utxos,
@@ -248,6 +298,7 @@ Raw Inscription Data: ${inscriptionData.toString("hex")}
   ).data;
   console.log("Commit TXID:", commitTxid);
 
+  // Create and broadcast reveal transaction
   const revealHex = makeRevealTransaction(
     commitTxid,
     0,
