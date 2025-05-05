@@ -12,11 +12,19 @@ import { DEFAULT_FACTORY, DEFAULT_FEE, DEFAULT_RPC } from "./constants";
 
 const main = async (options: CreatePoolOptions): Promise<void> => {
   try {
-    // Validate options
     const validatedOptions = createPoolOptionsSchema.parse(options);
 
     if (validatedOptions.tokens.length !== 2) {
       throw new Error("Exactly 2 token addresses must be provided");
+    }
+
+    if (!validatedOptions.prices || validatedOptions.prices.length !== 2) {
+      throw new Error("Exactly 2 prices must be provided using --prices");
+    }
+
+    const [price0, price1] = validatedOptions.prices.map(Number);
+    if (price0 <= 0 || price1 <= 0 || isNaN(price0) || isNaN(price1)) {
+      throw new Error("Both prices must be valid positive numbers");
     }
 
     // Initialize provider and signer
@@ -60,22 +68,12 @@ const main = async (options: CreatePoolOptions): Promise<void> => {
     // Initialize the pool
     const pool = new Contract(poolAddress, UniswapV3Pool.abi, signer);
 
-    // Default sqrt price represents 1:1 ratio
-    let sqrtPriceX96 = ethers.toBigInt("79228162514264337593543950336"); // sqrt(1) * 2^96
+    // Calculate sqrtPriceX96 from USD prices
+    const initialPrice = price1 / price0;
+    const sqrtPrice = Math.sqrt(initialPrice);
+    const sqrtPriceX96 = BigInt(Math.floor(sqrtPrice * 2 ** 96));
 
-    // If initial price was provided, calculate the sqrtPriceX96
-    if (validatedOptions.initialPrice) {
-      const price = Number(validatedOptions.initialPrice);
-      if (isNaN(price) || price <= 0)
-        throw new Error("Initial price must be a positive number");
-
-      const sqrtPrice = Math.sqrt(price);
-      sqrtPriceX96 = BigInt(Math.floor(sqrtPrice * 2 ** 96));
-    }
-
-    const initTx = (await pool.initialize(
-      sqrtPriceX96
-    )) as ethers.TransactionResponse;
+    const initTx = (await pool.initialize(sqrtPriceX96)) as ethers.TransactionResponse;
     console.log("Pool initialization transaction hash:", initTx.hash);
     await initTx.wait();
 
@@ -116,5 +114,8 @@ export const createCommand = new Command("create")
     "Fee tier for the pool (3000 = 0.3%)",
     DEFAULT_FEE.toString()
   )
-  .option("--initial-price <initialPrice>", "Initial price for the pool")
+  .requiredOption(
+    "--prices <prices...>",
+    "USD prices of the two tokens in the same order as --tokens"
+  )
   .action(main);
