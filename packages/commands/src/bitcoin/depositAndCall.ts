@@ -190,7 +190,7 @@ const main = async (options: depositAndCallOptions) => {
   });
 
   const utxos = (
-    await axios.get<BtcUtxo[]>(`${options.api}/address/${address}/BtcUtxo`)
+    await axios.get<BtcUtxo[]>(`${options.api}/address/${address}/utxo`)
   ).data;
   const encodedPayload = new ethers.AbiCoder().encode(
     options.types,
