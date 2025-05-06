@@ -7,7 +7,7 @@ import {
   EncodingFormat,
   OpCode,
   trimOx,
-} from "../../../client/src/bitcoinEncode";
+} from "../../../../utils/bitcoinEncode";
 
 interface EncodeOptions {
   format?: string;

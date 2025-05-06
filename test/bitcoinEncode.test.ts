@@ -5,7 +5,7 @@ import {
   bitcoinEncode,
   BtcAddress,
   trimOx,
-} from "../packages/client/src/bitcoinEncode";
+} from "../utils/bitcoinEncode";
 
 describe("bitcoinEncode", () => {
   const receiverAddress: Address = "0xEA9808f0Ac504d1F521B5BbdfC33e6f1953757a7";

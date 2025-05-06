@@ -18,7 +18,7 @@ import {
   EncodingFormat,
   OpCode,
   trimOx,
-} from "../../../client/src/bitcoinEncode";
+} from "../../../../utils/bitcoinEncode";
 
 // Initialize Bitcoin library with ECC implementation
 bitcoin.initEccLib(ecc);

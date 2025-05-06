@@ -1,4 +1,3 @@
-export * from "./bitcoinEncode";
 export * from "./client";
 export * from "./evmCall";
 export * from "./evmDeposit";

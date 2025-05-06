@@ -1,4 +1,5 @@
 export * from "./api";
+export * from "./bitcoinEncode";
 export * from "./bitsize";
 export * from "./compareBigIntAndNumber";
 export * from "./formatting";
