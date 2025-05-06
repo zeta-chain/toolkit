@@ -5,6 +5,7 @@ import { Command } from "commander";
 import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
+import { z } from "zod";
 
 import { BITCOIN_FEES } from "../../../../types/bitcoin.constants";
 import type { BtcUtxo } from "../../../../types/bitcoin.types";
@@ -19,23 +20,10 @@ import {
   OpCode,
   trimOx,
 } from "../../../../utils/bitcoinEncode";
+import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
 
-// Initialize Bitcoin library with ECC implementation
-bitcoin.initEccLib(ecc);
-
-/**
- * Options for the deposit-and-call command
- */
-interface depositAndCallOptions {
-  amount: string;
-  api: string;
-  gateway: string;
-  privateKey: string;
-  receiver: string;
-  revertAddress: string;
-  types: string[];
-  values: string[];
-}
+type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
 /**
  * Main function that executes the deposit-and-call operation.
@@ -43,7 +31,10 @@ interface depositAndCallOptions {
  *
  * @param options - Command options including amounts, addresses, and contract parameters
  */
-const main = async (options: depositAndCallOptions) => {
+const main = async (options: DepositAndCallOptions) => {
+  // Initialize Bitcoin library with ECC implementation
+  bitcoin.initEccLib(ecc);
+
   // Set up Bitcoin key pair
   const ECPair = ECPairFactory(ecc);
   const pk = options.privateKey;
@@ -155,4 +146,13 @@ export const depositAndCallCommand = new Command()
   .requiredOption("--amount <btcAmount>", "BTC amount to inscribe (in BTC)")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
   .requiredOption("--private-key <key>", "Bitcoin private key")
-  .action(main);
+  .action(async (opts) => {
+    const validated = validateAndParseSchema(
+      opts,
+      depositAndCallOptionsSchema,
+      {
+        exitOnError: true,
+      }
+    );
+    await main(validated);
+  });

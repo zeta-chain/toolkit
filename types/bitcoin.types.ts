@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export interface BtcUtxo {
   status: {
     block_hash: string;
@@ -41,3 +43,17 @@ export interface BtcTxById {
   vout: BtcVout[];
   weight: number;
 }
+
+/**
+ * Schema for the deposit-and-call command options
+ */
+export const depositAndCallOptionsSchema = z.object({
+  amount: z.string(),
+  api: z.string().url(),
+  gateway: z.string(),
+  privateKey: z.string(),
+  receiver: z.string(),
+  revertAddress: z.string(),
+  types: z.array(z.string()),
+  values: z.array(z.string()),
+});
