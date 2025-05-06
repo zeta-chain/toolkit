@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { BITCOIN_FEES } from "../../../../types/bitcoin.constants";
 import type { BtcUtxo } from "../../../../types/bitcoin.types";
+import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   makeCommitTransaction,
   makeRevealTransaction,
@@ -21,7 +22,6 @@ import {
   trimOx,
 } from "../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
