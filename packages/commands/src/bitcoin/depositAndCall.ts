@@ -69,7 +69,11 @@ const main = async (options: DepositAndCallOptions) => {
   );
 
   // Convert BTC amount to satoshis
-  const amountSat = ethers.toNumber(ethers.parseUnits(options.amount, 8));
+  const amountSatBig = ethers.parseUnits(options.amount, 8);
+  if (amountSatBig > Number.MAX_SAFE_INTEGER) {
+    throw new Error("Amount exceeds JS safe-integer range");
+  }
+  const amountSat = Number(amountSatBig);
 
   // Display transaction information and confirm
   console.log(`
