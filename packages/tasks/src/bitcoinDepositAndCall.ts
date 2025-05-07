@@ -8,42 +8,10 @@ import { task } from "hardhat/config";
 import * as ecc from "tiny-secp256k1";
 import { z } from "zod";
 
+import type { BtcTxById, BtcUtxo } from "../../../types/bitcoin.types";
 import { validateAndParseSchema } from "../../../utils";
+
 dotenv.config();
-
-interface BtcUtxo {
-  status: {
-    block_hash: string;
-    block_height: number;
-    block_time: number;
-    confirmed: boolean;
-  };
-  txid: string;
-  value: number;
-  vout: number;
-}
-
-interface BtcVout {
-  scriptpubkey: string; // The scriptpubkey is a hex-encoded string
-  value: number; // The value of the output in satoshis
-}
-
-interface BtcTxById {
-  fee: number;
-  locktime: number;
-  size: number;
-  status: {
-    block_hash: string;
-    block_height: number;
-    block_time: number;
-    confirmed: boolean;
-  };
-  txid: string;
-  version: number;
-  vin: [];
-  vout: BtcVout[];
-  weight: number;
-}
 
 const makeTransaction = async (
   to: string,
