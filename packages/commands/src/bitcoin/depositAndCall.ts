@@ -37,9 +37,7 @@ const main = async (options: DepositAndCallOptions) => {
 
   // Set up Bitcoin key pair
   const ECPair = ECPairFactory(ecc);
-  const pk = options.privateKey;
-  if (!pk) throw new Error("missing private key");
-  const key = ECPair.fromPrivateKey(Buffer.from(pk, "hex"), {
+  const key = ECPair.fromPrivateKey(Buffer.from(options.privateKey, "hex"), {
     network: SIGNET,
   });
   const { address } = bitcoin.payments.p2wpkh({

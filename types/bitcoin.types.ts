@@ -47,13 +47,20 @@ export interface BtcTxById {
 /**
  * Schema for the deposit-and-call command options
  */
-export const depositAndCallOptionsSchema = z.object({
-  amount: z.string(),
-  api: z.string().url(),
-  gateway: z.string(),
-  privateKey: z.string(),
-  receiver: z.string(),
-  revertAddress: z.string(),
-  types: z.array(z.string()),
-  values: z.array(z.string()),
-});
+export const depositAndCallOptionsSchema = z
+  .object({
+    amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "Amount must be a valid positive number",
+    }),
+    api: z.string().url(),
+    gateway: z.string(),
+    privateKey: z.string().min(1, "Private key is required"),
+    receiver: z.string().min(1, "Receiver address is required"),
+    revertAddress: z.string(),
+    types: z.array(z.string()),
+    values: z.array(z.string()),
+  })
+  .refine((data) => data.types.length === data.values.length, {
+    message: "The 'types' and 'values' arrays must have the same length",
+    path: ["values"],
+  });
