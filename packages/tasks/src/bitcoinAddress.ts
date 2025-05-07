@@ -2,6 +2,9 @@ import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
 import * as ecc from "tiny-secp256k1";
 
+/**
+ * @deprecated This function is deprecated. Please use generateBitcoinAddress instead.
+ */
 export const bitcoinAddress = (pk: string, network: "mainnet" | "testnet") => {
   const bitcoinNetwork =
     network === "testnet" ? bitcoin.networks.testnet : bitcoin.networks.bitcoin;

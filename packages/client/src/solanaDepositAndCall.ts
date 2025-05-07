@@ -9,7 +9,7 @@ import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
 import { AbiCoder, ethers } from "ethers";
 
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
-import { handleError } from "../../../utils";
+import { handleError } from "../../../utils/handleError";
 import { ZetaChainClient } from "./client";
 
 const SEED = "meta";

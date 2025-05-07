@@ -10,6 +10,7 @@ import { validateAndParseSchema } from "../../../utils";
 import { ZetaChainClient } from "../../client/src/";
 
 const evmDepositArgsSchema = z.object({
+  abortAddress: evmAddressSchema,
   amount: z.string(),
   callOnRevert: z.boolean().optional(),
   erc20: z.string().optional(),
@@ -40,6 +41,7 @@ export const evmDeposit = async (
       gatewayEvm: parsedArgs.gatewayEvm,
       receiver: parsedArgs.receiver,
       revertOptions: {
+        abortAddress: parsedArgs.abortAddress,
         callOnRevert: Boolean(parsedArgs.callOnRevert),
         onRevertGasLimit: parsedArgs.onRevertGasLimit,
         revertAddress: parsedArgs.revertAddress,
@@ -69,6 +71,11 @@ task("evm-deposit", "Deposit tokens", evmDeposit)
     "Revert address",
     "0x0000000000000000000000000000000000000000",
     types.string
+  )
+  .addOptionalParam(
+    "abortAddress",
+    "Abort address",
+    "0x0000000000000000000000000000000000000000"
   )
   .addOptionalParam(
     "gasPrice",
