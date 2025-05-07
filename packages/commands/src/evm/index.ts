@@ -4,4 +4,5 @@ import { depositCommand } from "./deposit";
 
 export const evmCommand = new Command("evm")
   .description("EVM commands")
-  .addCommand(depositCommand);
+  .addCommand(depositCommand)
+  .helpCommand(false);

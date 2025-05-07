@@ -1,8 +1,8 @@
-import fs from "fs";
 import os from "os";
 import path from "path";
 
 import { AvailableAccountTypes } from "../types/accounts.types";
+import { safeExists, safeReadJson } from "./fsUtils";
 
 /**
  * Base directory for all account keys
@@ -41,14 +41,15 @@ interface KeyData {
 
 export const readKeyFromStore = (keyName: string): string => {
   const keyPath = getAccountKeyPath("evm", keyName);
-  if (!fs.existsSync(keyPath)) {
+
+  if (!safeExists(keyPath)) {
     throw new Error(`Key file not found at ${keyPath}`);
   }
-  const keyData: KeyData = JSON.parse(
-    fs.readFileSync(keyPath, "utf-8")
-  ) as KeyData;
+
+  const keyData: KeyData = safeReadJson<KeyData>(keyPath);
   if (!keyData.privateKey) {
     throw new Error(`Private key not found in key file ${keyPath}`);
   }
+
   return keyData.privateKey;
 };

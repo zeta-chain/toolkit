@@ -81,6 +81,7 @@ Call on revert: ${options.callOnRevert ? "true" : "false"}${
 const main = async (options: {
   amount: string;
   callOnRevert: boolean;
+  chainId: string;
   erc20?: string;
   gasLimit: string;
   gasPrice: string;
@@ -96,8 +97,8 @@ const main = async (options: {
   yes: boolean;
 }) => {
   try {
-    const chainId = parseInt(options.network);
-    const networkType = getNetworkType(chainId);
+    const chainId = parseInt(options.chainId);
+    const networkType = options.network;
     const rpcUrl = options.rpc || getRpcUrl(chainId);
     const provider = new ethers.JsonRpcProvider(rpcUrl);
 
@@ -169,19 +170,6 @@ const main = async (options: {
   }
 };
 
-const getNetworkType = (chainId: number): "testnet" | "mainnet" => {
-  const typedNetworks = networks as NetworksSchema;
-  const network = Object.values(typedNetworks).find(
-    (n) => n.chain_id === chainId
-  );
-
-  if (!network) {
-    throw new Error(`Network with chain ID ${chainId} not found`);
-  }
-
-  return network.type;
-};
-
 const getChainName = (chainId: number): string => {
   const typedNetworks = networks as NetworksSchema;
   const network = Object.values(typedNetworks).find(
@@ -220,11 +208,16 @@ const getRpcUrl = (chainId: number): string => {
 export const depositCommand = new Command("deposit")
   .description("Deposit tokens to ZetaChain from an EVM-compatible chain")
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
-  .requiredOption("--network <network>", "Chain ID of the network")
+  .addOption(
+    new Option("--network <network>", "Network to use")
+      .choices(["mainnet", "testnet"])
+      .default("testnet")
+  )
+  .requiredOption("--chain-id <chainId>", "Chain ID of the network")
   .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
   .addOption(
     new Option("--key <key>", "Key name to be used from the key store")
-      .default("testnet")
+      .default("default")
       .conflicts(["key-raw"])
   )
   .addOption(
