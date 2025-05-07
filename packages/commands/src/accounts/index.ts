@@ -10,4 +10,5 @@ export const accountsCommand = new Command("accounts")
   .addCommand(createAccountsCommand)
   .addCommand(showAccountsCommand)
   .addCommand(listAccountsCommand)
-  .addCommand(deleteAccountsCommand);
+  .addCommand(deleteAccountsCommand)
+  .helpCommand(false);
