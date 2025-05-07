@@ -35,11 +35,24 @@ export const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
  * @param n - The number to encode
  * @returns A Buffer containing the compact size representation
  */
-export const compactSize = (n: number) => {
-  if (n < BITCOIN_TX.COMPACT_SIZE.MARKER_UINT16) return Buffer.from([n]);
-  const buf = Buffer.alloc(3);
-  buf.writeUInt8(BITCOIN_TX.COMPACT_SIZE.MARKER_UINT16, 0);
-  buf.writeUInt16LE(n, 1);
+export const compactSize = (n: number): Buffer => {
+  if (n < 0xfd) return Buffer.from([n]);
+  if (n <= 0xffff) {
+    const buf = Buffer.alloc(3);
+    buf.writeUInt8(0xfd, 0);
+    buf.writeUInt16LE(n, 1);
+    return buf;
+  }
+  if (n <= 0xffffffff) {
+    const buf = Buffer.alloc(5);
+    buf.writeUInt8(0xfe, 0);
+    buf.writeUInt32LE(n, 1);
+    return buf;
+  }
+  // uint64
+  const buf = Buffer.alloc(9);
+  buf.writeUInt8(0xff, 0);
+  buf.writeBigUInt64LE(BigInt(n), 1);
   return buf;
 };
 
