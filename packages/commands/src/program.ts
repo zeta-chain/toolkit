@@ -6,6 +6,7 @@ import { balancesCommand } from "./balances";
 import { bitcoinCommand } from "./bitcoin";
 import { solanaCommand } from "./solana";
 import { suiCommand } from "./sui";
+import { poolsCommand } from "./pools";
 
 export const toolkitCommand = new Command("toolkit")
   .description("Local development environment")
@@ -16,5 +17,6 @@ toolkitCommand.addCommand(balancesCommand);
 toolkitCommand.addCommand(bitcoinCommand);
 toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(suiCommand);
+toolkitCommand.addCommand(poolsCommand);
 
 toolkitCommand.parse(process.argv);
