@@ -1,5 +1,9 @@
+import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
+import { ethers } from "ethers";
+
 import { TokenBalance } from "../types/balances.types";
 import { CCTX } from "../types/trackCCTX.types";
+import { getChainName } from "./chains";
 
 /**
  * Create a shortened hash representation for better readability
@@ -91,4 +95,41 @@ export const formatBalances = (
     Token: balance.symbol,
     Type: balance.coin_type,
   }));
+};
+
+export const printTransactionDetails = async (
+  signer: ethers.Wallet,
+  chainId: number,
+  options: {
+    amount: string;
+    callOnRevert: boolean;
+    erc20?: string;
+    onRevertGasLimit: string;
+    receiver: string;
+    revertMessage: string;
+  }
+): Promise<void> => {
+  let tokenSymbol = "native tokens";
+  if (options.erc20) {
+    const erc20Contract = new ethers.Contract(
+      options.erc20,
+      ERC20_ABI.abi,
+      signer.provider
+    );
+    tokenSymbol = (await erc20Contract.symbol()) as string;
+  }
+
+  console.log(`
+From:   ${signer.address} on ${getChainName(chainId)}
+To:     ${options.receiver} on ZetaChain
+Amount: ${options.amount} ${tokenSymbol}${
+    !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
+  }
+Call on revert: ${options.callOnRevert ? "true" : "false"}${
+    options.callOnRevert
+      ? `\n  Revert Address:      ${signer.address}
+  On Revert Gas Limit: ${options.onRevertGasLimit}
+  Revert Message:      "${options.revertMessage}"`
+      : ""
+  }\n`);
 };

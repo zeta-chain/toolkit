@@ -1,11 +1,10 @@
 import confirm from "@inquirer/confirm";
-import { networks } from "@zetachain/networks";
-import { type NetworksSchema } from "@zetachain/networks/dist/src/types";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 
 import { readKeyFromStore } from "../../../../utils";
 import { hasSufficientBalanceEvm } from "../../../../utils/balances";
+import { getChainName, getRpcUrl } from "../../../../utils/chains";
 import { ZetaChainClient } from "../../../client/src/client";
 
 const printTransactionDetails = async (
@@ -149,41 +148,6 @@ const main = async (options: {
     console.error("Error depositing to EVM:", error);
     process.exit(1);
   }
-};
-
-const getChainName = (chainId: number): string => {
-  const typedNetworks = networks as NetworksSchema;
-  const network = Object.values(typedNetworks).find(
-    (n) => n.chain_id === chainId
-  );
-
-  if (!network) {
-    throw new Error(`Network with chain ID ${chainId} not found`);
-  }
-
-  return network.chain_name;
-};
-
-const getRpcUrl = (chainId: number): string => {
-  const typedNetworks = networks as NetworksSchema;
-  const network = Object.values(typedNetworks).find(
-    (n) => n.chain_id === chainId
-  );
-
-  if (!network) {
-    throw new Error(`Network with chain ID ${chainId} not found`);
-  }
-
-  if (!network.api) {
-    throw new Error(`Network with chain ID ${chainId} has no API endpoints`);
-  }
-
-  const evmRpc = network.api.find((api) => api.type === "evm");
-  if (!evmRpc) {
-    throw new Error(`Network with chain ID ${chainId} has no EVM RPC endpoint`);
-  }
-
-  return evmRpc.url;
 };
 
 export const depositCommand = new Command("deposit")
