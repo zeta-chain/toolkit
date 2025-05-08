@@ -97,7 +97,10 @@ export const formatBalances = (
   }));
 };
 
-export const printTransactionDetails = async (
+/**
+ * Prints the details of an EVM transaction to the console
+ */
+export const printEvmTransactionDetails = async (
   signer: ethers.Wallet,
   chainId: number,
   options: {

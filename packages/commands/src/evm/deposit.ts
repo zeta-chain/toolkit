@@ -2,7 +2,10 @@ import confirm from "@inquirer/confirm";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 
-import { printTransactionDetails, readKeyFromStore } from "../../../../utils";
+import {
+  printEvmTransactionDetails,
+  readKeyFromStore,
+} from "../../../../utils";
 import { hasSufficientBalanceEvm } from "../../../../utils/balances";
 import { getRpcUrl } from "../../../../utils/chains";
 import { ZetaChainClient } from "../../../client/src/client";
@@ -62,7 +65,7 @@ const main = async (options: {
       );
     }
 
-    await printTransactionDetails(signer, chainId, {
+    await printEvmTransactionDetails(signer, chainId, {
       amount: options.amount,
       callOnRevert: options.callOnRevert,
       erc20: options.erc20,
