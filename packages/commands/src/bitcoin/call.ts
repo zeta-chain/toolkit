@@ -14,10 +14,10 @@ import {
 import type { BtcUtxo } from "../../../../types/bitcoin.types";
 import { callOptionsSchema } from "../../../../types/bitcoin.types";
 import {
+  calculateFees,
   makeCommitTransaction,
   makeRevealTransaction,
   SIGNET,
-  calculateFees,
 } from "../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,

@@ -11,10 +11,10 @@ import { BITCOIN_FEES } from "../../../../types/bitcoin.constants";
 import type { BtcUtxo } from "../../../../types/bitcoin.types";
 import { depositOptionsSchema } from "../../../../types/bitcoin.types";
 import {
+  calculateFees,
   makeCommitTransaction,
   makeRevealTransaction,
   SIGNET,
-  calculateFees,
 } from "../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
