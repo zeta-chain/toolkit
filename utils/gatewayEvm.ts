@@ -182,8 +182,6 @@ export const generateEvmDepositData = (args: {
   } else {
     const value = ethers.parseEther(args.amount);
 
-    console.debug("depositNative", { revertData });
-
     return prepareGatewayTx(
       "depositNative",
       [args.receiver, revertData],
