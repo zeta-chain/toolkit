@@ -42,8 +42,9 @@ export const BITCOIN_LIMITS = {
     P2TR: 330,
     P2WPKH: 294,
   },
-  MIN_COMMIT_AMOUNT: 546, // Minimum amount for commit output
-  ESTIMATED_REVEAL_FEE: 5000, // Estimated fee for reveal transaction
+  // Minimum amount for commit output
+  ESTIMATED_REVEAL_FEE: 5000,
+  MIN_COMMIT_AMOUNT: 546, // Estimated fee for reveal transaction
 };
 
 /**
