@@ -7,6 +7,7 @@ import { EVMAccountData } from "../../../../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import {
   evmAddressSchema,
+  evmPrivateKeySchema,
   numericStringSchema,
   validAmountSchema,
 } from "../../../../types/shared.schema";
@@ -29,7 +30,7 @@ const depositOptionsSchema = z
     name: z.string().default(DEFAULT_ACCOUNT_NAME),
     network: z.enum(["mainnet", "testnet"]).default("testnet"),
     onRevertGasLimit: numericStringSchema.default("200000"),
-    privateKey: z.string().optional(),
+    privateKey: evmPrivateKeySchema.optional(),
     receiver: evmAddressSchema,
     revertAddress: evmAddressSchema.optional(),
     revertMessage: z.string().default(""),
@@ -64,9 +65,22 @@ const main = async (options: DepositOptions) => {
       throw new Error(errorMessage);
     }
 
+    const { success: isPrivateKeyValid, data: parsedPrivateKey } =
+      evmPrivateKeySchema.safeParse(privateKey);
+
+    if (!isPrivateKeyValid) {
+      const errorMessage = handleError({
+        context: "Invalid private key",
+        error: new Error("Private key is invalid"),
+        shouldThrow: false,
+      });
+
+      throw new Error(errorMessage);
+    }
+
     let signer: ethers.Wallet;
     try {
-      signer = new ethers.Wallet(privateKey, provider);
+      signer = new ethers.Wallet(parsedPrivateKey, provider);
     } catch (error) {
       const errorMessage = handleError({
         context: "Failed to create signer from private key",

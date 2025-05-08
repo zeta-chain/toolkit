@@ -35,3 +35,21 @@ export const numericStringSchema = z
   .refine((val) => /^\d+$/.test(val), {
     message: "Must be a string containing only numbers",
   });
+export const evmPrivateKeySchema = z
+  .string()
+  .refine((val) => /^(0x)?[0-9a-fA-F]{64}$/.test(val), {
+    message: "Must be a 64-character hex string (optional 0x prefix)",
+  })
+  .transform((val) => (val.startsWith("0x") ? val : `0x${val}`))
+  // Add cryptographic validation
+  .refine(
+    (val) => {
+      try {
+        new ethers.Wallet(val); // Throws if invalid
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: "Invalid private key (must be in secp256k1 range)" }
+  );
