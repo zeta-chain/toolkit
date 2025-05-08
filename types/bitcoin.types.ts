@@ -80,3 +80,15 @@ export const depositAndCallOptionsSchema = z
       path: ["values"],
     }
   );
+
+export const depositOptionsSchema = z.object({
+  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Amount must be a valid positive number",
+  }),
+  api: z.string().url(),
+  data: z.string().optional(),
+  gateway: z.string(),
+  privateKey: z.string().min(1, "Private key is required"),
+  receiver: z.string().optional(),
+  revertAddress: z.string().optional(),
+});
