@@ -25,7 +25,7 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 /**
- * Main function that executes the deposit-and-call operation.
+ * Main function that executes the deposit operation.
  * Creates and broadcasts both commit and reveal transactions to perform a cross-chain call.
  *
  * @param options - Command options including amounts, addresses, and contract parameters
@@ -127,10 +127,6 @@ Raw Inscription Data: ${data.toString("hex")}
   console.log("Reveal TXID:", revealTxid);
 };
 
-/**
- * Command definition for deposit-and-call
- * This allows users to deposit BTC and call a contract on ZetaChain using Bitcoin inscriptions
- */
 export const depositCommand = new Command()
   .name("deposit")
   .description("Deposit BTC to ZetaChain")
