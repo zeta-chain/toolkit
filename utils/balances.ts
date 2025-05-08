@@ -615,6 +615,15 @@ export const getSplTokenBalances = async (
   return balances;
 };
 
+/**
+ * Checks if a wallet has sufficient balance for a transaction
+ *
+ * @param provider - The ethers Provider to use for blockchain interactions
+ * @param signer - The wallet to check the balance for
+ * @param amount - The amount to check against the balance as a string
+ * @param erc20 - Optional ERC20 token address. If not provided, checks native token balance
+ * @returns Object containing the current balance, token decimals, and whether there's enough balance
+ */
 export const hasSufficientBalanceEvm = async (
   provider: ethers.Provider,
   signer: ethers.Wallet,
