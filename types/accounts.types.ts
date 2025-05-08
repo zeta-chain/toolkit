@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-import { evmAddressSchema } from "../types/shared.schema";
-
-export interface AccountData {
-  [key: string]: string | undefined;
-}
-
+import { evmAddressSchema } from "./shared.schema";
 export interface AccountInfo {
   address: string;
   name: string;
@@ -16,7 +11,12 @@ export interface AccountDetails {
   [key: string]: string;
 }
 
-export const AvailableAccountTypes = ["evm", "solana", "bitcoin"] as const;
+export const AvailableAccountTypes = [
+  "evm",
+  "solana",
+  "sui",
+  "bitcoin",
+] as const;
 
 // Define schemas for account data types
 const evmAccountDataSchema = z.object({
@@ -45,18 +45,28 @@ export type EVMAccountData = z.infer<typeof evmAccountDataSchema>;
 export type SolanaAccountData = z.infer<typeof solanaAccountDataSchema>;
 export type BitcoinAccountData = z.infer<typeof bitcoinAccountDataSchema>;
 
-// Union schema for all account types
-export const accountDataSchema = z.union([
-  evmAccountDataSchema,
-  solanaAccountDataSchema,
-  bitcoinAccountDataSchema,
-]);
-
 export const accountNameSchema = z
   .string()
   .min(1, "Account name is required")
   .regex(/^[a-zA-Z0-9]+$/, "Account name can only contain letters and numbers");
 
+// Define unified schema for all account types
+export const accountDataSchema = z.object({
+  address: z.string().optional(),
+  mainnetAddress: z.string().optional(),
+  mainnetWIF: z.string().optional(),
+  mnemonic: z.string().optional(),
+  name: z.string().optional(),
+  privateKey: z.string(),
+  privateKeyBytes: z.string().optional(),
+  privateKeyEncoding: z.string().optional(),
+  privateKeyScheme: z.string().optional(),
+  publicKey: z.string().optional(),
+  testnetAddress: z.string().optional(),
+  testnetWIF: z.string().optional(),
+});
+
+export type AccountData = z.infer<typeof accountDataSchema>;
 export const accountTypeSchema = z.enum(AvailableAccountTypes, {
   errorMap: () => ({
     message: `Type must be one of the following: ${AvailableAccountTypes.join(

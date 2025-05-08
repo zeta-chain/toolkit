@@ -74,12 +74,12 @@ const createEVMAccount = (): AccountData => {
 const createSolanaAccount = (): AccountData => {
   const keypair = Keypair.generate();
   return {
-    publicKey: keypair.publicKey.toBase58(),
-    secretKey: Buffer.from(keypair.secretKey).toString("hex"),
+    address: keypair.publicKey.toBase58(),
+    privateKey: Buffer.from(keypair.secretKey).toString("hex"),
   };
 };
 
-const createBitcoinAccount = (): AccountData => {
+export const createBitcoinAccount = (): AccountData => {
   const ECPair = ECPairFactory(ecc);
 
   // Generate a random keypair
@@ -121,7 +121,7 @@ const createBitcoinAccount = (): AccountData => {
   return {
     mainnetAddress,
     mainnetWIF,
-    privateKeyBytes,
+    privateKey: privateKeyBytes,
     testnetAddress,
     testnetWIF,
   };
@@ -199,7 +199,7 @@ export const listChainAccounts = (
     if (chainType === "evm") {
       return [
         {
-          address: (keyData as EVMAccountData).address,
+          address: (keyData as AccountData).address,
           name,
           type: chainType,
         },
@@ -207,7 +207,15 @@ export const listChainAccounts = (
     } else if (chainType === "solana") {
       return [
         {
-          address: (keyData as SolanaAccountData).publicKey,
+          address: (keyData as AccountData).address,
+          name,
+          type: chainType,
+        },
+      ];
+    } else if (chainType === "sui") {
+      return [
+        {
+          address: (keyData as AccountData).address,
           name,
           type: chainType,
         },
@@ -216,12 +224,12 @@ export const listChainAccounts = (
       // Return both mainnet and testnet addresses as separate entries
       return [
         {
-          address: (keyData as BitcoinAccountData).mainnetAddress,
+          address: (keyData as AccountData).mainnetAddress,
           name,
           type: "bitcoin",
         },
         {
-          address: (keyData as BitcoinAccountData).testnetAddress,
+          address: (keyData as AccountData).testnetAddress,
           name,
           type: "bitcoin",
         },
@@ -231,5 +239,7 @@ export const listChainAccounts = (
     return [];
   });
 
-  return accounts;
+  return accounts.filter(
+    (account): account is AccountInfo => account.address !== undefined
+  );
 };

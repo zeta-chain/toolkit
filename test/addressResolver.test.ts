@@ -27,6 +27,12 @@ jest.mock("../utils/keyPaths", () => ({
   getAccountKeyPath: jest.fn().mockReturnValue("/mock/path/account.json"),
 }));
 
+jest.mock("../utils/accounts", () => ({
+  accountExists: jest.fn(),
+  getAccountData: jest.fn(),
+}));
+
+import { accountExists, getAccountData } from "../utils/accounts";
 import {
   resolveBitcoinAddress,
   resolveEvmAddress,
@@ -64,6 +70,12 @@ describe("Address Resolver Utils", () => {
 
     // Mock safeReadFile to return empty string by default
     (safeReadFile as jest.Mock).mockReturnValue("{}");
+
+    // Mock accountExists to return false by default
+    (accountExists as jest.Mock).mockReturnValue(false);
+
+    // Mock getAccountData to return undefined by default
+    (getAccountData as jest.Mock).mockReturnValue(undefined);
   });
 
   describe("resolveEvmAddress", () => {
@@ -79,13 +91,11 @@ describe("Address Resolver Utils", () => {
 
     it("should derive address from account name", () => {
       // Setup mocks for account data
-      (safeExists as jest.Mock).mockReturnValue(true);
-      (safeReadFile as jest.Mock).mockReturnValue(
-        JSON.stringify({
-          address: DERIVED_EVM_ADDRESS,
-          privateKey: VALID_EVM_PRIVATE_KEY,
-        })
-      );
+      (accountExists as jest.Mock).mockReturnValue(true);
+      (getAccountData as jest.Mock).mockReturnValue({
+        address: DERIVED_EVM_ADDRESS,
+        privateKey: VALID_EVM_PRIVATE_KEY,
+      });
 
       const result = resolveEvmAddress({ accountName: "testAccount" });
       expect(result).toBe(DERIVED_EVM_ADDRESS);
@@ -139,13 +149,11 @@ describe("Address Resolver Utils", () => {
 
     it("should derive address from account name", () => {
       // Setup mocks for account data
-      (safeExists as jest.Mock).mockReturnValue(true);
-      (safeReadFile as jest.Mock).mockReturnValue(
-        JSON.stringify({
-          publicKey: SOLANA_PUBLIC_KEY,
-          secretKey: VALID_SOLANA_PRIVATE_KEY,
-        })
-      );
+      (accountExists as jest.Mock).mockReturnValue(true);
+      (getAccountData as jest.Mock).mockReturnValue({
+        publicKey: SOLANA_PUBLIC_KEY,
+        secretKey: VALID_SOLANA_PRIVATE_KEY,
+      });
 
       const result = resolveSolanaAddress({ accountName: "testAccount" });
       expect(result).toBe(SOLANA_PUBLIC_KEY);
@@ -231,17 +239,15 @@ describe("Address Resolver Utils", () => {
 
     it("should resolve mainnet address from account data", () => {
       // Setup mocks for account data
-      (safeExists as jest.Mock).mockReturnValue(true);
-      (safeReadFile as jest.Mock).mockReturnValue(
-        JSON.stringify({
-          mainnetAddress: VALID_BTC_MAINNET_ADDRESS,
-          mainnetWIF: "L1YYZngaKvau5egL8WSMnB9qoxoVGnkh1qVxe3SEsLWGpLCEMgpV",
-          privateKeyBytes:
-            "1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd",
-          testnetAddress: VALID_BTC_TESTNET_ADDRESS,
-          testnetWIF: "cVVvUsNHhbrgd7aW3gnuGo2qJM45LhHhTCVXrDSJDDcNGE6qmyCs",
-        })
-      );
+      (accountExists as jest.Mock).mockReturnValue(true);
+      (getAccountData as jest.Mock).mockReturnValue({
+        mainnetAddress: VALID_BTC_MAINNET_ADDRESS,
+        mainnetWIF: "L1YYZngaKvau5egL8WSMnB9qoxoVGnkh1qVxe3SEsLWGpLCEMgpV",
+        privateKeyBytes:
+          "1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd",
+        testnetAddress: VALID_BTC_TESTNET_ADDRESS,
+        testnetWIF: "cVVvUsNHhbrgd7aW3gnuGo2qJM45LhHhTCVXrDSJDDcNGE6qmyCs",
+      });
 
       const result = resolveBitcoinAddress({
         accountName: "testAccount",
@@ -252,17 +258,15 @@ describe("Address Resolver Utils", () => {
 
     it("should resolve testnet address from account data", () => {
       // Setup mocks for account data
-      (safeExists as jest.Mock).mockReturnValue(true);
-      (safeReadFile as jest.Mock).mockReturnValue(
-        JSON.stringify({
-          mainnetAddress: VALID_BTC_MAINNET_ADDRESS,
-          mainnetWIF: "L1YYZngaKvau5egL8WSMnB9qoxoVGnkh1qVxe3SEsLWGpLCEMgpV",
-          privateKeyBytes:
-            "1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd",
-          testnetAddress: VALID_BTC_TESTNET_ADDRESS,
-          testnetWIF: "cVVvUsNHhbrgd7aW3gnuGo2qJM45LhHhTCVXrDSJDDcNGE6qmyCs",
-        })
-      );
+      (accountExists as jest.Mock).mockReturnValue(true);
+      (getAccountData as jest.Mock).mockReturnValue({
+        mainnetAddress: VALID_BTC_MAINNET_ADDRESS,
+        mainnetWIF: "L1YYZngaKvau5egL8WSMnB9qoxoVGnkh1qVxe3SEsLWGpLCEMgpV",
+        privateKeyBytes:
+          "1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd",
+        testnetAddress: VALID_BTC_TESTNET_ADDRESS,
+        testnetWIF: "cVVvUsNHhbrgd7aW3gnuGo2qJM45LhHhTCVXrDSJDDcNGE6qmyCs",
+      });
 
       const result = resolveBitcoinAddress({
         accountName: "testAccount",
