@@ -26,7 +26,7 @@ const depositOptionsSchema = z
     gasLimit: numericStringSchema.optional(),
     gasPrice: numericStringSchema.optional(),
     gateway: evmAddressSchema.optional(),
-    name: z.string().default("default"),
+    name: z.string().default(DEFAULT_ACCOUNT_NAME),
     network: z.enum(["mainnet", "testnet"]).default("testnet"),
     onRevertGasLimit: numericStringSchema.default("200000"),
     privateKey: z.string().optional(),
@@ -36,7 +36,7 @@ const depositOptionsSchema = z
     rpc: z.string().url().optional(),
     yes: z.boolean().default(false),
   })
-  .refine((data) => !(data.privateKey && data.name !== "default"), {
+  .refine((data) => !(data.privateKey && data.name !== DEFAULT_ACCOUNT_NAME), {
     message: "Only one of --name or --private-key should be provided",
     path: ["name", "privateKey"],
   });
