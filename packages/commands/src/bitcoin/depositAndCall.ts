@@ -1,7 +1,7 @@
 import confirm from "@inquirer/confirm";
 import axios from "axios";
 import * as bitcoin from "bitcoinjs-lib";
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
@@ -50,21 +50,33 @@ const main = async (options: DepositAndCallOptions) => {
     await axios.get<BtcUtxo[]>(`${options.api}/address/${address}/utxo`)
   ).data;
 
-  // Encode contract call data for inscription
-  const encodedPayload = new ethers.AbiCoder().encode(
-    options.types,
-    options.values
-  );
-  const inscriptionData = Buffer.from(
-    bitcoinEncode(
-      options.receiver,
-      Buffer.from(trimOx(encodedPayload), "hex"),
-      options.revertAddress,
-      OpCode.DepositAndCall,
-      EncodingFormat.EncodingFmtABI
-    ),
-    "hex"
-  );
+  let data;
+  let payload;
+  if (
+    options.types &&
+    options.values &&
+    options.receiver &&
+    options.revertAddress
+  ) {
+    // Encode contract call data for inscription
+    payload = new ethers.AbiCoder().encode(options.types, options.values);
+    data = Buffer.from(
+      bitcoinEncode(
+        options.receiver,
+        Buffer.from(trimOx(payload), "hex"),
+        options.revertAddress,
+        OpCode.DepositAndCall,
+        EncodingFormat.EncodingFmtABI
+      ),
+      "hex"
+    );
+  } else if (options.data) {
+    data = Buffer.from(options.data, "hex");
+  } else {
+    throw new Error(
+      "Provide either data or types, values, receiver, and revert address"
+    );
+  }
 
   // Convert BTC amount to satoshis
   const amountSatBig = ethers.parseUnits(options.amount, 8);
@@ -81,9 +93,9 @@ Gateway: ${options.gateway}
 Universal Contract: ${options.receiver}
 Revert Address: ${options.revertAddress}
 Operation: DepositAndCall
-Encoded Message: ${encodedPayload}
+Encoded Message: ${payload || "encoded in raw inscription data"}
 Encoding Format: ABI
-Raw Inscription Data: ${inscriptionData.toString("hex")}
+Raw Inscription Data: ${data.toString("hex")}
 `);
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 
@@ -92,7 +104,7 @@ Raw Inscription Data: ${inscriptionData.toString("hex")}
     key,
     utxos,
     address!,
-    inscriptionData,
+    data,
     options.api,
     amountSat
   );
@@ -136,18 +148,26 @@ export const depositAndCallCommand = new Command()
   .description(
     "Deposit BTC and call a contract on ZetaChain (using inscriptions)"
   )
-  .requiredOption("-r, --receiver <address>", "ZetaChain receiver address")
+  .option("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
     "Bitcoin gateway (TSS) address",
     "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
   )
-  .requiredOption("-t, --types <types...>", "ABI types")
-  .requiredOption("-v, --values <values...>", "Values corresponding to types")
-  .requiredOption("-a, --revert-address <address>", "Revert address")
+  .option("-t, --types <types...>", "ABI types")
+  .option("-v, --values <values...>", "Values corresponding to types")
+  .option("-a, --revert-address <address>", "Revert address")
   .requiredOption("--amount <btcAmount>", "BTC amount to inscribe (in BTC)")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
   .requiredOption("--private-key <key>", "Bitcoin private key")
+  .addOption(
+    new Option("--data <data>", "Pass raw data").conflicts([
+      "types",
+      "values",
+      "revert-address",
+      "receiver",
+    ])
+  )
   .action(async (opts) => {
     const validated = validateAndParseSchema(
       opts,

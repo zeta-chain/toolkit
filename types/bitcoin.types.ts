@@ -55,12 +55,28 @@ export const depositAndCallOptionsSchema = z
     api: z.string().url(),
     gateway: z.string(),
     privateKey: z.string().min(1, "Private key is required"),
-    receiver: z.string().min(1, "Receiver address is required"),
-    revertAddress: z.string(),
-    types: z.array(z.string()),
-    values: z.array(z.string()),
+    receiver: z.string().optional(),
+    revertAddress: z.string().optional(),
+    types: z.array(z.string()).optional(),
+    values: z.array(z.string()).optional(),
+    data: z.string().optional(),
   })
-  .refine((data) => data.types.length === data.values.length, {
-    message: "The 'types' and 'values' arrays must have the same length",
-    path: ["values"],
-  });
+  .refine(
+    (data) => {
+      // Only check length equality if both arrays exist
+      if (data.types && data.values) {
+        return data.types.length === data.values.length;
+      }
+      // If one exists and the other doesn't, that's invalid
+      if ((data.types && !data.values) || (!data.types && data.values)) {
+        return false;
+      }
+      // If both are undefined/not provided, that's valid
+      return true;
+    },
+    {
+      message:
+        "If provided, the 'types' and 'values' arrays must both exist and have the same length",
+      path: ["values"],
+    }
+  );
