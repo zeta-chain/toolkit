@@ -37,8 +37,8 @@ const depositOptionsSchema = z
     yes: z.boolean().default(false),
   })
   .refine((data) => !(data.keyRaw && data.name !== "default"), {
-    message: "Only one of --key or --key-raw should be provided",
-    path: ["key", "keyRaw"],
+    message: "Only one of --name or --key-raw should be provided",
+    path: ["name", "keyRaw"],
   });
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
