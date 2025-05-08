@@ -17,6 +17,7 @@ import { ZetaChainClient } from "../../../client/src/client";
 
 const depositOptionsSchema = z
   .object({
+    abortAddress: evmAddressSchema,
     amount: validAmountSchema,
     callOnRevert: z.boolean().default(false),
     chainId: numericStringSchema,
