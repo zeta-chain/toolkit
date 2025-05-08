@@ -102,8 +102,10 @@ export const makeCommitTransaction = async (
   amountSat: number,
   feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
 ) => {
-  const DUST_THRESHOLD_P2TR = BITCOIN_LIMITS.DUST_THRESHOLD.P2TR;
-  if (amountSat < DUST_THRESHOLD_P2TR) throw new Error("Amount below dust");
+  const effectiveAmount = Math.max(
+    amountSat,
+    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE
+  );
 
   /* pick utxos */
   utxos.sort((a, b) => a.value - b.value);
@@ -112,10 +114,10 @@ export const makeCommitTransaction = async (
   for (const u of utxos) {
     inTotal += u.value;
     picks.push(u);
-    if (inTotal >= amountSat + feeSat) break;
+    if (inTotal >= effectiveAmount + feeSat) break;
   }
-  if (inTotal < amountSat + feeSat) throw new Error("Not enough funds");
-  const changeSat = inTotal - amountSat - feeSat;
+  if (inTotal < effectiveAmount + feeSat) throw new Error("Not enough funds");
+  const changeSat = inTotal - effectiveAmount - feeSat;
 
   /* leaf script */
   const scriptItems = [
@@ -150,7 +152,7 @@ export const makeCommitTransaction = async (
   if (!commitScript || !witness) throw new Error("taproot build failed");
 
   const psbt = new bitcoin.Psbt({ network: SIGNET });
-  psbt.addOutput({ script: commitScript, value: amountSat });
+  psbt.addOutput({ script: commitScript, value: effectiveAmount });
   if (changeSat > 0)
     psbt.addOutput({ address: changeAddress, value: changeSat });
   for (const u of picks) {
@@ -226,11 +228,15 @@ export const makeRevealTransaction = (
   const vsize = txOverhead + inputVbytes + outputVbytes;
   const feeSat = Math.ceil(vsize * feeRate);
 
-  const DUST_THRESHOLD_P2WPKH = BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH;
-  if (commitValue - feeSat < DUST_THRESHOLD_P2WPKH)
-    throw new Error("reveal would be dust");
+  // Ensure we have enough value for the output after fee
+  const outputValue = commitValue - feeSat;
+  if (outputValue < BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH) {
+    throw new Error(
+      `Insufficient value in commit output (${commitValue} sat) to cover reveal fee (${feeSat} sat) and maintain minimum output (${BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH} sat)`
+    );
+  }
 
-  psbt.addOutput({ address: to, value: commitValue - feeSat });
+  psbt.addOutput({ address: to, value: outputValue });
 
   psbt.signInput(0, key);
   psbt.finalizeAllInputs();
