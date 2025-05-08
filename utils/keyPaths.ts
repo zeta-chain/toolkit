@@ -47,6 +47,7 @@ export const readKeyFromStore = (keyName: string): string => {
   }
 
   const keyData: KeyData = safeReadJson<KeyData>(keyPath);
+
   if (!keyData.privateKey) {
     throw new Error(`Private key not found in key file ${keyPath}`);
   }

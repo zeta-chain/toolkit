@@ -25,3 +25,13 @@ export const bigNumberStringSchema = z
 
 export const numberArraySchema = z.array(z.number());
 export const stringArraySchema = z.array(z.string());
+export const validAmountSchema = z
+  .string()
+  .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Amount must be a valid positive number",
+  });
+export const numericStringSchema = z
+  .string()
+  .refine((val) => /^\d+$/.test(val), {
+    message: "Must be a string containing only numbers",
+  });

@@ -1,7 +1,13 @@
 import confirm from "@inquirer/confirm";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
+import { z } from "zod";
 
+import {
+  evmAddressSchema,
+  numericStringSchema,
+  validAmountSchema,
+} from "../../../../types/shared.schema";
 import {
   printEvmTransactionDetails,
   readKeyFromStore,
@@ -10,31 +16,40 @@ import { hasSufficientBalanceEvm } from "../../../../utils/balances";
 import { getRpcUrl } from "../../../../utils/chains";
 import { ZetaChainClient } from "../../../client/src/client";
 
-const main = async (options: {
-  amount: string;
-  callOnRevert: boolean;
-  chainId: string;
-  erc20?: string;
-  gasLimit: string;
-  gasPrice: string;
-  gateway?: string;
-  key: string;
-  keyRaw?: string;
-  network: string;
-  onRevertGasLimit: string;
-  receiver: string;
-  revertAddress: string;
-  revertMessage: string;
-  rpc: string;
-  yes: boolean;
-}) => {
+const depositOptionsSchema = z
+  .object({
+    amount: validAmountSchema,
+    callOnRevert: z.boolean().default(false),
+    chainId: numericStringSchema,
+    erc20: evmAddressSchema.optional(),
+    gasLimit: numericStringSchema.optional(),
+    gasPrice: numericStringSchema.optional(),
+    gateway: evmAddressSchema.optional(),
+    keyRaw: z.string().optional(),
+    name: z.string().default("default"),
+    network: z.enum(["mainnet", "testnet"]).default("testnet"),
+    onRevertGasLimit: numericStringSchema.default("200000"),
+    receiver: evmAddressSchema,
+    revertAddress: evmAddressSchema.optional(),
+    revertMessage: z.string().default(""),
+    rpc: z.string().optional(),
+    yes: z.boolean().default(false),
+  })
+  .refine((data) => !(data.keyRaw && data.name !== "default"), {
+    message: "Only one of --key or --key-raw should be provided",
+    path: ["key", "keyRaw"],
+  });
+
+type DepositOptions = z.infer<typeof depositOptionsSchema>;
+
+const main = async (options: DepositOptions) => {
   try {
     const chainId = parseInt(options.chainId);
     const networkType = options.network;
     const rpcUrl = options.rpc || getRpcUrl(chainId);
     const provider = new ethers.JsonRpcProvider(rpcUrl);
 
-    const privateKey = options.keyRaw || readKeyFromStore(options.key);
+    const privateKey = options.keyRaw || readKeyFromStore(options.name);
 
     let signer;
     try {
@@ -101,7 +116,7 @@ const main = async (options: {
       revertOptions: {
         callOnRevert: options.callOnRevert,
         onRevertGasLimit: options.onRevertGasLimit,
-        revertAddress: signer.address,
+        revertAddress: options.revertAddress || signer.address,
         revertMessage: options.revertMessage,
       },
       txOptions: {
@@ -127,7 +142,7 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--chain-id <chainId>", "Chain ID of the network")
   .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
   .addOption(
-    new Option("--key <key>", "Key name to be used from the key store")
+    new Option("--name <key>", "Account name")
       .default("default")
       .conflicts(["key-raw"])
   )
@@ -161,4 +176,7 @@ export const depositCommand = new Command("deposit")
   .option("--gas-limit <limit>", "Gas limit for the transaction")
   .option("--gas-price <price>", "Gas price for the transaction")
   .option("--yes", "Skip confirmation prompt", false)
-  .action(main);
+  .action(async (options) => {
+    const validatedOptions = depositOptionsSchema.parse(options);
+    await main(validatedOptions);
+  });
