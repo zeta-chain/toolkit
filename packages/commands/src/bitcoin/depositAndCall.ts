@@ -157,7 +157,7 @@ export const depositAndCallCommand = new Command()
   .option("-t, --types <types...>", "ABI types")
   .option("-v, --values <values...>", "Values corresponding to types")
   .option("-a, --revert-address <address>", "Revert address")
-  .requiredOption("--amount <btcAmount>", "BTC amount to inscribe (in BTC)")
+  .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
   .requiredOption("--private-key <key>", "Bitcoin private key")
   .addOption(
