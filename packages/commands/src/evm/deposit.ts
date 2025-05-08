@@ -5,41 +5,8 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 
 import { readKeyFromStore } from "../../../../utils";
+import { hasSufficientBalanceEvm } from "../../../../utils/balances";
 import { ZetaChainClient } from "../../../client/src/client";
-
-const checkBalance = async (
-  provider: ethers.Provider,
-  signer: ethers.Wallet,
-  amount: string,
-  erc20?: string
-): Promise<void> => {
-  let balance: bigint;
-  let decimals = 18;
-  if (erc20) {
-    const erc20Contract = new ethers.Contract(
-      erc20,
-      [
-        "function balanceOf(address) view returns (uint256)",
-        "function decimals() view returns (uint8)",
-      ],
-      provider
-    );
-    balance = (await erc20Contract.balanceOf(signer.address)) as bigint;
-    decimals = (await erc20Contract.decimals()) as number;
-  } else {
-    balance = await provider.getBalance(signer.address);
-  }
-
-  const parsedAmount = ethers.parseUnits(amount, decimals);
-  if (balance < parsedAmount) {
-    throw new Error(
-      `Insufficient balance. Required: ${amount}, Available: ${ethers.formatUnits(
-        balance,
-        decimals
-      )}`
-    );
-  }
-};
 
 const printTransactionDetails = async (
   signer: ethers.Wallet,
@@ -117,7 +84,21 @@ const main = async (options: {
 
     const client = new ZetaChainClient({ network: networkType, signer });
 
-    await checkBalance(provider, signer, options.amount, options.erc20);
+    const { hasEnoughBalance, balance, decimals } =
+      await hasSufficientBalanceEvm(
+        provider,
+        signer,
+        options.amount,
+        options.erc20
+      );
+
+    if (!hasEnoughBalance) {
+      throw new Error(
+        `Insufficient balance. Required: ${
+          options.amount
+        }, Available: ${ethers.formatUnits(balance, decimals)}`
+      );
+    }
 
     await printTransactionDetails(signer, chainId, {
       amount: options.amount,

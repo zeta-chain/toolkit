@@ -614,3 +614,32 @@ export const getSplTokenBalances = async (
 
   return balances;
 };
+
+export const hasSufficientBalanceEvm = async (
+  provider: ethers.Provider,
+  signer: ethers.Wallet,
+  amount: string,
+  erc20?: string
+): Promise<{
+  balance: bigint;
+  decimals: number;
+  hasEnoughBalance: boolean;
+}> => {
+  let balance: bigint;
+  let decimals = 18;
+
+  if (erc20) {
+    const erc20Contract = new ethers.Contract(erc20, ERC20_ABI.abi, provider);
+
+    balance = (await erc20Contract.balanceOf(signer.address)) as bigint;
+    decimals = (await erc20Contract.decimals()) as number;
+  } else {
+    balance = await provider.getBalance(signer.address);
+  }
+
+  const parsedAmount = ethers.parseUnits(amount, decimals);
+
+  const hasEnoughBalance = balance >= parsedAmount;
+
+  return { balance, decimals, hasEnoughBalance };
+};
