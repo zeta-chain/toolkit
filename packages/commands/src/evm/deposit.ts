@@ -33,7 +33,7 @@ const depositOptionsSchema = z
     receiver: evmAddressSchema,
     revertAddress: evmAddressSchema.optional(),
     revertMessage: z.string().default(""),
-    rpc: z.string().optional(),
+    rpc: z.string().url().optional(),
     yes: z.boolean().default(false),
   })
   .refine((data) => !(data.keyRaw && data.name !== "default"), {
