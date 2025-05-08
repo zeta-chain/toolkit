@@ -9,15 +9,19 @@ import {
   evmAddressSchema,
   evmPrivateKeySchema,
   numericStringSchema,
+  stringArraySchema,
   validAmountSchema,
+  validJsonStringSchema,
 } from "../../../../types/shared.schema";
 import { handleError, printEvmTransactionDetails } from "../../../../utils";
 import { getAccountData } from "../../../../utils/accounts";
 import { hasSufficientBalanceEvm } from "../../../../utils/balances";
 import { getRpcUrl } from "../../../../utils/chains";
+import { parseAbiValues } from "../../../../utils/parseAbiValues";
+import { parseJson } from "../../../../utils/parseJson";
 import { ZetaChainClient } from "../../../client/src/client";
 
-const depositOptionsSchema = z
+const depositAndCallOptionsSchema = z
   .object({
     abortAddress: evmAddressSchema,
     amount: validAmountSchema,
@@ -35,6 +39,8 @@ const depositOptionsSchema = z
     revertAddress: evmAddressSchema.optional(),
     revertMessage: z.string().default(""),
     rpc: z.string().url().optional(),
+    types: validJsonStringSchema,
+    values: z.array(z.string()).min(1, "At least one value is required"),
     yes: z.boolean().default(false),
   })
   .refine((data) => !(data.privateKey && data.name !== DEFAULT_ACCOUNT_NAME), {
@@ -42,9 +48,9 @@ const depositOptionsSchema = z
     path: ["name", "privateKey"],
   });
 
-type DepositOptions = z.infer<typeof depositOptionsSchema>;
+type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
-const main = async (options: DepositOptions) => {
+const main = async (options: DepositAndCallOptions) => {
   try {
     const chainId = parseInt(options.chainId);
     const networkType = options.network;
@@ -123,6 +129,11 @@ const main = async (options: DepositOptions) => {
       revertMessage: options.revertMessage,
     });
 
+    console.log(`Contract call details:
+Function parameters: ${options.values.join(", ")}
+Parameter types: ${options.types}
+`);
+
     if (options.yes) {
       console.log("Proceeding with transaction (--yes flag set)");
     } else {
@@ -143,9 +154,13 @@ const main = async (options: DepositOptions) => {
       }
     }
 
-    const tx = await client.evmDeposit({
+    const values = parseAbiValues(options.types, options.values);
+    const parsedTypes = parseJson(options.types, stringArraySchema);
+
+    const tx = await client.evmDepositAndCall({
       amount: options.amount,
       erc20: options.erc20,
+      gatewayEvm: options.gateway,
       receiver: options.receiver,
       revertOptions: {
         abortAddress: options.abortAddress,
@@ -158,11 +173,13 @@ const main = async (options: DepositOptions) => {
         gasLimit: options.gasLimit,
         gasPrice: options.gasPrice,
       },
+      types: parsedTypes,
+      values,
     });
     console.log("Transaction hash:", tx.hash);
   } catch (error) {
     handleError({
-      context: "Error depositing to EVM",
+      context: "Error during depositAndCall to EVM",
       error,
       shouldThrow: false,
     });
@@ -170,8 +187,10 @@ const main = async (options: DepositOptions) => {
   }
 };
 
-export const depositCommand = new Command("deposit")
-  .description("Deposit tokens to ZetaChain from an EVM-compatible chain")
+export const depositAndCallCommand = new Command("deposit-and-call")
+  .description(
+    "Deposit tokens and call a contract on ZetaChain from an EVM-compatible chain"
+  )
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
   .addOption(
     new Option("--network <network>", "Network to use")
@@ -179,7 +198,18 @@ export const depositCommand = new Command("deposit")
       .default("testnet")
   )
   .requiredOption("--chain-id <chainId>", "Chain ID of the network")
-  .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
+  .requiredOption(
+    "--receiver <address>",
+    "Contract address on ZetaChain to call"
+  )
+  .requiredOption(
+    "--types <types>",
+    'JSON string array of parameter types (e.g. \'["uint256","address"]\')'
+  )
+  .requiredOption(
+    "--values <values...>",
+    "Parameter values for the function call"
+  )
   .addOption(
     new Option("--name <name>", "Account name")
       .default(DEFAULT_ACCOUNT_NAME)
@@ -221,6 +251,6 @@ export const depositCommand = new Command("deposit")
   .option("--gas-price <price>", "Gas price for the transaction")
   .option("--yes", "Skip confirmation prompt", false)
   .action(async (options) => {
-    const validatedOptions = depositOptionsSchema.parse(options);
+    const validatedOptions = depositAndCallOptionsSchema.parse(options);
     await main(validatedOptions);
   });
