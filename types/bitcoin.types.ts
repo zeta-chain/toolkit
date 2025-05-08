@@ -53,13 +53,13 @@ export const depositAndCallOptionsSchema = z
       message: "Amount must be a valid positive number",
     }),
     api: z.string().url(),
+    data: z.string().optional(),
     gateway: z.string(),
     privateKey: z.string().min(1, "Private key is required"),
     receiver: z.string().optional(),
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
-    data: z.string().optional(),
   })
   .refine(
     (data) => {
