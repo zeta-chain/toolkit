@@ -1,6 +1,6 @@
 import confirm from "@inquirer/confirm";
 import { Command, Option } from "commander";
-import { ethers } from "ethers";
+import { ethers, ZeroAddress } from "ethers";
 import { z } from "zod";
 
 import { EVMAccountData } from "../../../../types/accounts.types";
@@ -183,6 +183,11 @@ export const depositCommand = new Command("deposit")
   .option(
     "--revert-address <address>",
     "Address to revert to in case of failure (default: signer address)"
+  )
+  .option(
+    "--abort-address <address>",
+    `Address to receive funds if aborted (default: ${ZeroAddress})`,
+    ZeroAddress
   )
   .option(
     "--call-on-revert",
