@@ -14,6 +14,7 @@ import {
   makeCommitTransaction,
   makeRevealTransaction,
   SIGNET,
+  calculateFees,
 } from "../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
@@ -24,12 +25,6 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
-/**
- * Main function that executes the deposit operation.
- * Creates and broadcasts both commit and reveal transactions to perform a cross-chain call.
- *
- * @param options - Command options including amounts, addresses, and contract parameters
- */
 const main = async (options: DepositOptions) => {
   // Initialize Bitcoin library with ECC implementation
   bitcoin.initEccLib(ecc);
@@ -74,6 +69,9 @@ const main = async (options: DepositOptions) => {
   }
   const amountSat = Number(amountSatBig);
 
+  // Calculate total fees
+  const { commitFee, revealFee, totalFee } = calculateFees(data);
+
   // Display transaction information and confirm
   console.log(`
 Network: Signet
@@ -84,6 +82,10 @@ Revert Address: ${revertAddress}
 Operation: Deposit
 Encoding Format: ABI
 Raw Inscription Data: ${data.toString("hex")}
+Fees:
+  - Commit Fee: ${commitFee} sat
+  - Reveal Fee: ${revealFee} sat
+  - Total Fee: ${totalFee} sat (${(totalFee / 100000000).toFixed(8)} BTC)
 `);
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 

@@ -14,6 +14,7 @@ import {
   makeCommitTransaction,
   makeRevealTransaction,
   SIGNET,
+  calculateFees,
 } from "../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
@@ -85,6 +86,9 @@ const main = async (options: DepositAndCallOptions) => {
 
   const notApplicable = "encoded in raw inscription data";
 
+  // Calculate total fees
+  const { commitFee, revealFee, totalFee } = calculateFees(data);
+
   // Display transaction information and confirm
   console.log(`
 Network: Signet
@@ -96,6 +100,10 @@ Operation: DepositAndCall
 Encoded Message: ${payload || notApplicable}
 Encoding Format: ABI
 Raw Inscription Data: ${data.toString("hex")}
+Fees:
+  - Commit Fee: ${commitFee} sat
+  - Reveal Fee: ${revealFee} sat
+  - Total Fee: ${totalFee} sat (${(totalFee / 100000000).toFixed(8)} BTC)
 `);
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 

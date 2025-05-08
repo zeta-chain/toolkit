@@ -243,3 +243,23 @@ export const makeRevealTransaction = (
 
   return psbt.extractTransaction(true).toHex();
 };
+
+/**
+ * Calculates the total fees for a Bitcoin inscription transaction
+ * @param data - The inscription data buffer
+ * @returns Object containing commit fee, reveal fee, and total fee
+ */
+export const calculateFees = (data: Buffer) => {
+  const commitFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
+  const revealFee = Math.ceil(
+    (BITCOIN_TX.TX_OVERHEAD +
+      36 +
+      1 +
+      43 +
+      Math.ceil(data.length / 4) +
+      BITCOIN_TX.P2WPKH_OUTPUT_VBYTES) *
+      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
+  );
+  const totalFee = commitFee + revealFee;
+  return { commitFee, revealFee, totalFee };
+};
