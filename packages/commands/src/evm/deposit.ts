@@ -3,16 +3,14 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { EVMAccountData } from "../../../../types/accounts.types";
 import {
   evmAddressSchema,
   numericStringSchema,
   validAmountSchema,
 } from "../../../../types/shared.schema";
-import {
-  handleError,
-  printEvmTransactionDetails,
-  readKeyFromStore,
-} from "../../../../utils";
+import { handleError, printEvmTransactionDetails } from "../../../../utils";
+import { getAccountData } from "../../../../utils/accounts";
 import { hasSufficientBalanceEvm } from "../../../../utils/balances";
 import { getRpcUrl } from "../../../../utils/chains";
 import { ZetaChainClient } from "../../../client/src/client";
@@ -50,7 +48,19 @@ const main = async (options: DepositOptions) => {
     const rpcUrl = options.rpc || getRpcUrl(chainId);
     const provider = new ethers.JsonRpcProvider(rpcUrl);
 
-    const privateKey = options.keyRaw || readKeyFromStore(options.name);
+    const privateKey =
+      options.keyRaw ||
+      getAccountData<EVMAccountData>("evm", options.name)?.privateKey;
+
+    if (!privateKey) {
+      const errorMessage = handleError({
+        context: "Failed to retrieve private key",
+        error: new Error("Private key not found"),
+        shouldThrow: false,
+      });
+
+      throw new Error(errorMessage);
+    }
 
     let signer: ethers.Wallet;
     try {
