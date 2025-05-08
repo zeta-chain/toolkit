@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import { TokenBalance } from "../types/balances.types";
 import { CCTX } from "../types/trackCCTX.types";
 import { getChainName } from "./chains";
+import { handleError } from "./handleError";
 
 /**
  * Create a shortened hash representation for better readability
@@ -114,12 +115,21 @@ export const printEvmTransactionDetails = async (
 ): Promise<void> => {
   let tokenSymbol = "native tokens";
   if (options.erc20) {
-    const erc20Contract = new ethers.Contract(
-      options.erc20,
-      ERC20_ABI.abi,
-      signer.provider
-    );
-    tokenSymbol = (await erc20Contract.symbol()) as string;
+    try {
+      const erc20Contract = new ethers.Contract(
+        options.erc20,
+        ERC20_ABI.abi,
+        signer.provider
+      );
+      tokenSymbol = (await erc20Contract.symbol()) as string;
+    } catch (error) {
+      handleError({
+        context: "Could not fetch token symbol",
+        error,
+        shouldThrow: false,
+      });
+      tokenSymbol = "ERC20 tokens";
+    }
   }
 
   console.log(`
