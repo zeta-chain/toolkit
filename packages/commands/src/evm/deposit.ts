@@ -9,6 +9,7 @@ import {
   validAmountSchema,
 } from "../../../../types/shared.schema";
 import {
+  handleError,
   printEvmTransactionDetails,
   readKeyFromStore,
 } from "../../../../utils";
@@ -51,15 +52,17 @@ const main = async (options: DepositOptions) => {
 
     const privateKey = options.keyRaw || readKeyFromStore(options.name);
 
-    let signer;
+    let signer: ethers.Wallet;
     try {
       signer = new ethers.Wallet(privateKey, provider);
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      throw new Error(
-        `Failed to create signer from private key: ${errorMessage}`
-      );
+    } catch (error) {
+      const errorMessage = handleError({
+        context: "Failed to create signer from private key",
+        error,
+        shouldThrow: false,
+      });
+
+      throw new Error(errorMessage);
     }
 
     const client = new ZetaChainClient({ network: networkType, signer });
@@ -73,11 +76,16 @@ const main = async (options: DepositOptions) => {
       );
 
     if (!hasEnoughBalance) {
-      throw new Error(
-        `Insufficient balance. Required: ${
-          options.amount
-        }, Available: ${ethers.formatUnits(balance, decimals)}`
-      );
+      handleError({
+        context: "Insufficient balance",
+        error: new Error(
+          `Required: ${options.amount}, Available: ${ethers.formatUnits(
+            balance,
+            decimals
+          )}`
+        ),
+        shouldThrow: true,
+      });
     }
 
     await printEvmTransactionDetails(signer, chainId, {
@@ -126,7 +134,11 @@ const main = async (options: DepositOptions) => {
     });
     console.log("Transaction hash:", tx.hash);
   } catch (error) {
-    console.error("Error depositing to EVM:", error);
+    handleError({
+      context: "Error depositing to EVM",
+      error,
+      shouldThrow: false,
+    });
     process.exit(1);
   }
 };
