@@ -2,47 +2,10 @@ import confirm from "@inquirer/confirm";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 
-import { readKeyFromStore } from "../../../../utils";
+import { printTransactionDetails, readKeyFromStore } from "../../../../utils";
 import { hasSufficientBalanceEvm } from "../../../../utils/balances";
-import { getChainName, getRpcUrl } from "../../../../utils/chains";
+import { getRpcUrl } from "../../../../utils/chains";
 import { ZetaChainClient } from "../../../client/src/client";
-
-const printTransactionDetails = async (
-  signer: ethers.Wallet,
-  chainId: number,
-  options: {
-    amount: string;
-    callOnRevert: boolean;
-    erc20?: string;
-    onRevertGasLimit: string;
-    receiver: string;
-    revertMessage: string;
-  }
-): Promise<void> => {
-  let tokenSymbol = "native tokens";
-  if (options.erc20) {
-    const erc20Contract = new ethers.Contract(
-      options.erc20,
-      ["function symbol() view returns (string)"],
-      signer.provider
-    );
-    tokenSymbol = (await erc20Contract.symbol()) as string;
-  }
-
-  console.log(`
-From:   ${signer.address} on ${getChainName(chainId)}
-To:     ${options.receiver} on ZetaChain
-Amount: ${options.amount} ${tokenSymbol}${
-    !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
-  }
-Call on revert: ${options.callOnRevert ? "true" : "false"}${
-    options.callOnRevert
-      ? `\n  Revert Address:      ${signer.address}
-  On Revert Gas Limit: ${options.onRevertGasLimit}
-  Revert Message:      "${options.revertMessage}"`
-      : ""
-  }\n`);
-};
 
 const main = async (options: {
   amount: string;
