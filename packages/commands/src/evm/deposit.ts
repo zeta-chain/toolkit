@@ -26,19 +26,19 @@ const depositOptionsSchema = z
     gasLimit: numericStringSchema.optional(),
     gasPrice: numericStringSchema.optional(),
     gateway: evmAddressSchema.optional(),
-    keyRaw: z.string().optional(),
     name: z.string().default("default"),
     network: z.enum(["mainnet", "testnet"]).default("testnet"),
     onRevertGasLimit: numericStringSchema.default("200000"),
+    privateKey: z.string().optional(),
     receiver: evmAddressSchema,
     revertAddress: evmAddressSchema.optional(),
     revertMessage: z.string().default(""),
     rpc: z.string().url().optional(),
     yes: z.boolean().default(false),
   })
-  .refine((data) => !(data.keyRaw && data.name !== "default"), {
-    message: "Only one of --name or --key-raw should be provided",
-    path: ["name", "keyRaw"],
+  .refine((data) => !(data.privateKey && data.name !== "default"), {
+    message: "Only one of --name or --private-key should be provided",
+    path: ["name", "privateKey"],
   });
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
@@ -51,7 +51,7 @@ const main = async (options: DepositOptions) => {
     const provider = new ethers.JsonRpcProvider(rpcUrl);
 
     const privateKey =
-      options.keyRaw ||
+      options.privateKey ||
       getAccountData<EVMAccountData>("evm", options.name)?.privateKey;
 
     if (!privateKey) {
@@ -168,13 +168,13 @@ export const depositCommand = new Command("deposit")
   .addOption(
     new Option("--name <name>", "Account name")
       .default(DEFAULT_ACCOUNT_NAME)
-      .conflicts(["key-raw"])
+      .conflicts(["private-key"])
   )
   .addOption(
     new Option(
-      "--key-raw <key>",
+      "--private-key <key>",
       "Private key for signing transactions"
-    ).conflicts(["key"])
+    ).conflicts(["name"])
   )
   .option("--rpc <url>", "RPC URL for the source chain")
   .option(
