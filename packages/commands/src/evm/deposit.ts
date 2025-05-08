@@ -4,6 +4,7 @@ import { ethers, ZeroAddress } from "ethers";
 import { z } from "zod";
 
 import { EVMAccountData } from "../../../../types/accounts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import {
   evmAddressSchema,
   numericStringSchema,
@@ -165,8 +166,8 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--chain-id <chainId>", "Chain ID of the network")
   .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
   .addOption(
-    new Option("--name <key>", "Account name")
-      .default("default")
+    new Option("--name <name>", "Account name")
+      .default(DEFAULT_ACCOUNT_NAME)
       .conflicts(["key-raw"])
   )
   .addOption(
