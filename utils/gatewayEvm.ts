@@ -1,5 +1,5 @@
 import GatewayEvmAbi from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
-import { AbiCoder, ethers, InterfaceAbi } from "ethers";
+import { AbiCoder, ethers, InterfaceAbi, ZeroAddress } from "ethers";
 
 import { RevertOptions, TxOptions } from "../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../types/parseAbiValues.types";
@@ -23,6 +23,7 @@ export const createRevertData = (
 ): RevertOptions => {
   return {
     ...revertOptions,
+    abortAddress: revertOptions.abortAddress || ZeroAddress,
     revertMessage: toHexString(revertOptions.revertMessage),
   };
 };
