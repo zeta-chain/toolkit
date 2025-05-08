@@ -48,6 +48,27 @@ describe("bitcoinEncode", () => {
     );
   });
 
+  it("should encode with empty payload when no types and values are provided", () => {
+    // Create an empty payload buffer
+    const emptyPayload = Buffer.from([]);
+
+    const result = bitcoinEncode(
+      receiverAddress,
+      emptyPayload,
+      btcRevertAddress
+    );
+
+    // The result should still be a valid encoded string
+    expect(result).toBeTruthy();
+    expect(typeof result).toBe("string");
+
+    // The encoded result should contain the receiver and revert address
+    // but have an empty payload section
+    expect(result.includes(receiverAddress.toLowerCase().substring(2))).toBe(
+      true
+    );
+  });
+
   it("should produce different outputs for different payloads", () => {
     const payload1 = Buffer.from("payload1");
     const payload2 = Buffer.from("payload2");

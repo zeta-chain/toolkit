@@ -7,9 +7,12 @@ import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
 import { z } from "zod";
 
-import { BITCOIN_FEES } from "../../../../types/bitcoin.constants";
+import {
+  BITCOIN_FEES,
+  BITCOIN_LIMITS,
+} from "../../../../types/bitcoin.constants";
 import type { BtcUtxo } from "../../../../types/bitcoin.types";
-import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
+import { callOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   calculateFees,
   makeCommitTransaction,
@@ -24,15 +27,15 @@ import {
 } from "../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
-type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
+type CallOptions = z.infer<typeof callOptionsSchema>;
 
 /**
- * Main function that executes the deposit-and-call operation.
+ * Main function that executes the call operation.
  * Creates and broadcasts both commit and reveal transactions to perform a cross-chain call.
  *
  * @param options - Command options including amounts, addresses, and contract parameters
  */
-const main = async (options: DepositAndCallOptions) => {
+const main = async (options: CallOptions) => {
   // Initialize Bitcoin library with ECC implementation
   bitcoin.initEccLib(ecc);
 
@@ -65,7 +68,7 @@ const main = async (options: DepositAndCallOptions) => {
         options.receiver,
         Buffer.from(trimOx(payload), "hex"),
         options.revertAddress,
-        OpCode.DepositAndCall,
+        OpCode.Call,
         EncodingFormat.EncodingFmtABI
       ),
       "hex"
@@ -78,12 +81,6 @@ const main = async (options: DepositAndCallOptions) => {
     );
   }
 
-  const amountSatBig = ethers.parseUnits(options.amount, 8);
-  if (amountSatBig > Number.MAX_SAFE_INTEGER) {
-    throw new Error("Amount exceeds JS safe-integer range");
-  }
-  const amountSat = Number(amountSatBig);
-
   const notApplicable = "encoded in raw inscription data";
 
   // Calculate total fees
@@ -92,11 +89,10 @@ const main = async (options: DepositAndCallOptions) => {
   // Display transaction information and confirm
   console.log(`
 Network: Signet
-Amount: ${options.amount} BTC
 Gateway: ${options.gateway}
 Universal Contract: ${options.receiver || notApplicable}
 Revert Address: ${options.revertAddress || notApplicable}
-Operation: DepositAndCall
+Operation: Call
 Encoded Message: ${payload || notApplicable}
 Encoding Format: ABI
 Raw Inscription Data: ${data.toString("hex")}
@@ -108,13 +104,16 @@ Fees:
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 
   // Create and broadcast commit transaction
+  const effectiveAmount =
+    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
+
   const commit = await makeCommitTransaction(
     key,
     utxos,
     address!,
     data,
     options.api,
-    amountSat
+    effectiveAmount
   );
 
   const commitTxid = (
@@ -129,7 +128,7 @@ Fees:
   const revealHex = makeRevealTransaction(
     commitTxid,
     0,
-    amountSat,
+    effectiveAmount,
     options.gateway,
     BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE,
     {
@@ -148,14 +147,12 @@ Fees:
 };
 
 /**
- * Command definition for deposit-and-call
- * This allows users to deposit BTC and call a contract on ZetaChain using Bitcoin inscriptions
+ * Command definition for call
+ * This allows users to call contracts on ZetaChain
  */
-export const depositAndCallCommand = new Command()
-  .name("deposit-and-call")
-  .description(
-    "Deposit BTC and call a contract on ZetaChain (using inscriptions)"
-  )
+export const callCommand = new Command()
+  .name("call")
+  .description("Call a contract on ZetaChain")
   .option("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
@@ -165,7 +162,6 @@ export const depositAndCallCommand = new Command()
   .option("-t, --types <types...>", "ABI types")
   .option("-v, --values <values...>", "Values corresponding to types")
   .option("-a, --revert-address <address>", "Revert address")
-  .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
   .requiredOption("--private-key <key>", "Bitcoin private key")
   .addOption(
@@ -177,12 +173,8 @@ export const depositAndCallCommand = new Command()
     ])
   )
   .action(async (opts) => {
-    const validated = validateAndParseSchema(
-      opts,
-      depositAndCallOptionsSchema,
-      {
-        exitOnError: true,
-      }
-    );
+    const validated = validateAndParseSchema(opts, callOptionsSchema, {
+      exitOnError: true,
+    });
     await main(validated);
   });

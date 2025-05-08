@@ -1,6 +1,7 @@
 import { Buffer } from "buffer";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
+import { z } from "zod";
 
 import {
   bitcoinEncode,
@@ -9,25 +10,35 @@ import {
   trimOx,
 } from "../../../../utils/bitcoinEncode";
 
-interface EncodeOptions {
-  format?: string;
-  opCode?: string;
-  receiver: string;
-  revertAddress: string;
-  types: string[];
-  values: string[];
-}
+const encodeOptionsSchema = z.object({
+  format: z.string().optional(),
+  opCode: z.string().optional(),
+  receiver: z.string(),
+  revertAddress: z.string(),
+  types: z.array(z.string()).optional().default([]),
+  values: z.array(z.string()).optional().default([]),
+});
+
+type EncodeOptions = z.infer<typeof encodeOptionsSchema>;
 
 const main = (options: EncodeOptions) => {
-  if (options.types.length !== options.values.length) {
+  // Ensure types and values are arrays even if not provided
+  const types = options.types || [];
+  const values = options.values || [];
+
+  if (types.length !== values.length) {
     throw new Error("Number of types must match number of values");
   }
 
-  const encodedPayload = new ethers.AbiCoder().encode(
-    options.types,
-    options.values
-  );
-  const payloadBuffer = Buffer.from(trimOx(encodedPayload), "hex");
+  let payloadBuffer: Buffer;
+
+  if (types.length === 0 && values.length === 0) {
+    // Empty payload
+    payloadBuffer = Buffer.from([]);
+  } else {
+    const encodedPayload = new ethers.AbiCoder().encode(types, values);
+    payloadBuffer = Buffer.from(trimOx(encodedPayload), "hex");
+  }
 
   // Encode the data
   const result = bitcoinEncode(
@@ -45,8 +56,8 @@ export const encodeCommand = new Command()
   .name("encode")
   .description("Encode data for Bitcoin transactions using ABI encoding")
   .requiredOption("-r, --receiver <address>", "Receiver address")
-  .requiredOption("-t, --types <types...>", "ABI types (e.g. string uint256)")
-  .requiredOption("-v, --values <values...>", "Values corresponding to types")
+  .option("-t, --types <types...>", "ABI types (e.g. string uint256)", [])
+  .option("-v, --values <values...>", "Values corresponding to types", [])
   .requiredOption("-a, --revert-address <address>", "Bitcoin revert address")
   .addOption(
     new Option("-o, --op-code <code>", "Operation code")
