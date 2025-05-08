@@ -118,14 +118,27 @@ export const makeCommitTransaction = async (
   const changeSat = inTotal - amountSat - feeSat;
 
   /* leaf script */
-  const leafScript = bitcoin.script.compile([
+  const scriptItems = [
     key.publicKey.slice(1, 33),
     bitcoin.opcodes.OP_CHECKSIG,
     bitcoin.opcodes.OP_FALSE,
     bitcoin.opcodes.OP_IF,
-    inscriptionData,
-    bitcoin.opcodes.OP_ENDIF,
-  ]);
+  ];
+
+  // Add inscription data in chunks if it exceeds 520 bytes (max script element size)
+  const MAX_SCRIPT_ELEMENT_SIZE = 520;
+  if (inscriptionData.length > MAX_SCRIPT_ELEMENT_SIZE) {
+    for (let i = 0; i < inscriptionData.length; i += MAX_SCRIPT_ELEMENT_SIZE) {
+      const end = Math.min(i + MAX_SCRIPT_ELEMENT_SIZE, inscriptionData.length);
+      scriptItems.push(inscriptionData.slice(i, end));
+    }
+  } else {
+    scriptItems.push(inscriptionData);
+  }
+
+  scriptItems.push(bitcoin.opcodes.OP_ENDIF);
+
+  const leafScript = bitcoin.script.compile(scriptItems);
 
   /* p2tr */
   const { output: commitScript, witness } = bitcoin.payments.p2tr({
