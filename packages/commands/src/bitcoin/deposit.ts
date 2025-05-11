@@ -95,6 +95,7 @@ const main = async (options: DepositOptions) => {
 Network: Signet
 Amount: ${options.amount} BTC
 Gateway: ${options.gateway}
+Sender: ${address}
 Universal Contract: ${options.receiver}
 Revert Address: ${revertAddress}
 Operation: Deposit

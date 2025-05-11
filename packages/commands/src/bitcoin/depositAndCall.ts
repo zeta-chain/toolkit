@@ -23,6 +23,9 @@ import {
   trimOx,
 } from "../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { getAccountData } from "../../../../utils/accounts";
+import { handleError } from "../../../../utils/handleError";
+import { EVMAccountData } from "../../../../types/accounts.types";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
@@ -36,11 +39,26 @@ const main = async (options: DepositAndCallOptions) => {
   // Initialize Bitcoin library with ECC implementation
   bitcoin.initEccLib(ecc);
 
+  const privateKey =
+    options.privateKey ||
+    getAccountData<EVMAccountData>("bitcoin", options.name)?.privateKey;
+
+  if (!privateKey) {
+    const errorMessage = handleError({
+      context: "Failed to retrieve private key",
+      error: new Error("Private key not found"),
+      shouldThrow: false,
+    });
+
+    throw new Error(errorMessage);
+  }
+
   // Set up Bitcoin key pair
   const ECPair = ECPairFactory(ecc);
-  const key = ECPair.fromPrivateKey(Buffer.from(options.privateKey, "hex"), {
+  const key = ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"), {
     network: SIGNET,
   });
+
   const { address } = bitcoin.payments.p2wpkh({
     network: SIGNET,
     pubkey: key.publicKey,
@@ -94,6 +112,7 @@ const main = async (options: DepositAndCallOptions) => {
 Network: Signet
 Amount: ${options.amount} BTC
 Gateway: ${options.gateway}
+Sender: ${address}
 Universal Contract: ${options.receiver || notApplicable}
 Revert Address: ${options.revertAddress || notApplicable}
 Operation: DepositAndCall
@@ -162,12 +181,13 @@ export const depositAndCallCommand = new Command()
     "Bitcoin gateway (TSS) address",
     "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
   )
+  .option("-n, --name <name>", "Bitcoin account name")
   .option("-t, --types <types...>", "ABI types")
   .option("-v, --values <values...>", "Values corresponding to types")
   .option("-a, --revert-address <address>", "Revert address")
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
-  .requiredOption("--private-key <key>", "Bitcoin private key")
+  .option("--private-key <key>", "Bitcoin private key")
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
       "types",
