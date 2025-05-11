@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { validAmountSchema } from "./shared.schema";
+
 export interface BtcUtxo {
   status: {
     block_hash: string;
@@ -46,9 +48,7 @@ export interface BtcTxById {
 
 export const depositAndCallOptionsSchema = z
   .object({
-    amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Amount must be a valid positive number",
-    }),
+    amount: validAmountSchema,
     api: z.string().url(),
     data: z.string().optional(),
     gateway: z.string(),

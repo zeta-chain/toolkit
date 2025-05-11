@@ -56,7 +56,8 @@ export const evmDeposit = async function (
     const value = ethers.parseUnits(args.amount, decimals);
 
     // Approve the gateway to spend the tokens
-    await erc20Contract.approve(gatewayEvmAddress, value);
+    const approval = await erc20Contract.approve(gatewayEvmAddress, value);
+    await approval.wait();
 
     // Generate calldata for deposit
     const callData = generateEvmDepositData({
