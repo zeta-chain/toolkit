@@ -62,28 +62,34 @@ export const getAccountData = <
   }
 };
 
-const createEVMAccount = (): AccountData => {
-  const wallet = ethers.Wallet.createRandom();
+const createEVMAccount = (privateKey?: string): AccountData => {
+  const wallet = privateKey
+    ? new ethers.Wallet(privateKey)
+    : ethers.Wallet.createRandom();
   return {
     address: wallet.address,
-    mnemonic: wallet.mnemonic?.phrase,
+    mnemonic: "mnemonic" in wallet ? wallet.mnemonic?.phrase : undefined,
     privateKey: wallet.privateKey,
   };
 };
 
-const createSolanaAccount = (): AccountData => {
-  const keypair = Keypair.generate();
+const createSolanaAccount = (privateKey?: string): AccountData => {
+  const keypair = privateKey
+    ? Keypair.fromSecretKey(Buffer.from(privateKey, "hex"))
+    : Keypair.generate();
   return {
     publicKey: keypair.publicKey.toBase58(),
     secretKey: Buffer.from(keypair.secretKey).toString("hex"),
   };
 };
 
-const createBitcoinAccount = (): AccountData => {
+const createBitcoinAccount = (privateKey?: string): AccountData => {
   const ECPair = ECPairFactory(ecc);
 
-  // Generate a random keypair
-  const keyPair = ECPair.makeRandom();
+  // Generate or use provided keypair
+  const keyPair = privateKey
+    ? ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"))
+    : ECPair.makeRandom();
 
   // Store the raw private key bytes (hex encoded for storage)
   const privateKeyBytes = keyPair.privateKey?.toString("hex") || "";
@@ -129,7 +135,8 @@ const createBitcoinAccount = (): AccountData => {
 
 export const createAccountForType = async (
   type: (typeof AvailableAccountTypes)[number],
-  name: string
+  name: string,
+  privateKey?: string
 ): Promise<void> => {
   try {
     const baseDir = getAccountTypeDir(type);
@@ -151,12 +158,12 @@ export const createAccountForType = async (
     let keyData: AccountData;
 
     if (type === "evm") {
-      keyData = createEVMAccount();
+      keyData = createEVMAccount(privateKey);
     } else if (type === "solana") {
-      keyData = createSolanaAccount();
+      keyData = createSolanaAccount(privateKey);
     } else if (type === "bitcoin") {
       // Default to testnet for Bitcoin
-      keyData = createBitcoinAccount();
+      keyData = createBitcoinAccount(privateKey);
     } else {
       // Type assertion to help TypeScript understand this isn't 'never'
       throw new Error(`Unsupported account type: ${type as string}`);
