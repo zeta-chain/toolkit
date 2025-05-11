@@ -25,6 +25,7 @@ import {
 } from "../../../../utils/bitcoinEncode";
 import { handleError } from "../../../../utils/handleError";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
@@ -164,12 +165,19 @@ export const depositCommand = new Command()
   .option("-a, --revert-address <address>", "Revert address")
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
-  .option("--private-key <key>", "Bitcoin private key")
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
       "revert-address",
       "receiver",
     ])
+  )
+  .addOption(
+    new Option("--private-key <key>", "Bitcoin private key").conflicts(["name"])
+  )
+  .addOption(
+    new Option("--name <name>", "Account name")
+      .default(DEFAULT_ACCOUNT_NAME)
+      .conflicts(["private-key"])
   )
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, depositOptionsSchema, {

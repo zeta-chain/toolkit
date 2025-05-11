@@ -184,15 +184,15 @@ export const callCommand = new Command()
   .option("-a, --revert-address <address>", "Revert address")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
   .addOption(
-    new Option("--private-key <key>", "Bitcoin private key").conflicts(["name"])
-  )
-  .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
       "types",
       "values",
       "revert-address",
       "receiver",
     ])
+  )
+  .addOption(
+    new Option("--private-key <key>", "Bitcoin private key").conflicts(["name"])
   )
   .addOption(
     new Option("--name <name>", "Account name")

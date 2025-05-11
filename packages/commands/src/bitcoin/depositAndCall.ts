@@ -26,6 +26,7 @@ import {
 } from "../../../../utils/bitcoinEncode";
 import { handleError } from "../../../../utils/handleError";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
@@ -181,13 +182,19 @@ export const depositAndCallCommand = new Command()
     "Bitcoin gateway (TSS) address",
     "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
   )
-  .option("-n, --name <name>", "Bitcoin account name")
   .option("-t, --types <types...>", "ABI types")
   .option("-v, --values <values...>", "Values corresponding to types")
   .option("-a, --revert-address <address>", "Revert address")
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
-  .option("--private-key <key>", "Bitcoin private key")
+  .addOption(
+    new Option("--private-key <key>", "Bitcoin private key").conflicts(["name"])
+  )
+  .addOption(
+    new Option("--name <name>", "Account name")
+      .default(DEFAULT_ACCOUNT_NAME)
+      .conflicts(["private-key"])
+  )
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
       "types",
