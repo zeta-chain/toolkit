@@ -1,34 +1,23 @@
-import confirm from "@inquirer/confirm";
-import axios from "axios";
-import * as bitcoin from "bitcoinjs-lib";
 import { Command, Option } from "commander";
-import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
-import * as ecc from "tiny-secp256k1";
 import { z } from "zod";
 
-import { BitcoinAccountData } from "../../../../types/accounts.types";
-import {
-  BITCOIN_FEES,
-  BITCOIN_LIMITS,
-} from "../../../../types/bitcoin.constants";
-import type { BtcUtxo } from "../../../../types/bitcoin.types";
+import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
 import { callOptionsSchema } from "../../../../types/bitcoin.types";
-import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
-import { getAccountData } from "../../../../utils/accounts";
 import {
-  calculateFees,
-  makeCommitTransaction,
-  makeRevealTransaction,
-  SIGNET,
-} from "../../../../utils/bitcoin.helpers";
+  addCommonOptions,
+  createAndBroadcastTransactions,
+  displayAndConfirmTransaction,
+  fetchUtxos,
+  setupBitcoinKeyPair,
+} from "../../../../utils/bitcoin.command.helpers";
+import { calculateFees } from "../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
   EncodingFormat,
   OpCode,
   trimOx,
 } from "../../../../utils/bitcoinEncode";
-import { handleError } from "../../../../utils/handleError";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 type CallOptions = z.infer<typeof callOptionsSchema>;
@@ -40,37 +29,11 @@ type CallOptions = z.infer<typeof callOptionsSchema>;
  * @param options - Command options including amounts, addresses, and contract parameters
  */
 const main = async (options: CallOptions) => {
-  // Initialize Bitcoin library with ECC implementation
-  bitcoin.initEccLib(ecc);
-
-  const privateKey =
-    options.privateKey ||
-    getAccountData<BitcoinAccountData>("bitcoin", options.name)?.privateKey;
-
-  if (!privateKey) {
-    const errorMessage = handleError({
-      context: "Failed to retrieve private key",
-      error: new Error("Private key not found"),
-      shouldThrow: false,
-    });
-
-    throw new Error(errorMessage);
-  }
-
-  // Set up Bitcoin key pair
-  const ECPair = ECPairFactory(ecc);
-  const key = ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"), {
-    network: SIGNET,
-  });
-
-  const { address } = bitcoin.payments.p2wpkh({
-    network: SIGNET,
-    pubkey: key.publicKey,
-  });
-
-  const utxos = (
-    await axios.get<BtcUtxo[]>(`${options.api}/address/${address}/utxo`)
-  ).data;
+  const { key, address } = setupBitcoinKeyPair(
+    options.privateKey,
+    options.name
+  );
+  const utxos = await fetchUtxos(address, options.api);
 
   let data;
   let payload;
@@ -80,7 +43,6 @@ const main = async (options: CallOptions) => {
     options.receiver &&
     options.revertAddress
   ) {
-    // Encode contract call data for inscription
     payload = new ethers.AbiCoder().encode(options.types, options.values);
     data = Buffer.from(
       bitcoinEncode(
@@ -100,70 +62,35 @@ const main = async (options: CallOptions) => {
     );
   }
 
-  const notApplicable = "encoded in raw inscription data";
-
-  // Calculate total fees
-  const { commitFee, revealFee, totalFee } = calculateFees(data);
-
-  // Display transaction information and confirm
-  console.log(`
-Network: Signet
-Gateway: ${options.gateway}
-Sender: ${address}
-Universal Contract: ${options.receiver || notApplicable}
-Revert Address: ${options.revertAddress || notApplicable}
-Operation: Call
-Encoded Message: ${payload || notApplicable}
-Encoding Format: ABI
-Raw Inscription Data: ${data.toString("hex")}
-Fees:
-  - Commit Fee: ${commitFee} sat
-  - Reveal Fee: ${revealFee} sat
-  - Total Fee: ${totalFee} sat (${(totalFee / 100000000).toFixed(8)} BTC)
-`);
-  await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
-
-  // Create and broadcast commit transaction
-  const effectiveAmount =
+  const amount =
     BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
 
-  const commit = await makeCommitTransaction(
+  const { commitFee, revealFee, totalFee } = calculateFees(data);
+
+  await displayAndConfirmTransaction({
+    commitFee,
+    encodedMessage: payload,
+    encodingFormat: "ABI",
+    gateway: options.gateway,
+    network: "Signet",
+    operation: "Call",
+    rawInscriptionData: data.toString("hex"),
+    receiver: options.receiver,
+    revealFee,
+    revertAddress: options.revertAddress,
+    sender: address,
+    totalFee,
+  });
+
+  await createAndBroadcastTransactions(
     key,
     utxos,
-    address!,
+    address,
     data,
     options.api,
-    effectiveAmount
+    amount,
+    options.gateway
   );
-
-  const commitTxid = (
-    await axios.post<string>(`${options.api}/tx`, commit.txHex, {
-      headers: { "Content-Type": "text/plain" },
-    })
-  ).data;
-
-  console.log("Commit TXID:", commitTxid);
-
-  // Create and broadcast reveal transaction
-  const revealHex = makeRevealTransaction(
-    commitTxid,
-    0,
-    effectiveAmount,
-    options.gateway,
-    BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE,
-    {
-      controlBlock: commit.controlBlock,
-      internalKey: commit.internalKey,
-      leafScript: commit.leafScript,
-    },
-    key
-  );
-  const revealTxid = (
-    await axios.post<string>(`${options.api}/tx`, revealHex, {
-      headers: { "Content-Type": "text/plain" },
-    })
-  ).data;
-  console.log("Reveal TXID:", revealTxid);
 };
 
 /**
@@ -182,7 +109,6 @@ export const callCommand = new Command()
   .option("-t, --types <types...>", "ABI types")
   .option("-v, --values <values...>", "Values corresponding to types")
   .option("-a, --revert-address <address>", "Revert address")
-  .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
       "types",
@@ -191,17 +117,11 @@ export const callCommand = new Command()
       "receiver",
     ])
   )
-  .addOption(
-    new Option("--private-key <key>", "Bitcoin private key").conflicts(["name"])
-  )
-  .addOption(
-    new Option("--name <name>", "Account name")
-      .default(DEFAULT_ACCOUNT_NAME)
-      .conflicts(["private-key"])
-  )
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, callOptionsSchema, {
       exitOnError: true,
     });
     await main(validated);
   });
+
+addCommonOptions(callCommand);
