@@ -11,6 +11,7 @@ import { EVMAccountData } from "../../../../types/accounts.types";
 import { BITCOIN_FEES } from "../../../../types/bitcoin.constants";
 import type { BtcUtxo } from "../../../../types/bitcoin.types";
 import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import { getAccountData } from "../../../../utils/accounts";
 import {
   calculateFees,
@@ -26,7 +27,6 @@ import {
 } from "../../../../utils/bitcoinEncode";
 import { handleError } from "../../../../utils/handleError";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
