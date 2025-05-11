@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { validAmountSchema } from "./shared.schema";
+import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 
 export interface BtcUtxo {
   status: {
@@ -95,7 +96,8 @@ export const callOptionsSchema = z
     api: z.string().url(),
     data: z.string().optional(),
     gateway: z.string(),
-    privateKey: z.string().min(1, "Private key is required"),
+    name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+    privateKey: z.string().optional(),
     receiver: z.string().optional(),
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),

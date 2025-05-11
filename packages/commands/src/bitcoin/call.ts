@@ -26,6 +26,10 @@ import {
   trimOx,
 } from "../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { handleError } from "../../../../utils/handleError";
+import { EVMAccountData } from "../../../../types/accounts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
+import { getAccountData } from "../../../../utils/accounts";
 
 type CallOptions = z.infer<typeof callOptionsSchema>;
 
@@ -39,11 +43,26 @@ const main = async (options: CallOptions) => {
   // Initialize Bitcoin library with ECC implementation
   bitcoin.initEccLib(ecc);
 
+  const privateKey =
+    options.privateKey ||
+    getAccountData<EVMAccountData>("bitcoin", options.name)?.privateKey;
+
+  if (!privateKey) {
+    const errorMessage = handleError({
+      context: "Failed to retrieve private key",
+      error: new Error("Private key not found"),
+      shouldThrow: false,
+    });
+
+    throw new Error(errorMessage);
+  }
+
   // Set up Bitcoin key pair
   const ECPair = ECPairFactory(ecc);
-  const key = ECPair.fromPrivateKey(Buffer.from(options.privateKey, "hex"), {
+  const key = ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"), {
     network: SIGNET,
   });
+
   const { address } = bitcoin.payments.p2wpkh({
     network: SIGNET,
     pubkey: key.publicKey,
@@ -90,6 +109,7 @@ const main = async (options: CallOptions) => {
   console.log(`
 Network: Signet
 Gateway: ${options.gateway}
+Sender: ${address}
 Universal Contract: ${options.receiver || notApplicable}
 Revert Address: ${options.revertAddress || notApplicable}
 Operation: Call
@@ -163,7 +183,9 @@ export const callCommand = new Command()
   .option("-v, --values <values...>", "Values corresponding to types")
   .option("-a, --revert-address <address>", "Revert address")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
-  .requiredOption("--private-key <key>", "Bitcoin private key")
+  .addOption(
+    new Option("--private-key <key>", "Bitcoin private key").conflicts(["name"])
+  )
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
       "types",
@@ -171,6 +193,11 @@ export const callCommand = new Command()
       "revert-address",
       "receiver",
     ])
+  )
+  .addOption(
+    new Option("--name <name>", "Account name")
+      .default(DEFAULT_ACCOUNT_NAME)
+      .conflicts(["private-key"])
   )
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, callOptionsSchema, {
