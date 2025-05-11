@@ -78,6 +78,19 @@ export const depositAndCallOptionsSchema = z
         "If provided, the 'types' and 'values' arrays must both exist and have the same length",
       path: ["values"],
     }
+  )
+  .refine(
+    (data) => {
+      // Prevent providing both data and types/values
+      if (data.data && (data.types || data.values)) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Provide either --data or --types/--values (not both)",
+      path: ["data"],
+    }
   );
 
 export const depositOptionsSchema = z.object({
@@ -122,5 +135,18 @@ export const callOptionsSchema = z
       message:
         "If provided, the 'types' and 'values' arrays must both exist and have the same length",
       path: ["values"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Prevent providing both data and types/values
+      if (data.data && (data.types || data.values)) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Provide either --data or --types/--values (not both)",
+      path: ["data"],
     }
   );
