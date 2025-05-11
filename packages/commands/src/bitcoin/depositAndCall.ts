@@ -7,7 +7,7 @@ import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
 import { z } from "zod";
 
-import { EVMAccountData } from "../../../../types/accounts.types";
+import { BitcoinAccountData } from "../../../../types/accounts.types";
 import { BITCOIN_FEES } from "../../../../types/bitcoin.constants";
 import type { BtcUtxo } from "../../../../types/bitcoin.types";
 import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
@@ -42,7 +42,7 @@ const main = async (options: DepositAndCallOptions) => {
 
   const privateKey =
     options.privateKey ||
-    getAccountData<EVMAccountData>("bitcoin", options.name)?.privateKey;
+    getAccountData<BitcoinAccountData>("bitcoin", options.name)?.privateKey;
 
   if (!privateKey) {
     const errorMessage = handleError({
