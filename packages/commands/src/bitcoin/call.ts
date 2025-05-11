@@ -7,12 +7,15 @@ import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
 import { z } from "zod";
 
+import { EVMAccountData } from "../../../../types/accounts.types";
 import {
   BITCOIN_FEES,
   BITCOIN_LIMITS,
 } from "../../../../types/bitcoin.constants";
 import type { BtcUtxo } from "../../../../types/bitcoin.types";
 import { callOptionsSchema } from "../../../../types/bitcoin.types";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
+import { getAccountData } from "../../../../utils/accounts";
 import {
   calculateFees,
   makeCommitTransaction,
@@ -25,11 +28,8 @@ import {
   OpCode,
   trimOx,
 } from "../../../../utils/bitcoinEncode";
-import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 import { handleError } from "../../../../utils/handleError";
-import { EVMAccountData } from "../../../../types/accounts.types";
-import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
-import { getAccountData } from "../../../../utils/accounts";
+import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 type CallOptions = z.infer<typeof callOptionsSchema>;
 

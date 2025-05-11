@@ -7,9 +7,11 @@ import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
 import { z } from "zod";
 
+import { EVMAccountData } from "../../../../types/accounts.types";
 import { BITCOIN_FEES } from "../../../../types/bitcoin.constants";
 import type { BtcUtxo } from "../../../../types/bitcoin.types";
 import { depositOptionsSchema } from "../../../../types/bitcoin.types";
+import { getAccountData } from "../../../../utils/accounts";
 import {
   calculateFees,
   makeCommitTransaction,
@@ -21,10 +23,8 @@ import {
   EncodingFormat,
   OpCode,
 } from "../../../../utils/bitcoinEncode";
-import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 import { handleError } from "../../../../utils/handleError";
-import { getAccountData } from "../../../../utils/accounts";
-import { EVMAccountData } from "../../../../types/accounts.types";
+import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
