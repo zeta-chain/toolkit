@@ -1,7 +1,7 @@
 import { Command, Option } from "commander";
-import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
 import { z } from "zod";
 
+import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
 import { depositOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
