@@ -22,6 +22,9 @@ import {
   OpCode,
 } from "../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { handleError } from "../../../../utils/handleError";
+import { getAccountData } from "../../../../utils/accounts";
+import { EVMAccountData } from "../../../../types/accounts.types";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
@@ -29,11 +32,26 @@ const main = async (options: DepositOptions) => {
   // Initialize Bitcoin library with ECC implementation
   bitcoin.initEccLib(ecc);
 
+  const privateKey =
+    options.privateKey ||
+    getAccountData<EVMAccountData>("bitcoin", options.name)?.privateKey;
+
+  if (!privateKey) {
+    const errorMessage = handleError({
+      context: "Failed to retrieve private key",
+      error: new Error("Private key not found"),
+      shouldThrow: false,
+    });
+
+    throw new Error(errorMessage);
+  }
+
   // Set up Bitcoin key pair
   const ECPair = ECPairFactory(ecc);
-  const key = ECPair.fromPrivateKey(Buffer.from(options.privateKey, "hex"), {
+  const key = ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"), {
     network: SIGNET,
   });
+
   const { address } = bitcoin.payments.p2wpkh({
     network: SIGNET,
     pubkey: key.publicKey,
@@ -145,7 +163,7 @@ export const depositCommand = new Command()
   .option("-a, --revert-address <address>", "Revert address")
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
-  .requiredOption("--private-key <key>", "Bitcoin private key")
+  .option("--private-key <key>", "Bitcoin private key")
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
       "revert-address",

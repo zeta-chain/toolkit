@@ -85,8 +85,9 @@ export const depositOptionsSchema = z.object({
   }),
   api: z.string().url(),
   data: z.string().optional(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   gateway: z.string(),
-  privateKey: z.string().min(1, "Private key is required"),
+  privateKey: z.string().optional(),
   receiver: z.string().optional(),
   revertAddress: z.string().optional(),
 });
