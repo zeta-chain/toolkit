@@ -1,6 +1,8 @@
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
+
 export const evmAddressSchema = z
   .string()
   .refine((val) => ethers.isAddress(val), "Must be a valid EVM address");
@@ -53,3 +55,13 @@ export const evmPrivateKeySchema = z
     },
     { message: "Invalid private key (must be in secp256k1 range)" }
   );
+/**
+ * Validation rule for Zod schema refinement that ensures only one of name or privateKey is provided.
+ * This prevents users from specifying both a named account and a private key at the same time.
+ */
+export const namePkRefineRule = (data: {
+  name: string;
+  privateKey?: string;
+}) => {
+  return !(data.privateKey && data.name !== DEFAULT_ACCOUNT_NAME);
+};
