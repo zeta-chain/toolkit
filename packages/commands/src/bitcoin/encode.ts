@@ -3,6 +3,7 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { typesAndValuesLengthRefineRule } from "../../../../types/shared.schema";
 import {
   bitcoinEncode,
   EncodingFormat,
@@ -10,14 +11,19 @@ import {
   trimOx,
 } from "../../../../utils/bitcoinEncode";
 
-const encodeOptionsSchema = z.object({
-  format: z.string().optional(),
-  opCode: z.string().optional(),
-  receiver: z.string(),
-  revertAddress: z.string(),
-  types: z.array(z.string()).optional().default([]),
-  values: z.array(z.string()).optional().default([]),
-});
+const encodeOptionsSchema = z
+  .object({
+    format: z.string().optional(),
+    opCode: z.string().optional(),
+    receiver: z.string(),
+    revertAddress: z.string(),
+    types: z.array(z.string()).optional().default([]),
+    values: z.array(z.string()).optional().default([]),
+  })
+  .refine(typesAndValuesLengthRefineRule.rule, {
+    message: typesAndValuesLengthRefineRule.message,
+    path: typesAndValuesLengthRefineRule.path,
+  });
 
 type EncodeOptions = z.infer<typeof encodeOptionsSchema>;
 
@@ -25,10 +31,6 @@ const main = (options: EncodeOptions) => {
   // Ensure types and values are arrays even if not provided
   const types = options.types || [];
   const values = options.values || [];
-
-  if (types.length !== values.length) {
-    throw new Error("Number of types must match number of values");
-  }
 
   let payloadBuffer: Buffer;
 
