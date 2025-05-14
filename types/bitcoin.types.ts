@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
-import { validAmountSchema } from "./shared.schema";
+import {
+  typesAndDataExclusivityRefineRule,
+  typesAndValuesLengthRefineRule,
+  validAmountSchema,
+} from "./shared.schema";
 
 export interface BtcUtxo {
   status: {
@@ -60,38 +64,14 @@ export const depositAndCallOptionsSchema = z
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
   })
-  .refine(
-    (data) => {
-      // Only check length equality if both arrays exist
-      if (data.types && data.values) {
-        return data.types.length === data.values.length;
-      }
-      // If one exists and the other doesn't, that's invalid
-      if ((data.types && !data.values) || (!data.types && data.values)) {
-        return false;
-      }
-      // If both are undefined/not provided, that's valid
-      return true;
-    },
-    {
-      message:
-        "If provided, the 'types' and 'values' arrays must both exist and have the same length",
-      path: ["values"],
-    }
-  )
-  .refine(
-    (data) => {
-      // Prevent providing both data and types/values
-      if (data.data && (data.types || data.values)) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "Provide either --data or --types/--values (not both)",
-      path: ["data"],
-    }
-  );
+  .refine(typesAndValuesLengthRefineRule.rule, {
+    message: typesAndValuesLengthRefineRule.message,
+    path: typesAndValuesLengthRefineRule.path,
+  })
+  .refine(typesAndDataExclusivityRefineRule.rule, {
+    message: typesAndDataExclusivityRefineRule.message,
+    path: typesAndDataExclusivityRefineRule.path,
+  });
 
 export const depositOptionsSchema = z.object({
   amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
@@ -118,35 +98,11 @@ export const callOptionsSchema = z
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
   })
-  .refine(
-    (data) => {
-      // Only check length equality if both arrays exist
-      if (data.types && data.values) {
-        return data.types.length === data.values.length;
-      }
-      // If one exists and the other doesn't, that's invalid
-      if ((data.types && !data.values) || (!data.types && data.values)) {
-        return false;
-      }
-      // If both are undefined/not provided, that's valid
-      return true;
-    },
-    {
-      message:
-        "If provided, the 'types' and 'values' arrays must both exist and have the same length",
-      path: ["values"],
-    }
-  )
-  .refine(
-    (data) => {
-      // Prevent providing both data and types/values
-      if (data.data && (data.types || data.values)) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "Provide either --data or --types/--values (not both)",
-      path: ["data"],
-    }
-  );
+  .refine(typesAndValuesLengthRefineRule.rule, {
+    message: typesAndValuesLengthRefineRule.message,
+    path: typesAndValuesLengthRefineRule.path,
+  })
+  .refine(typesAndDataExclusivityRefineRule.rule, {
+    message: typesAndDataExclusivityRefineRule.message,
+    path: typesAndDataExclusivityRefineRule.path,
+  });
