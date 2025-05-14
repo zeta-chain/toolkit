@@ -8,7 +8,7 @@ export const bitcoinCommand = new Command("bitcoin")
   .description("Bitcoin-related commands")
   .helpCommand(false);
 
+bitcoinCommand.addCommand(callCommand);
 bitcoinCommand.addCommand(depositAndCallCommand);
 bitcoinCommand.addCommand(depositCommand);
-bitcoinCommand.addCommand(callCommand);
 bitcoinCommand.addCommand(encodeCommand);
