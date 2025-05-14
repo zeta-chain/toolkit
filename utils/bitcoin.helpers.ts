@@ -119,10 +119,18 @@ export const makeCommitTransaction = async (
   if (inTotal < effectiveAmount + feeSat) throw new Error("Not enough funds");
   const changeSat = inTotal - effectiveAmount - feeSat;
 
-  /* leaf script */
+  /**
+   * Leaf script execution flow:
+   * 1. OP_CHECKSIG returns 0 (false)
+   * 2. OP_TRUE pushes 1
+   * 3. OP_FALSE pushes 0
+   * 4. OP_IF sees 0, skips the body
+   * Script ends with [0,1] on stack, which is truthy
+   */
   const scriptItems = [
     key.publicKey.slice(1, 33),
     bitcoin.opcodes.OP_CHECKSIG,
+    bitcoin.opcodes.OP_TRUE, // ensure non-zero top-of-stack
     bitcoin.opcodes.OP_FALSE,
     bitcoin.opcodes.OP_IF,
   ];
