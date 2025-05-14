@@ -34,7 +34,7 @@ const main = async (options: DepositOptions) => {
     data = Buffer.from(
       bitcoinEncode(
         options.receiver,
-        Buffer.from(""),
+        Buffer.from(""), // Empty payload for deposit
         revertAddress,
         OpCode.Deposit,
         EncodingFormat.EncodingFmtABI
