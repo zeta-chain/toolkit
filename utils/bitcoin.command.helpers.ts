@@ -39,6 +39,9 @@ export interface TransactionInfo {
   totalFee: number;
 }
 
+/**
+ * Sets up a Bitcoin key pair using either a provided private key or one stored in the account data
+ */
 export const setupBitcoinKeyPair = (
   privateKey: string | undefined,
   name: string
@@ -74,6 +77,9 @@ export const setupBitcoinKeyPair = (
   return { address: address!, key };
 };
 
+/**
+ * Fetches unspent transaction outputs (UTXOs) for the given address
+ */
 export const fetchUtxos = async (
   address: string,
   api: string
@@ -81,6 +87,9 @@ export const fetchUtxos = async (
   return (await axios.get<BtcUtxo[]>(`${api}/address/${address}/utxo`)).data;
 };
 
+/**
+ * Displays transaction details to the user and asks for confirmation before proceeding
+ */
 export const displayAndConfirmTransaction = async (info: TransactionInfo) => {
   const notApplicable = "encoded in raw inscription data";
 
@@ -105,6 +114,9 @@ Fees:
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 };
 
+/**
+ * Broadcasts a raw Bitcoin transaction to the network
+ */
 export const broadcastBtcTransaction = async (
   txHex: string,
   api: string
@@ -116,6 +128,9 @@ export const broadcastBtcTransaction = async (
   return data;
 };
 
+/**
+ * Creates and broadcasts both commit and reveal transactions for Bitcoin inscriptions
+ */
 export const createAndBroadcastTransactions = async (
   key: ECPairInterface,
   utxos: BtcUtxo[],
@@ -157,6 +172,9 @@ export const createAndBroadcastTransactions = async (
   return { commitTxid, revealTxid };
 };
 
+/**
+ * Adds common Bitcoin-related command options to a Commander command
+ */
 export const addCommonOptions = (command: Command) => {
   return command
     .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
@@ -172,6 +190,9 @@ export const addCommonOptions = (command: Command) => {
     );
 };
 
+/**
+ * Parses a Bitcoin amount string and converts it to satoshis as a number
+ */
 export const parseAmount = (amount: string): number => {
   const amountSatBig = ethers.parseUnits(amount, 8);
   if (amountSatBig > Number.MAX_SAFE_INTEGER) {
