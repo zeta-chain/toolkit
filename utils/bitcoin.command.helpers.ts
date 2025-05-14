@@ -105,15 +105,15 @@ Fees:
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 };
 
-export const broadcastTransaction = async (
+export const broadcastBtcTransaction = async (
   txHex: string,
   api: string
 ): Promise<string> => {
-  return (
-    await axios.post<string>(`${api}/tx`, txHex, {
-      headers: { "Content-Type": "text/plain" },
-    })
-  ).data;
+  const { data } = await axios.post<string>(`${api}/tx`, txHex, {
+    headers: { "Content-Type": "text/plain" },
+  });
+
+  return data;
 };
 
 export const createAndBroadcastTransactions = async (
@@ -135,7 +135,7 @@ export const createAndBroadcastTransactions = async (
     amount
   );
 
-  const commitTxid = await broadcastTransaction(commit.txHex, api);
+  const commitTxid = await broadcastBtcTransaction(commit.txHex, api);
   console.log("Commit TXID:", commitTxid);
 
   // Create and broadcast reveal transaction
@@ -152,7 +152,7 @@ export const createAndBroadcastTransactions = async (
     },
     key
   );
-  const revealTxid = await broadcastTransaction(revealHex, api);
+  const revealTxid = await broadcastBtcTransaction(revealHex, api);
 
   return { commitTxid, revealTxid };
 };
