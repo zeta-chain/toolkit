@@ -168,6 +168,7 @@ export const createAndBroadcastTransactions = async (
     key
   );
   const revealTxid = await broadcastBtcTransaction(revealHex, api);
+  console.log("Reveal TXID:", revealTxid);
 
   return { commitTxid, revealTxid };
 };
