@@ -35,6 +35,10 @@ export const numericStringSchema = z
   .refine((val) => /^\d+$/.test(val), {
     message: "Must be a string containing only numbers",
   });
+export const hexStringSchema = z
+  .string()
+  .regex(/^(0x)?[0-9a-fA-F]*$/, { message: "data must be hex encoded" });
+
 export const evmPrivateKeySchema = z
   .string()
   .refine((val) => /^(0x)?[0-9a-fA-F]{64}$/.test(val), {

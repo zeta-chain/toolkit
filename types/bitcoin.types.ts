@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 import {
+  hexStringSchema,
   typesAndDataExclusivityRefineRule,
   typesAndValuesLengthRefineRule,
   validAmountSchema,
@@ -55,7 +56,7 @@ export const depositAndCallOptionsSchema = z
   .object({
     amount: validAmountSchema,
     api: z.string().url(),
-    data: z.string().optional(),
+    data: hexStringSchema.optional(),
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
@@ -78,7 +79,7 @@ export const depositOptionsSchema = z.object({
     message: "Amount must be a valid positive number",
   }),
   api: z.string().url(),
-  data: z.string().optional(),
+  data: hexStringSchema.optional(),
   gateway: z.string(),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
@@ -89,7 +90,7 @@ export const depositOptionsSchema = z.object({
 export const callOptionsSchema = z
   .object({
     api: z.string().url(),
-    data: z.string().optional(),
+    data: hexStringSchema.optional(),
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
