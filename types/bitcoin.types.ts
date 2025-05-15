@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-import { validAmountSchema } from "./shared.schema";
+import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
+import {
+  hexStringSchema,
+  typesAndDataExclusivityRefineRule,
+  typesAndValuesLengthRefineRule,
+  validAmountSchema,
+} from "./shared.schema";
 
 export interface BtcUtxo {
   status: {
@@ -46,21 +52,58 @@ export interface BtcTxById {
   weight: number;
 }
 
-/**
- * Schema for the deposit-and-call command options
- */
 export const depositAndCallOptionsSchema = z
   .object({
     amount: validAmountSchema,
     api: z.string().url(),
+    data: hexStringSchema.optional(),
     gateway: z.string(),
-    privateKey: z.string().min(1, "Private key is required"),
-    receiver: z.string().min(1, "Receiver address is required"),
-    revertAddress: z.string(),
-    types: z.array(z.string()),
-    values: z.array(z.string()),
+    name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+    privateKey: z.string().optional(),
+    receiver: z.string().optional(),
+    revertAddress: z.string().optional(),
+    types: z.array(z.string()).optional(),
+    values: z.array(z.string()).optional(),
   })
-  .refine((data) => data.types.length === data.values.length, {
-    message: "The 'types' and 'values' arrays must have the same length",
-    path: ["values"],
+  .refine(typesAndValuesLengthRefineRule.rule, {
+    message: typesAndValuesLengthRefineRule.message,
+    path: typesAndValuesLengthRefineRule.path,
+  })
+  .refine(typesAndDataExclusivityRefineRule.rule, {
+    message: typesAndDataExclusivityRefineRule.message,
+    path: typesAndDataExclusivityRefineRule.path,
+  });
+
+export const depositOptionsSchema = z.object({
+  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Amount must be a valid positive number",
+  }),
+  api: z.string().url(),
+  data: hexStringSchema.optional(),
+  gateway: z.string(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+  privateKey: z.string().optional(),
+  receiver: z.string().optional(),
+  revertAddress: z.string().optional(),
+});
+
+export const callOptionsSchema = z
+  .object({
+    api: z.string().url(),
+    data: hexStringSchema.optional(),
+    gateway: z.string(),
+    name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+    privateKey: z.string().optional(),
+    receiver: z.string().optional(),
+    revertAddress: z.string().optional(),
+    types: z.array(z.string()).optional(),
+    values: z.array(z.string()).optional(),
+  })
+  .refine(typesAndValuesLengthRefineRule.rule, {
+    message: typesAndValuesLengthRefineRule.message,
+    path: typesAndValuesLengthRefineRule.path,
+  })
+  .refine(typesAndDataExclusivityRefineRule.rule, {
+    message: typesAndDataExclusivityRefineRule.message,
+    path: typesAndDataExclusivityRefineRule.path,
   });

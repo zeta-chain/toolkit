@@ -36,7 +36,7 @@ const bitcoinAccountDataSchema = z.object({
   mainnetAddress: z.string(),
   mainnetWIF: z.string(),
   name: z.string().optional(),
-  privateKeyBytes: z.string(),
+  privateKey: z.string(),
   testnetAddress: z.string(),
   testnetWIF: z.string(),
 });

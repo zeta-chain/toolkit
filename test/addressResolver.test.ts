@@ -236,7 +236,7 @@ describe("Address Resolver Utils", () => {
         JSON.stringify({
           mainnetAddress: VALID_BTC_MAINNET_ADDRESS,
           mainnetWIF: "L1YYZngaKvau5egL8WSMnB9qoxoVGnkh1qVxe3SEsLWGpLCEMgpV",
-          privateKeyBytes:
+          privateKey:
             "1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd",
           testnetAddress: VALID_BTC_TESTNET_ADDRESS,
           testnetWIF: "cVVvUsNHhbrgd7aW3gnuGo2qJM45LhHhTCVXrDSJDDcNGE6qmyCs",
@@ -257,7 +257,7 @@ describe("Address Resolver Utils", () => {
         JSON.stringify({
           mainnetAddress: VALID_BTC_MAINNET_ADDRESS,
           mainnetWIF: "L1YYZngaKvau5egL8WSMnB9qoxoVGnkh1qVxe3SEsLWGpLCEMgpV",
-          privateKeyBytes:
+          privateKey:
             "1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd",
           testnetAddress: VALID_BTC_TESTNET_ADDRESS,
           testnetWIF: "cVVvUsNHhbrgd7aW3gnuGo2qJM45LhHhTCVXrDSJDDcNGE6qmyCs",
