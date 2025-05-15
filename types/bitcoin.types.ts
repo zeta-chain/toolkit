@@ -81,6 +81,7 @@ export const depositOptionsSchema = z.object({
   api: z.string().url(),
   data: hexStringSchema.optional(),
   gateway: z.string(),
+  method: z.enum(["inscription", "memo"]).default("inscription"),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
   receiver: z.string().optional(),

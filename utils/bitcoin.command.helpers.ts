@@ -188,6 +188,11 @@ export const addCommonOptions = (command: Command) => {
       new Option("--name <name>", "Account name")
         .default(DEFAULT_ACCOUNT_NAME)
         .conflicts(["private-key"])
+    )
+    .addOption(
+      new Option("--method <method>", "Method")
+        .choices(["inscription", "memo"])
+        .default("inscription")
     );
 };
 
