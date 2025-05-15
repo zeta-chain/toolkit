@@ -101,7 +101,7 @@ const main = async (options: CallOptions) => {
     const tx = await bitcoinMakeTransactionWithMemo(
       options.gateway,
       key,
-      0,
+      BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH,
       utxos,
       address,
       options.api,

@@ -18,6 +18,7 @@ export const bitcoinMakeTransactionWithMemo = async (
   if (memo.length >= 78) throw new Error("Memo too long");
   utxos.sort((a, b) => a.value - b.value); // sort by value, ascending
   const fee = 10000;
+  const memoAmount = 0; // Use 0 satoshis for OP_RETURN output
   const total = amount + fee;
   let sum = 0;
   const pickUtxos = [];
@@ -43,7 +44,7 @@ export const bitcoinMakeTransactionWithMemo = async (
   if (memo.length > 0) {
     const embed = bitcoin.payments.embed({ data: [memo] });
     if (!embed.output) throw new Error("Unable to embed memo");
-    psbt.addOutput({ script: embed.output, value: 0 });
+    psbt.addOutput({ script: embed.output, value: memoAmount });
   }
   if (change > 0) {
     psbt.addOutput({ address, value: change });
