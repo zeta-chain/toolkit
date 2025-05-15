@@ -1,4 +1,5 @@
 import confirm from "@inquirer/confirm";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Keypair } from "@solana/web3.js";
 import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
@@ -62,23 +63,6 @@ export const getAccountData = <
   }
 };
 
-const createEVMAccount = (): AccountData => {
-  const wallet = ethers.Wallet.createRandom();
-  return {
-    address: wallet.address,
-    mnemonic: wallet.mnemonic?.phrase,
-    privateKey: wallet.privateKey,
-  };
-};
-
-const createSolanaAccount = (): AccountData => {
-  const keypair = Keypair.generate();
-  return {
-    address: keypair.publicKey.toBase58(),
-    privateKey: Buffer.from(keypair.secretKey).toString("hex"),
-  };
-};
-
 export const createBitcoinAccount = (): AccountData => {
   const ECPair = ECPairFactory(ecc);
 
@@ -127,6 +111,40 @@ export const createBitcoinAccount = (): AccountData => {
   };
 };
 
+const createEVMAccount = (): AccountData => {
+  const wallet = ethers.Wallet.createRandom();
+  return {
+    address: wallet.address.toLowerCase(),
+    mnemonic: wallet.mnemonic?.phrase,
+    privateKey: wallet.privateKey,
+    privateKeyEncoding: "hex",
+    privateKeyScheme: "secp256k1",
+  };
+};
+
+const createSolanaAccount = (): AccountData => {
+  const keypair = Keypair.generate();
+  return {
+    address: keypair.publicKey.toBase58(),
+    privateKey: `0x${Buffer.from(keypair.secretKey).toString("hex")}`,
+    privateKeyEncoding: "hex",
+    privateKeyScheme: "ed25519",
+    publicKey: keypair.publicKey.toBase58(),
+  };
+};
+
+const createSUIAccount = (): AccountData => {
+  const keypair = new Ed25519Keypair();
+  const secretKey = keypair.getSecretKey();
+  return {
+    address: keypair.toSuiAddress(),
+    privateKey: `0x${Buffer.from(secretKey).toString("hex")}`,
+    privateKeyEncoding: "hex",
+    privateKeyScheme: "ed25519",
+    publicKey: keypair.getPublicKey().toBase64(),
+  };
+};
+
 export const createAccountForType = async (
   type: (typeof AvailableAccountTypes)[number],
   name: string
@@ -154,6 +172,8 @@ export const createAccountForType = async (
       keyData = createEVMAccount();
     } else if (type === "solana") {
       keyData = createSolanaAccount();
+    } else if (type === "sui") {
+      keyData = createSUIAccount();
     } else if (type === "bitcoin") {
       // Default to testnet for Bitcoin
       keyData = createBitcoinAccount();
@@ -161,18 +181,13 @@ export const createAccountForType = async (
       // Type assertion to help TypeScript understand this isn't 'never'
       throw new Error(`Unsupported account type: ${type as string}`);
     }
-
     safeWriteFile(keyPath, keyData);
     console.log(`${type.toUpperCase()} account created successfully!`);
     console.log(`Key saved to: ${keyPath}`);
-
     if (type === "evm") {
       console.log(`Address: ${keyData.address}`);
     } else if (type === "solana") {
-      console.log(`Public Key: ${keyData.publicKey}`);
-    } else if (type === "bitcoin") {
-      console.log(`Address: ${keyData.mainnetAddress}`);
-      console.log(`Testnet Address: ${keyData.testnetAddress}`);
+      console.log(`Public Key: ${keyData.address}`);
     }
   } catch (error: unknown) {
     handleError({
@@ -182,7 +197,6 @@ export const createAccountForType = async (
     });
   }
 };
-
 export const listChainAccounts = (
   chainType: (typeof AvailableAccountTypes)[number]
 ): AccountInfo[] => {
