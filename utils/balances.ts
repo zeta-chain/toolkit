@@ -16,6 +16,7 @@ import {
 } from "../types/balances.types";
 import { ForeignCoin } from "../types/foreignCoins.types";
 import { ObserverSupportedChain } from "../types/supportedChains.types";
+import { handleError } from "./handleError";
 
 /**
  * Parses a token ID from chain ID and symbol
@@ -613,4 +614,86 @@ export const getSplTokenBalances = async (
   }
 
   return balances;
+};
+
+/**
+ * Estimates the gas price for a transaction
+ * @param provider - The ethers Provider to use for blockchain interactions
+ * @returns The estimated gas price in wei
+ */
+const getGasPriceEstimate = async (provider: ethers.Provider) => {
+  // Define constants for better readability
+  const STANDARD_ETH_TRANSFER_GAS = BigInt(21000); // Standard gas units for basic ETH transfers
+  const DEFAULT_GAS_PRICE_GWEI = BigInt(10); // 10 gwei fallback gas price
+  const GWEI_TO_WEI_MULTIPLIER = BigInt(1_000_000_000); // 1 gwei = 10^9 wei
+
+  const feeData = await provider.getFeeData();
+  let gasPriceEstimate: bigint;
+
+  // Handle different fee structures based on what's available
+  if (feeData?.gasPrice !== null) {
+    // Legacy gas price for pre-EIP-1559
+    gasPriceEstimate = feeData.gasPrice;
+  } else if (feeData?.maxFeePerGas !== null) {
+    // EIP-1559 fee structure
+    gasPriceEstimate = feeData.maxFeePerGas;
+  } else {
+    // Fallback if neither is available
+    gasPriceEstimate = DEFAULT_GAS_PRICE_GWEI * GWEI_TO_WEI_MULTIPLIER;
+  }
+
+  const estimatedGasCost = STANDARD_ETH_TRANSFER_GAS * gasPriceEstimate;
+
+  return estimatedGasCost;
+};
+
+/**
+ * Checks if a wallet has sufficient balance for a transaction
+ *
+ * @param provider - The ethers Provider to use for blockchain interactions
+ * @param signer - The wallet to check the balance for
+ * @param amount - The amount to check against the balance as a string
+ * @param erc20 - Optional ERC20 token address. If not provided, checks native token balance
+ * @returns Object containing the current balance, token decimals, and whether there's enough balance
+ */
+export const hasSufficientBalanceEvm = async (
+  provider: ethers.Provider,
+  signer: ethers.Wallet,
+  amount: string,
+  erc20?: string
+): Promise<{
+  balance: bigint;
+  decimals: number;
+  hasEnoughBalance: boolean;
+}> => {
+  let balance: bigint;
+  let decimals = 18;
+
+  if (erc20) {
+    const erc20Contract = new ethers.Contract(erc20, ERC20_ABI.abi, provider);
+
+    balance = (await erc20Contract.balanceOf(signer.address)) as bigint;
+    decimals = (await erc20Contract.decimals()) as number;
+  } else {
+    balance = await provider.getBalance(signer.address);
+
+    // Keep some balance for gas costs when using native tokens
+    try {
+      const estimatedGasCost = await getGasPriceEstimate(provider);
+      balance =
+        balance > estimatedGasCost ? balance - estimatedGasCost : BigInt(0);
+    } catch (error) {
+      handleError({
+        context: "Failed to estimate gas cost",
+        error,
+        shouldThrow: false,
+      });
+    }
+  }
+
+  const parsedAmount = ethers.parseUnits(amount, decimals);
+
+  const hasEnoughBalance = balance >= parsedAmount;
+
+  return { balance, decimals, hasEnoughBalance };
 };

@@ -1,13 +1,9 @@
-import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
-import { AbiCoder, ethers } from "ethers";
-
-import {
-  GatewayContract,
-  RevertOptions,
-  TxOptions,
-} from "../../../types/contracts.types";
+import { RevertOptions, TxOptions } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
-import { toHexString } from "../../../utils/toHexString";
+import {
+  broadcastGatewayTx,
+  generateEvmCallData,
+} from "../../../utils/gatewayEvm";
 import { validateSigner } from "../../../utils/validateSigner";
 import { ZetaChainClient } from "./client";
 
@@ -27,7 +23,6 @@ import { ZetaChainClient } from "./client";
  * @returns {object} - Returns the transaction object.
  * @property {object} tx - The transaction object that represents the function call.
  */
-
 export const evmCall = async function (
   this: ZetaChainClient,
   args: {
@@ -42,32 +37,21 @@ export const evmCall = async function (
   const signer = validateSigner(this.signer);
   const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
 
-  const gateway = new ethers.Contract(
-    gatewayEvmAddress,
-    GatewayABI.abi,
-    signer
-  ) as GatewayContract;
+  const callData = generateEvmCallData({
+    receiver: args.receiver,
+    revertOptions: args.revertOptions,
+    types: args.types,
+    values: args.values,
+  });
 
-  const revertOptions = {
-    ...args.revertOptions,
-    revertMessage: toHexString(args.revertOptions.revertMessage),
-  };
-
-  const abiCoder = AbiCoder.defaultAbiCoder();
-  const encodedParameters = abiCoder.encode(args.types, args.values);
-
-  const callAbiSignature =
-    "call(address,bytes,(address,bool,address,bytes,uint256))";
-  const gatewayCallFunction = gateway[
-    callAbiSignature
-  ] as GatewayContract["call"];
-
-  const tx = await gatewayCallFunction(
-    args.receiver,
-    encodedParameters,
-    revertOptions,
-    args.txOptions
-  );
+  const tx = await broadcastGatewayTx({
+    signer,
+    txData: {
+      data: callData.data,
+      to: gatewayEvmAddress,
+    },
+    txOptions: args.txOptions,
+  });
 
   return tx;
 };
