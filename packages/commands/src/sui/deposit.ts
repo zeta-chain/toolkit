@@ -11,12 +11,13 @@ import {
 } from "../../../../utils/sui";
 
 // Convert decimal amount to smallest unit (e.g., SUI to MIST)
-const toSmallestUnit = (amount: string, decimals: number = 9): string => {
-  const value = parseFloat(amount);
-  if (isNaN(value)) {
-    throw new Error("Invalid amount");
+const toSmallestUnit = (amount: string, decimals = 9): bigint => {
+  if (!/^\d+(\.\d+)?$/.test(amount)) {
+    throw new Error("Invalid decimal amount");
   }
-  return BigInt(Math.floor(value * Math.pow(10, decimals))).toString();
+  const [whole = "0", fraction = ""] = amount.split(".");
+  const paddedFraction = (fraction + "0".repeat(decimals)).slice(0, decimals);
+  return BigInt(whole) * BigInt(10 ** decimals) + BigInt(paddedFraction);
 };
 
 const depositOptionsSchema = z
