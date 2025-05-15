@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import {
   accountDataSchema,
+  accountNameSchema,
+  accountTypeSchema,
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
 import { safeReadFile } from "../../../../utils/fsUtils";
@@ -13,8 +15,8 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 
 const showAccountOptionsSchema = z.object({
   json: z.boolean().default(false),
-  name: z.string(),
-  type: z.enum(AvailableAccountTypes),
+  name: accountNameSchema,
+  type: accountTypeSchema,
 });
 
 type ShowAccountOptions = z.infer<typeof showAccountOptionsSchema>;
