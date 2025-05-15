@@ -95,9 +95,9 @@ const main = async (options: CallOptions) => {
       options.gateway
     );
   } else if (options.method === "memo") {
-    const memo = options.receiver?.startsWith("0x")
-      ? options.receiver.slice(2)
-      : options.receiver;
+    const memo = options.data?.startsWith("0x")
+      ? options.data.slice(2)
+      : options.data;
     const tx = await bitcoinMakeTransactionWithMemo(
       options.gateway,
       key,
