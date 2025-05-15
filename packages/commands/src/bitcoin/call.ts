@@ -19,8 +19,8 @@ import {
   OpCode,
   trimOx,
 } from "../../../../utils/bitcoinEncode";
-import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 import { bitcoinMakeTransactionWithMemo } from "../../../../utils/bitcoinMemo.helpers";
+import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 type CallOptions = z.infer<typeof callOptionsSchema>;
 

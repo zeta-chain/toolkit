@@ -9,6 +9,7 @@ import * as ecc from "tiny-secp256k1";
 import { BitcoinAccountData } from "../types/accounts.types";
 import { BITCOIN_FEES } from "../types/bitcoin.constants";
 import type { BtcUtxo } from "../types/bitcoin.types";
+import { bitcoinMethods } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { getAccountData } from "./accounts";
 import {
@@ -17,7 +18,6 @@ import {
   SIGNET,
 } from "./bitcoin.helpers";
 import { handleError } from "./handleError";
-import { bitcoinMethods } from "../types/bitcoin.types";
 
 export interface BitcoinKeyPair {
   address: string;

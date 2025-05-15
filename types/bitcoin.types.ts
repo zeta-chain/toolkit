@@ -60,13 +60,13 @@ export const depositAndCallOptionsSchema = z
     api: z.string().url(),
     data: hexStringSchema.optional(),
     gateway: z.string(),
+    method: z.enum(bitcoinMethods).default("inscription"),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
     receiver: z.string().optional(),
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
-    method: z.enum(bitcoinMethods).default("inscription"),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
@@ -96,13 +96,13 @@ export const callOptionsSchema = z
     api: z.string().url(),
     data: hexStringSchema.optional(),
     gateway: z.string(),
+    method: z.enum(bitcoinMethods).default("inscription"),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
     receiver: z.string().optional(),
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
-    method: z.enum(bitcoinMethods).default("inscription"),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
