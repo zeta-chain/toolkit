@@ -29,9 +29,8 @@ const main = async (options: DepositOptions) => {
   );
   const utxos = await fetchUtxos(address, options.api);
 
-  const revertAddress = options.revertAddress || address;
-
   if (options.method === "inscription") {
+    const revertAddress = options.revertAddress || address;
     let data;
     if (options.receiver && revertAddress) {
       data = Buffer.from(
@@ -82,7 +81,7 @@ const main = async (options: DepositOptions) => {
       options.gateway
     );
   } else if (options.method === "memo") {
-    const receiver = options.receiver?.startsWith("0x")
+    const memo = options.receiver?.startsWith("0x")
       ? options.receiver.slice(2)
       : options.receiver;
     const tx = await bitcoinMakeTransactionWithMemo(
@@ -92,7 +91,7 @@ const main = async (options: DepositOptions) => {
       utxos,
       address,
       options.api,
-      receiver
+      memo
     );
     const txid = await broadcastBtcTransaction(tx, options.api);
     console.log(`Transaction hash: ${txid}`);

@@ -17,6 +17,7 @@ import {
   SIGNET,
 } from "./bitcoin.helpers";
 import { handleError } from "./handleError";
+import { bitcoinMethods } from "../types/bitcoin.types";
 
 export interface BitcoinKeyPair {
   address: string;
@@ -191,7 +192,7 @@ export const addCommonOptions = (command: Command) => {
     )
     .addOption(
       new Option("--method <method>", "Method")
-        .choices(["inscription", "memo"])
+        .choices(bitcoinMethods)
         .default("inscription")
     );
 };

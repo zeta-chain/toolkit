@@ -6,6 +6,7 @@ import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
 import { callOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
+  broadcastBtcTransaction,
   createAndBroadcastTransactions,
   displayAndConfirmTransaction,
   fetchUtxos,
@@ -19,6 +20,7 @@ import {
   trimOx,
 } from "../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { bitcoinMakeTransactionWithMemo } from "../../../../utils/bitcoinMemo.helpers";
 
 type CallOptions = z.infer<typeof callOptionsSchema>;
 
@@ -35,62 +37,79 @@ const main = async (options: CallOptions) => {
   );
   const utxos = await fetchUtxos(address, options.api);
 
-  let data;
-  let payload;
-  if (
-    options.types &&
-    options.values &&
-    options.receiver &&
-    options.revertAddress
-  ) {
-    payload = new ethers.AbiCoder().encode(options.types, options.values);
-    data = Buffer.from(
-      bitcoinEncode(
-        options.receiver,
-        Buffer.from(trimOx(payload), "hex"),
-        options.revertAddress,
-        OpCode.Call,
-        EncodingFormat.EncodingFmtABI
-      ),
-      "hex"
+  if (options.method === "inscription") {
+    let data;
+    let payload;
+    if (
+      options.types &&
+      options.values &&
+      options.receiver &&
+      options.revertAddress
+    ) {
+      payload = new ethers.AbiCoder().encode(options.types, options.values);
+      data = Buffer.from(
+        bitcoinEncode(
+          options.receiver,
+          Buffer.from(trimOx(payload), "hex"),
+          options.revertAddress,
+          OpCode.Call,
+          EncodingFormat.EncodingFmtABI
+        ),
+        "hex"
+      );
+    } else if (options.data) {
+      data = Buffer.from(options.data, "hex");
+    } else {
+      throw new Error(
+        "Provide either data or types, values, receiver, and revert address"
+      );
+    }
+
+    const amount =
+      BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
+
+    const { commitFee, revealFee, totalFee } = calculateFees(data);
+
+    await displayAndConfirmTransaction({
+      commitFee,
+      encodedMessage: payload,
+      encodingFormat: "ABI",
+      gateway: options.gateway,
+      network: "Signet",
+      operation: "Call",
+      rawInscriptionData: data.toString("hex"),
+      receiver: options.receiver,
+      revealFee,
+      revertAddress: options.revertAddress,
+      sender: address,
+      totalFee,
+    });
+
+    await createAndBroadcastTransactions(
+      key,
+      utxos,
+      address,
+      data,
+      options.api,
+      amount,
+      options.gateway
     );
-  } else if (options.data) {
-    data = Buffer.from(options.data, "hex");
-  } else {
-    throw new Error(
-      "Provide either data or types, values, receiver, and revert address"
+  } else if (options.method === "memo") {
+    const memo = options.receiver?.startsWith("0x")
+      ? options.receiver.slice(2)
+      : options.receiver;
+    const tx = await bitcoinMakeTransactionWithMemo(
+      options.gateway,
+      key,
+      0,
+      utxos,
+      address,
+      options.api,
+      memo
     );
+    const txid = await broadcastBtcTransaction(tx, options.api);
+    console.log(`Transaction hash: ${txid}`);
   }
-
-  const amount =
-    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
-
-  const { commitFee, revealFee, totalFee } = calculateFees(data);
-
-  await displayAndConfirmTransaction({
-    commitFee,
-    encodedMessage: payload,
-    encodingFormat: "ABI",
-    gateway: options.gateway,
-    network: "Signet",
-    operation: "Call",
-    rawInscriptionData: data.toString("hex"),
-    receiver: options.receiver,
-    revealFee,
-    revertAddress: options.revertAddress,
-    sender: address,
-    totalFee,
-  });
-
-  await createAndBroadcastTransactions(
-    key,
-    utxos,
-    address,
-    data,
-    options.api,
-    amount,
-    options.gateway
-  );
 };
 
 /**

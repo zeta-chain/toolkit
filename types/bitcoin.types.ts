@@ -52,6 +52,8 @@ export interface BtcTxById {
   weight: number;
 }
 
+export const bitcoinMethods = ["inscription", "memo"] as const;
+
 export const depositAndCallOptionsSchema = z
   .object({
     amount: validAmountSchema,
@@ -64,6 +66,7 @@ export const depositAndCallOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
+    method: z.enum(bitcoinMethods).default("inscription"),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
@@ -81,7 +84,7 @@ export const depositOptionsSchema = z.object({
   api: z.string().url(),
   data: hexStringSchema.optional(),
   gateway: z.string(),
-  method: z.enum(["inscription", "memo"]).default("inscription"),
+  method: z.enum(bitcoinMethods).default("inscription"),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
   receiver: z.string().optional(),
@@ -99,6 +102,7 @@ export const callOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
+    method: z.enum(bitcoinMethods).default("inscription"),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
