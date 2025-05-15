@@ -85,12 +85,6 @@ const main = async (options: DepositOptions) => {
       ? options.data.slice(2)
       : options.data;
 
-    if (!memo || memo.length < 40) {
-      throw new Error(
-        "Invalid memo: first 20 bytes of the data should be EVM receiver address on ZetaChain"
-      );
-    }
-
     const tx = await bitcoinMakeTransactionWithMemo(
       options.gateway,
       key,

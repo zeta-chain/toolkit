@@ -3,6 +3,12 @@ import * as bitcoin from "bitcoinjs-lib";
 
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
 
+const errorTooLong =
+  "Invalid memo: too long. Please, use less than 80 bytes (including the 20 bytes of the receiver address) or use inscription.";
+
+const errorNoReceiver =
+  "Invalid memo: first 20 bytes of the data should be EVM receiver address on ZetaChain";
+
 export const bitcoinMakeTransactionWithMemo = async (
   gateway: string,
   key: bitcoin.Signer,
@@ -14,8 +20,11 @@ export const bitcoinMakeTransactionWithMemo = async (
 ) => {
   const TESTNET = bitcoin.networks.testnet;
   const memo = Buffer.from(m, "hex");
+  console.log(memo.length);
 
-  if (memo.length >= 78) throw new Error("Memo too long");
+  if (!memo || memo.length < 20) throw new Error(errorNoReceiver);
+  if (memo.length > 80) throw new Error(errorTooLong);
+
   utxos.sort((a, b) => a.value - b.value); // sort by value, ascending
   const fee = 10000;
   const memoAmount = 0; // Use 0 satoshis for OP_RETURN output

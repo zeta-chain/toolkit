@@ -99,12 +99,6 @@ const main = async (options: CallOptions) => {
       ? options.data.slice(2)
       : options.data;
 
-    if (!memo || memo.length < 40) {
-      throw new Error(
-        "Invalid memo: first 20 bytes of the data should be EVM receiver address on ZetaChain"
-      );
-    }
-
     const tx = await bitcoinMakeTransactionWithMemo(
       options.gateway,
       key,
@@ -114,8 +108,8 @@ const main = async (options: CallOptions) => {
       options.api,
       memo
     );
-    const txid = await broadcastBtcTransaction(tx, options.api);
-    console.log(`Transaction hash: ${txid}`);
+    // const txid = await broadcastBtcTransaction(tx, options.api);
+    // console.log(`Transaction hash: ${txid}`);
   }
 };
 
