@@ -6,10 +6,10 @@ import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
 import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
+  broadcastBtcTransaction,
   createAndBroadcastTransactions,
   displayAndConfirmTransaction,
   fetchUtxos,
-  broadcastBtcTransaction,
   setupBitcoinKeyPair,
 } from "../../../../utils/bitcoin.command.helpers";
 import { calculateFees } from "../../../../utils/bitcoin.helpers";
@@ -19,8 +19,8 @@ import {
   OpCode,
   trimOx,
 } from "../../../../utils/bitcoinEncode";
-import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 import { bitcoinMakeTransactionWithMemo } from "../../../../utils/bitcoinMemo.helpers";
+import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
