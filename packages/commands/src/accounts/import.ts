@@ -29,7 +29,7 @@ export const importAccountsCommand = new Command("import")
     new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
   .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
-  .option("--private-key <key>", "Private key in hex format")
+  .requiredOption("--private-key <key>", "Private key in hex format")
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, importAccountOptionsSchema, {
       exitOnError: true,

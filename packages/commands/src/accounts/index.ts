@@ -9,8 +9,8 @@ import { showAccountsCommand } from "./show";
 export const accountsCommand = new Command("accounts")
   .description("Account management commands")
   .addCommand(createAccountsCommand)
-  .addCommand(showAccountsCommand)
-  .addCommand(listAccountsCommand)
   .addCommand(deleteAccountsCommand)
   .addCommand(importAccountsCommand)
+  .addCommand(listAccountsCommand)
+  .addCommand(showAccountsCommand)
   .helpCommand(false);
