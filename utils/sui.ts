@@ -36,7 +36,14 @@ export const getKeypairFromMnemonic = (mnemonic: string): Ed25519Keypair => {
   const seed = mnemonicToSeedSync(mnemonic);
   const hdKey = HDKey.fromMasterSeed(seed);
   const derivedKey = hdKey.derive("m/44'/784'/0'/0'/0'");
-  return Ed25519Keypair.fromSecretKey(derivedKey.privateKey!);
+
+  if (!derivedKey.privateKey || derivedKey.privateKey.length !== 32) {
+    throw new Error(
+      "Failed to derive a valid Ed25519 private key from mnemonic"
+    );
+  }
+
+  return Ed25519Keypair.fromSecretKey(derivedKey.privateKey);
 };
 
 export const getKeypairFromPrivateKey = (
