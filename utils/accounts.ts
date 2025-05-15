@@ -182,11 +182,10 @@ export const createAccountForType = async (
     safeWriteFile(keyPath, keyData);
     console.log(`${type.toUpperCase()} account created successfully!`);
     console.log(`Key saved to: ${keyPath}`);
-    if (type === "evm") {
-      console.log(`Address: ${keyData.address}`);
-    } else if (type === "solana") {
-      console.log(`Public Key: ${keyData.address}`);
-    }
+
+    const address =
+      type === "bitcoin" ? keyData.mainnetAddress : keyData.address;
+    console.log(`Address: ${address}`);
   } catch (error: unknown) {
     handleError({
       context: "Failed to create or save account",
