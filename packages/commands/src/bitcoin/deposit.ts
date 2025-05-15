@@ -82,6 +82,9 @@ const main = async (options: DepositOptions) => {
       options.gateway
     );
   } else if (options.method === "memo") {
+    const receiver = options.receiver?.startsWith("0x")
+      ? options.receiver.slice(2)
+      : options.receiver;
     const tx = await bitcoinMakeTransactionWithMemo(
       options.gateway,
       key,
@@ -89,7 +92,7 @@ const main = async (options: DepositOptions) => {
       utxos,
       address,
       options.api,
-      options.data
+      receiver
     );
     const txid = await broadcastBtcTransaction(tx, options.api);
     console.log(`Transaction hash: ${txid}`);
