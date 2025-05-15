@@ -108,8 +108,8 @@ const main = async (options: CallOptions) => {
       options.api,
       memo
     );
-    // const txid = await broadcastBtcTransaction(tx, options.api);
-    // console.log(`Transaction hash: ${txid}`);
+    const txid = await broadcastBtcTransaction(tx, options.api);
+    console.log(`Transaction hash: ${txid}`);
   }
 };
 
