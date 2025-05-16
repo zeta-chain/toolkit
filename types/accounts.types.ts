@@ -41,10 +41,19 @@ const bitcoinAccountDataSchema = z.object({
   testnetWIF: z.string(),
 });
 
+const suiAccountDataSchema = z.object({
+  address: z.string(),
+  name: z.string().optional(),
+  privateKey: z.string(),
+  privateKeyEncoding: z.string(),
+  privateKeyScheme: z.string(),
+  publicKey: z.string(),
+});
+
 export type EVMAccountData = z.infer<typeof evmAccountDataSchema>;
 export type SolanaAccountData = z.infer<typeof solanaAccountDataSchema>;
 export type BitcoinAccountData = z.infer<typeof bitcoinAccountDataSchema>;
-
+export type SuiAccountData = z.infer<typeof suiAccountDataSchema>;
 export const accountNameSchema = z
   .string()
   .min(1, "Account name is required")
