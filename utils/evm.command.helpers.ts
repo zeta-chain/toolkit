@@ -44,6 +44,15 @@ export const setupTransaction = async (options: EvmDepositOptions) => {
   const chainId = parseInt(options.chainId);
   const networkType = getNetworkTypeByChainId(chainId);
   const rpcUrl = options.rpc || getRpcUrl(chainId);
+
+  if (!rpcUrl) {
+    handleError({
+      context: "Failed to retrieve RPC URL",
+      error: new Error("RPC URL not found"),
+      shouldThrow: true,
+    });
+  }
+
   const provider = new ethers.JsonRpcProvider(rpcUrl);
 
   const privateKey =
