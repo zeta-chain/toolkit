@@ -6,7 +6,7 @@ import {
   stringArraySchema,
   typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
-import { handleError } from "../../../../utils";
+import { handleError, validateAndParseSchema } from "../../../../utils";
 import {
   addCommonEvmDepositCommandOptions,
   baseEvmDepositOptionsSchema,
@@ -84,6 +84,12 @@ addCommonEvmDepositCommandOptions(depositAndCallCommand)
     "Parameter values for the function call"
   )
   .action(async (options) => {
-    const validatedOptions = depositAndCallOptionsSchema.parse(options);
+    const validatedOptions = validateAndParseSchema(
+      options,
+      depositAndCallOptionsSchema,
+      {
+        exitOnError: true,
+      }
+    );
     await main(validatedOptions);
   });

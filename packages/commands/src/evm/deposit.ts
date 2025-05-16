@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { z } from "zod";
 
 import { namePkRefineRule } from "../../../../types/shared.schema";
-import { handleError } from "../../../../utils";
+import { handleError, validateAndParseSchema } from "../../../../utils";
 import {
   addCommonEvmDepositCommandOptions,
   baseEvmDepositOptionsSchema,
@@ -46,6 +46,12 @@ export const depositCommand = new Command("deposit").description(
 );
 
 addCommonEvmDepositCommandOptions(depositCommand).action(async (options) => {
-  const validatedOptions = depositOptionsSchema.parse(options);
+  const validatedOptions = validateAndParseSchema(
+    options,
+    depositOptionsSchema,
+    {
+      exitOnError: true,
+    }
+  );
   await main(validatedOptions);
 });
