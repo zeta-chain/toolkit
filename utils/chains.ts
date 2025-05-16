@@ -48,5 +48,6 @@ export const getNetworkTypeByChainId = (
     throw new Error(`Network with chain ID ${chainId} not found`);
   }
 
-  return network.type as "mainnet" | "testnet";
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return network.type;
 };
