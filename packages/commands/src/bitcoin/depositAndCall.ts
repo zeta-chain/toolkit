@@ -78,7 +78,7 @@ const main = async (options: DepositAndCallOptions) => {
       encodedMessage: payload,
       encodingFormat: "ABI",
       gateway: options.gateway,
-      network: "Signet",
+      network: options.api,
       operation: "DepositAndCall",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,

@@ -77,7 +77,7 @@ const main = async (options: CallOptions) => {
       encodedMessage: payload,
       encodingFormat: "ABI",
       gateway: options.gateway,
-      network: "Signet",
+      network: options.api,
       operation: "Call",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,

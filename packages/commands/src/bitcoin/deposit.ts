@@ -63,7 +63,7 @@ const main = async (options: DepositOptions) => {
       depositFee,
       encodingFormat: "ABI",
       gateway: options.gateway,
-      network: "Signet",
+      network: options.api,
       operation: "Deposit",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
