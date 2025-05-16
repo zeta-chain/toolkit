@@ -9,6 +9,7 @@ import * as ecc from "tiny-secp256k1";
 import { BitcoinAccountData } from "../types/accounts.types";
 import { BITCOIN_FEES } from "../types/bitcoin.constants";
 import type { BtcUtxo } from "../types/bitcoin.types";
+import { bitcoinMethods } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { getAccountData } from "./accounts";
 import {
@@ -16,6 +17,7 @@ import {
   makeRevealTransaction,
   SIGNET,
 } from "./bitcoin.helpers";
+import { calculateMemoTransactionFee } from "./bitcoinMemo.helpers";
 import { handleError } from "./handleError";
 
 export interface BitcoinKeyPair {
@@ -26,6 +28,7 @@ export interface BitcoinKeyPair {
 export interface TransactionInfo {
   amount?: string;
   commitFee: number;
+  depositFee: number;
   encodedMessage?: string;
   encodingFormat: string;
   gateway: string;
@@ -107,10 +110,36 @@ Raw Inscription Data: ${info.rawInscriptionData}
 Fees:
   - Commit Fee: ${info.commitFee} sat
   - Reveal Fee: ${info.revealFee} sat
+  - Deposit Fee: ${info.depositFee} sat
   - Total Fee: ${info.totalFee} sat (${(info.totalFee / 100000000).toFixed(
     8
   )} BTC)
 `);
+  await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
+};
+
+/**
+ * Displays memo transaction details to the user and asks for confirmation before proceeding
+ */
+export const displayAndConfirmMemoTransaction = async (
+  amount: number,
+  gateway: string,
+  sender: string,
+  memo: string
+) => {
+  const memoBuffer = Buffer.from(memo, "hex");
+  const fee = calculateMemoTransactionFee(memoBuffer.length);
+
+  console.log(`
+Network: Signet
+Amount: ${(amount / 100000000).toFixed(8)} BTC
+Gateway: ${gateway}
+Sender: ${sender}
+Operation: Memo Transaction
+Memo: ${memo}
+Fee: ${fee} sat (${(fee / 100000000).toFixed(8)} BTC)
+`);
+
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 };
 
@@ -188,6 +217,11 @@ export const addCommonOptions = (command: Command) => {
       new Option("--name <name>", "Account name")
         .default(DEFAULT_ACCOUNT_NAME)
         .conflicts(["private-key"])
+    )
+    .addOption(
+      new Option("--method <method>", "Method")
+        .choices(bitcoinMethods)
+        .default("inscription")
     );
 };
 

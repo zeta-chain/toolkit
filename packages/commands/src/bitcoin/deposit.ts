@@ -1,11 +1,14 @@
 import { Command, Option } from "commander";
+import { ethers } from "ethers";
 import { z } from "zod";
 
 import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
 import { depositOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
+  broadcastBtcTransaction,
   createAndBroadcastTransactions,
+  displayAndConfirmMemoTransaction,
   displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -16,8 +19,8 @@ import {
   EncodingFormat,
   OpCode,
 } from "../../../../utils/bitcoinEncode";
+import { bitcoinMakeTransactionWithMemo } from "../../../../utils/bitcoinMemo.helpers";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
@@ -27,55 +30,84 @@ const main = async (options: DepositOptions) => {
   );
   const utxos = await fetchUtxos(address, options.api);
 
-  const revertAddress = options.revertAddress || address;
+  if (options.method === "inscription") {
+    const revertAddress = options.revertAddress || address;
+    let data;
+    if (options.receiver && revertAddress) {
+      data = Buffer.from(
+        bitcoinEncode(
+          options.receiver,
+          Buffer.from(""), // Empty payload for deposit
+          revertAddress,
+          OpCode.Deposit,
+          EncodingFormat.EncodingFmtABI
+        ),
+        "hex"
+      );
+    } else if (options.data) {
+      data = Buffer.from(options.data, "hex");
+    } else {
+      throw new Error(
+        "Provide either --receiver or receiver encoded in --data"
+      );
+    }
 
-  let data;
-  if (options.receiver && revertAddress) {
-    data = Buffer.from(
-      bitcoinEncode(
-        options.receiver,
-        Buffer.from(""), // Empty payload for deposit
-        revertAddress,
-        OpCode.Deposit,
-        EncodingFormat.EncodingFmtABI
-      ),
-      "hex"
+    const amount =
+      BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
+
+    const { commitFee, revealFee, depositFee, totalFee } = calculateFees(data);
+
+    await displayAndConfirmTransaction({
+      amount: options.amount,
+      commitFee,
+      depositFee,
+      encodingFormat: "ABI",
+      gateway: options.gateway,
+      network: options.api,
+      operation: "Deposit",
+      rawInscriptionData: data.toString("hex"),
+      receiver: options.receiver,
+      revealFee,
+      revertAddress,
+      sender: address,
+      totalFee,
+    });
+
+    await createAndBroadcastTransactions(
+      key,
+      utxos,
+      address,
+      data,
+      options.api,
+      amount + depositFee,
+      options.gateway
     );
-  } else if (options.data) {
-    data = Buffer.from(options.data, "hex");
-  } else {
-    throw new Error("Provide either --receiver or receiver encoded in --data");
+  } else if (options.method === "memo") {
+    const memo = options.data?.startsWith("0x")
+      ? options.data.slice(2)
+      : options.data;
+
+    const amount = Number(ethers.parseUnits(options.amount, 8));
+
+    await displayAndConfirmMemoTransaction(
+      amount,
+      options.gateway,
+      address,
+      memo || ""
+    );
+
+    const tx = await bitcoinMakeTransactionWithMemo(
+      options.gateway,
+      key,
+      amount,
+      utxos,
+      address,
+      options.api,
+      memo
+    );
+    const txid = await broadcastBtcTransaction(tx, options.api);
+    console.log(`Transaction hash: ${txid}`);
   }
-
-  const amount =
-    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
-
-  const { commitFee, revealFee, totalFee } = calculateFees(data);
-
-  await displayAndConfirmTransaction({
-    amount: options.amount,
-    commitFee,
-    encodingFormat: "ABI",
-    gateway: options.gateway,
-    network: "Signet",
-    operation: "Deposit",
-    rawInscriptionData: data.toString("hex"),
-    receiver: options.receiver,
-    revealFee,
-    revertAddress,
-    sender: address,
-    totalFee,
-  });
-
-  await createAndBroadcastTransactions(
-    key,
-    utxos,
-    address,
-    data,
-    options.api,
-    amount,
-    options.gateway
-  );
 };
 
 /**

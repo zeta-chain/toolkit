@@ -52,12 +52,15 @@ export interface BtcTxById {
   weight: number;
 }
 
+export const bitcoinMethods = ["inscription", "memo"] as const;
+
 export const depositAndCallOptionsSchema = z
   .object({
     amount: validAmountSchema,
     api: z.string().url(),
     data: hexStringSchema.optional(),
     gateway: z.string(),
+    method: z.enum(bitcoinMethods).default("inscription"),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
     receiver: z.string().optional(),
@@ -81,6 +84,7 @@ export const depositOptionsSchema = z.object({
   api: z.string().url(),
   data: hexStringSchema.optional(),
   gateway: z.string(),
+  method: z.enum(bitcoinMethods).default("inscription"),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
   receiver: z.string().optional(),
@@ -92,6 +96,7 @@ export const callOptionsSchema = z
     api: z.string().url(),
     data: hexStringSchema.optional(),
     gateway: z.string(),
+    method: z.enum(bitcoinMethods).default("inscription"),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
     receiver: z.string().optional(),
