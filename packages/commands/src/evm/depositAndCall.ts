@@ -42,7 +42,9 @@ Function parameters: ${options.values.join(", ")}
 Parameter types: ${stringifiedTypes}
 `);
 
-    await confirmTransaction(options);
+    const isConfirmed = await confirmTransaction(options);
+
+    if (!isConfirmed) return;
 
     const values = parseAbiValues(stringifiedTypes, options.values);
     const parsedTypes = parseJson(stringifiedTypes, stringArraySchema);

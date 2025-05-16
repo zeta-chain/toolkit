@@ -132,18 +132,21 @@ export const confirmTransaction = async (options: EvmDepositOptions) => {
     });
   } catch (error) {
     handleError({
-      context: "Transaction cancelled",
+      context: "Failed to confirm transaction",
       error,
-      shouldThrow: true,
+      shouldThrow: false,
     });
+
+    return false; // treat as “not confirmed”
   }
 
   if (!confirmed) {
     handleError({
-      context: "Transaction cancelled",
       error: new Error("Transaction cancelled"),
-      shouldThrow: true,
+      shouldThrow: false,
     });
+
+    return false; // treat as “not confirmed”
   }
 
   return confirmed;

@@ -21,7 +21,9 @@ const main = async (options: DepositOptions) => {
   try {
     const { client, signer } = await setupTransaction(options);
 
-    await confirmTransaction(options);
+    const isConfirmed = await confirmTransaction(options);
+
+    if (!isConfirmed) return;
 
     const tx = await client.evmDeposit({
       amount: options.amount,
