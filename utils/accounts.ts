@@ -83,56 +83,6 @@ const createSolanaAccount = (privateKey?: string): AccountData => {
   };
 };
 
-const createBitcoinAccount = (privateKey?: string): AccountData => {
-  const ECPair = ECPairFactory(ecc);
-
-  // Generate or use provided keypair
-  const keyPair = privateKey
-    ? ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"))
-    : ECPair.makeRandom();
-
-  // Store the raw private key bytes (hex encoded for storage)
-  const privateKeyBytes = keyPair.privateKey?.toString("hex") || "";
-  if (!privateKeyBytes) {
-    throw new Error("Failed to generate Bitcoin private key");
-  }
-
-  // Create testnet WIF
-  const testnetWIF = ECPair.fromPrivateKey(
-    Buffer.from(privateKeyBytes, "hex"),
-    { network: bitcoin.networks.testnet }
-  ).toWIF();
-
-  // Create mainnet WIF
-  const mainnetWIF = ECPair.fromPrivateKey(
-    Buffer.from(privateKeyBytes, "hex"),
-    { network: bitcoin.networks.bitcoin }
-  ).toWIF();
-
-  // Generate a SegWit (P2WPKH) address for mainnet
-  const { address: mainnetAddress } = bitcoin.payments.p2wpkh({
-    network: bitcoin.networks.bitcoin,
-    pubkey: keyPair.publicKey,
-  });
-
-  // Generate a SegWit (P2WPKH) address for testnet
-  const { address: testnetAddress } = bitcoin.payments.p2wpkh({
-    network: bitcoin.networks.testnet,
-    pubkey: keyPair.publicKey,
-  });
-
-  if (!mainnetAddress || !testnetAddress)
-    throw new Error("Unable to generate Bitcoin addresses");
-
-  return {
-    mainnetAddress,
-    mainnetWIF,
-    privateKeyBytes,
-    testnetAddress,
-    testnetWIF,
-  };
-};
-
 export const createAccountForType = async (
   type: (typeof AvailableAccountTypes)[number],
   name: string,
@@ -188,6 +138,56 @@ export const createAccountForType = async (
       shouldThrow: true,
     });
   }
+};
+
+const createBitcoinAccount = (privateKey?: string): AccountData => {
+  const ECPair = ECPairFactory(ecc);
+
+  // Generate or use provided keypair
+  const keyPair = privateKey
+    ? ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"))
+    : ECPair.makeRandom();
+
+  // Store the raw private key bytes (hex encoded for storage)
+  const privateKeyBytes = keyPair.privateKey?.toString("hex") || "";
+  if (!privateKeyBytes) {
+    throw new Error("Failed to generate Bitcoin private key");
+  }
+
+  // Create testnet WIF
+  const testnetWIF = ECPair.fromPrivateKey(
+    Buffer.from(privateKeyBytes, "hex"),
+    { network: bitcoin.networks.testnet }
+  ).toWIF();
+
+  // Create mainnet WIF
+  const mainnetWIF = ECPair.fromPrivateKey(
+    Buffer.from(privateKeyBytes, "hex"),
+    { network: bitcoin.networks.bitcoin }
+  ).toWIF();
+
+  // Generate a SegWit (P2WPKH) address for mainnet
+  const { address: mainnetAddress } = bitcoin.payments.p2wpkh({
+    network: bitcoin.networks.bitcoin,
+    pubkey: keyPair.publicKey,
+  });
+
+  // Generate a SegWit (P2WPKH) address for testnet
+  const { address: testnetAddress } = bitcoin.payments.p2wpkh({
+    network: bitcoin.networks.testnet,
+    pubkey: keyPair.publicKey,
+  });
+
+  if (!mainnetAddress || !testnetAddress)
+    throw new Error("Unable to generate Bitcoin addresses");
+
+  return {
+    mainnetAddress,
+    mainnetWIF,
+    privateKeyBytes,
+    testnetAddress,
+    testnetWIF,
+  };
 };
 
 export const listChainAccounts = (
