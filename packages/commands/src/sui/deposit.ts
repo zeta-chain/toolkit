@@ -38,39 +38,29 @@ const depositOptionsSchema = z
 
 export type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
-const main = async ({
-  mnemonic,
-  privateKey,
-  gatewayObject,
-  gatewayPackage,
-  receiver,
-  amount,
-  coinType,
-  network,
-  gasBudget,
-}: DepositOptions) => {
-  const client = new SuiClient({ url: getFullnodeUrl(network) });
+const main = async (options: DepositOptions) => {
+  const client = new SuiClient({ url: getFullnodeUrl(options.network) });
 
   // Convert gas budget to BigInt or use default
-  const gasBudgetValue = BigInt(gasBudget);
+  const gasBudgetValue = BigInt(options.gasBudget);
 
-  if (!gatewayObject || !gatewayPackage) {
+  if (!options.gatewayObject || !options.gatewayPackage) {
     throw new Error(
       "Gateway object ID and module ID must be provided either as parameters or in localnet.json"
     );
   }
 
-  const keypair = mnemonic
-    ? getKeypairFromMnemonic(mnemonic)
-    : getKeypairFromPrivateKey(privateKey!);
+  const keypair = options.mnemonic
+    ? getKeypairFromMnemonic(options.mnemonic)
+    : getKeypairFromPrivateKey(options.privateKey!);
   const address = keypair.toSuiAddress();
   console.log(`Using Address: ${address}`);
 
-  const fullCoinType = coinType || "0x2::sui::SUI";
+  const fullCoinType = options.coinType || "0x2::sui::SUI";
   console.log(`Using Coin Type: ${fullCoinType}`);
 
   // Convert amount to smallest unit (e.g., SUI to MIST)
-  const amountInSmallestUnit = toSmallestUnit(amount);
+  const amountInSmallestUnit = toSmallestUnit(options.amount);
   console.log(`Amount in smallest unit: ${amountInSmallestUnit}`);
 
   const coinObjectId = await getCoin(client, address, fullCoinType);
@@ -152,11 +142,11 @@ const main = async ({
 
     tx.moveCall({
       arguments: [
-        tx.object(gatewayObject),
+        tx.object(options.gatewayObject),
         splitCoin,
-        tx.pure.string(receiver),
+        tx.pure.string(options.receiver),
       ],
-      target: `${gatewayPackage}::gateway::deposit`,
+      target: `${options.gatewayPackage}::gateway::deposit`,
       typeArguments: [fullCoinType],
     });
   } else {
@@ -206,11 +196,11 @@ const main = async ({
 
     tx.moveCall({
       arguments: [
-        tx.object(gatewayObject),
+        tx.object(options.gatewayObject),
         splitCoin,
-        tx.pure.string(receiver),
+        tx.pure.string(options.receiver),
       ],
-      target: `${gatewayPackage}::gateway::deposit`,
+      target: `${options.gatewayPackage}::gateway::deposit`,
       typeArguments: [fullCoinType],
     });
   }
@@ -271,4 +261,7 @@ export const depositCommand = new Command("deposit")
     "Gas budget in MIST",
     GAS_BUDGET.toString()
   )
-  .action(main);
+  .action(async (options) => {
+    const validatedOptions = depositOptionsSchema.parse(options);
+    await main(validatedOptions);
+  });
