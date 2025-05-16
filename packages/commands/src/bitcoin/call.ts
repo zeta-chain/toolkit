@@ -9,6 +9,7 @@ import {
   broadcastBtcTransaction,
   createAndBroadcastTransactions,
   displayAndConfirmTransaction,
+  displayAndConfirmMemoTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../utils/bitcoin.command.helpers";
@@ -68,7 +69,7 @@ const main = async (options: CallOptions) => {
     const amount =
       BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
 
-    const { commitFee, revealFee, totalFee } = calculateFees(data);
+    const { commitFee, revealFee, depositFee, totalFee } = calculateFees(data);
 
     await displayAndConfirmTransaction({
       commitFee,
@@ -80,6 +81,7 @@ const main = async (options: CallOptions) => {
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
       revealFee,
+      depositFee,
       revertAddress: options.revertAddress,
       sender: address,
       totalFee,
@@ -91,13 +93,20 @@ const main = async (options: CallOptions) => {
       address,
       data,
       options.api,
-      amount,
+      amount + depositFee,
       options.gateway
     );
   } else if (options.method === "memo") {
     const memo = options.data?.startsWith("0x")
       ? options.data.slice(2)
       : options.data;
+
+    await displayAndConfirmMemoTransaction(
+      BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH,
+      options.gateway,
+      address,
+      memo || ""
+    );
 
     const tx = await bitcoinMakeTransactionWithMemo(
       options.gateway,

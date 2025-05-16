@@ -18,6 +18,7 @@ import {
   SIGNET,
 } from "./bitcoin.helpers";
 import { handleError } from "./handleError";
+import { calculateMemoTransactionFee } from "./bitcoinMemo.helpers";
 
 export interface BitcoinKeyPair {
   address: string;
@@ -35,6 +36,7 @@ export interface TransactionInfo {
   rawInscriptionData: string;
   receiver?: string;
   revealFee: number;
+  depositFee: number;
   revertAddress?: string;
   sender: string;
   totalFee: number;
@@ -108,10 +110,36 @@ Raw Inscription Data: ${info.rawInscriptionData}
 Fees:
   - Commit Fee: ${info.commitFee} sat
   - Reveal Fee: ${info.revealFee} sat
+  - Deposit Fee: ${info.depositFee} sat
   - Total Fee: ${info.totalFee} sat (${(info.totalFee / 100000000).toFixed(
     8
   )} BTC)
 `);
+  await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
+};
+
+/**
+ * Displays memo transaction details to the user and asks for confirmation before proceeding
+ */
+export const displayAndConfirmMemoTransaction = async (
+  amount: number,
+  gateway: string,
+  sender: string,
+  memo: string
+) => {
+  const memoBuffer = Buffer.from(memo, "hex");
+  const fee = calculateMemoTransactionFee(memoBuffer.length);
+
+  console.log(`
+Network: Signet
+Amount: ${(amount / 100000000).toFixed(8)} BTC
+Gateway: ${gateway}
+Sender: ${sender}
+Operation: Memo Transaction
+Memo: ${memo}
+Fee: ${fee} sat (${(fee / 100000000).toFixed(8)} BTC)
+`);
+
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 };
 

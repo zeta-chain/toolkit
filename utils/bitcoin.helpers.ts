@@ -246,7 +246,7 @@ export const makeRevealTransaction = (
 /**
  * Calculates the total fees for a Bitcoin inscription transaction
  * @param data - The inscription data buffer
- * @returns Object containing commit fee, reveal fee, and total fee
+ * @returns Object containing commit fee, reveal fee, deposit fee, and total fee
  */
 export const calculateFees = (data: Buffer) => {
   const commitFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
@@ -259,6 +259,27 @@ export const calculateFees = (data: Buffer) => {
       BITCOIN_TX.P2WPKH_OUTPUT_VBYTES) *
       BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
   );
-  const totalFee = commitFee + revealFee;
-  return { commitFee, revealFee, totalFee };
+
+  // Calculate deposit fee based on reveal transaction
+  const txVsize =
+    BITCOIN_TX.TX_OVERHEAD +
+    36 +
+    1 +
+    43 +
+    Math.ceil(data.length / 4) +
+    BITCOIN_TX.P2WPKH_OUTPUT_VBYTES;
+  const depositFee = calculateDepositFee(revealFee, txVsize);
+
+  const totalFee = commitFee + revealFee + depositFee;
+  return { commitFee, revealFee, depositFee, totalFee };
+};
+
+/**
+ * Calculates the deposit fee for a Bitcoin transaction
+ * @param txFee - Total transaction fee (totalInputValue - totalOutputValue)
+ * @param txVsize - Virtual size of the transaction in vbytes
+ * @returns The calculated deposit fee in satoshis
+ */
+export const calculateDepositFee = (txFee: number, txVsize: number): number => {
+  return Math.ceil((txFee / txVsize) * 68 * 2);
 };
