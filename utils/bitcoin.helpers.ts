@@ -271,7 +271,7 @@ export const calculateFees = (data: Buffer) => {
   const depositFee = calculateDepositFee(revealFee, txVsize);
 
   const totalFee = commitFee + revealFee + depositFee;
-  return { commitFee, revealFee, depositFee, totalFee };
+  return { commitFee, depositFee, revealFee, totalFee };
 };
 
 /**

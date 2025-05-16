@@ -17,8 +17,8 @@ import {
   makeRevealTransaction,
   SIGNET,
 } from "./bitcoin.helpers";
-import { handleError } from "./handleError";
 import { calculateMemoTransactionFee } from "./bitcoinMemo.helpers";
+import { handleError } from "./handleError";
 
 export interface BitcoinKeyPair {
   address: string;
@@ -28,6 +28,7 @@ export interface BitcoinKeyPair {
 export interface TransactionInfo {
   amount?: string;
   commitFee: number;
+  depositFee: number;
   encodedMessage?: string;
   encodingFormat: string;
   gateway: string;
@@ -36,7 +37,6 @@ export interface TransactionInfo {
   rawInscriptionData: string;
   receiver?: string;
   revealFee: number;
-  depositFee: number;
   revertAddress?: string;
   sender: string;
   totalFee: number;

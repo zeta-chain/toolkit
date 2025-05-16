@@ -8,8 +8,8 @@ import {
   addCommonOptions,
   broadcastBtcTransaction,
   createAndBroadcastTransactions,
-  displayAndConfirmTransaction,
   displayAndConfirmMemoTransaction,
+  displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../utils/bitcoin.command.helpers";
@@ -60,6 +60,7 @@ const main = async (options: DepositOptions) => {
     await displayAndConfirmTransaction({
       amount: options.amount,
       commitFee,
+      depositFee,
       encodingFormat: "ABI",
       gateway: options.gateway,
       network: "Signet",
@@ -67,7 +68,6 @@ const main = async (options: DepositOptions) => {
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
       revealFee,
-      depositFee,
       revertAddress,
       sender: address,
       totalFee,
