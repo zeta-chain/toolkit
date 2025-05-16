@@ -1,18 +1,18 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
 import { Command, Option } from "commander";
 import { z } from "zod";
 
+import { SuiAccountData } from "../../../../types/accounts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
+import { getAccountData } from "../../../../utils/accounts";
 import {
   GAS_BUDGET,
   getCoin,
   getKeypairFromMnemonic,
   getKeypairFromPrivateKey,
 } from "../../../../utils/sui";
-import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
-import { SuiAccountData } from "../../../../types/accounts.types";
-import { getAccountData } from "../../../../utils/accounts";
 // Convert decimal amount to smallest unit (e.g., SUI to MIST)
 const toSmallestUnit = (amount: string, decimals = 9): bigint => {
   if (!/^\d+(\.\d+)?$/.test(amount)) {
@@ -31,10 +31,10 @@ const depositOptionsSchema = z
     gatewayObject: z.string(),
     gatewayPackage: z.string(),
     mnemonic: z.string().optional(),
+    name: z.string().optional(),
     network: z.enum(["localnet", "testnet", "mainnet"]),
     privateKey: z.string().optional(),
     receiver: z.string(),
-    name: z.string().optional(),
   })
   .refine((data) => data.mnemonic || data.privateKey || data.name, {
     message: "Either mnemonic, private key or name must be provided",

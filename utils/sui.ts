@@ -1,8 +1,8 @@
 import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { bech32 } from "bech32";
 import { mnemonicToSeedSync } from "bip39";
 import { HDKey } from "ethereum-cryptography/hdkey";
-import { bech32 } from "bech32";
 
 export const GAS_BUDGET = 10_000_000;
 
