@@ -14,7 +14,7 @@ import {
 import { handleError, printEvmTransactionDetails } from "../../../../utils";
 import { getAccountData } from "../../../../utils/accounts";
 import { hasSufficientBalanceEvm } from "../../../../utils/balances";
-import { getRpcUrl } from "../../../../utils/chains";
+import { getNetworkTypeByChainId, getRpcUrl } from "../../../../utils/chains";
 import { ZetaChainClient } from "../../../client/src/client";
 
 export const baseEvmDepositOptionsSchema = z.object({
@@ -27,7 +27,6 @@ export const baseEvmDepositOptionsSchema = z.object({
   gasPrice: numericStringSchema.optional(),
   gateway: evmAddressSchema.optional(),
   name: z.string().default(DEFAULT_ACCOUNT_NAME),
-  network: z.enum(["mainnet", "testnet"]).default("testnet"),
   onRevertGasLimit: numericStringSchema.default("200000"),
   privateKey: evmPrivateKeySchema.optional(),
   receiver: evmAddressSchema,
@@ -42,7 +41,7 @@ type EvmDepositOptions = z.infer<typeof baseEvmDepositOptionsSchema>;
 // Common setup function for both deposit commands
 export const setupTransaction = async (options: EvmDepositOptions) => {
   const chainId = parseInt(options.chainId);
-  const networkType = options.network;
+  const networkType = getNetworkTypeByChainId(chainId);
   const rpcUrl = options.rpc || getRpcUrl(chainId);
   const provider = new ethers.JsonRpcProvider(rpcUrl);
 
@@ -160,11 +159,6 @@ export const prepareTxOptions = (options: EvmDepositOptions) => {
 export const addCommonEvmDepositCommandOptions = (command: Command) => {
   return command
     .requiredOption("--amount <amount>", "Amount of tokens to deposit")
-    .addOption(
-      new Option("--network <network>", "Network to use")
-        .choices(["mainnet", "testnet"])
-        .default("testnet")
-    )
     .requiredOption("--chain-id <chainId>", "Chain ID of the network")
     .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
     .addOption(

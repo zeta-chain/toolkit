@@ -35,3 +35,18 @@ export const getRpcUrl = (chainId: number): string => {
 
   return evmRpc.url;
 };
+
+export const getNetworkTypeByChainId = (
+  chainId: number
+): "mainnet" | "testnet" => {
+  const typedNetworks = networks as NetworksSchema;
+  const network = Object.values(typedNetworks).find(
+    (n) => n.chain_id === chainId
+  );
+
+  if (!network?.type) {
+    throw new Error(`Network with chain ID ${chainId} not found`);
+  }
+
+  return network.type as "mainnet" | "testnet";
+};
