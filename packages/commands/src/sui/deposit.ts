@@ -26,13 +26,14 @@ const toSmallestUnit = (amount: string, decimals = 9): bigint => {
 const depositOptionsSchema = z
   .object({
     amount: z.string(),
+    chainId: z.enum(["101", "103", "0103"]).optional(),
     coinType: z.string().optional(),
     gasBudget: z.string(),
     gatewayObject: z.string(),
     gatewayPackage: z.string(),
     mnemonic: z.string().optional(),
     name: z.string().optional(),
-    network: z.enum(["localnet", "testnet", "mainnet"]),
+    network: z.enum(["localnet", "testnet", "mainnet"]).optional(),
     privateKey: z.string().optional(),
     receiver: z.string(),
   })
@@ -43,9 +44,20 @@ const depositOptionsSchema = z
 export type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
-  const client = new SuiClient({ url: getFullnodeUrl(options.network) });
+  const chainIdToNetwork = {
+    "0103": "localnet",
+    "101": "mainnet",
+    "103": "testnet",
+  } as const;
 
-  // Convert gas budget to BigInt or use default
+  const network =
+    options.network ||
+    (options.chainId ? chainIdToNetwork[options.chainId] : undefined);
+  if (!network) {
+    throw new Error("Either network or chainId must be provided");
+  }
+  const client = new SuiClient({ url: getFullnodeUrl(network) });
+  console.log(getFullnodeUrl(network));
   const gasBudgetValue = BigInt(options.gasBudget);
 
   if (!options.gatewayObject || !options.gatewayPackage) {
@@ -270,8 +282,18 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--gateway-package <gatewayPackage>", "Gateway package ID")
   .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
   .requiredOption("--amount <amount>", "Amount to deposit in decimal format")
+  .addOption(
+    new Option("--chain-id <chainId>", "Chain ID")
+      .choices(["101", "103", "0103"])
+      .default("103")
+      .conflicts(["network"])
+  )
   .option("--coin-type <coinType>", "Coin type to deposit")
-  .option("--network <network>", "Network to use", "testnet")
+  .addOption(
+    new Option("--network <network>", "Network to use")
+      .choices(["localnet", "testnet", "mainnet"])
+      .conflicts(["chain-id"])
+  )
   .option(
     "--gas-budget <gasBudget>",
     "Gas budget in MIST",
