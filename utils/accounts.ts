@@ -45,7 +45,11 @@ export const accountExists = (
  * @typeparam T The expected account data type
  */
 export const getAccountData = <
-  T extends EVMAccountData | SolanaAccountData | BitcoinAccountData | SuiAccountData
+  T extends
+    | EVMAccountData
+    | SolanaAccountData
+    | BitcoinAccountData
+    | SuiAccountData
 >(
   accountType: (typeof AvailableAccountTypes)[number],
   accountName: string
@@ -97,7 +101,7 @@ const createSUIAccount = (privateKey?: string): AccountData => {
   const secretKey = keypair.getSecretKey();
   return {
     address: keypair.toSuiAddress(),
-    privateKey: `0x${Buffer.from(secretKey).toString("hex")}`,
+    privateKey: secretKey,
     privateKeyEncoding: "hex",
     privateKeyScheme: "ed25519",
     publicKey: keypair.getPublicKey().toBase64(),
@@ -133,7 +137,7 @@ export const createAccountForType = async (
     } else if (type === "solana") {
       keyData = createSolanaAccount(privateKey);
     } else if (type === "sui") {
-      keyData = createSUIAccount();
+      keyData = createSUIAccount(privateKey);
     } else if (type === "bitcoin") {
       // Default to testnet for Bitcoin
       keyData = createBitcoinAccount(privateKey);

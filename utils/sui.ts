@@ -2,6 +2,7 @@ import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { mnemonicToSeedSync } from "bip39";
 import { HDKey } from "ethereum-cryptography/hdkey";
+import { bech32 } from "bech32";
 
 export const GAS_BUDGET = 10_000_000;
 
@@ -50,13 +51,53 @@ export const getKeypairFromPrivateKey = (
   privateKey: string
 ): Ed25519Keypair => {
   try {
-    // Remove 0x prefix if present
+    // Check if the private key is in Bech32 format
+    if (privateKey.startsWith("suiprivkey1")) {
+      try {
+        const decoded = bech32.decode(privateKey);
+        if (!decoded) {
+          throw new Error("Invalid Bech32 private key");
+        }
+
+        // Convert the decoded words to bytes
+        const words = bech32.fromWords(decoded.words);
+        // Skip the version byte (first byte) and take the next 32 bytes
+        const keyBytes = Buffer.from(words.slice(1, 33));
+
+        // Validate the key length
+        if (keyBytes.length !== 32) {
+          throw new Error(
+            `Invalid key length: ${keyBytes.length} bytes (expected 32)`
+          );
+        }
+
+        return Ed25519Keypair.fromSecretKey(keyBytes);
+      } catch (error: unknown) {
+        console.error("Bech32 decoding error:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        throw new Error(`Invalid Bech32 private key format: ${errorMessage}`);
+      }
+    }
+
+    // Handle hex format
     const cleanKey = privateKey.startsWith("0x")
       ? privateKey.slice(2)
       : privateKey;
+
+    // Validate hex length
+    if (cleanKey.length !== 64) {
+      throw new Error(
+        `Invalid hex key length: ${cleanKey.length} chars (expected 64)`
+      );
+    }
+
     const keyBytes = Uint8Array.from(Buffer.from(cleanKey, "hex"));
     return Ed25519Keypair.fromSecretKey(keyBytes);
-  } catch (error) {
-    throw new Error("Invalid private key format");
+  } catch (error: unknown) {
+    console.error("Private key processing error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Invalid private key format: ${errorMessage}`);
   }
 };
