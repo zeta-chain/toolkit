@@ -149,22 +149,20 @@ const createBitcoinAccount = (privateKey?: string): AccountData => {
     : ECPair.makeRandom();
 
   // Store the raw private key bytes (hex encoded for storage)
-  const privateKeyBytes = keyPair.privateKey?.toString("hex") || "";
-  if (!privateKeyBytes) {
+  const privateKeyData = keyPair.privateKey?.toString("hex") || "";
+  if (!privateKeyData) {
     throw new Error("Failed to generate Bitcoin private key");
   }
 
   // Create testnet WIF
-  const testnetWIF = ECPair.fromPrivateKey(
-    Buffer.from(privateKeyBytes, "hex"),
-    { network: bitcoin.networks.testnet }
-  ).toWIF();
+  const testnetWIF = ECPair.fromPrivateKey(Buffer.from(privateKeyData, "hex"), {
+    network: bitcoin.networks.testnet,
+  }).toWIF();
 
   // Create mainnet WIF
-  const mainnetWIF = ECPair.fromPrivateKey(
-    Buffer.from(privateKeyBytes, "hex"),
-    { network: bitcoin.networks.bitcoin }
-  ).toWIF();
+  const mainnetWIF = ECPair.fromPrivateKey(Buffer.from(privateKeyData, "hex"), {
+    network: bitcoin.networks.bitcoin,
+  }).toWIF();
 
   // Generate a SegWit (P2WPKH) address for mainnet
   const { address: mainnetAddress } = bitcoin.payments.p2wpkh({
@@ -184,7 +182,7 @@ const createBitcoinAccount = (privateKey?: string): AccountData => {
   return {
     mainnetAddress,
     mainnetWIF,
-    privateKeyBytes,
+    privateKeyBytes: privateKeyData,
     testnetAddress,
     testnetWIF,
   };
