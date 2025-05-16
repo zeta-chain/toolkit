@@ -188,7 +188,7 @@ const createBitcoinAccount = (privateKey?: string): AccountData => {
   return {
     mainnetAddress,
     mainnetWIF,
-    privateKeyBytes: privateKeyBytes,
+    privateKeyBytes,
     testnetAddress,
     testnetWIF,
   };
