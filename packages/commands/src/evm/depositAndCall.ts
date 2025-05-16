@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   namePkRefineRule,
   stringArraySchema,
-  validJsonStringSchema,
+  typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
 import { handleError } from "../../../../utils";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
@@ -20,8 +20,12 @@ import {
 
 const depositAndCallOptionsSchema = baseEvmDepositOptionsSchema
   .extend({
-    types: validJsonStringSchema,
-    values: z.array(z.string()).min(1, "At least one value is required"),
+    types: stringArraySchema,
+    values: stringArraySchema.min(1, "At least one value is required"),
+  })
+  .refine(typesAndValuesLengthRefineRule.rule, {
+    message: typesAndValuesLengthRefineRule.message,
+    path: typesAndValuesLengthRefineRule.path,
   })
   .refine(namePkRefineRule);
 
@@ -31,15 +35,17 @@ const main = async (options: DepositAndCallOptions) => {
   try {
     const { client, signer } = await setupTransaction(options);
 
+    const stringifiedTypes = JSON.stringify(options.types);
+
     console.log(`Contract call details:
 Function parameters: ${options.values.join(", ")}
-Parameter types: ${options.types}
+Parameter types: ${stringifiedTypes}
 `);
 
     await confirmTransaction(options);
 
-    const values = parseAbiValues(options.types, options.values);
-    const parsedTypes = parseJson(options.types, stringArraySchema);
+    const values = parseAbiValues(stringifiedTypes, options.values);
+    const parsedTypes = parseJson(stringifiedTypes, stringArraySchema);
 
     const tx = await client.evmDepositAndCall({
       amount: options.amount,
@@ -70,8 +76,8 @@ export const depositAndCallCommand = new Command(
 
 addCommonEvmDepositCommandOptions(depositAndCallCommand)
   .requiredOption(
-    "--types <types>",
-    'JSON string array of parameter types (e.g. \'["uint256","address"]\')'
+    "--types <types...>",
+    "JSON string array of parameter types (e.g. uint256 address)"
   )
   .requiredOption(
     "--values <values...>",
