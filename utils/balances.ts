@@ -6,7 +6,6 @@ import { AbiCoder, ethers } from "ethers";
 
 import {
   Call,
-  EsploraResponse,
   MULTICALL3_ABI,
   MulticallContract,
   RpcSolTokenByAccountResponse,
@@ -17,6 +16,12 @@ import {
 import { ForeignCoin } from "../types/foreignCoins.types";
 import { ObserverSupportedChain } from "../types/supportedChains.types";
 import { handleError } from "./handleError";
+
+export interface UTXO {
+  txid: string;
+  value: number;
+  vout: number;
+}
 
 /**
  * Parses a token ID from chain ID and symbol
@@ -411,11 +416,10 @@ export const getNativeEvmTokenBalances = async (
  */
 export const getBtcBalances = async (
   tokens: Token[],
-  btcAddress: string,
-  getEndpoint: (type: string, chainName: string) => string
+  btcAddress: string
 ): Promise<TokenBalance[]> => {
   const balances: TokenBalance[] = [];
-  const btcChainNames = ["btc_testnet", "btc_mainnet"];
+  const btcChainNames = ["btc_testnet4", "btc_signet_testnet", "btc_mainnet"];
 
   const btcTokens = tokens.filter(
     (token) =>
@@ -426,23 +430,24 @@ export const getBtcBalances = async (
 
   for (const token of btcTokens) {
     try {
-      const API = getEndpoint("esplora", token.chain_name || "");
-
-      if (!API) {
-        console.error(`No API endpoint found for ${token.chain_name}`);
-        continue;
+      let network = "";
+      if (token.chain_name === "btc_signet_testnet") {
+        network = "/signet";
+      } else if (token.chain_name === "btc_testnet4") {
+        network = "/testnet4";
       }
-
-      const { data } = await axios.get<EsploraResponse>(
-        `${API}/address/${btcAddress}`
-      );
-
-      const { funded_txo_sum, spent_txo_sum } = data.chain_stats;
-      const balance = (
-        (BigInt(funded_txo_sum) - BigInt(spent_txo_sum)) /
-        BigInt(100000000)
-      ).toString();
-
+      const API = `https://mempool.space${network}/api`;
+      const utxos = (
+        await axios.get<UTXO[]>(`${API}/address/${btcAddress}/utxo`)
+      ).data;
+      utxos.sort((a: UTXO, b: UTXO) => a.value - b.value);
+      let inTotal = 0;
+      const picks = [];
+      for (const u of utxos) {
+        inTotal += u.value;
+        picks.push(u);
+      }
+      const balance = (inTotal / 100000000).toFixed(8);
       balances.push({
         ...token,
         balance,

@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { z } from "zod";
 
 import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
-import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
+import { callOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
   createAndBroadcastTransactions,
@@ -20,15 +20,15 @@ import {
 } from "../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
-type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
+type CallOptions = z.infer<typeof callOptionsSchema>;
 
 /**
- * Main function that executes the deposit-and-call operation.
+ * Main function that executes the call operation.
  * Creates and broadcasts both commit and reveal transactions to perform a cross-chain call.
  *
  * @param options - Command options including amounts, addresses, and contract parameters
  */
-const main = async (options: DepositAndCallOptions) => {
+const main = async (options: CallOptions) => {
   const { key, address } = setupBitcoinKeyPair(
     options.privateKey,
     options.name
@@ -43,14 +43,13 @@ const main = async (options: DepositAndCallOptions) => {
     options.receiver &&
     options.revertAddress
   ) {
-    // Encode contract call data for inscription
     payload = new ethers.AbiCoder().encode(options.types, options.values);
     data = Buffer.from(
       bitcoinEncode(
         options.receiver,
         Buffer.from(trimOx(payload), "hex"),
         options.revertAddress,
-        OpCode.DepositAndCall,
+        OpCode.Call,
         EncodingFormat.EncodingFmtABI
       ),
       "hex"
@@ -68,15 +67,13 @@ const main = async (options: DepositAndCallOptions) => {
 
   const { commitFee, revealFee, totalFee } = calculateFees(data);
 
-  // Display transaction information and confirm
   await displayAndConfirmTransaction({
-    amount: options.amount,
     commitFee,
     encodedMessage: payload,
     encodingFormat: "ABI",
     gateway: options.gateway,
     network: "Signet",
-    operation: "DepositAndCall",
+    operation: "Call",
     rawInscriptionData: data.toString("hex"),
     receiver: options.receiver,
     revealFee,
@@ -97,14 +94,12 @@ const main = async (options: DepositAndCallOptions) => {
 };
 
 /**
- * Command definition for deposit-and-call
- * This allows users to deposit BTC and call a contract on ZetaChain using Bitcoin inscriptions
+ * Command definition for call
+ * This allows users to call contracts on ZetaChain
  */
-export const depositAndCallCommand = new Command()
-  .name("deposit-and-call")
-  .description(
-    "Deposit BTC and call a contract on ZetaChain (using inscriptions)"
-  )
+export const callCommand = new Command()
+  .name("call")
+  .description("Call a contract on ZetaChain")
   .option("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
@@ -114,7 +109,6 @@ export const depositAndCallCommand = new Command()
   .option("-t, --types <types...>", "ABI types")
   .option("-v, --values <values...>", "Values corresponding to types")
   .option("-a, --revert-address <address>", "Revert address")
-  .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
       "types",
@@ -124,14 +118,10 @@ export const depositAndCallCommand = new Command()
     ])
   )
   .action(async (opts) => {
-    const validated = validateAndParseSchema(
-      opts,
-      depositAndCallOptionsSchema,
-      {
-        exitOnError: true,
-      }
-    );
+    const validated = validateAndParseSchema(opts, callOptionsSchema, {
+      exitOnError: true,
+    });
     await main(validated);
   });
 
-addCommonOptions(depositAndCallCommand);
+addCommonOptions(callCommand);

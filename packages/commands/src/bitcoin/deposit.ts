@@ -1,9 +1,8 @@
 import { Command, Option } from "commander";
-import { ethers } from "ethers";
 import { z } from "zod";
 
 import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
-import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
+import { depositOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
   createAndBroadcastTransactions,
@@ -16,41 +15,28 @@ import {
   bitcoinEncode,
   EncodingFormat,
   OpCode,
-  trimOx,
 } from "../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
-type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
+type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
-/**
- * Main function that executes the deposit-and-call operation.
- * Creates and broadcasts both commit and reveal transactions to perform a cross-chain call.
- *
- * @param options - Command options including amounts, addresses, and contract parameters
- */
-const main = async (options: DepositAndCallOptions) => {
+const main = async (options: DepositOptions) => {
   const { key, address } = setupBitcoinKeyPair(
     options.privateKey,
     options.name
   );
   const utxos = await fetchUtxos(address, options.api);
 
+  const revertAddress = options.revertAddress || address;
+
   let data;
-  let payload;
-  if (
-    options.types &&
-    options.values &&
-    options.receiver &&
-    options.revertAddress
-  ) {
-    // Encode contract call data for inscription
-    payload = new ethers.AbiCoder().encode(options.types, options.values);
+  if (options.receiver && revertAddress) {
     data = Buffer.from(
       bitcoinEncode(
         options.receiver,
-        Buffer.from(trimOx(payload), "hex"),
-        options.revertAddress,
-        OpCode.DepositAndCall,
+        Buffer.from(""), // Empty payload for deposit
+        revertAddress,
+        OpCode.Deposit,
         EncodingFormat.EncodingFmtABI
       ),
       "hex"
@@ -58,9 +44,7 @@ const main = async (options: DepositAndCallOptions) => {
   } else if (options.data) {
     data = Buffer.from(options.data, "hex");
   } else {
-    throw new Error(
-      "Provide either data or types, values, receiver, and revert address"
-    );
+    throw new Error("Provide either --receiver or receiver encoded in --data");
   }
 
   const amount =
@@ -68,19 +52,17 @@ const main = async (options: DepositAndCallOptions) => {
 
   const { commitFee, revealFee, totalFee } = calculateFees(data);
 
-  // Display transaction information and confirm
   await displayAndConfirmTransaction({
     amount: options.amount,
     commitFee,
-    encodedMessage: payload,
     encodingFormat: "ABI",
     gateway: options.gateway,
     network: "Signet",
-    operation: "DepositAndCall",
+    operation: "Deposit",
     rawInscriptionData: data.toString("hex"),
     receiver: options.receiver,
     revealFee,
-    revertAddress: options.revertAddress,
+    revertAddress,
     sender: address,
     totalFee,
   });
@@ -97,41 +79,31 @@ const main = async (options: DepositAndCallOptions) => {
 };
 
 /**
- * Command definition for deposit-and-call
- * This allows users to deposit BTC and call a contract on ZetaChain using Bitcoin inscriptions
+ * Command definition for deposit
+ * This allows users to deposit BTC to EOAs and contracts on ZetaChain
  */
-export const depositAndCallCommand = new Command()
-  .name("deposit-and-call")
-  .description(
-    "Deposit BTC and call a contract on ZetaChain (using inscriptions)"
-  )
+export const depositCommand = new Command()
+  .name("deposit")
+  .description("Deposit BTC to ZetaChain")
   .option("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
     "Bitcoin gateway (TSS) address",
     "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
   )
-  .option("-t, --types <types...>", "ABI types")
-  .option("-v, --values <values...>", "Values corresponding to types")
   .option("-a, --revert-address <address>", "Revert address")
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
-      "types",
-      "values",
       "revert-address",
       "receiver",
     ])
   )
   .action(async (opts) => {
-    const validated = validateAndParseSchema(
-      opts,
-      depositAndCallOptionsSchema,
-      {
-        exitOnError: true,
-      }
-    );
+    const validated = validateAndParseSchema(opts, depositOptionsSchema, {
+      exitOnError: true,
+    });
     await main(validated);
   });
 
-addCommonOptions(depositAndCallCommand);
+addCommonOptions(depositCommand);
