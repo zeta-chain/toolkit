@@ -1,5 +1,6 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Command, Option } from "commander";
 import { z } from "zod";
 
@@ -8,8 +9,10 @@ import {
   getCoin,
   getKeypairFromMnemonic,
   getKeypairFromPrivateKey,
-} from "../../../../utils/sui";
-
+} from "utils/sui";
+import { DEFAULT_ACCOUNT_NAME } from "types/shared.constants";
+import { AccountData } from "types/accounts.types";
+import { getAccountData } from "utils/accounts";
 // Convert decimal amount to smallest unit (e.g., SUI to MIST)
 const toSmallestUnit = (amount: string, decimals = 9): bigint => {
   if (!/^\d+(\.\d+)?$/.test(amount)) {
@@ -31,6 +34,7 @@ const depositOptionsSchema = z
     network: z.enum(["localnet", "testnet", "mainnet"]),
     privateKey: z.string().optional(),
     receiver: z.string(),
+    name: z.string().optional(),
   })
   .refine((data) => data.mnemonic || data.privateKey, {
     message: "Either mnemonic or private key must be provided",
@@ -50,11 +54,23 @@ const main = async (options: DepositOptions) => {
     );
   }
 
-  const keypair = options.mnemonic
-    ? getKeypairFromMnemonic(options.mnemonic)
-    : getKeypairFromPrivateKey(options.privateKey!);
+  let keypair: Ed25519Keypair;
+
+  if (options.mnemonic) {
+    keypair = getKeypairFromMnemonic(options.mnemonic);
+  } else if (options.privateKey) {
+    keypair = getKeypairFromPrivateKey(options.privateKey);
+  } else if (options.name) {
+    const accountData = getAccountData<AccountData>("sui", options.name);
+    if (!accountData?.privateKey) {
+      throw new Error("No private key found for the specified account");
+    }
+    keypair = getKeypairFromPrivateKey(accountData.privateKey);
+  } else {
+    throw new Error("Either mnemonic or private key must be provided");
+  }
+
   const address = keypair.toSuiAddress();
-  console.log(`Using Address: ${address}`);
 
   const fullCoinType = options.coinType || "0x2::sui::SUI";
   console.log(`Using Coin Type: ${fullCoinType}`);
@@ -260,6 +276,11 @@ export const depositCommand = new Command("deposit")
     "--gas-budget <gasBudget>",
     "Gas budget in MIST",
     GAS_BUDGET.toString()
+  )
+  .addOption(
+    new Option("--name <name>", "Account name")
+      .default(DEFAULT_ACCOUNT_NAME)
+      .conflicts(["private-key"])
   )
   .action(async (options) => {
     const validatedOptions = depositOptionsSchema.parse(options);
