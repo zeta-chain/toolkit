@@ -60,7 +60,7 @@ const getBitcoinAccountDetails = (
     mainnetAddress: keyData.mainnetAddress,
     mainnetWIF: keyData.mainnetWIF,
     name: keyData.name || "N/A",
-    privateKeyBytes: keyData.privateKeyBytes,
+    privateKeyBytes: keyData.privateKey,
     testnetAddress: keyData.testnetAddress,
     testnetWIF: keyData.testnetWIF,
     type: "bitcoin",

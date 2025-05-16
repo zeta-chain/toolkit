@@ -35,6 +35,10 @@ export const numericStringSchema = z
   .refine((val) => /^\d+$/.test(val), {
     message: "Must be a string containing only numbers",
   });
+export const hexStringSchema = z
+  .string()
+  .regex(/^(0x)?[0-9a-fA-F]*$/, { message: "data must be hex encoded" });
+
 export const evmPrivateKeySchema = z
   .string()
   .refine((val) => /^(0x)?[0-9a-fA-F]{64}$/.test(val), {
@@ -53,3 +57,33 @@ export const evmPrivateKeySchema = z
     },
     { message: "Invalid private key (must be in secp256k1 range)" }
   );
+
+export const typesAndValuesLengthRefineRule = {
+  message:
+    "If provided, the 'types' and 'values' arrays must both exist and have the same length",
+  path: ["values"],
+  rule: (data: { types?: string[]; values?: string[] }) => {
+    // Only check length equality if both arrays exist
+    if (data.types && data.values) {
+      return data.types.length === data.values.length;
+    }
+    // If one exists and the other doesn't, that's invalid
+    if ((data.types && !data.values) || (!data.types && data.values)) {
+      return false;
+    }
+    // If both are undefined/not provided, that's valid
+    return true;
+  },
+};
+export const typesAndDataExclusivityRefineRule = {
+  message: "Provide either --data or --types/--values (not both)",
+  path: ["data"],
+  rule: (data: { data?: string; types?: string[]; values?: string[] }) => {
+    // Prevent providing both data and types/values
+    if (data.data && (data.types || data.values)) {
+      return false;
+    }
+
+    return true;
+  },
+};

@@ -102,8 +102,10 @@ export const makeCommitTransaction = async (
   amountSat: number,
   feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
 ) => {
-  const DUST_THRESHOLD_P2TR = BITCOIN_LIMITS.DUST_THRESHOLD.P2TR;
-  if (amountSat < DUST_THRESHOLD_P2TR) throw new Error("Amount below dust");
+  const effectiveAmount = Math.max(
+    amountSat,
+    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE
+  );
 
   /* pick utxos */
   utxos.sort((a, b) => a.value - b.value);
@@ -112,20 +114,32 @@ export const makeCommitTransaction = async (
   for (const u of utxos) {
     inTotal += u.value;
     picks.push(u);
-    if (inTotal >= amountSat + feeSat) break;
+    if (inTotal >= effectiveAmount + feeSat) break;
   }
-  if (inTotal < amountSat + feeSat) throw new Error("Not enough funds");
-  const changeSat = inTotal - amountSat - feeSat;
+  if (inTotal < effectiveAmount + feeSat) throw new Error("Not enough funds");
+  const changeSat = inTotal - effectiveAmount - feeSat;
 
-  /* leaf script */
-  const leafScript = bitcoin.script.compile([
+  const scriptItems = [
     key.publicKey.slice(1, 33),
     bitcoin.opcodes.OP_CHECKSIG,
     bitcoin.opcodes.OP_FALSE,
     bitcoin.opcodes.OP_IF,
-    inscriptionData,
-    bitcoin.opcodes.OP_ENDIF,
-  ]);
+  ];
+
+  // Add inscription data in chunks if it exceeds 520 bytes (max script element size)
+  const MAX_SCRIPT_ELEMENT_SIZE = 520;
+  if (inscriptionData.length > MAX_SCRIPT_ELEMENT_SIZE) {
+    for (let i = 0; i < inscriptionData.length; i += MAX_SCRIPT_ELEMENT_SIZE) {
+      const end = Math.min(i + MAX_SCRIPT_ELEMENT_SIZE, inscriptionData.length);
+      scriptItems.push(inscriptionData.slice(i, end));
+    }
+  } else {
+    scriptItems.push(inscriptionData);
+  }
+
+  scriptItems.push(bitcoin.opcodes.OP_ENDIF);
+
+  const leafScript = bitcoin.script.compile(scriptItems);
 
   /* p2tr */
   const { output: commitScript, witness } = bitcoin.payments.p2tr({
@@ -137,7 +151,7 @@ export const makeCommitTransaction = async (
   if (!commitScript || !witness) throw new Error("taproot build failed");
 
   const psbt = new bitcoin.Psbt({ network: SIGNET });
-  psbt.addOutput({ script: commitScript, value: amountSat });
+  psbt.addOutput({ script: commitScript, value: effectiveAmount });
   if (changeSat > 0)
     psbt.addOutput({ address: changeAddress, value: changeSat });
   for (const u of picks) {
@@ -213,14 +227,38 @@ export const makeRevealTransaction = (
   const vsize = txOverhead + inputVbytes + outputVbytes;
   const feeSat = Math.ceil(vsize * feeRate);
 
-  const DUST_THRESHOLD_P2WPKH = BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH;
-  if (commitValue - feeSat < DUST_THRESHOLD_P2WPKH)
-    throw new Error("reveal would be dust");
+  // Ensure we have enough value for the output after fee
+  const outputValue = commitValue - feeSat;
+  if (outputValue < BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH) {
+    throw new Error(
+      `Insufficient value in commit output (${commitValue} sat) to cover reveal fee (${feeSat} sat) and maintain minimum output (${BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH} sat)`
+    );
+  }
 
-  psbt.addOutput({ address: to, value: commitValue - feeSat });
+  psbt.addOutput({ address: to, value: outputValue });
 
   psbt.signInput(0, key);
   psbt.finalizeAllInputs();
 
   return psbt.extractTransaction(true).toHex();
+};
+
+/**
+ * Calculates the total fees for a Bitcoin inscription transaction
+ * @param data - The inscription data buffer
+ * @returns Object containing commit fee, reveal fee, and total fee
+ */
+export const calculateFees = (data: Buffer) => {
+  const commitFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
+  const revealFee = Math.ceil(
+    (BITCOIN_TX.TX_OVERHEAD +
+      36 +
+      1 +
+      43 +
+      Math.ceil(data.length / 4) +
+      BITCOIN_TX.P2WPKH_OUTPUT_VBYTES) *
+      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
+  );
+  const totalFee = commitFee + revealFee;
+  return { commitFee, revealFee, totalFee };
 };
