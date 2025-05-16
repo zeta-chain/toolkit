@@ -7,8 +7,6 @@ import {
   typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
 import { handleError } from "../../../../utils";
-import { parseAbiValues } from "../../../../utils/parseAbiValues";
-import { parseJson } from "../../../../utils/parseJson";
 import {
   addCommonEvmDepositCommandOptions,
   baseEvmDepositOptionsSchema,
@@ -16,7 +14,9 @@ import {
   prepareRevertOptions,
   prepareTxOptions,
   setupTransaction,
-} from "./common";
+} from "../../../../utils/evm.command.helpers";
+import { parseAbiValues } from "../../../../utils/parseAbiValues";
+import { parseJson } from "../../../../utils/parseJson";
 
 const depositAndCallOptionsSchema = baseEvmDepositOptionsSchema
   .extend({

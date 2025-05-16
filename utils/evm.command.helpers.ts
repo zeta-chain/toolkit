@@ -3,19 +3,20 @@ import { Command, Option } from "commander";
 import { ethers, ZeroAddress } from "ethers";
 import { z } from "zod";
 
-import { EVMAccountData } from "../../../../types/accounts.types";
-import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
+import { ZetaChainClient } from "../packages/client/src/client";
+import { EVMAccountData } from "../types/accounts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import {
   evmAddressSchema,
   evmPrivateKeySchema,
   numericStringSchema,
   validAmountSchema,
-} from "../../../../types/shared.schema";
-import { handleError, printEvmTransactionDetails } from "../../../../utils";
-import { getAccountData } from "../../../../utils/accounts";
-import { hasSufficientBalanceEvm } from "../../../../utils/balances";
-import { getNetworkTypeByChainId, getRpcUrl } from "../../../../utils/chains";
-import { ZetaChainClient } from "../../../client/src/client";
+} from "../types/shared.schema";
+import { getAccountData } from "./accounts";
+import { hasSufficientBalanceEvm } from "./balances";
+import { getNetworkTypeByChainId, getRpcUrl } from "./chains";
+import { printEvmTransactionDetails } from "./formatting";
+import { handleError } from "./handleError";
 
 export const baseEvmDepositOptionsSchema = z.object({
   abortAddress: evmAddressSchema,
