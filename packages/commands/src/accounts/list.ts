@@ -6,7 +6,7 @@ import { listChainAccounts } from "../../../../utils/accounts";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const listAccountsOptionsSchema = z.object({
-  json: z.boolean().default(false),
+  json: z.boolean().optional(),
 });
 
 type ListAccountsOptions = z.infer<typeof listAccountsOptionsSchema>;
