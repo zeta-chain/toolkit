@@ -9,10 +9,10 @@ import {
   getCoin,
   getKeypairFromMnemonic,
   getKeypairFromPrivateKey,
-} from "utils/sui";
-import { DEFAULT_ACCOUNT_NAME } from "types/shared.constants";
-import { AccountData } from "types/accounts.types";
-import { getAccountData } from "utils/accounts";
+} from "../../../../utils/sui";
+import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
+import { SuiAccountData } from "../../../../types/accounts.types";
+import { getAccountData } from "../../../../utils/accounts";
 // Convert decimal amount to smallest unit (e.g., SUI to MIST)
 const toSmallestUnit = (amount: string, decimals = 9): bigint => {
   if (!/^\d+(\.\d+)?$/.test(amount)) {
@@ -36,8 +36,8 @@ const depositOptionsSchema = z
     receiver: z.string(),
     name: z.string().optional(),
   })
-  .refine((data) => data.mnemonic || data.privateKey, {
-    message: "Either mnemonic or private key must be provided",
+  .refine((data) => data.mnemonic || data.privateKey || data.name, {
+    message: "Either mnemonic, private key or name must be provided",
   });
 
 export type DepositOptions = z.infer<typeof depositOptionsSchema>;
@@ -61,11 +61,11 @@ const main = async (options: DepositOptions) => {
   } else if (options.privateKey) {
     keypair = getKeypairFromPrivateKey(options.privateKey);
   } else if (options.name) {
-    const accountData = getAccountData<AccountData>("sui", options.name);
-    if (!accountData?.privateKey) {
+    const account = getAccountData<SuiAccountData>("sui", options.name);
+    if (!account?.privateKey) {
       throw new Error("No private key found for the specified account");
     }
-    keypair = getKeypairFromPrivateKey(accountData.privateKey);
+    keypair = getKeypairFromPrivateKey(account.privateKey);
   } else {
     throw new Error("Either mnemonic or private key must be provided");
   }
