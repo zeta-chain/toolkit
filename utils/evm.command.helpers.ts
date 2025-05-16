@@ -131,13 +131,19 @@ export const confirmTransaction = async (options: EvmDepositOptions) => {
       message: "Proceed with the transaction?",
     });
   } catch (error) {
-    console.log("\nTransaction cancelled");
-    process.exit(0);
+    handleError({
+      context: "Transaction cancelled",
+      error,
+      shouldThrow: true,
+    });
   }
 
   if (!confirmed) {
-    console.log("\nTransaction cancelled");
-    process.exit(0);
+    handleError({
+      context: "Transaction cancelled",
+      error: new Error("Transaction cancelled"),
+      shouldThrow: true,
+    });
   }
 
   return confirmed;
