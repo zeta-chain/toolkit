@@ -10,7 +10,7 @@ import {
   prepareRevertOptions,
   prepareTxOptions,
   setupTransaction,
-} from "./common";
+} from "../../../../utils/evm.command.helpers";
 
 const depositOptionsSchema =
   baseEvmDepositOptionsSchema.refine(namePkRefineRule);
