@@ -20,7 +20,8 @@ const toSmallestUnit = (amount: string, decimals = 9): bigint => {
   }
   const [whole = "0", fraction = ""] = amount.split(".");
   const paddedFraction = (fraction + "0".repeat(decimals)).slice(0, decimals);
-  return BigInt(whole) * BigInt(10 ** decimals) + BigInt(paddedFraction);
+  const multiplier = BigInt(10) ** BigInt(decimals);
+  return BigInt(whole) * multiplier + BigInt(paddedFraction);
 };
 
 const depositOptionsSchema = z
