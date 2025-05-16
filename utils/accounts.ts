@@ -88,7 +88,11 @@ const createSolanaAccount = (privateKey?: string): AccountData => {
 };
 
 const createSUIAccount = (privateKey?: string): AccountData => {
-  const keypair = new Ed25519Keypair();
+  const keypair = privateKey
+    ? Ed25519Keypair.fromSecretKey(
+        Buffer.from(privateKey.replace("0x", ""), "hex")
+      )
+    : new Ed25519Keypair();
   const secretKey = keypair.getSecretKey();
   return {
     address: keypair.toSuiAddress(),
