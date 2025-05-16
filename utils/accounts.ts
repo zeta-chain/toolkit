@@ -1,4 +1,5 @@
 import confirm from "@inquirer/confirm";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Keypair } from "@solana/web3.js";
 import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
@@ -78,8 +79,27 @@ const createSolanaAccount = (privateKey?: string): AccountData => {
     ? Keypair.fromSecretKey(Buffer.from(privateKey, "hex"))
     : Keypair.generate();
   return {
+    address: keypair.publicKey.toBase58(),
+    privateKey: `0x${Buffer.from(keypair.secretKey).toString("hex")}`,
+    privateKeyEncoding: "hex",
+    privateKeyScheme: "ed25519",
     publicKey: keypair.publicKey.toBase58(),
-    secretKey: Buffer.from(keypair.secretKey).toString("hex"),
+  };
+};
+
+const createSUIAccount = (privateKey?: string): AccountData => {
+  const keypair = privateKey
+    ? Ed25519Keypair.fromSecretKey(
+        Buffer.from(privateKey.replace("0x", ""), "hex")
+      )
+    : new Ed25519Keypair();
+  const secretKey = keypair.getSecretKey();
+  return {
+    address: keypair.toSuiAddress(),
+    privateKey: `0x${Buffer.from(secretKey).toString("hex")}`,
+    privateKeyEncoding: "hex",
+    privateKeyScheme: "ed25519",
+    publicKey: keypair.getPublicKey().toBase64(),
   };
 };
 
@@ -111,6 +131,8 @@ export const createAccountForType = async (
       keyData = createEVMAccount(privateKey);
     } else if (type === "solana") {
       keyData = createSolanaAccount(privateKey);
+    } else if (type === "sui") {
+      keyData = createSUIAccount();
     } else if (type === "bitcoin") {
       // Default to testnet for Bitcoin
       keyData = createBitcoinAccount(privateKey);
@@ -118,19 +140,13 @@ export const createAccountForType = async (
       // Type assertion to help TypeScript understand this isn't 'never'
       throw new Error(`Unsupported account type: ${type as string}`);
     }
-
     safeWriteFile(keyPath, keyData);
     console.log(`${type.toUpperCase()} account created successfully!`);
     console.log(`Key saved to: ${keyPath}`);
 
-    if (type === "evm") {
-      console.log(`Address: ${keyData.address}`);
-    } else if (type === "solana") {
-      console.log(`Public Key: ${keyData.publicKey}`);
-    } else if (type === "bitcoin") {
-      console.log(`Address: ${keyData.mainnetAddress}`);
-      console.log(`Testnet Address: ${keyData.testnetAddress}`);
-    }
+    const address =
+      type === "bitcoin" ? keyData.mainnetAddress : keyData.address;
+    console.log(`Address: ${address}`);
   } catch (error: unknown) {
     handleError({
       context: "Failed to create or save account",
@@ -188,7 +204,7 @@ const createBitcoinAccount = (privateKey?: string): AccountData => {
   return {
     mainnetAddress,
     mainnetWIF,
-    privateKeyBytes,
+    privateKey: privateKeyBytes,
     testnetAddress,
     testnetWIF,
   };
@@ -210,7 +226,7 @@ export const listChainAccounts = (
     if (chainType === "evm") {
       return [
         {
-          address: (keyData as EVMAccountData).address,
+          address: (keyData as AccountData).address,
           name,
           type: chainType,
         },
@@ -218,7 +234,15 @@ export const listChainAccounts = (
     } else if (chainType === "solana") {
       return [
         {
-          address: (keyData as SolanaAccountData).publicKey,
+          address: (keyData as AccountData).address,
+          name,
+          type: chainType,
+        },
+      ];
+    } else if (chainType === "sui") {
+      return [
+        {
+          address: (keyData as AccountData).address,
           name,
           type: chainType,
         },
@@ -227,12 +251,12 @@ export const listChainAccounts = (
       // Return both mainnet and testnet addresses as separate entries
       return [
         {
-          address: (keyData as BitcoinAccountData).mainnetAddress,
+          address: (keyData as AccountData).mainnetAddress,
           name,
           type: "bitcoin",
         },
         {
-          address: (keyData as BitcoinAccountData).testnetAddress,
+          address: (keyData as AccountData).testnetAddress,
           name,
           type: "bitcoin",
         },
@@ -242,5 +266,7 @@ export const listChainAccounts = (
     return [];
   });
 
-  return accounts;
+  return accounts.filter(
+    (account): account is AccountInfo => account.address !== undefined
+  );
 };
