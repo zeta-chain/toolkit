@@ -2,11 +2,11 @@ import confirm from "@inquirer/confirm";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Keypair } from "@solana/web3.js";
 import * as bitcoin from "bitcoinjs-lib";
+import bs58 from "bs58";
 import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import path from "path";
 import * as ecc from "tiny-secp256k1";
-import bs58 from "bs58";
 
 import {
   AccountData,
