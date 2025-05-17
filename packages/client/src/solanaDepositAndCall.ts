@@ -1,5 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import {
+  Connection,
   Transaction,
   TransactionMessage,
   VersionedTransaction,
@@ -126,7 +127,7 @@ export const solanaDepositAndCall = async function (
 
       txSignature = await this.solanaAdapter.sendTransaction(
         versionedTransaction,
-        connection as any
+        connection as unknown as Connection
       );
     } else {
       txSignature = await anchor.web3.sendAndConfirmTransaction(
