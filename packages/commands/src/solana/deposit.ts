@@ -5,7 +5,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { clusterApiUrl, Keypair, PublicKey } from "@solana/web3.js";
+import { clusterApiUrl, PublicKey } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 import * as bip39 from "bip39";
@@ -29,16 +29,18 @@ export interface DepositOptions {
 
 export const keypairFromMnemonic = async (
   mnemonic: string
-): Promise<Keypair> => {
+): Promise<anchor.web3.Keypair> => {
   const seed = await bip39.mnemonicToSeed(mnemonic);
   const seedSlice = new Uint8Array(seed).slice(0, 32);
-  return Keypair.fromSeed(seedSlice);
+  return anchor.web3.Keypair.fromSeed(seedSlice);
 };
 
-export const keypairFromPrivateKey = (privateKey: string): Keypair => {
+export const keypairFromPrivateKey = (
+  privateKey: string
+): anchor.web3.Keypair => {
   try {
     const decodedKey = bs58.decode(privateKey);
-    return Keypair.fromSecretKey(decodedKey);
+    return anchor.web3.Keypair.fromSecretKey(decodedKey);
   } catch (error) {
     throw new Error(
       "Invalid private key format. Expected base58-encoded private key."
@@ -51,7 +53,7 @@ const main = async (options: DepositOptions) => {
   const gatewayIDL =
     options.network === "localnet" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
 
-  let keypair: Keypair;
+  let keypair: anchor.web3.Keypair;
   if (options.privateKey) {
     keypair = keypairFromPrivateKey(options.privateKey);
   } else if (options.mnemonic) {

@@ -111,7 +111,7 @@ export const solanaDeposit = async function (
 
       txSignature = await this.solanaAdapter.sendTransaction(
         versionedTransaction,
-        connection
+        connection as any
       );
     } else {
       txSignature = await anchor.web3.sendAndConfirmTransaction(
