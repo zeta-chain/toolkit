@@ -6,6 +6,7 @@ import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import path from "path";
 import * as ecc from "tiny-secp256k1";
+import bs58 from "bs58";
 
 import {
   AccountData,
@@ -80,12 +81,31 @@ const createEVMAccount = (privateKey?: string): AccountData => {
 };
 
 const createSolanaAccount = (privateKey?: string): AccountData => {
-  const keypair = privateKey
-    ? Keypair.fromSecretKey(Buffer.from(privateKey, "hex"))
-    : Keypair.generate();
+  let keypair: Keypair;
+
+  if (privateKey) {
+    try {
+      const decodedKey = bs58.decode(privateKey);
+      keypair = Keypair.fromSecretKey(decodedKey);
+    } catch (error) {
+      try {
+        const cleanKey = privateKey.startsWith("0x")
+          ? privateKey.slice(2)
+          : privateKey;
+        keypair = Keypair.fromSecretKey(Buffer.from(cleanKey, "hex"));
+      } catch (error) {
+        throw new Error(
+          "Invalid private key format. Must be either base58 or hex."
+        );
+      }
+    }
+  } else {
+    keypair = Keypair.generate();
+  }
+
   return {
     address: keypair.publicKey.toBase58(),
-    privateKey: `0x${Buffer.from(keypair.secretKey).toString("hex")}`,
+    privateKey: bs58.encode(keypair.secretKey),
     privateKeyEncoding: "hex",
     privateKeyScheme: "ed25519",
     publicKey: keypair.publicKey.toBase58(),
