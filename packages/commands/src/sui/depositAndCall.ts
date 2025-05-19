@@ -30,7 +30,7 @@ const depositAndCallOptionsSchema = z
   .object({
     amount: z.string(),
     chainId: z.enum(["101", "103", "0103"]).optional(),
-    coinType: z.string().optional(),
+    coinType: z.string().default("0x2::sui::SUI"),
     gasBudget: z.string(),
     gatewayObject: z.string(),
     gatewayPackage: z.string(),
@@ -89,12 +89,9 @@ const main = async (options: DepositOptions) => {
 
   const address = keypair.toSuiAddress();
 
-  const fullCoinType = options.coinType || "0x2::sui::SUI";
-
-  // Convert amount to smallest unit (e.g., SUI to MIST)
   const amountInSmallestUnit = toSmallestUnit(options.amount);
 
-  const coinObjectId = await getCoin(client, address, fullCoinType);
+  const coinObjectId = await getCoin(client, address, options.coinType);
 
   const coinObject = await client.getObject({
     id: coinObjectId,
@@ -108,9 +105,9 @@ const main = async (options: DepositOptions) => {
   }
   const actualCoinType = coinObject.data.content.type;
 
-  if (!actualCoinType.includes(fullCoinType)) {
+  if (!actualCoinType.includes(options.coinType)) {
     throw new Error(
-      `Coin type mismatch. Expected: ${fullCoinType}, Got: ${actualCoinType}`
+      `Coin type mismatch. Expected: ${options.coinType}, Got: ${actualCoinType}`
     );
   }
 
@@ -120,7 +117,7 @@ const main = async (options: DepositOptions) => {
   const payload = abiCoder.encode(options.types, options.values);
   const payloadBytes = ethers.getBytes(payload);
 
-  if (fullCoinType === "0x2::sui::SUI") {
+  if (options.coinType === "0x2::sui::SUI") {
     const [splitCoin] = tx.splitCoins(tx.gas, [amountInSmallestUnit]);
 
     tx.moveCall({
@@ -131,7 +128,7 @@ const main = async (options: DepositOptions) => {
         tx.pure.vector("u8", payloadBytes),
       ],
       target: `${options.gatewayPackage}::gateway::deposit_and_call`,
-      typeArguments: [fullCoinType],
+      typeArguments: [options.coinType],
     });
   } else {
     const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
@@ -146,7 +143,7 @@ const main = async (options: DepositOptions) => {
         tx.pure.vector("u8", payloadBytes),
       ],
       target: `${options.gatewayPackage}::gateway::deposit_and_call`,
-      typeArguments: [fullCoinType],
+      typeArguments: [options.coinType],
     });
   }
 
@@ -205,7 +202,7 @@ export const depositAndCallCommand = new Command("deposit-and-call")
       .default("103")
       .conflicts(["network"])
   )
-  .option("--coin-type <coinType>", "Coin type to deposit")
+  .option("--coin-type <coinType>", "Coin type to deposit", "0x2::sui::SUI")
   .addOption(
     new Option("--network <network>", "Network to use")
       .choices(["localnet", "testnet", "mainnet"])

@@ -29,7 +29,7 @@ const depositOptionsSchema = z
   .object({
     amount: z.string(),
     chainId: z.enum(["101", "103", "0103"]).optional(),
-    coinType: z.string().optional().default("0x2::sui::SUI"),
+    coinType: z.string().default("0x2::sui::SUI"),
     gasBudget: z.string(),
     gatewayObject: z.string(),
     gatewayPackage: z.string(),
