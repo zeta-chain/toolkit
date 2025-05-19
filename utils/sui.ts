@@ -130,7 +130,7 @@ export const getKeypair = (options: KeypairOptions): Ed25519Keypair => {
 export interface SignAndExecuteTransactionOptions {
   client: SuiClient;
   keypair: Ed25519Keypair;
-  transaction: Transaction;
+  tx: Transaction;
   gasBudget: bigint;
 }
 
@@ -151,10 +151,10 @@ export interface TransactionResult {
 export const signAndExecuteTransaction = async ({
   client,
   keypair,
-  transaction,
+  tx,
   gasBudget,
 }: SignAndExecuteTransactionOptions): Promise<TransactionResult> => {
-  transaction.setGasBudget(gasBudget);
+  tx.setGasBudget(gasBudget);
 
   const result = await client.signAndExecuteTransaction({
     options: {
@@ -164,7 +164,7 @@ export const signAndExecuteTransaction = async ({
     },
     requestType: "WaitForLocalExecution",
     signer: keypair,
-    transaction,
+    transaction: tx,
   });
 
   if (result.effects?.status.status === "failure") {

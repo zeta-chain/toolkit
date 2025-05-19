@@ -95,12 +95,7 @@ const main = async (options: DepositOptions) => {
 
   tx.setGasBudget(gasBudget);
 
-  await signAndExecuteTransaction({
-    client,
-    keypair,
-    transaction: tx,
-    gasBudget,
-  });
+  await signAndExecuteTransaction({ client, keypair, tx, gasBudget });
 };
 
 export const depositAndCallCommand = new Command("deposit-and-call")
