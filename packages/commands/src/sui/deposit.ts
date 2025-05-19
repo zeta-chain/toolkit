@@ -91,38 +91,7 @@ const main = async (options: DepositOptions) => {
   const tx = new Transaction();
 
   if (options.coinType === "0x2::sui::SUI") {
-    const coins = await client.getCoins({
-      coinType: options.coinType,
-      owner: address,
-    });
-
-    const gasCoin = coins.data.find(
-      (coin) => BigInt(coin.balance) >= gasBudgetValue
-    );
-    if (!gasCoin) {
-      throw new Error(
-        "No SUI coins found with sufficient balance for gas payment"
-      );
-    }
-
-    const depositCoin = coins.data.find(
-      (coin) => coin.coinObjectId !== gasCoin.coinObjectId
-    );
-    if (!depositCoin) {
-      throw new Error("No other SUI coins found for deposit");
-    }
-
-    const [splitCoin] = tx.splitCoins(tx.object(depositCoin.coinObjectId), [
-      amountInSmallestUnit,
-    ]);
-
-    tx.setGasPayment([
-      {
-        digest: gasCoin.digest,
-        objectId: gasCoin.coinObjectId,
-        version: gasCoin.version,
-      },
-    ]);
+    const [splitCoin] = tx.splitCoins(tx.gas, [amountInSmallestUnit]);
 
     tx.moveCall({
       arguments: [
@@ -135,28 +104,6 @@ const main = async (options: DepositOptions) => {
     });
   } else {
     const coinObjectId = await getCoin(client, address, options.coinType);
-
-    const suiCoins = await client.getCoins({
-      coinType: "0x2::sui::SUI",
-      owner: address,
-    });
-
-    const gasCoin = suiCoins.data.find(
-      (coin) => BigInt(coin.balance) >= gasBudgetValue
-    );
-    if (!gasCoin) {
-      throw new Error(
-        "No SUI coins found with sufficient balance for gas payment"
-      );
-    }
-
-    tx.setGasPayment([
-      {
-        digest: gasCoin.digest,
-        objectId: gasCoin.coinObjectId,
-        version: gasCoin.version,
-      },
-    ]);
 
     const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
       amountInSmallestUnit,

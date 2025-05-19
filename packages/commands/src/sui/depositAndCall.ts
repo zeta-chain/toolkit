@@ -124,58 +124,10 @@ const main = async (options: DepositOptions) => {
   const payload = abiCoder.encode(options.types, options.values);
   const payloadBytes = ethers.getBytes(payload);
 
-  // If we're depositing SUI, we need a different coin for gas payment
+  // If we're depositing SUI, use tx.gas for splitting
   if (fullCoinType === "0x2::sui::SUI") {
-    const coins = await client.getCoins({
-      coinType: fullCoinType,
-      owner: address,
-    });
-
-    console.log("\nAvailable SUI coins:");
-    coins.data.forEach((coin) => {
-      console.log(
-        `Coin ID: ${coin.coinObjectId}, Balance: ${coin.balance} MIST (${
-          Number(coin.balance) / 1_000_000_000
-        } SUI)`
-      );
-    });
-
-    console.log(
-      `Required gas budget: ${gasBudgetValue} MIST (${
-        Number(gasBudgetValue) / 1_000_000_000
-      } SUI)\n`
-    );
-
-    // Find a coin with sufficient balance for gas
-    const gasCoin = coins.data.find(
-      (coin) => BigInt(coin.balance) >= gasBudgetValue
-    );
-    if (!gasCoin) {
-      throw new Error(
-        "No SUI coins found with sufficient balance for gas payment"
-      );
-    }
-
-    // Use the other coin for deposit
-    const depositCoin = coins.data.find(
-      (coin) => coin.coinObjectId !== gasCoin.coinObjectId
-    );
-    if (!depositCoin) {
-      throw new Error("No other SUI coins found for deposit");
-    }
-
-    // Split the deposit coin if needed
-    const [splitCoin] = tx.splitCoins(tx.object(depositCoin.coinObjectId), [
-      amountInSmallestUnit,
-    ]);
-
-    tx.setGasPayment([
-      {
-        digest: gasCoin.digest,
-        objectId: gasCoin.coinObjectId,
-        version: gasCoin.version,
-      },
-    ]);
+    // Split from gas coin directly
+    const [splitCoin] = tx.splitCoins(tx.gas, [amountInSmallestUnit]);
 
     tx.moveCall({
       arguments: [
@@ -188,46 +140,7 @@ const main = async (options: DepositOptions) => {
       typeArguments: [fullCoinType],
     });
   } else {
-    // For non-SUI coins, we need to use SUI for gas payment
-    const suiCoins = await client.getCoins({
-      coinType: "0x2::sui::SUI",
-      owner: address,
-    });
-
-    console.log("\nAvailable SUI coins for gas:");
-    suiCoins.data.forEach((coin) => {
-      console.log(
-        `Coin ID: ${coin.coinObjectId}, Balance: ${coin.balance} MIST (${
-          Number(coin.balance) / 1_000_000_000
-        } SUI)`
-      );
-    });
-
-    console.log(
-      `Required gas budget: ${gasBudgetValue} MIST (${
-        Number(gasBudgetValue) / 1_000_000_000
-      } SUI)\n`
-    );
-
-    // Find a SUI coin with sufficient balance for gas
-    const gasCoin = suiCoins.data.find(
-      (coin) => BigInt(coin.balance) >= gasBudgetValue
-    );
-    if (!gasCoin) {
-      throw new Error(
-        "No SUI coins found with sufficient balance for gas payment"
-      );
-    }
-
-    tx.setGasPayment([
-      {
-        digest: gasCoin.digest,
-        objectId: gasCoin.coinObjectId,
-        version: gasCoin.version,
-      },
-    ]);
-
-    // Split the coin for deposit
+    // For non-SUI coins, split from the specified coin
     const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
       amountInSmallestUnit,
     ]);
@@ -244,6 +157,7 @@ const main = async (options: DepositOptions) => {
     });
   }
 
+  // Set gas budget and let SDK handle gas price
   tx.setGasBudget(gasBudgetValue);
 
   const result = await client.signAndExecuteTransaction({
