@@ -79,7 +79,7 @@ export const depositAndCallCommand = new Command(
 addCommonEvmDepositCommandOptions(depositAndCallCommand)
   .requiredOption(
     "--types <types...>",
-    "JSON string array of parameter types (e.g. uint256 address)"
+    "List of parameter types (e.g. uint256 address)"
   )
   .requiredOption(
     "--values <values...>",
