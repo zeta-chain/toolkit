@@ -90,14 +90,11 @@ const main = async (options: DepositOptions) => {
   const address = keypair.toSuiAddress();
 
   const fullCoinType = options.coinType || "0x2::sui::SUI";
-  console.log(`Using Coin Type: ${fullCoinType}`);
 
   // Convert amount to smallest unit (e.g., SUI to MIST)
   const amountInSmallestUnit = toSmallestUnit(options.amount);
-  console.log(`Amount in smallest unit: ${amountInSmallestUnit}`);
 
   const coinObjectId = await getCoin(client, address, fullCoinType);
-  console.log(`Using Coin Object: ${coinObjectId}`);
 
   const coinObject = await client.getObject({
     id: coinObjectId,
@@ -110,7 +107,6 @@ const main = async (options: DepositOptions) => {
     throw new Error(`Failed to get coin object data for ${coinObjectId}`);
   }
   const actualCoinType = coinObject.data.content.type;
-  console.log(`Actual Coin Type: ${actualCoinType}`);
 
   if (!actualCoinType.includes(fullCoinType)) {
     throw new Error(
@@ -124,9 +120,7 @@ const main = async (options: DepositOptions) => {
   const payload = abiCoder.encode(options.types, options.values);
   const payloadBytes = ethers.getBytes(payload);
 
-  // If we're depositing SUI, use tx.gas for splitting
   if (fullCoinType === "0x2::sui::SUI") {
-    // Split from gas coin directly
     const [splitCoin] = tx.splitCoins(tx.gas, [amountInSmallestUnit]);
 
     tx.moveCall({
@@ -140,7 +134,6 @@ const main = async (options: DepositOptions) => {
       typeArguments: [fullCoinType],
     });
   } else {
-    // For non-SUI coins, split from the specified coin
     const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
       amountInSmallestUnit,
     ]);
@@ -157,7 +150,6 @@ const main = async (options: DepositOptions) => {
     });
   }
 
-  // Set gas budget and let SDK handle gas price
   tx.setGasBudget(gasBudgetValue);
 
   const result = await client.signAndExecuteTransaction({
