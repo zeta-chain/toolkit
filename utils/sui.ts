@@ -4,9 +4,10 @@ import { Transaction } from "@mysten/sui/transactions";
 import { bech32 } from "bech32";
 import { mnemonicToSeedSync } from "bip39";
 import { HDKey } from "ethereum-cryptography/hdkey";
+import { z } from "zod";
+
 import { SuiAccountData } from "../types/accounts.types";
 import { getAccountData } from "./accounts";
-import { z } from "zod";
 
 export const GAS_BUDGET = 10_000_000;
 
@@ -108,8 +109,8 @@ export const getKeypairFromPrivateKey = (
 
 export interface KeypairOptions {
   mnemonic?: string;
-  privateKey?: string;
   name?: string;
+  privateKey?: string;
 }
 
 export const getKeypair = (options: KeypairOptions): Ed25519Keypair => {
@@ -130,22 +131,22 @@ export const getKeypair = (options: KeypairOptions): Ed25519Keypair => {
 
 export interface SignAndExecuteTransactionOptions {
   client: SuiClient;
+  gasBudget: bigint;
   keypair: Ed25519Keypair;
   tx: Transaction;
-  gasBudget: bigint;
 }
 
 export interface TransactionResult {
   digest: string;
   effects?: {
     status: {
-      status: string;
       error?: string;
+      status: string;
     };
   } | null;
   events?: Array<{
-    type: string;
     parsedJson?: unknown;
+    type: string;
   }>;
 }
 

@@ -1,18 +1,15 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { Command, Option } from "commander";
+import { Command } from "commander";
 import { z } from "zod";
-import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
+
 import {
-  GAS_BUDGET,
+  commonDepositOptionsSchema,
   getCoin,
   getKeypair,
-  signAndExecuteTransaction,
   getNetwork,
-  chainIds,
+  signAndExecuteTransaction,
   toSmallestUnit,
-  networks,
-  commonDepositOptionsSchema,
 } from "../../../../utils/sui";
 import { addCommonSuiCommandOptions } from "../../../../utils/sui.command.helpers";
 
@@ -57,7 +54,7 @@ const main = async (options: DepositOptions) => {
 
   tx.setGasBudget(gasBudget);
 
-  await signAndExecuteTransaction({ client, keypair, tx, gasBudget });
+  await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };
 
 export const depositCommand = new Command("deposit").description(

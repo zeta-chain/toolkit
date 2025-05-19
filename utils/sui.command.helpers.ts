@@ -1,6 +1,7 @@
 import { Command, Option } from "commander";
-import { chainIds, networks, GAS_BUDGET } from "./sui";
+
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
+import { chainIds, GAS_BUDGET, networks } from "./sui";
 
 export const addCommonSuiCommandOptions = (command: Command) => {
   return command

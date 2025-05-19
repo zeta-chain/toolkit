@@ -1,29 +1,26 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { Command, Option } from "commander";
+import { Command } from "commander";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
-import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import {
-  GAS_BUDGET,
+  commonDepositObjectSchema,
   getCoin,
   getKeypair,
   getNetwork,
   signAndExecuteTransaction,
-  chainIds,
   toSmallestUnit,
-  networks,
-  commonDepositObjectSchema,
 } from "../../../../utils/sui";
 import { addCommonSuiCommandOptions } from "../../../../utils/sui.command.helpers";
+
 const depositAndCallOptionsSchema = commonDepositObjectSchema
   .extend({
     types: z.array(z.string()),
     values: z.array(z.string()),
   })
   .refine(
-    (data: { mnemonic?: string; privateKey?: string; name?: string }) =>
+    (data: { mnemonic?: string; name?: string; privateKey?: string }) =>
       data.mnemonic || data.privateKey || data.name,
     {
       message: "Either mnemonic, private key or name must be provided",
@@ -76,7 +73,7 @@ const main = async (options: DepositAndCallOptions) => {
 
   tx.setGasBudget(gasBudget);
 
-  await signAndExecuteTransaction({ client, keypair, tx, gasBudget });
+  await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };
 
 export const depositAndCallCommand = new Command(
