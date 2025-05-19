@@ -1,5 +1,5 @@
 export * from "./accounts";
-export * from "./balances";
+export * from "./query";
 export * from "./bitcoin";
 export * from "./evm";
 export * from "./solana";
