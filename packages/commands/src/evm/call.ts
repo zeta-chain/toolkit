@@ -2,11 +2,9 @@ import { Command } from "commander";
 import { z } from "zod";
 
 import {
-  evmAddressSchema,
   namePkRefineRule,
   stringArraySchema,
   typesAndValuesLengthRefineRule,
-  validAmountSchema,
 } from "../../../../types/shared.schema";
 import {
   handleError,
@@ -16,7 +14,6 @@ import {
 import {
   addCommonEvmCommandOptions,
   baseEvmOptionsSchema,
-  checkSufficientBalance,
   confirmTransaction,
   prepareRevertOptions,
   prepareTxOptions,
@@ -24,10 +21,8 @@ import {
 } from "../../../../utils/evm.command.helpers";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 
-const depositAndCallOptionsSchema = baseEvmOptionsSchema
+const callOptionsSchema = baseEvmOptionsSchema
   .extend({
-    amount: validAmountSchema,
-    erc20: evmAddressSchema.optional(),
     types: stringArraySchema,
     values: stringArraySchema.min(1, "At least one value is required"),
   })
@@ -37,23 +32,14 @@ const depositAndCallOptionsSchema = baseEvmOptionsSchema
   })
   .refine(namePkRefineRule);
 
-type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
+type CallOptions = z.infer<typeof callOptionsSchema>;
 
-const main = async (options: DepositAndCallOptions) => {
+const main = async (options: CallOptions) => {
   try {
-    const { client, provider, signer, chainId } = setupTransaction(options);
-
-    await checkSufficientBalance(
-      provider,
-      signer,
-      options.amount,
-      options.erc20
-    );
+    const { client, signer, chainId } = setupTransaction(options);
 
     await printEvmTransactionDetails(signer, chainId, {
-      amount: options.amount,
       callOnRevert: options.callOnRevert,
-      erc20: options.erc20,
       onRevertGasLimit: options.onRevertGasLimit,
       receiver: options.receiver,
       revertMessage: options.revertMessage,
@@ -72,9 +58,7 @@ Parameter types: ${stringifiedTypes}
 
     const values = parseAbiValues(stringifiedTypes, options.values);
 
-    const tx = await client.evmDepositAndCall({
-      amount: options.amount,
-      erc20: options.erc20,
+    const tx = await client.evmCall({
       gatewayEvm: options.gateway,
       receiver: options.receiver,
       revertOptions: prepareRevertOptions(options, signer),
@@ -85,7 +69,7 @@ Parameter types: ${stringifiedTypes}
     console.log("Transaction hash:", tx.hash);
   } catch (error) {
     handleError({
-      context: "Error during depositAndCall to EVM",
+      context: "Error during call to EVM",
       error,
       shouldThrow: false,
     });
@@ -93,18 +77,11 @@ Parameter types: ${stringifiedTypes}
   }
 };
 
-export const depositAndCallCommand = new Command(
-  "deposit-and-call"
-).description(
-  "Deposit tokens and call a contract on ZetaChain from an EVM-compatible chain"
+export const callCommand = new Command("call").description(
+  "Call a contract on ZetaChain from an EVM-compatible chain"
 );
 
-addCommonEvmCommandOptions(depositAndCallCommand)
-  .requiredOption("--amount <amount>", "Amount of tokens to deposit")
-  .option(
-    "--erc20 <address>",
-    "ERC20 token address (optional for native token deposits)"
-  )
+addCommonEvmCommandOptions(callCommand)
   .requiredOption(
     "--types <types...>",
     "List of parameter types (e.g. uint256 address)"
@@ -116,7 +93,7 @@ addCommonEvmCommandOptions(depositAndCallCommand)
   .action(async (options) => {
     const validatedOptions = validateAndParseSchema(
       options,
-      depositAndCallOptionsSchema,
+      callOptionsSchema,
       {
         exitOnError: true,
       }
