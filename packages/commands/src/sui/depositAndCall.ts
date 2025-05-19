@@ -119,6 +119,10 @@ const main = async (options: DepositOptions) => {
 
   const tx = new Transaction();
 
+  const abiCoder = AbiCoder.defaultAbiCoder();
+  const payload = abiCoder.encode(options.types, options.values);
+  const payloadBytes = ethers.getBytes(payload);
+
   // If we're depositing SUI, we need a different coin for gas payment
   if (fullCoinType === "0x2::sui::SUI") {
     const coins = await client.getCoins({
@@ -177,8 +181,9 @@ const main = async (options: DepositOptions) => {
         tx.object(options.gatewayObject),
         splitCoin,
         tx.pure.string(options.receiver),
+        tx.pure.vector("u8", payloadBytes),
       ],
-      target: `${options.gatewayPackage}::gateway::deposit`,
+      target: `${options.gatewayPackage}::gateway::deposit_and_call`,
       typeArguments: [fullCoinType],
     });
   } else {
@@ -226,10 +231,6 @@ const main = async (options: DepositOptions) => {
       amountInSmallestUnit,
     ]);
 
-    const abiCoder = AbiCoder.defaultAbiCoder();
-    const payload = abiCoder.encode(options.types, options.values);
-    const payloadBytes = ethers.getBytes(payload);
-
     tx.moveCall({
       arguments: [
         tx.object(options.gatewayObject),
@@ -264,12 +265,12 @@ const main = async (options: DepositOptions) => {
   console.log(`Transaction hash: ${result.digest}`);
 
   const event = result.events?.find((evt) =>
-    evt.type.includes("gateway::DepositEvent")
+    evt.type.includes("gateway::DepositAndCallEvent")
   );
   if (event) {
     console.log("Event:", event.parsedJson);
   } else {
-    console.log("No Deposit Event found.");
+    console.log("No DepositAndCall Event found.");
     console.log("Transaction result:", JSON.stringify(result, null, 2));
   }
 };
