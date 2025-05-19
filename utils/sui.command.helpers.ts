@@ -11,15 +11,16 @@ declare module "commander" {
 
 Command.prototype.addCommonSuiCommandOptions = function () {
   return this.addOption(
-    new Option("--mnemonic <mnemonic>", "Mnemonic for the account").conflicts(
-      "private-key"
-    )
+    new Option("--mnemonic <mnemonic>", "Mnemonic for the account").conflicts([
+      "private-key",
+      "name",
+    ])
   )
     .addOption(
       new Option(
         "--private-key <privateKey>",
         "Private key for the account"
-      ).conflicts("mnemonic")
+      ).conflicts(["mnemonic", "name"])
     )
     .requiredOption("--gateway-object <gatewayObject>", "Gateway object ID")
     .requiredOption("--gateway-package <gatewayPackage>", "Gateway package ID")
@@ -45,6 +46,6 @@ Command.prototype.addCommonSuiCommandOptions = function () {
     .addOption(
       new Option("--name <name>", "Account name")
         .default(DEFAULT_ACCOUNT_NAME)
-        .conflicts(["private-key"])
+        .conflicts(["private-key", "mnemonic"])
     );
 };
