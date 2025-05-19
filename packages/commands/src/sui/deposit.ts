@@ -3,6 +3,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { Command } from "commander";
 import { z } from "zod";
 
+import "../../../../utils/sui.command.helpers";
 import {
   commonDepositOptionsSchema,
   getCoin,
@@ -59,7 +60,7 @@ const main = async (options: DepositOptions) => {
 export const depositCommand = new Command("deposit")
   .description("Deposit tokens from Sui")
   .addCommonSuiCommandOptions()
-  .action(async (options) => {
+  .action(async (options: DepositOptions) => {
     const validatedOptions = commonDepositOptionsSchema.parse(options);
     await main(validatedOptions);
   });

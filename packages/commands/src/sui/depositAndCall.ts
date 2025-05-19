@@ -75,7 +75,7 @@ export const depositAndCallCommand = new Command("deposit-and-call")
     "--types <types...>",
     "JSON string array of parameter types (e.g. uint256 address)"
   )
-  .action(async (options) => {
+  .action(async (options: DepositAndCallOptions) => {
     const validatedOptions = depositAndCallOptionsSchema.parse(options);
     await main(validatedOptions);
   });
