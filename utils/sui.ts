@@ -178,23 +178,35 @@ export const signAndExecuteTransaction = async ({
   return result as TransactionResult;
 };
 
-export const chainIdToNetwork = {
-  "0103": "localnet",
-  "101": "mainnet",
-  "103": "testnet",
-} as const;
+export const chainIds = ["0103", "101", "103"] as const;
+export const networks = ["localnet", "mainnet", "testnet"] as const;
 
-export type SuiNetwork =
-  (typeof chainIdToNetwork)[keyof typeof chainIdToNetwork];
+export type SuiNetwork = (typeof networks)[number];
 
 export const getNetwork = (
   network?: SuiNetwork,
-  chainId?: keyof typeof chainIdToNetwork
+  chainId?: (typeof chainIds)[number]
 ): SuiNetwork => {
-  const resolvedNetwork =
-    network || (chainId ? chainIdToNetwork[chainId] : undefined);
-  if (!resolvedNetwork) {
-    throw new Error("Either network or chainId must be provided");
+  if (network) {
+    return network;
   }
-  return resolvedNetwork;
+  if (chainId) {
+    const index = chainIds.indexOf(chainId);
+    if (index === -1) {
+      throw new Error(`Invalid chain ID: ${chainId}`);
+    }
+    return networks[index];
+  }
+  throw new Error("Either network or chainId must be provided");
+};
+
+// Convert decimal amount to smallest unit (e.g., SUI to MIST)
+export const toSmallestUnit = (amount: string, decimals = 9): bigint => {
+  if (!/^\d+(\.\d+)?$/.test(amount)) {
+    throw new Error("Invalid decimal amount");
+  }
+  const [whole = "0", fraction = ""] = amount.split(".");
+  const paddedFraction = (fraction + "0".repeat(decimals)).slice(0, decimals);
+  const multiplier = BigInt(10) ** BigInt(decimals);
+  return BigInt(whole) * multiplier + BigInt(paddedFraction);
 };

@@ -10,30 +10,22 @@ import {
   getKeypair,
   signAndExecuteTransaction,
   getNetwork,
+  chainIds,
+  toSmallestUnit,
+  networks,
 } from "../../../../utils/sui";
-
-// Convert decimal amount to smallest unit (e.g., SUI to MIST)
-const toSmallestUnit = (amount: string, decimals = 9): bigint => {
-  if (!/^\d+(\.\d+)?$/.test(amount)) {
-    throw new Error("Invalid decimal amount");
-  }
-  const [whole = "0", fraction = ""] = amount.split(".");
-  const paddedFraction = (fraction + "0".repeat(decimals)).slice(0, decimals);
-  const multiplier = BigInt(10) ** BigInt(decimals);
-  return BigInt(whole) * multiplier + BigInt(paddedFraction);
-};
 
 const depositOptionsSchema = z
   .object({
     amount: z.string(),
-    chainId: z.enum(["101", "103", "0103"]).optional(),
+    chainId: z.enum(chainIds).optional(),
     coinType: z.string().default("0x2::sui::SUI"),
     gasBudget: z.string(),
     gatewayObject: z.string(),
     gatewayPackage: z.string(),
     mnemonic: z.string().optional(),
     name: z.string().optional(),
-    network: z.enum(["localnet", "testnet", "mainnet"]).optional(),
+    network: z.enum(networks).optional(),
     privateKey: z.string().optional(),
     receiver: z.string(),
   })
@@ -108,14 +100,14 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--amount <amount>", "Amount to deposit in decimal format")
   .addOption(
     new Option("--chain-id <chainId>", "Chain ID")
-      .choices(["101", "103", "0103"])
+      .choices(chainIds)
       .default("103")
       .conflicts(["network"])
   )
   .option("--coin-type <coinType>", "Coin type to deposit", "0x2::sui::SUI")
   .addOption(
     new Option("--network <network>", "Network to use")
-      .choices(["localnet", "testnet", "mainnet"])
+      .choices(networks)
       .conflicts(["chain-id"])
   )
   .option(
