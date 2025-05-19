@@ -20,7 +20,6 @@ import {
   setupTransaction,
 } from "../../../../utils/evm.command.helpers";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
-import { parseJson } from "../../../../utils/parseJson";
 
 const callOptionsSchema = baseEvmOptionsSchema
   .extend({
@@ -40,7 +39,6 @@ const main = async (options: CallOptions) => {
     const { client, signer, chainId } = setupTransaction(options);
 
     await printEvmTransactionDetails(signer, chainId, {
-      amount: "",
       callOnRevert: options.callOnRevert,
       onRevertGasLimit: options.onRevertGasLimit,
       receiver: options.receiver,
@@ -59,14 +57,13 @@ Parameter types: ${stringifiedTypes}
     if (!isConfirmed) return;
 
     const values = parseAbiValues(stringifiedTypes, options.values);
-    const parsedTypes = parseJson(stringifiedTypes, stringArraySchema);
 
     const tx = await client.evmCall({
       gatewayEvm: options.gateway,
       receiver: options.receiver,
       revertOptions: prepareRevertOptions(options, signer),
       txOptions: prepareTxOptions(options),
-      types: parsedTypes,
+      types: options.types,
       values,
     });
     console.log("Transaction hash:", tx.hash);
