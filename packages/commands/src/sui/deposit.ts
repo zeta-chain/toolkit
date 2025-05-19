@@ -13,6 +13,7 @@ import {
   getKeypairFromMnemonic,
   getKeypairFromPrivateKey,
 } from "../../../../utils/sui";
+
 // Convert decimal amount to smallest unit (e.g., SUI to MIST)
 const toSmallestUnit = (amount: string, decimals = 9): bigint => {
   if (!/^\d+(\.\d+)?$/.test(amount)) {
@@ -28,7 +29,7 @@ const depositOptionsSchema = z
   .object({
     amount: z.string(),
     chainId: z.enum(["101", "103", "0103"]).optional(),
-    coinType: z.string().optional(),
+    coinType: z.string().optional().default("0x2::sui::SUI"),
     gasBudget: z.string(),
     gatewayObject: z.string(),
     gatewayPackage: z.string(),
@@ -85,60 +86,16 @@ const main = async (options: DepositOptions) => {
 
   const address = keypair.toSuiAddress();
 
-  const fullCoinType = options.coinType || "0x2::sui::SUI";
-  console.log(`Using Coin Type: ${fullCoinType}`);
-
-  // Convert amount to smallest unit (e.g., SUI to MIST)
   const amountInSmallestUnit = toSmallestUnit(options.amount);
-  console.log(`Amount in smallest unit: ${amountInSmallestUnit}`);
-
-  const coinObjectId = await getCoin(client, address, fullCoinType);
-  console.log(`Using Coin Object: ${coinObjectId}`);
-
-  const coinObject = await client.getObject({
-    id: coinObjectId,
-    options: { showContent: true },
-  });
-  if (
-    !coinObject.data?.content ||
-    coinObject.data.content.dataType !== "moveObject"
-  ) {
-    throw new Error(`Failed to get coin object data for ${coinObjectId}`);
-  }
-  const actualCoinType = coinObject.data.content.type;
-  console.log(`Actual Coin Type: ${actualCoinType}`);
-
-  if (!actualCoinType.includes(fullCoinType)) {
-    throw new Error(
-      `Coin type mismatch. Expected: ${fullCoinType}, Got: ${actualCoinType}`
-    );
-  }
 
   const tx = new Transaction();
 
-  // If we're depositing SUI, we need a different coin for gas payment
-  if (fullCoinType === "0x2::sui::SUI") {
+  if (options.coinType === "0x2::sui::SUI") {
     const coins = await client.getCoins({
-      coinType: fullCoinType,
+      coinType: options.coinType,
       owner: address,
     });
 
-    console.log("\nAvailable SUI coins:");
-    coins.data.forEach((coin) => {
-      console.log(
-        `Coin ID: ${coin.coinObjectId}, Balance: ${coin.balance} MIST (${
-          Number(coin.balance) / 1_000_000_000
-        } SUI)`
-      );
-    });
-
-    console.log(
-      `Required gas budget: ${gasBudgetValue} MIST (${
-        Number(gasBudgetValue) / 1_000_000_000
-      } SUI)\n`
-    );
-
-    // Find a coin with sufficient balance for gas
     const gasCoin = coins.data.find(
       (coin) => BigInt(coin.balance) >= gasBudgetValue
     );
@@ -148,7 +105,6 @@ const main = async (options: DepositOptions) => {
       );
     }
 
-    // Use the other coin for deposit
     const depositCoin = coins.data.find(
       (coin) => coin.coinObjectId !== gasCoin.coinObjectId
     );
@@ -156,7 +112,6 @@ const main = async (options: DepositOptions) => {
       throw new Error("No other SUI coins found for deposit");
     }
 
-    // Split the deposit coin if needed
     const [splitCoin] = tx.splitCoins(tx.object(depositCoin.coinObjectId), [
       amountInSmallestUnit,
     ]);
@@ -176,31 +131,16 @@ const main = async (options: DepositOptions) => {
         tx.pure.string(options.receiver),
       ],
       target: `${options.gatewayPackage}::gateway::deposit`,
-      typeArguments: [fullCoinType],
+      typeArguments: [options.coinType],
     });
   } else {
-    // For non-SUI coins, we need to use SUI for gas payment
+    const coinObjectId = await getCoin(client, address, options.coinType);
+
     const suiCoins = await client.getCoins({
       coinType: "0x2::sui::SUI",
       owner: address,
     });
 
-    console.log("\nAvailable SUI coins for gas:");
-    suiCoins.data.forEach((coin) => {
-      console.log(
-        `Coin ID: ${coin.coinObjectId}, Balance: ${coin.balance} MIST (${
-          Number(coin.balance) / 1_000_000_000
-        } SUI)`
-      );
-    });
-
-    console.log(
-      `Required gas budget: ${gasBudgetValue} MIST (${
-        Number(gasBudgetValue) / 1_000_000_000
-      } SUI)\n`
-    );
-
-    // Find a SUI coin with sufficient balance for gas
     const gasCoin = suiCoins.data.find(
       (coin) => BigInt(coin.balance) >= gasBudgetValue
     );
@@ -218,7 +158,6 @@ const main = async (options: DepositOptions) => {
       },
     ]);
 
-    // Split the coin for deposit
     const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
       amountInSmallestUnit,
     ]);
@@ -230,7 +169,7 @@ const main = async (options: DepositOptions) => {
         tx.pure.string(options.receiver),
       ],
       target: `${options.gatewayPackage}::gateway::deposit`,
-      typeArguments: [fullCoinType],
+      typeArguments: [options.coinType],
     });
   }
 
@@ -289,7 +228,7 @@ export const depositCommand = new Command("deposit")
       .default("103")
       .conflicts(["network"])
   )
-  .option("--coin-type <coinType>", "Coin type to deposit")
+  .option("--coin-type <coinType>", "Coin type to deposit", "0x2::sui::SUI")
   .addOption(
     new Option("--network <network>", "Network to use")
       .choices(["localnet", "testnet", "mainnet"])
