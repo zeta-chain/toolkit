@@ -3,7 +3,7 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { Command, Option } from "commander";
 import { z } from "zod";
-
+import { AbiCoder, ethers } from "ethers";
 import { SuiAccountData } from "../../../../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import { getAccountData } from "../../../../utils/accounts";
@@ -13,6 +13,7 @@ import {
   getKeypairFromMnemonic,
   getKeypairFromPrivateKey,
 } from "../../../../utils/sui";
+
 // Convert decimal amount to smallest unit (e.g., SUI to MIST)
 const toSmallestUnit = (amount: string, decimals = 9): bigint => {
   if (!/^\d+(\.\d+)?$/.test(amount)) {
@@ -24,7 +25,7 @@ const toSmallestUnit = (amount: string, decimals = 9): bigint => {
   return BigInt(whole) * multiplier + BigInt(paddedFraction);
 };
 
-const depositOptionsSchema = z
+const depositAndCallOptionsSchema = z
   .object({
     amount: z.string(),
     chainId: z.enum(["101", "103", "0103"]).optional(),
@@ -37,12 +38,14 @@ const depositOptionsSchema = z
     network: z.enum(["localnet", "testnet", "mainnet"]).optional(),
     privateKey: z.string().optional(),
     receiver: z.string(),
+    types: z.array(z.string()),
+    values: z.array(z.string()),
   })
   .refine((data) => data.mnemonic || data.privateKey || data.name, {
     message: "Either mnemonic, private key or name must be provided",
   });
 
-export type DepositOptions = z.infer<typeof depositOptionsSchema>;
+export type DepositOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   const chainIdToNetwork = {
@@ -223,13 +226,18 @@ const main = async (options: DepositOptions) => {
       amountInSmallestUnit,
     ]);
 
+    const abiCoder = AbiCoder.defaultAbiCoder();
+    const payload = abiCoder.encode(options.types, options.values);
+    const payloadBytes = ethers.getBytes(payload);
+
     tx.moveCall({
       arguments: [
         tx.object(options.gatewayObject),
         splitCoin,
         tx.pure.string(options.receiver),
+        tx.pure.vector("u8", payloadBytes),
       ],
-      target: `${options.gatewayPackage}::gateway::deposit`,
+      target: `${options.gatewayPackage}::gateway::deposit_and_call`,
       typeArguments: [fullCoinType],
     });
   }
@@ -311,6 +319,6 @@ export const depositAndCallCommand = new Command("deposit-and-call")
       .conflicts(["private-key"])
   )
   .action(async (options) => {
-    const validatedOptions = depositOptionsSchema.parse(options);
+    const validatedOptions = depositAndCallOptionsSchema.parse(options);
     await main(validatedOptions);
   });
