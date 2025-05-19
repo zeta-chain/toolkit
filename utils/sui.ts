@@ -3,6 +3,8 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { bech32 } from "bech32";
 import { mnemonicToSeedSync } from "bip39";
 import { HDKey } from "ethereum-cryptography/hdkey";
+import { SuiAccountData } from "../types/accounts.types";
+import { getAccountData } from "./accounts";
 
 export const GAS_BUDGET = 10_000_000;
 
@@ -99,5 +101,27 @@ export const getKeypairFromPrivateKey = (
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     throw new Error(`Invalid private key format: ${errorMessage}`);
+  }
+};
+
+export interface KeypairOptions {
+  mnemonic?: string;
+  privateKey?: string;
+  name?: string;
+}
+
+export const getKeypair = (options: KeypairOptions): Ed25519Keypair => {
+  if (options.mnemonic) {
+    return getKeypairFromMnemonic(options.mnemonic);
+  } else if (options.privateKey) {
+    return getKeypairFromPrivateKey(options.privateKey);
+  } else if (options.name) {
+    const account = getAccountData<SuiAccountData>("sui", options.name);
+    if (!account?.privateKey) {
+      throw new Error("No private key found for the specified account");
+    }
+    return getKeypairFromPrivateKey(account.privateKey);
+  } else {
+    throw new Error("Either mnemonic or private key must be provided");
   }
 };

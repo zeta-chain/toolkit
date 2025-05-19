@@ -11,9 +11,11 @@ import { getAccountData } from "../../../../utils/accounts";
 import {
   GAS_BUDGET,
   getCoin,
+  getKeypair,
   getKeypairFromMnemonic,
   getKeypairFromPrivateKey,
 } from "../../../../utils/sui";
+import { chainIdToNetwork } from "utils/sui.command.helpers";
 
 // Convert decimal amount to smallest unit (e.g., SUI to MIST)
 const toSmallestUnit = (amount: string, decimals = 9): bigint => {
@@ -49,20 +51,14 @@ const depositAndCallOptionsSchema = z
 export type DepositOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
-  const chainIdToNetwork = {
-    "0103": "localnet",
-    "101": "mainnet",
-    "103": "testnet",
-  } as const;
-
-  const network =
+  const resolvedNetwork =
     options.network ||
     (options.chainId ? chainIdToNetwork[options.chainId] : undefined);
-  if (!network) {
+  if (!resolvedNetwork) {
     throw new Error("Either network or chainId must be provided");
   }
-  const client = new SuiClient({ url: getFullnodeUrl(network) });
-  console.log(getFullnodeUrl(network));
+  const client = new SuiClient({ url: getFullnodeUrl(resolvedNetwork) });
+
   const gasBudgetValue = BigInt(options.gasBudget);
 
   if (!options.gatewayObject || !options.gatewayPackage) {
@@ -71,21 +67,7 @@ const main = async (options: DepositOptions) => {
     );
   }
 
-  let keypair: Ed25519Keypair;
-
-  if (options.mnemonic) {
-    keypair = getKeypairFromMnemonic(options.mnemonic);
-  } else if (options.privateKey) {
-    keypair = getKeypairFromPrivateKey(options.privateKey);
-  } else if (options.name) {
-    const account = getAccountData<SuiAccountData>("sui", options.name);
-    if (!account?.privateKey) {
-      throw new Error("No private key found for the specified account");
-    }
-    keypair = getKeypairFromPrivateKey(account.privateKey);
-  } else {
-    throw new Error("Either mnemonic or private key must be provided");
-  }
+  const keypair = getKeypair(options);
 
   const address = keypair.toSuiAddress();
 
