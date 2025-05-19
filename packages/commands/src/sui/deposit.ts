@@ -11,7 +11,6 @@ import {
   signAndExecuteTransaction,
   toSmallestUnit,
 } from "../../../../utils/sui";
-import { addCommonSuiCommandOptions } from "../../../../utils/sui.command.helpers";
 
 type DepositOptions = z.infer<typeof commonDepositOptionsSchema>;
 
@@ -57,11 +56,10 @@ const main = async (options: DepositOptions) => {
   await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };
 
-export const depositCommand = new Command("deposit").description(
-  "Deposit tokens from Sui"
-);
-
-addCommonSuiCommandOptions(depositCommand).action(async (options) => {
-  const validatedOptions = commonDepositOptionsSchema.parse(options);
-  await main(validatedOptions);
-});
+export const depositCommand = new Command("deposit")
+  .description("Deposit tokens from Sui")
+  .addCommonSuiCommandOptions()
+  .action(async (options) => {
+    const validatedOptions = commonDepositOptionsSchema.parse(options);
+    await main(validatedOptions);
+  });

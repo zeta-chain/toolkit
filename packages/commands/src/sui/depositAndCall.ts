@@ -12,7 +12,6 @@ import {
   signAndExecuteTransaction,
   toSmallestUnit,
 } from "../../../../utils/sui";
-import { addCommonSuiCommandOptions } from "../../../../utils/sui.command.helpers";
 
 const depositAndCallOptionsSchema = commonDepositObjectSchema
   .extend({
@@ -76,11 +75,9 @@ const main = async (options: DepositAndCallOptions) => {
   await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };
 
-export const depositAndCallCommand = new Command(
-  "deposit-and-call"
-).description("Deposit tokens from Sui and call a contract on ZetaChain");
-
-addCommonSuiCommandOptions(depositAndCallCommand)
+export const depositAndCallCommand = new Command("deposit-and-call")
+  .description("Deposit tokens from Sui and call a contract on ZetaChain")
+  .addCommonSuiCommandOptions()
   .option("--values <values...>", "Parameter values for the function call")
   .option(
     "--types <types...>",
