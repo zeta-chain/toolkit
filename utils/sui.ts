@@ -1,5 +1,6 @@
 import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
 import { bech32 } from "bech32";
 import { mnemonicToSeedSync } from "bip39";
 import { HDKey } from "ethereum-cryptography/hdkey";
@@ -125,3 +126,60 @@ export const getKeypair = (options: KeypairOptions): Ed25519Keypair => {
     throw new Error("Either mnemonic or private key must be provided");
   }
 };
+
+export interface SignAndExecuteTransactionOptions {
+  client: SuiClient;
+  keypair: Ed25519Keypair;
+  transaction: Transaction;
+  gasBudget: bigint;
+}
+
+export interface TransactionResult {
+  digest: string;
+  effects?: {
+    status: {
+      status: string;
+      error?: string;
+    };
+  } | null;
+  events?: Array<{
+    type: string;
+    parsedJson?: unknown;
+  }>;
+}
+
+export const signAndExecuteTransaction = async ({
+  client,
+  keypair,
+  transaction,
+  gasBudget,
+}: SignAndExecuteTransactionOptions): Promise<TransactionResult> => {
+  transaction.setGasBudget(gasBudget);
+
+  const result = await client.signAndExecuteTransaction({
+    options: {
+      showEffects: true,
+      showEvents: true,
+      showObjectChanges: true,
+    },
+    requestType: "WaitForLocalExecution",
+    signer: keypair,
+    transaction,
+  });
+
+  if (result.effects?.status.status === "failure") {
+    console.error("Transaction failed:", result.effects.status.error);
+    throw new Error(`Transaction failed: ${result.effects.status.error}`);
+  }
+
+  console.log("\nTransaction successful!");
+  console.log(`Transaction hash: ${result.digest}`);
+
+  return result as TransactionResult;
+};
+
+export const chainIdToNetwork = {
+  "0103": "localnet",
+  "101": "mainnet",
+  "103": "testnet",
+} as const;

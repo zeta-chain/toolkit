@@ -1,21 +1,17 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { Command, Option } from "commander";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
-import { SuiAccountData } from "../../../../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
-import { getAccountData } from "../../../../utils/accounts";
 import {
   GAS_BUDGET,
   getCoin,
   getKeypair,
-  getKeypairFromMnemonic,
-  getKeypairFromPrivateKey,
+  chainIdToNetwork,
+  signAndExecuteTransaction,
 } from "../../../../utils/sui";
-import { chainIdToNetwork } from "utils/sui.command.helpers";
 
 // Convert decimal amount to smallest unit (e.g., SUI to MIST)
 const toSmallestUnit = (amount: string, decimals = 9): bigint => {
@@ -71,8 +67,6 @@ const main = async (options: DepositOptions) => {
 
   const address = keypair.toSuiAddress();
 
-  const amountInSmallestUnit = toSmallestUnit(options.amount);
-
   const coinObjectId = await getCoin(client, address, options.coinType);
 
   const coinObject = await client.getObject({
@@ -100,7 +94,7 @@ const main = async (options: DepositOptions) => {
   const payloadBytes = ethers.getBytes(payload);
 
   if (options.coinType === "0x2::sui::SUI") {
-    const [splitCoin] = tx.splitCoins(tx.gas, [amountInSmallestUnit]);
+    const [splitCoin] = tx.splitCoins(tx.gas, [toSmallestUnit(options.amount)]);
 
     tx.moveCall({
       arguments: [
@@ -114,7 +108,7 @@ const main = async (options: DepositOptions) => {
     });
   } else {
     const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
-      amountInSmallestUnit,
+      toSmallestUnit(options.amount),
     ]);
 
     tx.moveCall({
@@ -131,34 +125,12 @@ const main = async (options: DepositOptions) => {
 
   tx.setGasBudget(gasBudgetValue);
 
-  const result = await client.signAndExecuteTransaction({
-    options: {
-      showEffects: true,
-      showEvents: true,
-      showObjectChanges: true,
-    },
-    requestType: "WaitForLocalExecution",
-    signer: keypair,
+  await signAndExecuteTransaction({
+    client,
+    keypair,
     transaction: tx,
+    gasBudget: gasBudgetValue,
   });
-
-  if (result.effects?.status.status === "failure") {
-    console.error("Transaction failed:", result.effects.status.error);
-    return;
-  }
-
-  console.log("\nTransaction successful!");
-  console.log(`Transaction hash: ${result.digest}`);
-
-  const event = result.events?.find((evt) =>
-    evt.type.includes("gateway::DepositAndCallEvent")
-  );
-  if (event) {
-    console.log("Event:", event.parsedJson);
-  } else {
-    console.log("No DepositAndCall Event found.");
-    console.log("Transaction result:", JSON.stringify(result, null, 2));
-  }
 };
 
 export const depositAndCallCommand = new Command("deposit-and-call")
