@@ -136,26 +136,12 @@ export interface SignAndExecuteTransactionOptions {
   tx: Transaction;
 }
 
-export interface TransactionResult {
-  digest: string;
-  effects?: {
-    status: {
-      error?: string;
-      status: string;
-    };
-  } | null;
-  events?: Array<{
-    parsedJson?: unknown;
-    type: string;
-  }>;
-}
-
 export const signAndExecuteTransaction = async ({
   client,
   keypair,
   tx,
   gasBudget,
-}: SignAndExecuteTransactionOptions): Promise<TransactionResult> => {
+}: SignAndExecuteTransactionOptions) => {
   tx.setGasBudget(gasBudget);
 
   const result = await client.signAndExecuteTransaction({
@@ -177,7 +163,7 @@ export const signAndExecuteTransaction = async ({
   console.log("\nTransaction successful!");
   console.log(`Transaction hash: ${result.digest}`);
 
-  return result as TransactionResult;
+  return result;
 };
 
 export const chainIds = ["0103", "101", "103"] as const;
