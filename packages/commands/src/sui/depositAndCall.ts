@@ -13,18 +13,10 @@ import {
   toSmallestUnit,
 } from "../../../../utils/sui";
 
-const depositAndCallOptionsSchema = commonDepositObjectSchema
-  .extend({
-    types: z.array(z.string()),
-    values: z.array(z.string()),
-  })
-  .refine(
-    (data: { mnemonic?: string; name?: string; privateKey?: string }) =>
-      data.mnemonic || data.privateKey || data.name,
-    {
-      message: "Either mnemonic, private key or name must be provided",
-    }
-  );
+const depositAndCallOptionsSchema = commonDepositObjectSchema.extend({
+  types: z.array(z.string()),
+  values: z.array(z.string()),
+});
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
