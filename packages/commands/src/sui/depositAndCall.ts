@@ -16,7 +16,7 @@ import {
   networks,
   commonDepositObjectSchema,
 } from "../../../../utils/sui";
-
+import { addCommonSuiCommandOptions } from "../../../../utils/sui.command.helpers";
 const depositAndCallOptionsSchema = commonDepositObjectSchema
   .extend({
     types: z.array(z.string()),
@@ -79,45 +79,11 @@ const main = async (options: DepositAndCallOptions) => {
   await signAndExecuteTransaction({ client, keypair, tx, gasBudget });
 };
 
-export const depositAndCallCommand = new Command("deposit-and-call")
-  .description("Deposit tokens from Sui and call a contract on ZetaChain")
-  .addOption(
-    new Option("--mnemonic <mnemonic>", "Mnemonic for the account").conflicts(
-      "private-key"
-    )
-  )
-  .addOption(
-    new Option(
-      "--private-key <privateKey>",
-      "Private key for the account"
-    ).conflicts("mnemonic")
-  )
-  .requiredOption("--gateway-object <gatewayObject>", "Gateway object ID")
-  .requiredOption("--gateway-package <gatewayPackage>", "Gateway package ID")
-  .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
-  .requiredOption("--amount <amount>", "Amount to deposit in decimal format")
-  .addOption(
-    new Option("--chain-id <chainId>", "Chain ID")
-      .choices(chainIds)
-      .default("103")
-      .conflicts(["network"])
-  )
-  .option("--coin-type <coinType>", "Coin type to deposit", "0x2::sui::SUI")
-  .addOption(
-    new Option("--network <network>", "Network to use")
-      .choices(networks)
-      .conflicts(["chain-id"])
-  )
-  .option(
-    "--gas-budget <gasBudget>",
-    "Gas budget in MIST",
-    GAS_BUDGET.toString()
-  )
-  .addOption(
-    new Option("--name <name>", "Account name")
-      .default(DEFAULT_ACCOUNT_NAME)
-      .conflicts(["private-key"])
-  )
+export const depositAndCallCommand = new Command(
+  "deposit-and-call"
+).description("Deposit tokens from Sui and call a contract on ZetaChain");
+
+addCommonSuiCommandOptions(depositAndCallCommand)
   .option("--values <values...>", "Parameter values for the function call")
   .option(
     "--types <types...>",
