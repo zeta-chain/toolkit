@@ -1,25 +1,54 @@
 import { Command } from "commander";
 import { z } from "zod";
 
-import { namePkRefineRule } from "../../../../types/shared.schema";
-import { handleError, validateAndParseSchema } from "../../../../utils";
 import {
-  addCommonEvmDepositCommandOptions,
-  baseEvmDepositOptionsSchema,
+  evmAddressSchema,
+  namePkRefineRule,
+  validAmountSchema,
+} from "../../../../types/shared.schema";
+import {
+  handleError,
+  printEvmTransactionDetails,
+  validateAndParseSchema,
+} from "../../../../utils";
+import {
+  addCommonEvmCommandOptions,
+  baseEvmOptionsSchema,
+  checkSufficientBalance,
   confirmTransaction,
   prepareRevertOptions,
   prepareTxOptions,
   setupTransaction,
 } from "../../../../utils/evm.command.helpers";
 
-const depositOptionsSchema =
-  baseEvmDepositOptionsSchema.refine(namePkRefineRule);
+const depositOptionsSchema = baseEvmOptionsSchema
+  .extend({
+    amount: validAmountSchema,
+    erc20: evmAddressSchema.optional(),
+  })
+  .refine(namePkRefineRule);
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
-    const { client, signer } = await setupTransaction(options);
+    const { client, provider, signer, chainId } = setupTransaction(options);
+
+    await checkSufficientBalance(
+      provider,
+      signer,
+      options.amount,
+      options.erc20
+    );
+
+    await printEvmTransactionDetails(signer, chainId, {
+      amount: options.amount,
+      callOnRevert: options.callOnRevert,
+      erc20: options.erc20,
+      onRevertGasLimit: options.onRevertGasLimit,
+      receiver: options.receiver,
+      revertMessage: options.revertMessage,
+    });
 
     const isConfirmed = await confirmTransaction(options);
 
@@ -47,13 +76,19 @@ export const depositCommand = new Command("deposit").description(
   "Deposit tokens to ZetaChain from an EVM-compatible chain"
 );
 
-addCommonEvmDepositCommandOptions(depositCommand).action(async (options) => {
-  const validatedOptions = validateAndParseSchema(
-    options,
-    depositOptionsSchema,
-    {
-      exitOnError: true,
-    }
-  );
-  await main(validatedOptions);
-});
+addCommonEvmCommandOptions(depositCommand)
+  .requiredOption("--amount <amount>", "Amount of tokens to deposit")
+  .option(
+    "--erc20 <address>",
+    "ERC20 token address (optional for native token deposits)"
+  )
+  .action(async (options) => {
+    const validatedOptions = validateAndParseSchema(
+      options,
+      depositOptionsSchema,
+      {
+        exitOnError: true,
+      }
+    );
+    await main(validatedOptions);
+  });

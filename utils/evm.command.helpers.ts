@@ -10,20 +10,16 @@ import {
   evmAddressSchema,
   evmPrivateKeySchema,
   numericStringSchema,
-  validAmountSchema,
 } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
 import { hasSufficientBalanceEvm } from "./balances";
 import { getNetworkTypeByChainId, getRpcUrl } from "./chains";
-import { printEvmTransactionDetails } from "./formatting";
 import { handleError } from "./handleError";
 
-export const baseEvmDepositOptionsSchema = z.object({
+export const baseEvmOptionsSchema = z.object({
   abortAddress: evmAddressSchema,
-  amount: validAmountSchema,
   callOnRevert: z.boolean().default(false),
   chainId: numericStringSchema,
-  erc20: evmAddressSchema.optional(),
   gasLimit: numericStringSchema.optional(),
   gasPrice: numericStringSchema.optional(),
   gateway: evmAddressSchema.optional(),
@@ -37,10 +33,10 @@ export const baseEvmDepositOptionsSchema = z.object({
   yes: z.boolean().default(false),
 });
 
-type EvmDepositOptions = z.infer<typeof baseEvmDepositOptionsSchema>;
+type BaseEvmOptions = z.infer<typeof baseEvmOptionsSchema>;
 
 // Common setup function for both deposit commands
-export const setupTransaction = async (options: EvmDepositOptions) => {
+export const setupTransaction = (options: BaseEvmOptions) => {
   const chainId = parseInt(options.chainId);
   const networkType = getNetworkTypeByChainId(chainId);
   const rpcUrl = options.rpc || getRpcUrl(chainId);
@@ -85,18 +81,27 @@ export const setupTransaction = async (options: EvmDepositOptions) => {
 
   const client = new ZetaChainClient({ network: networkType, signer });
 
+  return { chainId, client, provider, signer };
+};
+
+export const checkSufficientBalance = async (
+  provider: ethers.JsonRpcProvider,
+  signer: ethers.Wallet,
+  amount: string,
+  erc20?: string
+) => {
   const { hasEnoughBalance, balance, decimals } = await hasSufficientBalanceEvm(
     provider,
     signer,
-    options.amount,
-    options.erc20
+    amount,
+    erc20
   );
 
   if (!hasEnoughBalance) {
     handleError({
       context: "Insufficient balance",
       error: new Error(
-        `Required: ${options.amount}, Available: ${ethers.formatUnits(
+        `Required: ${amount}, Available: ${ethers.formatUnits(
           balance,
           decimals
         )}`
@@ -104,21 +109,10 @@ export const setupTransaction = async (options: EvmDepositOptions) => {
       shouldThrow: true,
     });
   }
-
-  await printEvmTransactionDetails(signer, chainId, {
-    amount: options.amount,
-    callOnRevert: options.callOnRevert,
-    erc20: options.erc20,
-    onRevertGasLimit: options.onRevertGasLimit,
-    receiver: options.receiver,
-    revertMessage: options.revertMessage,
-  });
-
-  return { client, provider, signer };
 };
 
 // Common confirmation prompt for transactions
-export const confirmTransaction = async (options: EvmDepositOptions) => {
+export const confirmTransaction = async (options: BaseEvmOptions) => {
   if (options.yes) {
     console.log("Proceeding with transaction (--yes flag set)");
     return true;
@@ -154,7 +148,7 @@ export const confirmTransaction = async (options: EvmDepositOptions) => {
 
 // Common revert options preparation
 export const prepareRevertOptions = (
-  options: EvmDepositOptions,
+  options: BaseEvmOptions,
   signer: ethers.Wallet
 ) => {
   return {
@@ -167,17 +161,15 @@ export const prepareRevertOptions = (
 };
 
 // Common transaction options preparation
-export const prepareTxOptions = (options: EvmDepositOptions) => {
+export const prepareTxOptions = (options: BaseEvmOptions) => {
   return {
     gasLimit: options.gasLimit,
     gasPrice: options.gasPrice,
   };
 };
 
-// Common command options setup
-export const addCommonEvmDepositCommandOptions = (command: Command) => {
+export const addCommonEvmCommandOptions = (command: Command) => {
   return command
-    .requiredOption("--amount <amount>", "Amount of tokens to deposit")
     .requiredOption("--chain-id <chainId>", "Chain ID of the network")
     .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
     .addOption(
@@ -192,10 +184,6 @@ export const addCommonEvmDepositCommandOptions = (command: Command) => {
       ).conflicts(["name"])
     )
     .option("--rpc <url>", "RPC URL for the source chain")
-    .option(
-      "--erc20 <address>",
-      "ERC20 token address (optional for native token deposits)"
-    )
     .option("--gateway <address>", "EVM Gateway address")
     .option(
       "--revert-address <address>",
@@ -203,7 +191,7 @@ export const addCommonEvmDepositCommandOptions = (command: Command) => {
     )
     .option(
       "--abort-address <address>",
-      `Address to receive funds if aborted (default: ${ZeroAddress})`,
+      `Address to receive funds if aborted`,
       ZeroAddress
     )
     .option(
