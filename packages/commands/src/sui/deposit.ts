@@ -1,9 +1,10 @@
+import "../../../../utils/sui.command.helpers";
+
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { Command } from "commander";
 import { z } from "zod";
 
-import "../../../../utils/sui.command.helpers";
 import {
   commonDepositOptionsSchema,
   getCoin,
