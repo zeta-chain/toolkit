@@ -2,8 +2,9 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { Command, Option } from "commander";
-import { z } from "zod";
 import { AbiCoder, ethers } from "ethers";
+import { z } from "zod";
+
 import { SuiAccountData } from "../../../../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import { getAccountData } from "../../../../utils/accounts";
