@@ -14,31 +14,25 @@ import {
   chainIds,
   toSmallestUnit,
   networks,
+  commonDepositObjectSchema,
 } from "../../../../utils/sui";
 
-const depositAndCallOptionsSchema = z
-  .object({
-    amount: z.string(),
-    chainId: z.enum(chainIds).optional(),
-    coinType: z.string().default("0x2::sui::SUI"),
-    gasBudget: z.string(),
-    gatewayObject: z.string(),
-    gatewayPackage: z.string(),
-    mnemonic: z.string().optional(),
-    name: z.string().optional(),
-    network: z.enum(networks).optional(),
-    privateKey: z.string().optional(),
-    receiver: z.string(),
+const depositAndCallOptionsSchema = commonDepositObjectSchema
+  .extend({
     types: z.array(z.string()),
     values: z.array(z.string()),
   })
-  .refine((data) => data.mnemonic || data.privateKey || data.name, {
-    message: "Either mnemonic, private key or name must be provided",
-  });
+  .refine(
+    (data: { mnemonic?: string; privateKey?: string; name?: string }) =>
+      data.mnemonic || data.privateKey || data.name,
+    {
+      message: "Either mnemonic, private key or name must be provided",
+    }
+  );
 
-export type DepositOptions = z.infer<typeof depositAndCallOptionsSchema>;
+type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
-const main = async (options: DepositOptions) => {
+const main = async (options: DepositAndCallOptions) => {
   const network = getNetwork(options.network, options.chainId);
   const client = new SuiClient({ url: getFullnodeUrl(network) });
   const gasBudget = BigInt(options.gasBudget);
@@ -46,20 +40,20 @@ const main = async (options: DepositOptions) => {
   const tx = new Transaction();
 
   const abiCoder = AbiCoder.defaultAbiCoder();
-  const payload = abiCoder.encode(options.types, options.values);
-  const payloadBytes = ethers.getBytes(payload);
+  const payloadABI = abiCoder.encode(options.types, options.values);
+  const payloadBytes = ethers.getBytes(payloadABI);
+
+  const target = `${options.gatewayPackage}::gateway::deposit_and_call`;
+  const gateway = tx.object(options.gatewayObject);
+  const receiver = tx.pure.string(options.receiver);
+  const payload = tx.pure.vector("u8", payloadBytes);
 
   if (options.coinType === "0x2::sui::SUI") {
     const [splitCoin] = tx.splitCoins(tx.gas, [toSmallestUnit(options.amount)]);
 
     tx.moveCall({
-      arguments: [
-        tx.object(options.gatewayObject),
-        splitCoin,
-        tx.pure.string(options.receiver),
-        tx.pure.vector("u8", payloadBytes),
-      ],
-      target: `${options.gatewayPackage}::gateway::deposit_and_call`,
+      arguments: [gateway, splitCoin, receiver, payload],
+      target,
       typeArguments: [options.coinType],
     });
   } else {
@@ -74,13 +68,8 @@ const main = async (options: DepositOptions) => {
     ]);
 
     tx.moveCall({
-      arguments: [
-        tx.object(options.gatewayObject),
-        splitCoin,
-        tx.pure.string(options.receiver),
-        tx.pure.vector("u8", payloadBytes),
-      ],
-      target: `${options.gatewayPackage}::gateway::deposit_and_call`,
+      arguments: [gateway, splitCoin, receiver, payload],
+      target,
       typeArguments: [options.coinType],
     });
   }
@@ -124,15 +113,15 @@ export const depositAndCallCommand = new Command("deposit-and-call")
     "Gas budget in MIST",
     GAS_BUDGET.toString()
   )
-  .option(
-    "--types <types...>",
-    "JSON string array of parameter types (e.g. uint256 address)"
-  )
-  .option("--values <values...>", "Parameter values for the function call")
   .addOption(
     new Option("--name <name>", "Account name")
       .default(DEFAULT_ACCOUNT_NAME)
       .conflicts(["private-key"])
+  )
+  .option("--values <values...>", "Parameter values for the function call")
+  .option(
+    "--types <types...>",
+    "JSON string array of parameter types (e.g. uint256 address)"
   )
   .action(async (options) => {
     const validatedOptions = depositAndCallOptionsSchema.parse(options);

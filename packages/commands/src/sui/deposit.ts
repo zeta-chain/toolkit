@@ -2,7 +2,6 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { Command, Option } from "commander";
 import { z } from "zod";
-
 import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import {
   GAS_BUDGET,
@@ -13,27 +12,10 @@ import {
   chainIds,
   toSmallestUnit,
   networks,
+  commonDepositOptionsSchema,
 } from "../../../../utils/sui";
 
-const depositOptionsSchema = z
-  .object({
-    amount: z.string(),
-    chainId: z.enum(chainIds).optional(),
-    coinType: z.string().default("0x2::sui::SUI"),
-    gasBudget: z.string(),
-    gatewayObject: z.string(),
-    gatewayPackage: z.string(),
-    mnemonic: z.string().optional(),
-    name: z.string().optional(),
-    network: z.enum(networks).optional(),
-    privateKey: z.string().optional(),
-    receiver: z.string(),
-  })
-  .refine((data) => data.mnemonic || data.privateKey || data.name, {
-    message: "Either mnemonic, private key or name must be provided",
-  });
-
-export type DepositOptions = z.infer<typeof depositOptionsSchema>;
+type DepositOptions = z.infer<typeof commonDepositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   const network = getNetwork(options.network, options.chainId);
@@ -42,16 +24,16 @@ const main = async (options: DepositOptions) => {
   const keypair = getKeypair(options);
   const tx = new Transaction();
 
+  const target = `${options.gatewayPackage}::gateway::deposit`;
+  const receiver = tx.pure.string(options.receiver);
+  const gateway = tx.object(options.gatewayObject);
+
   if (options.coinType === "0x2::sui::SUI") {
     const [splitCoin] = tx.splitCoins(tx.gas, [toSmallestUnit(options.amount)]);
 
     tx.moveCall({
-      arguments: [
-        tx.object(options.gatewayObject),
-        splitCoin,
-        tx.pure.string(options.receiver),
-      ],
-      target: `${options.gatewayPackage}::gateway::deposit`,
+      arguments: [gateway, splitCoin, receiver],
+      target,
       typeArguments: [options.coinType],
     });
   } else {
@@ -66,12 +48,8 @@ const main = async (options: DepositOptions) => {
     ]);
 
     tx.moveCall({
-      arguments: [
-        tx.object(options.gatewayObject),
-        splitCoin,
-        tx.pure.string(options.receiver),
-      ],
-      target: `${options.gatewayPackage}::gateway::deposit`,
+      arguments: [gateway, splitCoin, receiver],
+      target,
       typeArguments: [options.coinType],
     });
   }
@@ -121,6 +99,6 @@ export const depositCommand = new Command("deposit")
       .conflicts(["private-key"])
   )
   .action(async (options) => {
-    const validatedOptions = depositOptionsSchema.parse(options);
+    const validatedOptions = commonDepositOptionsSchema.parse(options);
     await main(validatedOptions);
   });

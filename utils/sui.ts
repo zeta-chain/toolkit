@@ -6,6 +6,7 @@ import { mnemonicToSeedSync } from "bip39";
 import { HDKey } from "ethereum-cryptography/hdkey";
 import { SuiAccountData } from "../types/accounts.types";
 import { getAccountData } from "./accounts";
+import { z } from "zod";
 
 export const GAS_BUDGET = 10_000_000;
 
@@ -210,3 +211,24 @@ export const toSmallestUnit = (amount: string, decimals = 9): bigint => {
   const multiplier = BigInt(10) ** BigInt(decimals);
   return BigInt(whole) * multiplier + BigInt(paddedFraction);
 };
+
+export const commonDepositObjectSchema = z.object({
+  amount: z.string(),
+  chainId: z.enum(chainIds).optional(),
+  coinType: z.string().default("0x2::sui::SUI"),
+  gasBudget: z.string(),
+  gatewayObject: z.string(),
+  gatewayPackage: z.string(),
+  mnemonic: z.string().optional(),
+  name: z.string().optional(),
+  network: z.enum(networks).optional(),
+  privateKey: z.string().optional(),
+  receiver: z.string(),
+});
+
+export const commonDepositOptionsSchema = commonDepositObjectSchema.refine(
+  (data) => data.mnemonic || data.privateKey || data.name,
+  {
+    message: "Either mnemonic, private key or name must be provided",
+  }
+);
