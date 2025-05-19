@@ -8,8 +8,8 @@ import {
   GAS_BUDGET,
   getCoin,
   getKeypair,
-  chainIdToNetwork,
   signAndExecuteTransaction,
+  getNetwork,
 } from "../../../../utils/sui";
 
 // Convert decimal amount to smallest unit (e.g., SUI to MIST)
@@ -44,26 +44,10 @@ const depositOptionsSchema = z
 export type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
-  const resolvedNetwork =
-    options.network ||
-    (options.chainId ? chainIdToNetwork[options.chainId] : undefined);
-  if (!resolvedNetwork) {
-    throw new Error("Either network or chainId must be provided");
-  }
-  const client = new SuiClient({ url: getFullnodeUrl(resolvedNetwork) });
-
-  const gasBudgetValue = BigInt(options.gasBudget);
-
-  if (!options.gatewayObject || !options.gatewayPackage) {
-    throw new Error(
-      "Gateway object ID and module ID must be provided either as parameters or in localnet.json"
-    );
-  }
-
+  const network = getNetwork(options.network, options.chainId);
+  const client = new SuiClient({ url: getFullnodeUrl(network) });
+  const gasBudget = BigInt(options.gasBudget);
   const keypair = getKeypair(options);
-
-  const address = keypair.toSuiAddress();
-
   const tx = new Transaction();
 
   if (options.coinType === "0x2::sui::SUI") {
@@ -79,7 +63,11 @@ const main = async (options: DepositOptions) => {
       typeArguments: [options.coinType],
     });
   } else {
-    const coinObjectId = await getCoin(client, address, options.coinType);
+    const coinObjectId = await getCoin(
+      client,
+      keypair.toSuiAddress(),
+      options.coinType
+    );
 
     const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
       toSmallestUnit(options.amount),
@@ -96,13 +84,13 @@ const main = async (options: DepositOptions) => {
     });
   }
 
-  tx.setGasBudget(gasBudgetValue);
+  tx.setGasBudget(gasBudget);
 
   await signAndExecuteTransaction({
     client,
     keypair,
     transaction: tx,
-    gasBudget: gasBudgetValue,
+    gasBudget,
   });
 };
 

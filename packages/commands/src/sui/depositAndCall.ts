@@ -9,7 +9,7 @@ import {
   GAS_BUDGET,
   getCoin,
   getKeypair,
-  chainIdToNetwork,
+  getNetwork,
   signAndExecuteTransaction,
 } from "../../../../utils/sui";
 
@@ -47,46 +47,10 @@ const depositAndCallOptionsSchema = z
 export type DepositOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
-  const resolvedNetwork =
-    options.network ||
-    (options.chainId ? chainIdToNetwork[options.chainId] : undefined);
-  if (!resolvedNetwork) {
-    throw new Error("Either network or chainId must be provided");
-  }
-  const client = new SuiClient({ url: getFullnodeUrl(resolvedNetwork) });
-
-  const gasBudgetValue = BigInt(options.gasBudget);
-
-  if (!options.gatewayObject || !options.gatewayPackage) {
-    throw new Error(
-      "Gateway object ID and module ID must be provided either as parameters or in localnet.json"
-    );
-  }
-
+  const network = getNetwork(options.network, options.chainId);
+  const client = new SuiClient({ url: getFullnodeUrl(network) });
+  const gasBudget = BigInt(options.gasBudget);
   const keypair = getKeypair(options);
-
-  const address = keypair.toSuiAddress();
-
-  const coinObjectId = await getCoin(client, address, options.coinType);
-
-  const coinObject = await client.getObject({
-    id: coinObjectId,
-    options: { showContent: true },
-  });
-  if (
-    !coinObject.data?.content ||
-    coinObject.data.content.dataType !== "moveObject"
-  ) {
-    throw new Error(`Failed to get coin object data for ${coinObjectId}`);
-  }
-  const actualCoinType = coinObject.data.content.type;
-
-  if (!actualCoinType.includes(options.coinType)) {
-    throw new Error(
-      `Coin type mismatch. Expected: ${options.coinType}, Got: ${actualCoinType}`
-    );
-  }
-
   const tx = new Transaction();
 
   const abiCoder = AbiCoder.defaultAbiCoder();
@@ -107,6 +71,12 @@ const main = async (options: DepositOptions) => {
       typeArguments: [options.coinType],
     });
   } else {
+    const coinObjectId = await getCoin(
+      client,
+      keypair.toSuiAddress(),
+      options.coinType
+    );
+
     const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
       toSmallestUnit(options.amount),
     ]);
@@ -123,13 +93,13 @@ const main = async (options: DepositOptions) => {
     });
   }
 
-  tx.setGasBudget(gasBudgetValue);
+  tx.setGasBudget(gasBudget);
 
   await signAndExecuteTransaction({
     client,
     keypair,
     transaction: tx,
-    gasBudget: gasBudgetValue,
+    gasBudget,
   });
 };
 

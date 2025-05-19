@@ -183,3 +183,18 @@ export const chainIdToNetwork = {
   "101": "mainnet",
   "103": "testnet",
 } as const;
+
+export type SuiNetwork =
+  (typeof chainIdToNetwork)[keyof typeof chainIdToNetwork];
+
+export const getNetwork = (
+  network?: SuiNetwork,
+  chainId?: keyof typeof chainIdToNetwork
+): SuiNetwork => {
+  const resolvedNetwork =
+    network || (chainId ? chainIdToNetwork[chainId] : undefined);
+  if (!resolvedNetwork) {
+    throw new Error("Either network or chainId must be provided");
+  }
+  return resolvedNetwork;
+};
