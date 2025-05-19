@@ -13,10 +13,14 @@ import {
   toSmallestUnit,
 } from "../../../../utils/sui";
 
-const depositAndCallOptionsSchema = commonDepositObjectSchema.extend({
-  types: z.array(z.string()),
-  values: z.array(z.string()),
-});
+const depositAndCallOptionsSchema = commonDepositObjectSchema
+  .extend({
+    types: z.array(z.string()),
+    values: z.array(z.string()),
+  })
+  .refine((options) => options.types.length === options.values.length, {
+    message: "`types` and `values` must have equal length",
+  });
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
