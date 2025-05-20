@@ -136,11 +136,7 @@ export const getBalances = async function (
 
   // Get Sui balances
   if (suiAddress) {
-    const suiBalances = await getSuiBalances(
-      allTokens,
-      suiAddress,
-      this.getEndpoint.bind(this)
-    );
+    const suiBalances = await getSuiBalances(allTokens, suiAddress);
     balances.push(...suiBalances);
   }
 
