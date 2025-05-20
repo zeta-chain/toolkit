@@ -105,7 +105,7 @@ export const printEvmTransactionDetails = async (
   signer: ethers.Wallet,
   chainId: number,
   options: {
-    amount: string;
+    amount?: string;
     callOnRevert: boolean;
     erc20?: string;
     onRevertGasLimit: string;
@@ -134,9 +134,12 @@ export const printEvmTransactionDetails = async (
 
   console.log(`
 From:   ${signer.address} on ${getChainName(chainId)}
-To:     ${options.receiver} on ZetaChain
-Amount: ${options.amount} ${tokenSymbol}${
-    !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
+To:     ${options.receiver} on ZetaChain${
+    options.amount
+      ? `\nAmount: ${options.amount} ${tokenSymbol}${
+          !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
+        }`
+      : ""
   }
 Call on revert: ${options.callOnRevert ? "true" : "false"}${
     options.callOnRevert
