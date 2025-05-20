@@ -558,27 +558,55 @@ export const getSuiBalances = async (
           "testnet";
         const client = new SuiClient({ url: getFullnodeUrl(network) });
 
-        const coins = await client.getCoins({
-          coinType: "0x2::sui::SUI",
-          owner: suiAddress,
-        });
+        // For native SUI
+        if (token.coin_type === "Gas") {
+          const coins = await client.getCoins({
+            owner: suiAddress,
+            coinType: "0x2::sui::SUI",
+          });
 
-        let totalBalance = BigInt(0);
-        for (const coin of coins.data) {
-          totalBalance += BigInt(coin.balance);
+          let totalBalance = BigInt(0);
+          for (const coin of coins.data) {
+            totalBalance += BigInt(coin.balance);
+          }
+
+          // Convert from MIST (10^9) to SUI
+          const balance = (Number(totalBalance) / 10 ** 9).toFixed(9);
+
+          return {
+            ...token,
+            balance,
+            id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
+          };
+        } else if (token.coin_type === "SUI" && token.contract) {
+          const coinType = `0x${token.contract}`;
+          const coins = await client.getCoins({
+            owner: suiAddress,
+            coinType,
+          });
+
+          let totalBalance = BigInt(0);
+          for (const coin of coins.data) {
+            totalBalance += BigInt(coin.balance);
+          }
+
+          // Convert using token's decimals
+          const balance = (
+            Number(totalBalance) /
+            10 ** (token.decimals || 9)
+          ).toFixed(9);
+
+          return {
+            ...token,
+            balance,
+            id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
+          };
         }
 
-        // Convert from MIST (10^9) to SUI
-        const balance = (Number(totalBalance) / 10 ** 9).toFixed(9);
-
-        return {
-          ...token,
-          balance,
-          id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
-        };
+        return null;
       } catch (error) {
         console.error(
-          `Failed to get SUI balance for ${token.chain_name}:`,
+          `Failed to get SUI balance for ${token.symbol} on ${token.chain_name}:`,
           error
         );
         // Return null for failed requests
