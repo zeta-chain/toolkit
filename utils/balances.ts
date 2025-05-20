@@ -531,10 +531,9 @@ export const getSolanaBalances = async (
  */
 export const getSuiBalances = async (
   tokens: Token[],
-  suiAddress: string,
-  getEndpoint: (type: string, chainName: string) => string
+  suiAddress: string
 ): Promise<TokenBalance[]> => {
-  const suiChainNames = ["sui_mainnet", "sui_testnet", "sui_devnet"];
+  const suiChainNames = ["sui_mainnet", "sui_testnet"];
 
   const suiTokens = tokens.filter(
     (token) =>
@@ -548,10 +547,8 @@ export const getSuiBalances = async (
     suiTokens.map(async (token) => {
       try {
         const network =
-          (token.chain_name?.replace("sui_", "") as
-            | "mainnet"
-            | "testnet"
-            | "devnet") || "testnet";
+          (token.chain_name?.replace("sui_", "") as "mainnet" | "testnet") ||
+          "testnet";
         const client = new SuiClient({ url: getFullnodeUrl(network) });
 
         const coins = await client.getCoins({
