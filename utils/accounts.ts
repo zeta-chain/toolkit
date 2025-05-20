@@ -106,7 +106,7 @@ const createSolanaAccount = (privateKey?: string): AccountData => {
   return {
     address: keypair.publicKey.toBase58(),
     privateKey: bs58.encode(keypair.secretKey),
-    privateKeyEncoding: "hex",
+    privateKeyEncoding: "base58",
     privateKeyScheme: "ed25519",
     publicKey: keypair.publicKey.toBase58(),
   };
