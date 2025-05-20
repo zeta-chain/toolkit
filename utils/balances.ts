@@ -559,8 +559,8 @@ export const getSuiBalances = async (
 
         if (token.coin_type === "Gas") {
           const coins = await client.getCoins({
-            owner: suiAddress,
             coinType: "0x2::sui::SUI",
+            owner: suiAddress,
           });
 
           let totalBalance = BigInt(0);
@@ -579,8 +579,8 @@ export const getSuiBalances = async (
         } else if (token.coin_type === "SUI" && token.contract) {
           const coinType = `0x${token.contract}`;
           const coins = await client.getCoins({
-            owner: suiAddress,
             coinType,
+            owner: suiAddress,
           });
 
           let totalBalance = BigInt(0);
