@@ -1,7 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import * as bitcoin from "bitcoinjs-lib";
 import { ethers } from "ethers";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 import {
   BitcoinAccountData,
@@ -202,10 +201,10 @@ export const resolveBitcoinAddress = ({
 export interface ResolveSuiAddressArgs {
   /** Account name to use if address not provided */
   accountName?: string;
-  /** A Sui address to validate */
-  suiAddress?: string;
   /** Function to handle errors */
   handleError?: () => void;
+  /** A Sui address to validate */
+  suiAddress?: string;
 }
 
 /**

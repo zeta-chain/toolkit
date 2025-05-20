@@ -82,13 +82,13 @@ const main = async (options: BalancesOptions) => {
 
     const suiAddress = resolveSuiAddress({
       accountName: options.name,
-      suiAddress: options.sui,
       handleError: () =>
         spinner.warn(
           `Error resolving Sui address ${
             !options.sui && options.name ? `for user '${options.name}'` : ""
           }`
         ),
+      suiAddress: options.sui,
     });
 
     if (!evmAddress && !btcAddress && !solanaAddress && !suiAddress) {

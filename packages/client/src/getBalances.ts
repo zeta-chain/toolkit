@@ -1,4 +1,5 @@
 import { TokenBalance } from "../../../types/balances.types";
+import { ObserverSupportedChain } from "../../../types/supportedChains.types";
 import {
   addZetaTokens,
   collectTokensFromForeignCoins,
@@ -13,7 +14,6 @@ import {
   prepareMulticallContexts,
 } from "../../../utils/balances";
 import { ZetaChainClient } from "./client";
-import { ObserverSupportedChain } from "../../../types/supportedChains.types";
 
 /**
  * Get token balances of all tokens on all chains connected to ZetaChain.

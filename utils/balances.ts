@@ -1,9 +1,9 @@
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import axios from "axios";
 import { AbiCoder, ethers } from "ethers";
-import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 
 import {
   Call,
@@ -552,8 +552,8 @@ export const getSuiBalances = async (
         const client = new SuiClient({ url: getFullnodeUrl(network) });
 
         const coins = await client.getCoins({
-          owner: suiAddress,
           coinType: "0x2::sui::SUI",
+          owner: suiAddress,
         });
 
         let totalBalance = BigInt(0);
