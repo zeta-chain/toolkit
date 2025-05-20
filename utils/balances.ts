@@ -96,6 +96,16 @@ export const collectTokensFromForeignCoins = (
           zrc20: foreignCoin.zrc20_contract_address,
         };
         return [svmToken, zrc20Token];
+      } else if (supportedChain?.vm === "mvm_sui") {
+        const svmToken: Token = {
+          chain_id: foreignCoin.foreign_chain_id,
+          coin_type: "SUI",
+          contract: foreignCoin.asset,
+          decimals: foreignCoin.decimals,
+          symbol: foreignCoin.symbol,
+          zrc20: foreignCoin.zrc20_contract_address,
+        };
+        return [svmToken, zrc20Token];
       }
 
       // If no matching chain type, just return the ZRC20 token
@@ -536,10 +546,7 @@ export const getSuiBalances = async (
   const suiChainNames = ["sui_mainnet", "sui_testnet"];
 
   const suiTokens = tokens.filter(
-    (token) =>
-      token.coin_type === "Gas" &&
-      token.chain_name &&
-      suiChainNames.includes(token.chain_name)
+    (token) => token.chain_name && suiChainNames.includes(token.chain_name)
   );
 
   // Use Promise.all with map for parallel processing
