@@ -8,6 +8,7 @@ import {
   resolveBitcoinAddress,
   resolveEvmAddress,
   resolveSolanaAddress,
+  resolveSuiAddress,
 } from "../../../../utils/addressResolver";
 import { formatAddresses, formatBalances } from "../../../../utils/formatting";
 import { ZetaChainClient } from "../../../client/src/client";
@@ -21,6 +22,7 @@ To resolve this issue, please choose one of these options:
    --evm <address>
    --solana <address>
    --bitcoin <address>
+   --sui <address>
    
 2. Generate new wallets automatically by running:
    npx zetachain accounts create --name <name>
@@ -33,6 +35,7 @@ const balancesOptionsSchema = z.object({
   name: accountNameSchema.optional(),
   network: z.enum(["mainnet", "testnet"]).default("testnet"),
   solana: z.string().optional(),
+  sui: z.string().optional(),
 });
 
 type BalancesOptions = z.infer<typeof balancesOptionsSchema>;
@@ -77,7 +80,18 @@ const main = async (options: BalancesOptions) => {
       isMainnet: options.network === "mainnet",
     });
 
-    if (!evmAddress && !btcAddress && !solanaAddress) {
+    const suiAddress = resolveSuiAddress({
+      accountName: options.name,
+      suiAddress: options.sui,
+      handleError: () =>
+        spinner.warn(
+          `Error resolving Sui address ${
+            !options.sui && options.name ? `for user '${options.name}'` : ""
+          }`
+        ),
+    });
+
+    if (!evmAddress && !btcAddress && !solanaAddress && !suiAddress) {
       spinner.fail("No addresses provided or derivable from account name");
       console.error(chalk.red(WALLET_ERROR));
       return;
@@ -93,6 +107,7 @@ const main = async (options: BalancesOptions) => {
       btcAddress,
       evmAddress,
       solanaAddress,
+      suiAddress,
     });
 
     spinner.succeed("Successfully fetched balances");
@@ -106,6 +121,7 @@ const main = async (options: BalancesOptions) => {
       bitcoin: btcAddress,
       evm: evmAddress,
       solana: solanaAddress,
+      sui: suiAddress,
     });
 
     if (addressesInfo) {
@@ -132,6 +148,7 @@ export const balancesCommand = new Command("balances")
     "--bitcoin <address>",
     "Fetch balances for a specific Bitcoin address"
   )
+  .option("--sui <address>", "Fetch balances for a specific Sui address")
   .option("--name <name>", "Account name")
   .addOption(
     new Option("--network <network>", "Network to use")

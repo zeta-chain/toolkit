@@ -3,6 +3,7 @@ import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import axios from "axios";
 import { AbiCoder, ethers } from "ethers";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 
 import {
   Call,
@@ -511,6 +512,69 @@ export const getSolanaBalances = async (
       } catch (error) {
         console.error(
           `Failed to get SOL balance for ${token.chain_name}:`,
+          error
+        );
+        // Return null for failed requests
+        return null;
+      }
+    })
+  );
+
+  // Filter out null values from failures
+  return balanceResults.filter(
+    (result): result is TokenBalance => result !== null
+  );
+};
+
+/**
+ * Gets Sui native SUI balances
+ */
+export const getSuiBalances = async (
+  tokens: Token[],
+  suiAddress: string,
+  getEndpoint: (type: string, chainName: string) => string
+): Promise<TokenBalance[]> => {
+  const suiChainNames = ["sui_mainnet", "sui_testnet", "sui_devnet"];
+
+  const suiTokens = tokens.filter(
+    (token) =>
+      token.coin_type === "Gas" &&
+      token.chain_name &&
+      suiChainNames.includes(token.chain_name)
+  );
+
+  // Use Promise.all with map for parallel processing
+  const balanceResults = await Promise.all(
+    suiTokens.map(async (token) => {
+      try {
+        const network =
+          (token.chain_name?.replace("sui_", "") as
+            | "mainnet"
+            | "testnet"
+            | "devnet") || "testnet";
+        const client = new SuiClient({ url: getFullnodeUrl(network) });
+
+        const coins = await client.getCoins({
+          owner: suiAddress,
+          coinType: "0x2::sui::SUI",
+        });
+
+        let totalBalance = BigInt(0);
+        for (const coin of coins.data) {
+          totalBalance += BigInt(coin.balance);
+        }
+
+        // Convert from MIST (10^9) to SUI
+        const balance = (Number(totalBalance) / 10 ** 9).toFixed(9);
+
+        return {
+          ...token,
+          balance,
+          id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
+        };
+      } catch (error) {
+        console.error(
+          `Failed to get SUI balance for ${token.chain_name}:`,
           error
         );
         // Return null for failed requests

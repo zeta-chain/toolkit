@@ -1,11 +1,13 @@
 import { PublicKey } from "@solana/web3.js";
 import * as bitcoin from "bitcoinjs-lib";
 import { ethers } from "ethers";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 import {
   BitcoinAccountData,
   EVMAccountData,
   SolanaAccountData,
+  SuiAccountData,
 } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { accountExists, getAccountData } from "./accounts";
@@ -52,6 +54,19 @@ const isValidBitcoinAddress = (
     // Try to decode the address - will throw if invalid
     bitcoin.address.toOutputScript(address, network);
     return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Check if a string is a valid Sui address
+ */
+const isValidSuiAddress = (address?: string): boolean => {
+  if (!address) return false;
+  try {
+    // Sui addresses are 32 bytes (64 hex chars) prefixed with 0x
+    return /^0x[a-fA-F0-9]{64}$/.test(address);
   } catch {
     return false;
   }
@@ -177,6 +192,42 @@ export const resolveBitcoinAddress = ({
     }
   }
 
+  if (handleError) handleError();
+  return undefined;
+};
+
+/**
+ * Args for resolving a Sui address
+ */
+export interface ResolveSuiAddressArgs {
+  /** Account name to use if address not provided */
+  accountName?: string;
+  /** A Sui address to validate */
+  suiAddress?: string;
+  /** Function to handle errors */
+  handleError?: () => void;
+}
+
+/**
+ * Resolve a Sui address from either a direct input or account name
+ */
+export const resolveSuiAddress = ({
+  suiAddress,
+  accountName = DEFAULT_ACCOUNT_NAME,
+  handleError,
+}: ResolveSuiAddressArgs): string | undefined => {
+  // If valid address provided, return it
+  if (suiAddress && isValidSuiAddress(suiAddress)) return suiAddress;
+
+  // Otherwise, try to derive from account name
+  if (accountName && accountExists("sui", accountName)) {
+    const accountData = getAccountData<SuiAccountData>("sui", accountName);
+    if (accountData?.address) {
+      return accountData.address;
+    }
+  }
+
+  // Handle error if no valid address found
   if (handleError) handleError();
   return undefined;
 };
