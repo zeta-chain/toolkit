@@ -537,7 +537,7 @@ export const getSolanaBalances = async (
 };
 
 /**
- * Gets Sui native SUI balances
+ * Gets Sui native SUI and fungible token balances
  */
 export const getSuiBalances = async (
   tokens: Token[],
@@ -549,7 +549,6 @@ export const getSuiBalances = async (
     (token) => token.chain_name && suiChainNames.includes(token.chain_name)
   );
 
-  // Use Promise.all with map for parallel processing
   const balanceResults = await Promise.all(
     suiTokens.map(async (token) => {
       try {
@@ -558,7 +557,6 @@ export const getSuiBalances = async (
           "testnet";
         const client = new SuiClient({ url: getFullnodeUrl(network) });
 
-        // For native SUI
         if (token.coin_type === "Gas") {
           const coins = await client.getCoins({
             owner: suiAddress,
