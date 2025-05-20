@@ -1,7 +1,6 @@
 import axios from "axios";
 import * as bitcoin from "bitcoinjs-lib";
 
-import { BITCOIN_FEES, BITCOIN_TX } from "../types/bitcoin.constants";
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
 
 const errorTooLong =
@@ -10,27 +9,24 @@ const errorTooLong =
 const errorNoReceiver =
   "Invalid memo: first 20 bytes of the data should be EVM receiver address on ZetaChain";
 
-/**
- * Calculates the fee for a memo transaction based on its size
- * @param memoLength - Length of the memo in bytes
- * @returns The calculated fee in satoshis
- */
-export const calculateMemoTransactionFee = (memoLength: number): number => {
-  // Calculate transaction size in vbytes
-  const txOverhead = BITCOIN_TX.TX_OVERHEAD;
-  const inputVbytes = 36 + 1 + 43 + 107; // txin + marker+flag + varint scriptSig len (0) + sequence + witness weight/4
-  const outputVbytes = BITCOIN_TX.P2WPKH_OUTPUT_VBYTES;
-  const memoOutputVbytes = 9 + memoLength; // varint len + memo length
-  const vsize = txOverhead + inputVbytes + outputVbytes + memoOutputVbytes;
-
-  // Calculate fee based on fee rate
-  return Math.ceil(vsize * BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE);
+export const getDepositFee = async (api: string) => {
+  try {
+    const response = await axios.get(`${api}`);
+    const gasPrice = response.data.GasPrice;
+    const medianIndex = parseInt(gasPrice.median_index);
+    const medianGasPrice = parseInt(gasPrice.prices[medianIndex]);
+    return medianGasPrice * 68;
+  } catch (error) {
+    console.error("Error fetching gas price:", error);
+    throw error;
+  }
 };
 
 export const bitcoinMakeTransactionWithMemo = async (
   gateway: string,
   key: bitcoin.Signer,
   amount: number,
+  fee: number,
   utxos: BtcUtxo[],
   address: string,
   api: string,
@@ -38,15 +34,14 @@ export const bitcoinMakeTransactionWithMemo = async (
 ) => {
   const TESTNET = bitcoin.networks.testnet;
   const memo = Buffer.from(m, "hex");
-  console.log(memo.length);
 
   if (!memo || memo.length < 20) throw new Error(errorNoReceiver);
   if (memo.length > 80) throw new Error(errorTooLong);
 
   utxos.sort((a, b) => a.value - b.value); // sort by value, ascending
-  const fee = calculateMemoTransactionFee(memo.length);
+  const totalAmount = amount + fee;
   const memoAmount = 0; // Use 0 satoshis for OP_RETURN output
-  const total = amount + fee;
+  const total = amount + totalAmount;
   let sum = 0;
   const pickUtxos = [];
   for (let i = 0; i < utxos.length; i++) {

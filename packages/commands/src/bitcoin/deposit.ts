@@ -19,8 +19,12 @@ import {
   EncodingFormat,
   OpCode,
 } from "../../../../utils/bitcoinEncode";
-import { bitcoinMakeTransactionWithMemo } from "../../../../utils/bitcoinMemo.helpers";
+import {
+  bitcoinMakeTransactionWithMemo,
+  getDepositFee,
+} from "../../../../utils/bitcoinMemo.helpers";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
@@ -28,7 +32,7 @@ const main = async (options: DepositOptions) => {
     options.privateKey,
     options.name
   );
-  const utxos = await fetchUtxos(address, options.api);
+  const utxos = await fetchUtxos(address, options.bitcoinApi);
 
   if (options.method === "inscription") {
     const revertAddress = options.revertAddress || address;
@@ -63,7 +67,7 @@ const main = async (options: DepositOptions) => {
       depositFee,
       encodingFormat: "ABI",
       gateway: options.gateway,
-      network: options.api,
+      network: options.bitcoinApi,
       operation: "Deposit",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
@@ -78,7 +82,7 @@ const main = async (options: DepositOptions) => {
       utxos,
       address,
       data,
-      options.api,
+      options.bitcoinApi,
       amount + depositFee,
       options.gateway
     );
@@ -88,9 +92,11 @@ const main = async (options: DepositOptions) => {
       : options.data;
 
     const amount = Number(ethers.parseUnits(options.amount, 8));
+    const fee = await getDepositFee(options.gasPriceApi);
 
     await displayAndConfirmMemoTransaction(
       amount,
+      fee,
       options.gateway,
       address,
       memo || ""
@@ -100,12 +106,13 @@ const main = async (options: DepositOptions) => {
       options.gateway,
       key,
       amount,
+      fee,
       utxos,
       address,
-      options.api,
+      options.bitcoinApi,
       memo
     );
-    const txid = await broadcastBtcTransaction(tx, options.api);
+    const txid = await broadcastBtcTransaction(tx, options.bitcoinApi);
     console.log(`Transaction hash: ${txid}`);
   }
 };

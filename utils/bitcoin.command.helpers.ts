@@ -17,7 +17,6 @@ import {
   makeRevealTransaction,
   SIGNET,
 } from "./bitcoin.helpers";
-import { calculateMemoTransactionFee } from "./bitcoinMemo.helpers";
 import { handleError } from "./handleError";
 
 export interface BitcoinKeyPair {
@@ -123,21 +122,23 @@ Fees:
  */
 export const displayAndConfirmMemoTransaction = async (
   amount: number,
+  fee: number,
   gateway: string,
   sender: string,
   memo: string
 ) => {
-  const memoBuffer = Buffer.from(memo, "hex");
-  const fee = calculateMemoTransactionFee(memoBuffer.length);
-
   console.log(`
 Network: Signet
-Amount: ${(amount / 100000000).toFixed(8)} BTC
 Gateway: ${gateway}
 Sender: ${sender}
 Operation: Memo Transaction
 Memo: ${memo}
-Fee: ${fee} sat (${(fee / 100000000).toFixed(8)} BTC)
+Deposit Amount: ${amount} sats (${(amount / 100000000).toFixed(8)} BTC)
+Deposit Fee: ${fee} sats (${(fee / 100000000).toFixed(8)} BTC)
+Deposit Total: ${amount + fee} sats (${(
+    amount / 100000000 +
+    fee / 100000000
+  ).toFixed(8)} BTC)
 `);
 
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
@@ -207,7 +208,16 @@ export const createAndBroadcastTransactions = async (
  */
 export const addCommonOptions = (command: Command) => {
   return command
-    .option("--api <url>", "Bitcoin API", "https://mempool.space/signet/api")
+    .option(
+      "--bitcoin-api <url>",
+      "Bitcoin API",
+      "https://mempool.space/signet/api"
+    )
+    .option(
+      "--gas-price-api <url>",
+      "ZetaChain API",
+      "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/gasPrice/18333"
+    )
     .addOption(
       new Option("--private-key <key>", "Bitcoin private key").conflicts([
         "name",

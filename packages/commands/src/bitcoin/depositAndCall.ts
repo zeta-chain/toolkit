@@ -8,6 +8,7 @@ import {
   addCommonOptions,
   broadcastBtcTransaction,
   createAndBroadcastTransactions,
+  displayAndConfirmMemoTransaction,
   displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -19,7 +20,10 @@ import {
   OpCode,
   trimOx,
 } from "../../../../utils/bitcoinEncode";
-import { bitcoinMakeTransactionWithMemo } from "../../../../utils/bitcoinMemo.helpers";
+import {
+  bitcoinMakeTransactionWithMemo,
+  getDepositFee,
+} from "../../../../utils/bitcoinMemo.helpers";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
@@ -35,7 +39,7 @@ const main = async (options: DepositAndCallOptions) => {
     options.privateKey,
     options.name
   );
-  const utxos = await fetchUtxos(address, options.api);
+  const utxos = await fetchUtxos(address, options.bitcoinApi);
   if (options.method === "inscription") {
     let data;
     let payload;
@@ -78,7 +82,7 @@ const main = async (options: DepositAndCallOptions) => {
       encodedMessage: payload,
       encodingFormat: "ABI",
       gateway: options.gateway,
-      network: options.api,
+      network: options.bitcoinApi,
       operation: "DepositAndCall",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
@@ -93,7 +97,7 @@ const main = async (options: DepositAndCallOptions) => {
       utxos,
       address,
       data,
-      options.api,
+      options.bitcoinApi,
       amount + depositFee,
       options.gateway
     );
@@ -102,16 +106,28 @@ const main = async (options: DepositAndCallOptions) => {
       ? options.data.slice(2)
       : options.data;
 
+    const amount = Number(ethers.parseUnits(options.amount, 8));
+    const fee = await getDepositFee(options.gasPriceApi);
+
+    await displayAndConfirmMemoTransaction(
+      amount,
+      fee,
+      options.gateway,
+      address,
+      memo || ""
+    );
+
     const tx = await bitcoinMakeTransactionWithMemo(
       options.gateway,
       key,
-      BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH,
+      amount,
+      fee,
       utxos,
       address,
-      options.api,
+      options.bitcoinApi,
       memo
     );
-    const txid = await broadcastBtcTransaction(tx, options.api);
+    const txid = await broadcastBtcTransaction(tx, options.bitcoinApi);
     console.log(`Transaction hash: ${txid}`);
   }
 };

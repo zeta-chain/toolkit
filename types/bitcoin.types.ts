@@ -57,7 +57,7 @@ export const bitcoinMethods = ["inscription", "memo"] as const;
 export const depositAndCallOptionsSchema = z
   .object({
     amount: validAmountSchema,
-    api: z.string().url(),
+    bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
     gateway: z.string(),
     method: z.enum(bitcoinMethods).default("inscription"),
@@ -67,6 +67,7 @@ export const depositAndCallOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
+    gasPriceApi: z.string().url(),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
@@ -81,7 +82,7 @@ export const depositOptionsSchema = z.object({
   amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Amount must be a valid positive number",
   }),
-  api: z.string().url(),
+  bitcoinApi: z.string().url(),
   data: hexStringSchema.optional(),
   gateway: z.string(),
   method: z.enum(bitcoinMethods).default("inscription"),
@@ -89,11 +90,12 @@ export const depositOptionsSchema = z.object({
   privateKey: z.string().optional(),
   receiver: z.string().optional(),
   revertAddress: z.string().optional(),
+  gasPriceApi: z.string().url(),
 });
 
 export const callOptionsSchema = z
   .object({
-    api: z.string().url(),
+    bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
     gateway: z.string(),
     method: z.enum(bitcoinMethods).default("inscription"),
@@ -103,6 +105,7 @@ export const callOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
+    gasPriceApi: z.string().url(),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
