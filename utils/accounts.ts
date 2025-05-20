@@ -1,5 +1,8 @@
 import confirm from "@inquirer/confirm";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
+import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
 import { Keypair } from "@solana/web3.js";
 import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
@@ -93,17 +96,30 @@ const createSolanaAccount = (privateKey?: string): AccountData => {
 };
 
 const createSUIAccount = (privateKey?: string): AccountData => {
-  const keypair = privateKey
-    ? Ed25519Keypair.fromSecretKey(
-        Buffer.from(privateKey.replace("0x", ""), "hex")
-      )
-    : new Ed25519Keypair();
+  let keypair: Ed25519Keypair | Secp256k1Keypair | Secp256r1Keypair;
+
+  if (privateKey) {
+    const pair = decodeSuiPrivateKey(privateKey);
+
+    if (pair.schema === "ED25519") {
+      keypair = Ed25519Keypair.fromSecretKey(pair.secretKey);
+    } else if (pair.schema === "Secp256k1") {
+      keypair = Secp256k1Keypair.fromSecretKey(pair.secretKey);
+    } else if (pair.schema === "Secp256r1") {
+      keypair = Secp256r1Keypair.fromSecretKey(pair.secretKey);
+    } else {
+      throw new Error(`Unsupported key schema: ${pair.schema}`);
+    }
+  } else {
+    keypair = new Ed25519Keypair();
+  }
+
   const secretKey = keypair.getSecretKey();
   return {
     address: keypair.toSuiAddress(),
     privateKey: secretKey,
     privateKeyEncoding: "hex",
-    privateKeyScheme: "ed25519",
+    privateKeyScheme: keypair.getKeyScheme(),
     publicKey: keypair.getPublicKey().toBase64(),
   };
 };
