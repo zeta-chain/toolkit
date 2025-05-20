@@ -2,9 +2,9 @@
 import { Command } from "commander";
 
 import { accountsCommand } from "./accounts";
-import { balancesCommand } from "./balances";
 import { bitcoinCommand } from "./bitcoin";
 import { evmCommand } from "./evm";
+import { queryCommand } from "./query";
 import { solanaCommand } from "./solana";
 import { suiCommand } from "./sui";
 
@@ -13,9 +13,9 @@ export const toolkitCommand = new Command("toolkit")
   .helpCommand(false);
 
 toolkitCommand.addCommand(accountsCommand);
-toolkitCommand.addCommand(balancesCommand);
 toolkitCommand.addCommand(bitcoinCommand);
 toolkitCommand.addCommand(evmCommand);
+toolkitCommand.addCommand(queryCommand);
 toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(suiCommand);
 
