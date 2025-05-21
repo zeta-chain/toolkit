@@ -9,6 +9,7 @@ import {
   BITCOIN_TX,
 } from "../types/bitcoin.constants";
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
+import { getDepositFee } from "./bitcoinMemo.helpers";
 
 /**
  * Bitcoin Signet network parameters
@@ -248,7 +249,7 @@ export const makeRevealTransaction = (
  * @param data - The inscription data buffer
  * @returns Object containing commit fee, reveal fee, deposit fee, and total fee
  */
-export const calculateFees = (data: Buffer) => {
+export const calculateFees = async (data: Buffer, api: string) => {
   const commitFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
   const revealFee = Math.ceil(
     (BITCOIN_TX.TX_OVERHEAD +
@@ -260,15 +261,7 @@ export const calculateFees = (data: Buffer) => {
       BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
   );
 
-  // Calculate deposit fee based on reveal transaction
-  const txVsize =
-    BITCOIN_TX.TX_OVERHEAD +
-    36 +
-    1 +
-    43 +
-    Math.ceil(data.length / 4) +
-    BITCOIN_TX.P2WPKH_OUTPUT_VBYTES;
-  const depositFee = calculateDepositFee(revealFee, txVsize);
+  const depositFee = await getDepositFee(api);
 
   const totalFee = commitFee + revealFee + depositFee;
   return { commitFee, depositFee, revealFee, totalFee };

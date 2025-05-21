@@ -26,19 +26,16 @@ export interface BitcoinKeyPair {
 
 export interface TransactionInfo {
   amount?: string;
-  commitFee: number;
-  depositFee: number;
   encodedMessage?: string;
   encodingFormat: string;
+  fee?: number;
   gateway: string;
   network: string;
   operation: string;
   rawInscriptionData: string;
   receiver?: string;
-  revealFee: number;
   revertAddress?: string;
   sender: string;
-  totalFee: number;
 }
 
 /**
@@ -97,7 +94,12 @@ export const displayAndConfirmTransaction = async (info: TransactionInfo) => {
 
   console.log(`
 Network: ${info.network}
-${info.amount ? `Amount: ${info.amount} BTC` : ""}
+${
+  info.amount
+    ? `Amount: ${info.amount} BTC (${ethers.parseUnits(info.amount, 8)} sats)`
+    : ""
+}
+Fee: ${info.fee} sats
 Gateway: ${info.gateway}
 Sender: ${info.sender}
 Universal Contract: ${info.receiver || notApplicable}
@@ -106,13 +108,6 @@ Operation: ${info.operation}
 ${info.encodedMessage ? `Encoded Message: ${info.encodedMessage}` : ""}
 Encoding Format: ${info.encodingFormat}
 Raw Inscription Data: ${info.rawInscriptionData}
-Fees:
-  - Commit Fee: ${info.commitFee} sat
-  - Reveal Fee: ${info.revealFee} sat
-  - Deposit Fee: ${info.depositFee} sat
-  - Total Fee: ${info.totalFee} sat (${(info.totalFee / 100000000).toFixed(
-    8
-  )} BTC)
 `);
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 };

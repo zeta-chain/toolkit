@@ -59,22 +59,22 @@ const main = async (options: DepositOptions) => {
     const amount =
       BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
 
-    const { commitFee, revealFee, depositFee, totalFee } = calculateFees(data);
+    const { commitFee, revealFee, depositFee, totalFee } = await calculateFees(
+      data,
+      options.gasPriceApi
+    );
 
     await displayAndConfirmTransaction({
       amount: options.amount,
-      commitFee,
-      depositFee,
+      fee: depositFee,
       encodingFormat: "ABI",
       gateway: options.gateway,
       network: options.bitcoinApi,
       operation: "Deposit",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
-      revealFee,
       revertAddress,
       sender: address,
-      totalFee,
     });
 
     await createAndBroadcastTransactions(
