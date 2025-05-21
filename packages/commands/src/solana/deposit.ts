@@ -64,11 +64,7 @@ const main = async (options: DepositOptions) => {
 
   const connection = new anchor.web3.Connection(API);
 
-  const provider = new anchor.AnchorProvider(
-    connection,
-    new Wallet(keypair),
-    {}
-  );
+  const provider = new anchor.AnchorProvider(connection, new Wallet(keypair));
 
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
 
