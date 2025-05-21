@@ -18,7 +18,7 @@ import {
   SOLANA_NETWORKS,
   SOLANA_TOKEN_PROGRAM,
 } from "../../../../types/shared.constants";
-import { validateAndParseSchema } from "../../../../utils";
+import { handleError, validateAndParseSchema } from "../../../../utils";
 import { solanaDepositOptionsSchema } from "../../../../utils/solana.commands.helpers";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
@@ -95,6 +95,20 @@ const main = async (options: DepositOptions) => {
         throw new Error(`No token account found for mint ${options.mint}`);
       }
 
+      // Check token balance
+      const accountInfo = await connection.getTokenAccountBalance(
+        matchingTokenAccount.pubkey
+      );
+      const balance = accountInfo.value.uiAmount;
+      const amountToSend = parseFloat(options.amount);
+      if (!balance || balance < amountToSend) {
+        throw new Error(
+          `Insufficient token balance. Available: ${
+            balance ?? 0
+          }, Required: ${amountToSend}`
+        );
+      }
+
       const from = matchingTokenAccount.pubkey;
 
       // Find the TSS PDA (meta)
@@ -132,6 +146,16 @@ const main = async (options: DepositOptions) => {
         .rpc();
       console.log("Transaction hash:", tx);
     } else {
+      // Check SOL balance
+      const balance = await connection.getBalance(keypair!.publicKey);
+      const lamportsNeeded = ethers.parseUnits(options.amount, 9).toString();
+      if (balance < parseInt(lamportsNeeded)) {
+        throw new Error(
+          `Insufficient SOL balance. Available: ${balance / 1e9}, Required: ${
+            options.amount
+          }`
+        );
+      }
       const tx = await gatewayProgram.methods
         .deposit(
           new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
@@ -143,7 +167,12 @@ const main = async (options: DepositOptions) => {
       console.log("Transaction hash:", tx);
     }
   } catch (error) {
-    console.error("Transaction failed: ", error);
+    handleError({
+      context: "Error during deposit",
+      error,
+      shouldThrow: false,
+    });
+    process.exit(1);
   }
 };
 
