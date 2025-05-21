@@ -59,6 +59,7 @@ export const depositAndCallOptionsSchema = z
     amount: validAmountSchema,
     bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
+    gasPriceApi: z.string().url(),
     gateway: z.string(),
     method: z.enum(bitcoinMethods).default("inscription"),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
@@ -67,7 +68,6 @@ export const depositAndCallOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
-    gasPriceApi: z.string().url(),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
@@ -84,19 +84,20 @@ export const depositOptionsSchema = z.object({
   }),
   bitcoinApi: z.string().url(),
   data: hexStringSchema.optional(),
+  gasPriceApi: z.string().url(),
   gateway: z.string(),
   method: z.enum(bitcoinMethods).default("inscription"),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
   receiver: z.string().optional(),
   revertAddress: z.string().optional(),
-  gasPriceApi: z.string().url(),
 });
 
 export const callOptionsSchema = z
   .object({
     bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
+    gasPriceApi: z.string().url(),
     gateway: z.string(),
     method: z.enum(bitcoinMethods).default("inscription"),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
@@ -105,7 +106,6 @@ export const callOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
-    gasPriceApi: z.string().url(),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,

@@ -108,10 +108,12 @@ const main = async (options: DepositAndCallOptions) => {
 
     const amount = Number(ethers.parseUnits(options.amount, 8));
     const fee = await getDepositFee(options.gasPriceApi);
+    const dust = BITCOIN_LIMITS.DUST_THRESHOLD.ZETACHAIN;
+    const feeTotal = amount + fee <= dust ? dust : fee;
 
     await displayAndConfirmMemoTransaction(
       amount,
-      fee,
+      feeTotal,
       options.gateway,
       address,
       memo || ""
@@ -121,7 +123,7 @@ const main = async (options: DepositAndCallOptions) => {
       options.gateway,
       key,
       amount,
-      fee,
+      feeTotal,
       utxos,
       address,
       options.bitcoinApi,

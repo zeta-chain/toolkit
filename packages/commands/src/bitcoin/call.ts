@@ -105,10 +105,12 @@ const main = async (options: CallOptions) => {
       : options.data;
 
     const fee = await getDepositFee(options.gasPriceApi);
+    const dust = BITCOIN_LIMITS.DUST_THRESHOLD.ZETACHAIN;
+    const feeTotal = fee <= dust ? dust : fee;
 
     await displayAndConfirmMemoTransaction(
       0,
-      fee,
+      feeTotal,
       options.gateway,
       address,
       memo || ""
@@ -118,7 +120,7 @@ const main = async (options: CallOptions) => {
       options.gateway,
       key,
       0,
-      fee,
+      feeTotal,
       utxos,
       address,
       options.bitcoinApi,
