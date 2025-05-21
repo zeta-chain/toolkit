@@ -1,6 +1,5 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { Command } from "commander";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
@@ -12,6 +11,7 @@ import {
   signAndExecuteTransaction,
   toSmallestUnit,
 } from "../../../../utils/sui";
+import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
 
 const depositAndCallOptionsSchema = commonDepositObjectSchema
   .extend({
@@ -70,10 +70,10 @@ const main = async (options: DepositAndCallOptions) => {
 
   await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };
-
-export const depositAndCallCommand = new Command("deposit-and-call")
+export const depositAndCallCommand = createSuiCommandWithCommonOptions(
+  "deposit-and-call"
+)
   .description("Deposit tokens from Sui and call a contract on ZetaChain")
-  .addCommonSuiCommandOptions()
   .option("--values <values...>", "Parameter values for the function call")
   .option(
     "--types <types...>",

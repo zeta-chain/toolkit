@@ -1,8 +1,5 @@
-import "../../../../utils/sui.command.helpers";
-
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { Command } from "commander";
 import { z } from "zod";
 
 import {
@@ -13,6 +10,7 @@ import {
   signAndExecuteTransaction,
   toSmallestUnit,
 } from "../../../../utils/sui";
+import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
 
 type DepositOptions = z.infer<typeof commonDepositOptionsSchema>;
 
@@ -58,9 +56,8 @@ const main = async (options: DepositOptions) => {
   await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };
 
-export const depositCommand = new Command("deposit")
+export const depositCommand = createSuiCommandWithCommonOptions("deposit")
   .description("Deposit tokens from Sui")
-  .addCommonSuiCommandOptions()
   .action(async (options: DepositOptions) => {
     const validatedOptions = commonDepositOptionsSchema.parse(options);
     await main(validatedOptions);

@@ -3,19 +3,13 @@ import { Command, Option } from "commander";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { chainIds, GAS_BUDGET, networks } from "./sui";
 
-declare module "commander" {
-  interface Command {
-    addCommonSuiCommandOptions(): Command;
-  }
-}
-
-Command.prototype.addCommonSuiCommandOptions = function () {
-  return this.addOption(
-    new Option("--mnemonic <mnemonic>", "Mnemonic for the account").conflicts([
-      "private-key",
-      "name",
-    ])
-  )
+export const createSuiCommandWithCommonOptions = (name: string): Command => {
+  return new Command(name)
+    .addOption(
+      new Option("--mnemonic <mnemonic>", "Mnemonic for the account").conflicts(
+        ["private-key", "name"]
+      )
+    )
     .addOption(
       new Option(
         "--private-key <privateKey>",
