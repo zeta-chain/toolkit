@@ -568,8 +568,7 @@ export const getSuiBalances = async (
             totalBalance += BigInt(coin.balance);
           }
 
-          // Convert from MIST (10^9) to SUI
-          const balance = (Number(totalBalance) / 10 ** 9).toFixed(9);
+          const balance = ethers.formatUnits(totalBalance, 9);
 
           return {
             ...token,
@@ -588,11 +587,7 @@ export const getSuiBalances = async (
             totalBalance += BigInt(coin.balance);
           }
 
-          // Convert using token's decimals
-          const balance = (
-            Number(totalBalance) /
-            10 ** (token.decimals || 9)
-          ).toFixed(9);
+          const balance = ethers.formatUnits(totalBalance, token.decimals);
 
           return {
             ...token,
