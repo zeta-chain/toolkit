@@ -12,10 +12,11 @@ import * as bip39 from "bip39";
 import bs58 from "bs58";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
+import { z } from "zod";
+
+import { SOLANA_NETWORKS } from "../../../../types/shared.constants";
 import { validateAndParseSchema } from "../../../../utils";
 import { solanaDepositOptionsSchema } from "../../../../utils/solana.commands.helpers";
-import { z } from "zod";
-import { SOLANA_NETWORKS } from "../../../../types/shared.constants";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
 

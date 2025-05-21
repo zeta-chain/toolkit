@@ -1,12 +1,13 @@
-import { SOLANA_TOKEN_PROGRAM } from "../types/shared.constants";
 import { z } from "zod";
+
+import { SOLANA_TOKEN_PROGRAM } from "../types/shared.constants";
 
 export const solanaDepositOptionsSchema = z.object({
   amount: z.string(),
-  recipient: z.string(),
-  mnemonic: z.string().optional(),
-  privateKey: z.string().optional(),
-  tokenProgram: z.string().default(SOLANA_TOKEN_PROGRAM),
   mint: z.string().optional(),
+  mnemonic: z.string().optional(),
   network: z.string(),
+  privateKey: z.string().optional(),
+  recipient: z.string(),
+  tokenProgram: z.string().default(SOLANA_TOKEN_PROGRAM),
 });
