@@ -63,12 +63,8 @@ const isValidBitcoinAddress = (
  */
 const isValidSuiAddress = (address?: string): boolean => {
   if (!address) return false;
-  try {
-    // Sui addresses are 32 bytes (64 hex chars) prefixed with 0x
-    return /^0x[a-fA-F0-9]{64}$/.test(address);
-  } catch {
-    return false;
-  }
+  // Sui addresses are 1-64 hex chars prefixed with 0x
+  return /^0x[a-fA-F0-9]{1,64}$/.test(address);
 };
 
 /**
