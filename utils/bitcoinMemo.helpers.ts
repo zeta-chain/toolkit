@@ -3,6 +3,13 @@ import * as bitcoin from "bitcoinjs-lib";
 
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
 
+interface GasPriceResponse {
+  GasPrice: {
+    median_index: string;
+    prices: string[];
+  };
+}
+
 const errorTooLong =
   "Invalid memo: too long. Please, use less than 80 bytes (including the 20 bytes of the receiver address) or use inscription.";
 
@@ -11,7 +18,7 @@ const errorNoReceiver =
 
 export const getDepositFee = async (api: string) => {
   try {
-    const response = await axios.get(`${api}`);
+    const response = await axios.get<GasPriceResponse>(`${api}`);
     const gasPrice = response.data.GasPrice;
     const medianIndex = parseInt(gasPrice.median_index);
     const medianGasPrice = parseInt(gasPrice.prices[medianIndex]);
