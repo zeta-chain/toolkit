@@ -1,5 +1,5 @@
 import { Wallet } from "@coral-xyz/anchor";
-import { Keypair } from "@coral-xyz/anchor/node_modules/@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import { bech32 } from "bech32";
 import { ethers } from "ethers";
 import { task } from "hardhat/config";
