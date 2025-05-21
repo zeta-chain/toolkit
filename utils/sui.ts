@@ -10,6 +10,8 @@ import { SuiAccountData } from "../types/accounts.types";
 import { getAccountData } from "./accounts";
 
 export const GAS_BUDGET = 10_000_000;
+export const SUI_GAS_COIN_TYPE = "0x2::sui::SUI";
+export const SUI_DEFAULT_DECIMALS = "9";
 
 export const getCoin = async (
   client: SuiClient,
@@ -202,7 +204,8 @@ export const toSmallestUnit = (amount: string, decimals = 9): bigint => {
 export const commonDepositObjectSchema = z.object({
   amount: z.string(),
   chainId: z.enum(chainIds).optional(),
-  coinType: z.string().default("0x2::sui::SUI"),
+  coinType: z.string().default(SUI_GAS_COIN_TYPE),
+  decimals: z.string(),
   gasBudget: z.string(),
   gatewayObject: z.string(),
   gatewayPackage: z.string(),
