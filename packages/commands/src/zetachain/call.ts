@@ -6,23 +6,21 @@ import {
   stringArraySchema,
   typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
+import { handleError, validateAndParseSchema } from "../../../../utils";
+import { parseAbiValues } from "../../../../utils/parseAbiValues";
 import {
-  handleError,
-  printEvmTransactionDetails,
-  validateAndParseSchema,
-} from "../../../../utils";
-import {
-  addCommonEvmCommandOptions,
-  baseEvmOptionsSchema,
-  confirmEvmTransaction,
+  addCommonZetachainCommandOptions,
+  baseZetachainOptionsSchema,
+  confirmZetachainTransaction,
+  prepareCallOptions,
   prepareRevertOptions,
   prepareTxOptions,
-  setupEvmTransaction,
-} from "../../../../utils/evm.command.helpers";
-import { parseAbiValues } from "../../../../utils/parseAbiValues";
+  setupZetachainTransaction,
+} from "../../../../utils/zetachain.command.helpers";
 
-const callOptionsSchema = baseEvmOptionsSchema
+const callOptionsSchema = baseZetachainOptionsSchema
   .extend({
+    function: z.string(),
     types: stringArraySchema,
     values: stringArraySchema.min(1, "At least one value is required"),
   })
@@ -36,40 +34,38 @@ type CallOptions = z.infer<typeof callOptionsSchema>;
 
 const main = async (options: CallOptions) => {
   try {
-    const { client, signer, chainId } = setupEvmTransaction(options);
-
-    await printEvmTransactionDetails(signer, chainId, {
-      callOnRevert: options.callOnRevert,
-      onRevertGasLimit: options.onRevertGasLimit,
-      receiver: options.receiver,
-      revertMessage: options.revertMessage,
-    });
-
+    const { client } = setupZetachainTransaction(options);
     const stringifiedTypes = JSON.stringify(options.types);
 
     console.log(`Contract call details:
+Function: ${options.function}
 Function parameters: ${options.values.join(", ")}
 Parameter types: ${stringifiedTypes}
 `);
 
-    const isConfirmed = await confirmEvmTransaction(options);
+    const isConfirmed = await confirmZetachainTransaction(options);
 
     if (!isConfirmed) return;
 
     const values = parseAbiValues(stringifiedTypes, options.values);
 
-    const tx = await client.evmCall({
-      gatewayEvm: options.gateway,
+    const response = await client.zetachainCall({
+      callOptions: prepareCallOptions(options),
+      function: options.function,
+      gatewayZetaChain: options.gatewayZetachain,
       receiver: options.receiver,
-      revertOptions: prepareRevertOptions(options, signer),
+      revertOptions: prepareRevertOptions(options),
       txOptions: prepareTxOptions(options),
       types: options.types,
       values,
+      zrc20: options.zrc20,
     });
-    console.log("Transaction hash:", tx.hash);
+
+    const receipt = await response.tx.wait();
+    console.log("Transaction hash:", receipt?.hash);
   } catch (error) {
     handleError({
-      context: "Error during call to EVM",
+      context: "Error during zetachain call",
       error,
       shouldThrow: false,
     });
@@ -78,10 +74,14 @@ Parameter types: ${stringifiedTypes}
 };
 
 export const callCommand = new Command("call").description(
-  "Call a contract on ZetaChain from an EVM-compatible chain"
+  "Call a contract on a connected chain from ZetaChain"
 );
 
-addCommonEvmCommandOptions(callCommand)
+addCommonZetachainCommandOptions(callCommand)
+  .requiredOption(
+    "--function <function>",
+    `Function to call (example: "hello(string)")`
+  )
   .requiredOption(
     "--types <types...>",
     "List of parameter types (e.g. uint256 address)"

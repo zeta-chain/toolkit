@@ -14,11 +14,11 @@ import {
 import {
   addCommonEvmCommandOptions,
   baseEvmOptionsSchema,
-  checkSufficientBalance,
-  confirmTransaction,
+  checkSufficientEvmBalance,
+  confirmEvmTransaction,
   prepareRevertOptions,
   prepareTxOptions,
-  setupTransaction,
+  setupEvmTransaction,
 } from "../../../../utils/evm.command.helpers";
 
 const depositOptionsSchema = baseEvmOptionsSchema
@@ -32,9 +32,9 @@ type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
-    const { client, provider, signer, chainId } = setupTransaction(options);
+    const { client, provider, signer, chainId } = setupEvmTransaction(options);
 
-    await checkSufficientBalance(
+    await checkSufficientEvmBalance(
       provider,
       signer,
       options.amount,
@@ -50,7 +50,7 @@ const main = async (options: DepositOptions) => {
       revertMessage: options.revertMessage,
     });
 
-    const isConfirmed = await confirmTransaction(options);
+    const isConfirmed = await confirmEvmTransaction(options);
 
     if (!isConfirmed) return;
 
