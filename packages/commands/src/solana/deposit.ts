@@ -79,6 +79,11 @@ const main = async (options: DepositOptions) => {
   );
 
   if (options.mint) {
+    const mintInfo = await connection.getTokenSupply(
+      new PublicKey(options.mint)
+    );
+    const decimals = mintInfo.value.decimals;
+
     // Find the token account that matches the mint
     const matchingTokenAccount = tokenAccounts.value.find(({ account }) => {
       const data = AccountLayout.decode(account.data);
@@ -111,7 +116,7 @@ const main = async (options: DepositOptions) => {
 
     const tx = await gatewayProgram.methods
       .depositSplToken(
-        new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
+        new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
         receiverBytes,
         null
       )
