@@ -51,8 +51,6 @@ const main = async (options: DepositOptions) => {
     keypair = keypairFromPrivateKey(options.privateKey);
   } else if (options.mnemonic) {
     keypair = await keypairFromMnemonic(options.mnemonic);
-  } else {
-    throw new Error("Either privateKey or mnemonic must be provided");
   }
 
   let API = "http://localhost:8899";
@@ -64,7 +62,7 @@ const main = async (options: DepositOptions) => {
 
   const connection = new anchor.web3.Connection(API);
 
-  const provider = new anchor.AnchorProvider(connection, new Wallet(keypair));
+  const provider = new anchor.AnchorProvider(connection, new Wallet(keypair!));
 
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
 
@@ -117,7 +115,7 @@ const main = async (options: DepositOptions) => {
       .accounts({
         from,
         mintAccount: options.mint,
-        signer: keypair.publicKey,
+        signer: keypair!.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
         to,
         tokenProgram: options.tokenProgram,
@@ -141,8 +139,15 @@ export const depositCommand = new Command("deposit")
   .description("Deposit tokens from Solana")
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
   .requiredOption("--recipient <recipient>", "Recipient address")
-  .option("--mnemonic <mnemonic>", "Mnemonic")
-  .option("--private-key <privateKey>", "Private key in base58 format")
+  .addOption(
+    new Option("--mnemonic <mnemonic>", "Mnemonic").conflicts(["private-key"])
+  )
+  .addOption(
+    new Option(
+      "--private-key <privateKey>",
+      "Private key in base58 format"
+    ).conflicts(["mnemonic"])
+  )
   .option(
     "--token-program <tokenProgram>",
     "Token program",
