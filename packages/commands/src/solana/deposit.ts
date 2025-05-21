@@ -12,20 +12,12 @@ import * as bip39 from "bip39";
 import bs58 from "bs58";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
+import { validateAndParseSchema } from "../../../../utils";
+import { solanaDepositOptionsSchema } from "../../../../utils/solana.commands.helpers";
+import { z } from "zod";
+import { SOLANA_NETWORKS } from "../../../../types/shared.constants";
 
-const networks = ["devnet", "localnet", "mainnet"];
-
-export interface DepositOptions {
-  amount: string;
-  from: string;
-  mint: string;
-  mnemonic: string;
-  network: string;
-  privateKey: string;
-  recipient: string;
-  to: string;
-  tokenProgram: string;
-}
+type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
 
 export const keypairFromMnemonic = async (
   mnemonic: string
@@ -161,6 +153,15 @@ export const depositCommand = new Command("deposit")
   )
   .option("--mint <mint>", "SPL token mint address")
   .addOption(
-    new Option("--network <network>", "Solana network").choices(networks)
+    new Option("--network <network>", "Solana network").choices(SOLANA_NETWORKS)
   )
-  .action(main);
+  .action(async (options) => {
+    const validatedOptions = validateAndParseSchema(
+      options,
+      solanaDepositOptionsSchema,
+      {
+        exitOnError: true,
+      }
+    );
+    await main(validatedOptions);
+  });
