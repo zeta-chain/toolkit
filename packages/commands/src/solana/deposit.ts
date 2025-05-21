@@ -78,68 +78,72 @@ const main = async (options: DepositOptions) => {
     }
   );
 
-  if (options.mint) {
-    const mintInfo = await connection.getTokenSupply(
-      new PublicKey(options.mint)
-    );
-    const decimals = mintInfo.value.decimals;
+  try {
+    if (options.mint) {
+      const mintInfo = await connection.getTokenSupply(
+        new PublicKey(options.mint)
+      );
+      const decimals = mintInfo.value.decimals;
 
-    // Find the token account that matches the mint
-    const matchingTokenAccount = tokenAccounts.value.find(({ account }) => {
-      const data = AccountLayout.decode(account.data);
-      return new PublicKey(data.mint).toBase58() === options.mint;
-    });
+      // Find the token account that matches the mint
+      const matchingTokenAccount = tokenAccounts.value.find(({ account }) => {
+        const data = AccountLayout.decode(account.data);
+        return new PublicKey(data.mint).toBase58() === options.mint;
+      });
 
-    if (!matchingTokenAccount) {
-      throw new Error(`No token account found for mint ${options.mint}`);
+      if (!matchingTokenAccount) {
+        throw new Error(`No token account found for mint ${options.mint}`);
+      }
+
+      const from = matchingTokenAccount.pubkey;
+
+      // Find the TSS PDA (meta)
+      const [tssPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("meta", "utf-8")],
+        gatewayProgram.programId
+      );
+
+      // Find the TSS's ATA for the mint
+      const tssAta = await PublicKey.findProgramAddress(
+        [
+          tssPda.toBuffer(),
+          TOKEN_PROGRAM_ID.toBuffer(),
+          new PublicKey(options.mint).toBuffer(),
+        ],
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
+
+      const to = tssAta[0].toBase58();
+
+      const tx = await gatewayProgram.methods
+        .depositSplToken(
+          new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
+          receiverBytes,
+          null
+        )
+        .accounts({
+          from,
+          mintAccount: options.mint,
+          signer: keypair!.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          to,
+          tokenProgram: options.tokenProgram,
+        })
+        .rpc();
+      console.log("Transaction hash:", tx);
+    } else {
+      const tx = await gatewayProgram.methods
+        .deposit(
+          new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
+          receiverBytes,
+          null
+        )
+        .accounts({})
+        .rpc();
+      console.log("Transaction hash:", tx);
     }
-
-    const from = matchingTokenAccount.pubkey;
-
-    // Find the TSS PDA (meta)
-    const [tssPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("meta", "utf-8")],
-      gatewayProgram.programId
-    );
-
-    // Find the TSS's ATA for the mint
-    const tssAta = await PublicKey.findProgramAddress(
-      [
-        tssPda.toBuffer(),
-        TOKEN_PROGRAM_ID.toBuffer(),
-        new PublicKey(options.mint).toBuffer(),
-      ],
-      ASSOCIATED_TOKEN_PROGRAM_ID
-    );
-
-    const to = tssAta[0].toBase58();
-
-    const tx = await gatewayProgram.methods
-      .depositSplToken(
-        new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
-        receiverBytes,
-        null
-      )
-      .accounts({
-        from,
-        mintAccount: options.mint,
-        signer: keypair!.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
-        to,
-        tokenProgram: options.tokenProgram,
-      })
-      .rpc();
-    console.log("Transaction hash:", tx);
-  } else {
-    const tx = await gatewayProgram.methods
-      .deposit(
-        new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
-        receiverBytes,
-        null
-      )
-      .accounts({})
-      .rpc();
-    console.log("Transaction hash:", tx);
+  } catch (error) {
+    console.error(`Transaction failed: ${error}`);
   }
 };
 
