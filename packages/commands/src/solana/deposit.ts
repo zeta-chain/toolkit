@@ -14,7 +14,10 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { SOLANA_NETWORKS } from "../../../../types/shared.constants";
+import {
+  SOLANA_NETWORKS,
+  SOLANA_TOKEN_PROGRAM,
+} from "../../../../types/shared.constants";
 import { validateAndParseSchema } from "../../../../utils";
 import { solanaDepositOptionsSchema } from "../../../../utils/solana.commands.helpers";
 
@@ -151,7 +154,7 @@ export const depositCommand = new Command("deposit")
   .option(
     "--token-program <tokenProgram>",
     "Token program",
-    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    SOLANA_TOKEN_PROGRAM
   )
   .option("--mint <mint>", "SPL token mint address")
   .addOption(
