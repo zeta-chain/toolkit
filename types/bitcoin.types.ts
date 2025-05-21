@@ -55,15 +55,15 @@ export interface BtcTxById {
 export const bitcoinMethods = ["inscription", "memo"] as const;
 
 const memoDataRefineRule = {
-  rule: (data: { method: string; data?: string }) => {
+  message:
+    "When using --method memo, you must provide --data with the address of the recipient on ZetaChain.",
+  path: ["data"],
+  rule: (data: { data?: string; method: string }) => {
     if (data.method === "memo") {
       return !!data.data;
     }
     return true;
   },
-  message:
-    "When using --method memo, you must provide --data with the address of the recipient on ZetaChain.",
-  path: ["data"],
 };
 
 export const depositAndCallOptionsSchema = z
