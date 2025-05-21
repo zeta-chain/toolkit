@@ -143,7 +143,7 @@ const main = async (options: DepositOptions) => {
       console.log("Transaction hash:", tx);
     }
   } catch (error) {
-    console.error(`Transaction failed: ${error}`);
+    console.error("Transaction failed: ", error);
   }
 };
 
