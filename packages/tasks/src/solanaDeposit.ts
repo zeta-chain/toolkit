@@ -1,5 +1,4 @@
-import { Wallet } from "@coral-xyz/anchor";
-import { Keypair } from "@solana/web3.js";
+import { Wallet, web3 } from "@coral-xyz/anchor";
 import { bech32 } from "bech32";
 import { ethers } from "ethers";
 import { task } from "hardhat/config";
@@ -81,7 +80,7 @@ export const getKeypairFromFile = async (filepath: string) => {
     throw new Error(`Invalid secret key file at '${filepath}'!`);
   }
 
-  return Keypair.fromSecretKey(parsedFileContents);
+  return web3.Keypair.fromSecretKey(parsedFileContents);
 };
 
 task("solana-deposit", "Solana deposit", solanaDeposit)
