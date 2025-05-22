@@ -2,7 +2,10 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
+import {
+  BITCOIN_FEES,
+  BITCOIN_LIMITS,
+} from "../../../../types/bitcoin.constants";
 import { depositOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
@@ -13,7 +16,6 @@ import {
   fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../utils/bitcoin.command.helpers";
-import { calculateFees } from "../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
   EncodingFormat,
@@ -24,6 +26,11 @@ import {
   getDepositFee,
 } from "../../../../utils/bitcoinMemo.helpers";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import {
+  makeCommitTransaction,
+  makeRevealTransaction,
+  calculateRevealFee,
+} from "../../../../utils/bitcoin.helpers";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
@@ -56,17 +63,34 @@ const main = async (options: DepositOptions) => {
       );
     }
 
-    const amount =
-      BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
+    const amount = Number(ethers.parseUnits(options.amount, 8));
+    const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
+    const depositFee = await getDepositFee(options.gasPriceApi);
 
-    const { commitFee, revealFee, depositFee, totalFee } = await calculateFees(
+    // Create and broadcast commit transaction
+    const commit = await makeCommitTransaction(
+      key,
+      utxos,
+      address,
       data,
-      options.gasPriceApi
+      options.bitcoinApi,
+      amount + depositFee
+    );
+
+    const revealFee = calculateRevealFee(
+      {
+        controlBlock: commit.controlBlock,
+        internalKey: commit.internalKey,
+        leafScript: commit.leafScript,
+      },
+      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
     );
 
     await displayAndConfirmTransaction({
       amount: options.amount,
-      fee: depositFee,
+      inscriptionCommitFee: inscriptionFee,
+      inscriptionRevealFee: revealFee,
+      depositFee,
       encodingFormat: "ABI",
       gateway: options.gateway,
       network: options.bitcoinApi,
@@ -77,15 +101,33 @@ const main = async (options: DepositOptions) => {
       sender: address,
     });
 
-    await createAndBroadcastTransactions(
-      key,
-      utxos,
-      address,
-      data,
-      options.bitcoinApi,
-      amount + depositFee,
-      options.gateway
+    const commitTxid = await broadcastBtcTransaction(
+      commit.txHex,
+      options.bitcoinApi
     );
+
+    console.log("Commit TXID:", commitTxid);
+
+    const revealHex = makeRevealTransaction(
+      commitTxid,
+      0,
+      amount + revealFee + depositFee,
+      options.gateway,
+      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE,
+      {
+        controlBlock: commit.controlBlock,
+        internalKey: commit.internalKey,
+        leafScript: commit.leafScript,
+      },
+      key
+    );
+
+    const revealTxid = await broadcastBtcTransaction(
+      revealHex,
+      options.bitcoinApi
+    );
+
+    console.log("Reveal TXID:", revealTxid);
   } else if (options.method === "memo") {
     const memo = options.data?.startsWith("0x")
       ? options.data.slice(2)

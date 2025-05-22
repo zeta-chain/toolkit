@@ -25,10 +25,12 @@ export interface BitcoinKeyPair {
 }
 
 export interface TransactionInfo {
-  amount?: string;
+  amount: string;
+  inscriptionCommitFee: number;
+  inscriptionRevealFee: number;
+  depositFee: number;
   encodedMessage?: string;
   encodingFormat: string;
-  fee?: number;
   gateway: string;
   network: string;
   operation: string;
@@ -99,10 +101,18 @@ ${
     ? `Amount: ${info.amount} BTC (${ethers.parseUnits(info.amount, 8)} sats)`
     : ""
 }
-Fee: ${info.fee} sats
+Inscription Commit Fee: ${info.inscriptionCommitFee} sats
+Inscription Reveal Fee: ${info.inscriptionRevealFee} sats
+Deposit Fee: ${info.depositFee} sats
+Total: ${
+    Number(ethers.parseUnits(info.amount, 8)) +
+    info.inscriptionCommitFee +
+    info.inscriptionRevealFee +
+    info.depositFee
+  } sats
 Gateway: ${info.gateway}
 Sender: ${info.sender}
-Universal Contract: ${info.receiver || notApplicable}
+Receiver: ${info.receiver || notApplicable}
 Revert Address: ${info.revertAddress || notApplicable}
 Operation: ${info.operation}
 ${info.encodedMessage ? `Encoded Message: ${info.encodedMessage}` : ""}

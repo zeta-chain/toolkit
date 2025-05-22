@@ -2,7 +2,10 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
+import {
+  BITCOIN_FEES,
+  BITCOIN_LIMITS,
+} from "../../../../types/bitcoin.constants";
 import { callOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
@@ -72,33 +75,33 @@ const main = async (options: CallOptions) => {
     const amount =
       BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
 
-    const { commitFee, revealFee, depositFee, totalFee } = await calculateFees(
-      data,
-      options.gasPriceApi
-    );
+    const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
+    const depositFee = await getDepositFee(options.gasPriceApi);
 
-    await displayAndConfirmTransaction({
-      fee: depositFee,
-      encodedMessage: payload,
-      encodingFormat: "ABI",
-      gateway: options.gateway,
-      network: options.bitcoinApi,
-      operation: "Call",
-      rawInscriptionData: data.toString("hex"),
-      receiver: options.receiver,
-      revertAddress: options.revertAddress,
-      sender: address,
-    });
+    // await displayAndConfirmTransaction({
+    //   amount: "0",
+    //   inscriptionFee,
+    //   depositFee,
+    //   encodedMessage: payload,
+    //   encodingFormat: "ABI",
+    //   gateway: options.gateway,
+    //   network: options.bitcoinApi,
+    //   operation: "Call",
+    //   rawInscriptionData: data.toString("hex"),
+    //   receiver: options.receiver,
+    //   revertAddress: options.revertAddress,
+    //   sender: address,
+    // });
 
-    await createAndBroadcastTransactions(
-      key,
-      utxos,
-      address,
-      data,
-      options.bitcoinApi,
-      amount + depositFee,
-      options.gateway
-    );
+    // await createAndBroadcastTransactions(
+    //   key,
+    //   utxos,
+    //   address,
+    //   data,
+    //   options.bitcoinApi,
+    //   depositFee,
+    //   options.gateway
+    // );
   } else if (options.method === "memo") {
     const memo = options.data?.startsWith("0x")
       ? options.data.slice(2)

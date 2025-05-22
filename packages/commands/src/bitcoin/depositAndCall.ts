@@ -2,7 +2,10 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
+import {
+  BITCOIN_FEES,
+  BITCOIN_LIMITS,
+} from "../../../../types/bitcoin.constants";
 import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
@@ -69,38 +72,35 @@ const main = async (options: DepositAndCallOptions) => {
       );
     }
 
-    const amount =
-      BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
+    // const amount = Number(ethers.parseUnits(options.amount, 8));
+    // const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
+    // const depositFee = await getDepositFee(options.gasPriceApi);
 
-    const { commitFee, revealFee, depositFee, totalFee } = await calculateFees(
-      data,
-      options.gasPriceApi
-    );
+    // // Display transaction information and confirm
+    // await displayAndConfirmTransaction({
+    //   amount: options.amount,
+    //   encodedMessage: payload,
+    //   encodingFormat: "ABI",
+    //   gateway: options.gateway,
+    //   network: options.bitcoinApi,
+    //   operation: "DepositAndCall",
+    //   rawInscriptionData: data.toString("hex"),
+    //   receiver: options.receiver,
+    //   revertAddress: options.revertAddress,
+    //   sender: address,
+    //   inscriptionFee,
+    //   depositFee,
+    // });
 
-    // Display transaction information and confirm
-    await displayAndConfirmTransaction({
-      amount: options.amount,
-      encodedMessage: payload,
-      encodingFormat: "ABI",
-      gateway: options.gateway,
-      network: options.bitcoinApi,
-      operation: "DepositAndCall",
-      rawInscriptionData: data.toString("hex"),
-      receiver: options.receiver,
-      revertAddress: options.revertAddress,
-      sender: address,
-      fee: depositFee,
-    });
-
-    await createAndBroadcastTransactions(
-      key,
-      utxos,
-      address,
-      data,
-      options.bitcoinApi,
-      amount + depositFee,
-      options.gateway
-    );
+    // await createAndBroadcastTransactions(
+    //   key,
+    //   utxos,
+    //   address,
+    //   data,
+    //   options.bitcoinApi,
+    //   amount + depositFee,
+    //   options.gateway
+    // );
   } else if (options.method === "memo") {
     const memo = options.data?.startsWith("0x")
       ? options.data.slice(2)

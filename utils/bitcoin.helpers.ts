@@ -100,33 +100,15 @@ export const makeCommitTransaction = async (
   changeAddress: string,
   inscriptionData: Buffer,
   api: string,
-  amountSat: number,
+  amount: number,
   feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
 ) => {
-  const effectiveAmount = Math.max(
-    amountSat,
-    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE
-  );
-
-  /* pick utxos */
-  utxos.sort((a, b) => a.value - b.value);
-  let inTotal = 0;
-  const picks: BtcUtxo[] = [];
-  for (const u of utxos) {
-    inTotal += u.value;
-    picks.push(u);
-    if (inTotal >= effectiveAmount + feeSat) break;
-  }
-  if (inTotal < effectiveAmount + feeSat) throw new Error("Not enough funds");
-  const changeSat = inTotal - effectiveAmount - feeSat;
-
   const scriptItems = [
     key.publicKey.slice(1, 33),
     bitcoin.opcodes.OP_CHECKSIG,
     bitcoin.opcodes.OP_FALSE,
     bitcoin.opcodes.OP_IF,
   ];
-
   // Add inscription data in chunks if it exceeds 520 bytes (max script element size)
   const MAX_SCRIPT_ELEMENT_SIZE = 520;
   if (inscriptionData.length > MAX_SCRIPT_ELEMENT_SIZE) {
@@ -141,7 +123,6 @@ export const makeCommitTransaction = async (
   scriptItems.push(bitcoin.opcodes.OP_ENDIF);
 
   const leafScript = bitcoin.script.compile(scriptItems);
-
   /* p2tr */
   const { output: commitScript, witness } = bitcoin.payments.p2tr({
     internalPubkey: key.publicKey.slice(1, 33),
@@ -149,10 +130,44 @@ export const makeCommitTransaction = async (
     redeem: { output: leafScript, redeemVersion: LEAF_VERSION_TAPSCRIPT },
     scriptTree: { output: leafScript },
   });
-  if (!commitScript || !witness) throw new Error("taproot build failed");
+
+  if (!witness) throw new Error("taproot build failed");
+  const revealFee = calculateRevealFee(
+    {
+      controlBlock: witness[witness.length - 1],
+      internalKey: key.publicKey.slice(1, 33),
+      leafScript,
+    },
+    BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
+  );
+  const amountSat = amount + revealFee;
+
+  console.log("revealFee", revealFee);
+  if (
+    amountSat <
+    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE
+  ) {
+    throw new Error(
+      "Amount is less than the inscription (commit and reveal) fees"
+    );
+  }
+
+  /* pick utxos */
+  utxos.sort((a, b) => a.value - b.value);
+  let inTotal = 0;
+  const picks: BtcUtxo[] = [];
+  for (const u of utxos) {
+    inTotal += u.value;
+    picks.push(u);
+    if (inTotal >= amountSat + feeSat) break;
+  }
+  if (inTotal < amountSat + feeSat) throw new Error("Not enough funds");
+  const changeSat = inTotal - amountSat - feeSat;
+
+  if (!commitScript) throw new Error("taproot build failed");
 
   const psbt = new bitcoin.Psbt({ network: SIGNET });
-  psbt.addOutput({ script: commitScript, value: effectiveAmount });
+  psbt.addOutput({ script: commitScript, value: amountSat });
   if (changeSat > 0)
     psbt.addOutput({ address: changeAddress, value: changeSat });
   for (const u of picks) {
@@ -175,6 +190,21 @@ export const makeCommitTransaction = async (
     leafScript,
     txHex: psbt.extractTransaction().toHex(),
   };
+};
+
+export const calculateRevealFee = (
+  commitData: { controlBlock: Buffer; internalKey: Buffer; leafScript: Buffer },
+  feeRate: number
+) => {
+  const witness = buildRevealWitness(
+    commitData.leafScript,
+    commitData.controlBlock
+  );
+  const txOverhead = BITCOIN_TX.TX_OVERHEAD;
+  const inputVbytes = 36 + 1 + 43 + Math.ceil(witness.length / 4); // txin + marker+flag + varint scriptSig len (0) + sequence + witness weight/4
+  const outputVbytes = BITCOIN_TX.P2WPKH_OUTPUT_VBYTES;
+  const vsize = txOverhead + inputVbytes + outputVbytes;
+  return Math.ceil(vsize * feeRate);
 };
 
 /**
@@ -218,15 +248,7 @@ export const makeRevealTransaction = (
     witnessUtxo: { script: commitScript!, value: commitValue },
   });
 
-  const witness = buildRevealWitness(
-    commitData.leafScript,
-    commitData.controlBlock
-  );
-  const txOverhead = BITCOIN_TX.TX_OVERHEAD;
-  const inputVbytes = 36 + 1 + 43 + Math.ceil(witness.length / 4); // txin + marker+flag + varint scriptSig len (0) + sequence + witness weight/4
-  const outputVbytes = BITCOIN_TX.P2WPKH_OUTPUT_VBYTES;
-  const vsize = txOverhead + inputVbytes + outputVbytes;
-  const feeSat = Math.ceil(vsize * feeRate);
+  const feeSat = calculateRevealFee(commitData, feeRate);
 
   // Ensure we have enough value for the output after fee
   const outputValue = commitValue - feeSat;
@@ -240,6 +262,10 @@ export const makeRevealTransaction = (
 
   psbt.signInput(0, key);
   psbt.finalizeAllInputs();
+
+  console.log("feeSat", feeSat);
+  console.log("commitValue", commitValue);
+  console.log("outputValue", outputValue);
 
   return psbt.extractTransaction(true).toHex();
 };
