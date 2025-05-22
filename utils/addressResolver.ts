@@ -6,6 +6,7 @@ import {
   BitcoinAccountData,
   EVMAccountData,
   SolanaAccountData,
+  SuiAccountData,
 } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { accountExists, getAccountData } from "./accounts";
@@ -55,6 +56,15 @@ const isValidBitcoinAddress = (
   } catch {
     return false;
   }
+};
+
+/**
+ * Check if a string is a valid Sui address
+ */
+const isValidSuiAddress = (address?: string): boolean => {
+  if (!address) return false;
+  // Sui addresses are 1-64 hex chars prefixed with 0x
+  return /^0x[a-fA-F0-9]{1,64}$/.test(address);
 };
 
 /**
@@ -177,6 +187,42 @@ export const resolveBitcoinAddress = ({
     }
   }
 
+  if (handleError) handleError();
+  return undefined;
+};
+
+/**
+ * Args for resolving a Sui address
+ */
+export interface ResolveSuiAddressArgs {
+  /** Account name to use if address not provided */
+  accountName?: string;
+  /** Function to handle errors */
+  handleError?: () => void;
+  /** A Sui address to validate */
+  suiAddress?: string;
+}
+
+/**
+ * Resolve a Sui address from either a direct input or account name
+ */
+export const resolveSuiAddress = ({
+  suiAddress,
+  accountName = DEFAULT_ACCOUNT_NAME,
+  handleError,
+}: ResolveSuiAddressArgs): string | undefined => {
+  // If valid address provided, return it
+  if (suiAddress && isValidSuiAddress(suiAddress)) return suiAddress;
+
+  // Otherwise, try to derive from account name
+  if (accountName && accountExists("sui", accountName)) {
+    const accountData = getAccountData<SuiAccountData>("sui", accountName);
+    if (accountData?.address) {
+      return accountData.address;
+    }
+  }
+
+  // Handle error if no valid address found
   if (handleError) handleError();
   return undefined;
 };

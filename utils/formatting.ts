@@ -41,6 +41,7 @@ export interface FormatAddressesOptions {
   bitcoin?: string;
   evm?: string;
   solana?: string;
+  sui?: string;
 }
 
 export const formatAddresses = (options: FormatAddressesOptions): string => {
@@ -59,6 +60,11 @@ export const formatAddresses = (options: FormatAddressesOptions): string => {
   if (options.solana) {
     const solanaStr = `Solana: \x1b[35m${options.solana}\x1b[0m`;
     parts.push(solanaStr);
+  }
+
+  if (options.sui) {
+    const suiStr = `Sui: \x1b[32m${options.sui}\x1b[0m`;
+    parts.push(suiStr);
   }
 
   return parts.join("\n");

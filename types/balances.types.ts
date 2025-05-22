@@ -84,3 +84,10 @@ type AggregateResult = [blockNumber: bigint, returnData: string[]];
 export interface MulticallContract extends OmitIndexSignature<Contract> {
   aggregate?: ContractMethod<[calls: Call[]], AggregateResult, AggregateResult>;
 }
+
+export interface GetBalancesOptions {
+  btcAddress?: string;
+  evmAddress?: string;
+  solanaAddress?: string;
+  suiAddress?: string;
+}
