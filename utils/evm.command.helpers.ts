@@ -36,7 +36,7 @@ export const baseEvmOptionsSchema = z.object({
 type BaseEvmOptions = z.infer<typeof baseEvmOptionsSchema>;
 
 // Common setup function for both deposit commands
-export const setupTransaction = (options: BaseEvmOptions) => {
+export const setupEvmTransaction = (options: BaseEvmOptions) => {
   const chainId = parseInt(options.chainId);
   const networkType = getNetworkTypeByChainId(chainId);
   const rpcUrl = options.rpc || getRpcUrl(chainId);
@@ -84,7 +84,7 @@ export const setupTransaction = (options: BaseEvmOptions) => {
   return { chainId, client, provider, signer };
 };
 
-export const checkSufficientBalance = async (
+export const checkSufficientEvmBalance = async (
   provider: ethers.JsonRpcProvider,
   signer: ethers.Wallet,
   amount: string,
@@ -111,8 +111,7 @@ export const checkSufficientBalance = async (
   }
 };
 
-// Common confirmation prompt for transactions
-export const confirmTransaction = async (options: BaseEvmOptions) => {
+export const confirmEvmTransaction = async (options: BaseEvmOptions) => {
   if (options.yes) {
     console.log("Proceeding with transaction (--yes flag set)");
     return true;

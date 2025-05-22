@@ -4,3 +4,4 @@ export * from "./evm";
 export * from "./query";
 export * from "./solana";
 export * from "./sui";
+export * from "./zetachain";
