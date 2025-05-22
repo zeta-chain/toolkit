@@ -132,7 +132,7 @@ export const makeCommitTransaction = async (
   });
 
   if (!witness) throw new Error("taproot build failed");
-  const revealFee = calculateRevealFee(
+  const { revealFee, vsize } = calculateRevealFee(
     {
       controlBlock: witness[witness.length - 1],
       internalKey: key.publicKey.slice(1, 33),
@@ -140,8 +140,9 @@ export const makeCommitTransaction = async (
     },
     BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
   );
-  const amountSat = amount + revealFee;
-
+  const depositFee = Math.ceil((68 * 2 * revealFee) / vsize);
+  const amountSat = amount + revealFee + depositFee;
+  console.log("!!!!!!!!!!amountSat", amountSat);
   console.log("revealFee", revealFee);
   if (
     amountSat <
@@ -181,6 +182,8 @@ export const makeCommitTransaction = async (
       },
     });
   }
+
+  console.log("commit amountSat", amountSat);
   psbt.signAllInputs(key);
   psbt.finalizeAllInputs();
 
@@ -208,13 +211,23 @@ export const calculateRevealFee = (
     commitData.leafScript,
     commitData.controlBlock
   );
-  const txOverhead = BITCOIN_TX.TX_OVERHEAD; // 10
-  const inputVbytes = 36 + 1 + 43 + Math.ceil(witness.length / 4); // txin + marker+flag + varint scriptSig len (0) + sequence + witness weight/4
-  const outputVbytes = BITCOIN_TX.P2WPKH_OUTPUT_VBYTES; // 31
+
+  const txOverhead = BITCOIN_TX.TX_OVERHEAD; // 10 bytes: version (4) + marker (1) + flag (1) + locktime (4)
+
+  // Input vbytes:
+  // 36 bytes: outpoint (32-byte txid + 4-byte vout)
+  // 1 byte: scriptSig length (always 0 for segwit, but still encoded as a 1-byte varint)
+  // 4 bytes: sequence
+  // witness length is counted in weight units, so we divide by 4 to convert to virtual bytes
+  const inputVbytes = 36 + 1 + 4 + Math.ceil(witness.length / 4);
+
+  const outputVbytes = BITCOIN_TX.P2WPKH_OUTPUT_VBYTES; // 31 bytes: 8 (value) + 1 (script length) + 22 (P2WPKH script)
+
   const vsize = txOverhead + inputVbytes + outputVbytes;
-  console.log("inputVbytes", inputVbytes);
-  console.log("vsize", vsize);
-  return Math.ceil(vsize * feeRate);
+
+  const revealFee = Math.ceil(vsize * feeRate);
+
+  return { revealFee, vsize };
 };
 
 /**
@@ -258,13 +271,18 @@ export const makeRevealTransaction = (
     witnessUtxo: { script: commitScript!, value: commitValue },
   });
 
-  const feeSat = calculateRevealFee(commitData, feeRate);
+  const { revealFee, vsize } = calculateRevealFee(commitData, feeRate);
+  const depositFee = (68 * 2 * revealFee) / vsize;
 
-  // Ensure we have enough value for the output after fee
-  const outputValue = commitValue - feeSat;
+  const outputValue = commitValue - revealFee;
+  console.log("!!!!!!!!!!outputValue", outputValue);
+  console.log("revealFee", revealFee);
+  console.log("depositFee", depositFee);
+  console.log("vsize", vsize);
+  console.log("commitValue", commitValue);
   if (outputValue < BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH) {
     throw new Error(
-      `Insufficient value in commit output (${commitValue} sat) to cover reveal fee (${feeSat} sat) and maintain minimum output (${BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH} sat)`
+      `Insufficient value in commit output (${commitValue} sat) to cover reveal fee (${revealFee} sat) and maintain minimum output (${BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH} sat)`
     );
   }
 
@@ -272,10 +290,6 @@ export const makeRevealTransaction = (
 
   psbt.signInput(0, key);
   psbt.finalizeAllInputs();
-
-  const tx = psbt.extractTransaction();
-  const vSize = getTxVirtualSize(tx);
-  console.log("vSize!!!", vSize);
 
   return psbt.extractTransaction(true).toHex();
 };

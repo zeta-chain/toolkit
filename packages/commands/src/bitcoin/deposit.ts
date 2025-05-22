@@ -65,7 +65,6 @@ const main = async (options: DepositOptions) => {
 
     const amount = Number(ethers.parseUnits(options.amount, 8));
     const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
-    const depositFee = await getDepositFee(options.gasPriceApi);
 
     // Create and broadcast commit transaction
     const commit = await makeCommitTransaction(
@@ -74,10 +73,10 @@ const main = async (options: DepositOptions) => {
       address,
       data,
       options.bitcoinApi,
-      amount + depositFee
+      amount
     );
 
-    const revealFee = calculateRevealFee(
+    const { revealFee, vsize } = calculateRevealFee(
       {
         controlBlock: commit.controlBlock,
         internalKey: commit.internalKey,
@@ -85,6 +84,8 @@ const main = async (options: DepositOptions) => {
       },
       BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
     );
+
+    const depositFee = Math.ceil((68 * 2 * revealFee) / vsize);
 
     await displayAndConfirmTransaction({
       amount: options.amount,
