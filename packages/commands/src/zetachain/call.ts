@@ -1,9 +1,12 @@
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { z } from "zod";
 
 import {
+  functionTypesValuesConsistencyRule,
+  hexStringSchema,
   namePkRefineRule,
   stringArraySchema,
+  typesAndDataExclusivityRefineRule,
   typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../utils";
@@ -20,13 +23,22 @@ import {
 
 const callOptionsSchema = baseZetachainOptionsSchema
   .extend({
-    function: z.string(),
-    types: stringArraySchema,
-    values: stringArraySchema.min(1, "At least one value is required"),
+    data: hexStringSchema.optional(),
+    function: z.string().optional(),
+    types: stringArraySchema.optional(),
+    values: stringArraySchema.optional(),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
     path: typesAndValuesLengthRefineRule.path,
+  })
+  .refine(typesAndDataExclusivityRefineRule.rule, {
+    message: typesAndDataExclusivityRefineRule.message,
+    path: typesAndDataExclusivityRefineRule.path,
+  })
+  .refine(functionTypesValuesConsistencyRule.rule, {
+    message: functionTypesValuesConsistencyRule.message,
+    path: functionTypesValuesConsistencyRule.path,
   })
   .refine(namePkRefineRule);
 
@@ -35,34 +47,52 @@ type CallOptions = z.infer<typeof callOptionsSchema>;
 const main = async (options: CallOptions) => {
   try {
     const { client } = setupZetachainTransaction(options);
-    const stringifiedTypes = JSON.stringify(options.types);
 
-    console.log(`Contract call details:
+    if (options.data) {
+      console.log(`Contract call details:
+Raw data: ${options.data}
+`);
+
+      const response = await client.zetachainCall({
+        callOptions: prepareCallOptions(options),
+        data: options.data,
+        gatewayZetaChain: options.gatewayZetachain,
+        receiver: options.receiver,
+        revertOptions: prepareRevertOptions(options),
+        txOptions: prepareTxOptions(options),
+        zrc20: options.zrc20,
+      });
+
+      const receipt = await response.tx.wait();
+      console.log("Transaction hash:", receipt?.hash);
+    } else {
+      const stringifiedTypes = JSON.stringify(options.types);
+      console.log(`Contract call details:
 Function: ${options.function}
-Function parameters: ${options.values.join(", ")}
+Function parameters: ${options.values?.join(", ")}
 Parameter types: ${stringifiedTypes}
 `);
 
-    const isConfirmed = await confirmZetachainTransaction(options);
+      const isConfirmed = await confirmZetachainTransaction(options);
+      if (!isConfirmed) return;
 
-    if (!isConfirmed) return;
+      const values = parseAbiValues(stringifiedTypes, options.values || []);
 
-    const values = parseAbiValues(stringifiedTypes, options.values);
+      const response = await client.zetachainCall({
+        callOptions: prepareCallOptions(options),
+        function: options.function,
+        gatewayZetaChain: options.gatewayZetachain,
+        receiver: options.receiver,
+        revertOptions: prepareRevertOptions(options),
+        txOptions: prepareTxOptions(options),
+        types: options.types,
+        values,
+        zrc20: options.zrc20,
+      });
 
-    const response = await client.zetachainCall({
-      callOptions: prepareCallOptions(options),
-      function: options.function,
-      gatewayZetaChain: options.gatewayZetachain,
-      receiver: options.receiver,
-      revertOptions: prepareRevertOptions(options),
-      txOptions: prepareTxOptions(options),
-      types: options.types,
-      values,
-      zrc20: options.zrc20,
-    });
-
-    const receipt = await response.tx.wait();
-    console.log("Transaction hash:", receipt?.hash);
+      const receipt = await response.tx.wait();
+      console.log("Transaction hash:", receipt?.hash);
+    }
   } catch (error) {
     handleError({
       context: "Error during zetachain call",
@@ -78,17 +108,20 @@ export const callCommand = new Command("call").description(
 );
 
 addCommonZetachainCommandOptions(callCommand)
-  .requiredOption(
+  .option(
     "--function <function>",
     `Function to call (example: "hello(string)")`
   )
-  .requiredOption(
+  .option(
     "--types <types...>",
     "List of parameter types (e.g. uint256 address)"
   )
-  .requiredOption(
-    "--values <values...>",
-    "Parameter values for the function call"
+  .option("--values <values...>", "Parameter values for the function call")
+  .addOption(
+    new Option(
+      "--data <data>",
+      "Raw data for non-EVM chains like Solana"
+    ).conflicts(["types", "values", "function"])
   )
   .action(async (options) => {
     const validatedOptions = validateAndParseSchema(

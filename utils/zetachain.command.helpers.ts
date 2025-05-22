@@ -25,7 +25,7 @@ export const baseZetachainOptionsSchema = z.object({
   network: z.enum(["mainnet", "testnet"]).default("testnet"),
   onRevertGasLimit: numericStringSchema.default("7000000"),
   privateKey: evmPrivateKeySchema.optional(),
-  receiver: evmAddressSchema,
+  receiver: z.string(),
   revertAddress: evmAddressSchema,
   revertMessage: z.string().default("0x"),
   txOptionsGasLimit: numericStringSchema.default("7000000"),

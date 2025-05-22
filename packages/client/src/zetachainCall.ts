@@ -10,6 +10,7 @@ import {
   ZRC20Contract,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { handleError } from "../../../utils/handleError";
 import { toHexString } from "../../../utils/toHexString";
 import { validateSigner } from "../../../utils/validateSigner";
 import { ZetaChainClient } from "./client";
@@ -29,6 +30,7 @@ import { ZetaChainClient } from "./client";
  * @param {object} args.callOptions - Call options.
  * @param {txOptions} args.txOptions - Transaction options such as gasPrice, nonce, etc.
  * @param {revertOptions} args.revertOptions - Options to handle call reversion, including revert address and message.
+ * @param {string} args.data - Optional raw data for non-EVM chains like Solana.
  *
  * @returns {object} - Returns an object containing the transaction, gas token, and gas fee.
  * @property {object} tx - The transaction object for the cross-chain call.
@@ -40,13 +42,14 @@ export const zetachainCall = async function (
   this: ZetaChainClient,
   args: {
     callOptions: CallOptions;
-    function: string;
+    data?: string;
+    function?: string;
     gatewayZetaChain?: string;
     receiver: string;
     revertOptions: RevertOptions;
     txOptions: TxOptions;
-    types: string[];
-    values: ParseAbiValuesReturnType;
+    types?: string[];
+    values?: ParseAbiValuesReturnType;
     zrc20: string;
   }
 ) {
@@ -65,14 +68,31 @@ export const zetachainCall = async function (
     revertMessage: toHexString(args.revertOptions.revertMessage),
   };
 
-  const functionSignature = ethers.id(args.function).slice(0, 10);
+  let message: string;
 
-  const abiCoder = AbiCoder.defaultAbiCoder();
-  const encodedParameters = abiCoder.encode(args.types, args.values);
+  if (args.data) {
+    // For non-EVM chains, use the raw data directly
+    message = args.data.startsWith("0x") ? args.data : `0x${args.data}`;
+  } else if (args.types && args.values && args.function) {
+    // For EVM chains, encode the function and parameters
+    const functionSignature = ethers.id(args.function).slice(0, 10);
+    const abiCoder = AbiCoder.defaultAbiCoder();
+    const encodedParameters = abiCoder.encode(args.types, args.values);
+    message = ethers.hexlify(
+      ethers.concat([functionSignature, encodedParameters])
+    );
+  } else {
+    const errorMessage = handleError({
+      context: "Invalid arguments",
+      error: new Error(
+        "Either provide 'data' OR provide all three of 'function', 'types', and 'values' together. These two approaches are mutually exclusive."
+      ),
+      shouldThrow: false,
+    });
 
-  const message = ethers.hexlify(
-    ethers.concat([functionSignature, encodedParameters])
-  );
+    throw new Error(errorMessage);
+  }
+
   const zrc20 = new ethers.Contract(
     args.zrc20,
     ZRC20ABI.abi,
