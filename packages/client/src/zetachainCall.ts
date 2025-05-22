@@ -23,7 +23,7 @@ import { ZetaChainClient } from "./client";
  * @param {object} args - The function arguments.
  * @param {string} args.function - The name of the function to be executed on the target contract.
  * @param {string} args.gatewayZetaChain - The address of the ZetaChain gateway contract.
- * @param {string} args.receiver - The address of the contract or account that will receive the call.
+ * @param {string} args.receiver - The address or identifier of the contract or account that will receive the call. Can be any string - if not a hex string, it will be converted to a hex representation of its UTF-8 bytes.
  * @param {string} args.types - JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
  * @param {Array} args.values - The values to be passed to the function (should match the types).
  * @param {string} args.zrc20 - The address of the ZRC20 token contract used for paying gas fees.

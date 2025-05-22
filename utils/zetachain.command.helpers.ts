@@ -9,11 +9,13 @@ import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import {
   evmAddressSchema,
   evmPrivateKeySchema,
+  hexStringSchema,
   numericStringSchema,
 } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
 import { getRpcUrl } from "./chains";
 import { handleError } from "./handleError";
+import { toHexString } from "./toHexString";
 
 export const baseZetachainOptionsSchema = z.object({
   abortAddress: evmAddressSchema,
@@ -25,7 +27,14 @@ export const baseZetachainOptionsSchema = z.object({
   network: z.enum(["mainnet", "testnet"]).default("testnet"),
   onRevertGasLimit: numericStringSchema.default("7000000"),
   privateKey: evmPrivateKeySchema.optional(),
-  receiver: z.string(),
+  receiver: z.string().transform((val) => {
+    // If it's already a valid hex string, return it as is
+    if (hexStringSchema.safeParse(val).success) {
+      return val;
+    }
+    // Otherwise, convert it to a hex representation of its UTF-8 bytes
+    return toHexString(val);
+  }),
   revertAddress: evmAddressSchema,
   revertMessage: z.string().default("0x"),
   txOptionsGasLimit: numericStringSchema.default("7000000"),
@@ -153,7 +162,7 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
     .requiredOption("--zrc20 <address>", "The address of ZRC-20 to pay fees")
     .requiredOption(
       "--receiver <address>",
-      "The address of the receiver contract on a connected chain"
+      "The address of the receiver contract on a connected chain. Non-hex strings will be automatically encoded to hex."
     )
     .addOption(
       new Option("--name <name>", "Account name")
