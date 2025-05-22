@@ -184,13 +184,13 @@ export const makeCommitTransaction = async (
   };
 };
 
-export function getTxVirtualSize(tx: bitcoin.Transaction): number {
+export const getTxVirtualSize = (tx: bitcoin.Transaction): number => {
   const baseSize = tx.byteLength(false); // no witness data
   const totalSize = tx.byteLength(); // with witness data
   const weight = baseSize * 3 + totalSize;
   const vSize = Math.ceil(weight / 4);
   return vSize;
-}
+};
 
 export const calculateRevealFee = (
   commitData: { controlBlock: Buffer; internalKey: Buffer; leafScript: Buffer },

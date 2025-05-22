@@ -26,12 +26,12 @@ export interface BitcoinKeyPair {
 
 export interface TransactionInfo {
   amount: string;
-  inscriptionCommitFee: number;
-  inscriptionRevealFee: number;
   depositFee: number;
   encodedMessage?: string;
   encodingFormat: string;
   gateway: string;
+  inscriptionCommitFee: number;
+  inscriptionRevealFee: number;
   network: string;
   operation: string;
   rawInscriptionData: string;

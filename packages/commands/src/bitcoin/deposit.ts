@@ -10,12 +10,16 @@ import { depositOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
   broadcastBtcTransaction,
-  createAndBroadcastTransactions,
   displayAndConfirmMemoTransaction,
   displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../utils/bitcoin.command.helpers";
+import {
+  calculateRevealFee,
+  makeCommitTransaction,
+  makeRevealTransaction,
+} from "../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
   EncodingFormat,
@@ -26,11 +30,6 @@ import {
   getDepositFee,
 } from "../../../../utils/bitcoinMemo.helpers";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-import {
-  makeCommitTransaction,
-  makeRevealTransaction,
-  calculateRevealFee,
-} from "../../../../utils/bitcoin.helpers";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
@@ -88,11 +87,11 @@ const main = async (options: DepositOptions) => {
 
     await displayAndConfirmTransaction({
       amount: options.amount,
-      inscriptionCommitFee: inscriptionFee,
-      inscriptionRevealFee: revealFee,
       depositFee,
       encodingFormat: "ABI",
       gateway: options.gateway,
+      inscriptionCommitFee: inscriptionFee,
+      inscriptionRevealFee: revealFee,
       network: options.bitcoinApi,
       operation: "Deposit",
       rawInscriptionData: data.toString("hex"),

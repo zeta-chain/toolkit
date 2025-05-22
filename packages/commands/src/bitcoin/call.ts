@@ -10,14 +10,12 @@ import { callOptionsSchema } from "../../../../types/bitcoin.types";
 import {
   addCommonOptions,
   broadcastBtcTransaction,
-  createAndBroadcastTransactions,
   displayAndConfirmMemoTransaction,
   displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../utils/bitcoin.command.helpers";
 import {
-  calculateFees,
   calculateRevealFee,
   makeCommitTransaction,
   makeRevealTransaction,
@@ -101,18 +99,18 @@ const main = async (options: CallOptions) => {
 
     await displayAndConfirmTransaction({
       amount: "0",
-      inscriptionCommitFee: inscriptionFee,
-      inscriptionRevealFee: revealFee,
+      depositFee,
       encodedMessage: payload,
       encodingFormat: "ABI",
       gateway: options.gateway,
+      inscriptionCommitFee: inscriptionFee,
+      inscriptionRevealFee: revealFee,
       network: options.bitcoinApi,
       operation: "DepositAndCall",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
       revertAddress: options.revertAddress,
       sender: address,
-      depositFee,
     });
 
     const commitTxid = await broadcastBtcTransaction(
