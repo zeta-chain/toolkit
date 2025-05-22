@@ -16,7 +16,12 @@ import {
   fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../utils/bitcoin.command.helpers";
-import { calculateFees } from "../../../../utils/bitcoin.helpers";
+import {
+  calculateFees,
+  calculateRevealFee,
+  makeCommitTransaction,
+  makeRevealTransaction,
+} from "../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
   EncodingFormat,
@@ -72,35 +77,72 @@ const main = async (options: DepositAndCallOptions) => {
       );
     }
 
-    // const amount = Number(ethers.parseUnits(options.amount, 8));
-    // const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
-    // const depositFee = await getDepositFee(options.gasPriceApi);
+    const amount = Number(ethers.parseUnits(options.amount, 8));
+    const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
 
-    // // Display transaction information and confirm
-    // await displayAndConfirmTransaction({
-    //   amount: options.amount,
-    //   encodedMessage: payload,
-    //   encodingFormat: "ABI",
-    //   gateway: options.gateway,
-    //   network: options.bitcoinApi,
-    //   operation: "DepositAndCall",
-    //   rawInscriptionData: data.toString("hex"),
-    //   receiver: options.receiver,
-    //   revertAddress: options.revertAddress,
-    //   sender: address,
-    //   inscriptionFee,
-    //   depositFee,
-    // });
+    const commit = await makeCommitTransaction(
+      key,
+      utxos,
+      address,
+      data,
+      options.bitcoinApi,
+      amount
+    );
 
-    // await createAndBroadcastTransactions(
-    //   key,
-    //   utxos,
-    //   address,
-    //   data,
-    //   options.bitcoinApi,
-    //   amount + depositFee,
-    //   options.gateway
-    // );
+    const { revealFee, vsize } = calculateRevealFee(
+      {
+        controlBlock: commit.controlBlock,
+        internalKey: commit.internalKey,
+        leafScript: commit.leafScript,
+      },
+      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
+    );
+
+    const depositFee = Math.ceil((68 * 2 * revealFee) / vsize);
+
+    await displayAndConfirmTransaction({
+      amount: options.amount,
+      inscriptionCommitFee: inscriptionFee,
+      inscriptionRevealFee: revealFee,
+      encodedMessage: payload,
+      encodingFormat: "ABI",
+      gateway: options.gateway,
+      network: options.bitcoinApi,
+      operation: "DepositAndCall",
+      rawInscriptionData: data.toString("hex"),
+      receiver: options.receiver,
+      revertAddress: options.revertAddress,
+      sender: address,
+      depositFee,
+    });
+
+    const commitTxid = await broadcastBtcTransaction(
+      commit.txHex,
+      options.bitcoinApi
+    );
+
+    console.log("Commit TXID:", commitTxid);
+
+    const revealHex = makeRevealTransaction(
+      commitTxid,
+      0,
+      amount + revealFee + depositFee,
+      options.gateway,
+      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE,
+      {
+        controlBlock: commit.controlBlock,
+        internalKey: commit.internalKey,
+        leafScript: commit.leafScript,
+      },
+      key
+    );
+
+    const revealTxid = await broadcastBtcTransaction(
+      revealHex,
+      options.bitcoinApi
+    );
+
+    console.log("Reveal TXID:", revealTxid);
   } else if (options.method === "memo") {
     const memo = options.data?.startsWith("0x")
       ? options.data.slice(2)

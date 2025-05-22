@@ -142,16 +142,6 @@ export const makeCommitTransaction = async (
   );
   const depositFee = Math.ceil((68 * 2 * revealFee) / vsize);
   const amountSat = amount + revealFee + depositFee;
-  console.log("!!!!!!!!!!amountSat", amountSat);
-  console.log("revealFee", revealFee);
-  if (
-    amountSat <
-    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE
-  ) {
-    throw new Error(
-      "Amount is less than the inscription (commit and reveal) fees"
-    );
-  }
 
   /* pick utxos */
   utxos.sort((a, b) => a.value - b.value);
@@ -183,7 +173,6 @@ export const makeCommitTransaction = async (
     });
   }
 
-  console.log("commit amountSat", amountSat);
   psbt.signAllInputs(key);
   psbt.finalizeAllInputs();
 
@@ -271,15 +260,9 @@ export const makeRevealTransaction = (
     witnessUtxo: { script: commitScript!, value: commitValue },
   });
 
-  const { revealFee, vsize } = calculateRevealFee(commitData, feeRate);
-  const depositFee = (68 * 2 * revealFee) / vsize;
+  const { revealFee } = calculateRevealFee(commitData, feeRate);
 
   const outputValue = commitValue - revealFee;
-  console.log("!!!!!!!!!!outputValue", outputValue);
-  console.log("revealFee", revealFee);
-  console.log("depositFee", depositFee);
-  console.log("vsize", vsize);
-  console.log("commitValue", commitValue);
   if (outputValue < BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH) {
     throw new Error(
       `Insufficient value in commit output (${commitValue} sat) to cover reveal fee (${revealFee} sat) and maintain minimum output (${BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH} sat)`

@@ -66,7 +66,6 @@ const main = async (options: DepositOptions) => {
     const amount = Number(ethers.parseUnits(options.amount, 8));
     const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
 
-    // Create and broadcast commit transaction
     const commit = await makeCommitTransaction(
       key,
       utxos,
