@@ -1,10 +1,17 @@
 import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
 import { bech32 } from "bech32";
 import { mnemonicToSeedSync } from "bip39";
 import { HDKey } from "ethereum-cryptography/hdkey";
+import { z } from "zod";
+
+import { SuiAccountData } from "../types/accounts.types";
+import { getAccountData } from "./accounts";
 
 export const GAS_BUDGET = 10_000_000;
+export const SUI_GAS_COIN_TYPE = "0x2::sui::SUI";
+export const SUI_DEFAULT_DECIMALS = "9";
 
 export const getCoin = async (
   client: SuiClient,
@@ -101,3 +108,117 @@ export const getKeypairFromPrivateKey = (
     throw new Error(`Invalid private key format: ${errorMessage}`);
   }
 };
+
+export interface KeypairOptions {
+  mnemonic?: string;
+  name?: string;
+  privateKey?: string;
+}
+
+export const getKeypair = (options: KeypairOptions): Ed25519Keypair => {
+  if (options.mnemonic) {
+    return getKeypairFromMnemonic(options.mnemonic);
+  } else if (options.privateKey) {
+    return getKeypairFromPrivateKey(options.privateKey);
+  } else if (options.name) {
+    const account = getAccountData<SuiAccountData>("sui", options.name);
+    if (!account?.privateKey) {
+      throw new Error("No private key found for the specified account");
+    }
+    return getKeypairFromPrivateKey(account.privateKey);
+  } else {
+    throw new Error("Either mnemonic or private key must be provided");
+  }
+};
+
+export interface SignAndExecuteTransactionOptions {
+  client: SuiClient;
+  gasBudget: bigint;
+  keypair: Ed25519Keypair;
+  tx: Transaction;
+}
+
+export const signAndExecuteTransaction = async ({
+  client,
+  keypair,
+  tx,
+  gasBudget,
+}: SignAndExecuteTransactionOptions) => {
+  tx.setGasBudget(gasBudget);
+
+  const result = await client.signAndExecuteTransaction({
+    options: {
+      showEffects: true,
+      showEvents: true,
+      showObjectChanges: true,
+    },
+    requestType: "WaitForLocalExecution",
+    signer: keypair,
+    transaction: tx,
+  });
+
+  if (result.effects?.status.status === "failure") {
+    console.error("Transaction failed:", result.effects.status.error);
+    throw new Error(`Transaction failed: ${result.effects.status.error}`);
+  }
+
+  console.log("\nTransaction successful!");
+  console.log(`Transaction hash: ${result.digest}`);
+
+  return result;
+};
+
+export const chainIds = ["0103", "101", "103"] as const;
+export const networks = ["localnet", "mainnet", "testnet"] as const;
+
+export type SuiNetwork = (typeof networks)[number];
+
+export const getNetwork = (
+  network?: SuiNetwork,
+  chainId?: (typeof chainIds)[number]
+): SuiNetwork => {
+  if (network) {
+    return network;
+  }
+  if (chainId) {
+    const index = chainIds.indexOf(chainId);
+    if (index === -1) {
+      throw new Error(`Invalid chain ID: ${chainId}`);
+    }
+    return networks[index];
+  }
+  throw new Error("Either network or chainId must be provided");
+};
+
+// Convert decimal amount to smallest unit (e.g., SUI to MIST)
+export const toSmallestUnit = (amount: string, decimals = 9): bigint => {
+  if (!/^\d+(\.\d+)?$/.test(amount)) {
+    throw new Error("Invalid decimal amount");
+  }
+  const [whole = "0", fraction = ""] = amount.split(".");
+  const paddedFraction = (fraction + "0".repeat(decimals)).slice(0, decimals);
+  const multiplier = BigInt(10) ** BigInt(decimals);
+  return BigInt(whole) * multiplier + BigInt(paddedFraction);
+};
+
+export const commonDepositObjectSchema = z.object({
+  amount: z.string(),
+  chainId: z.enum(chainIds).optional(),
+  coinType: z.string().default(SUI_GAS_COIN_TYPE),
+  decimals: z.string(),
+  gasBudget: z.string(),
+  gatewayObject: z.string(),
+  gatewayPackage: z.string(),
+  mnemonic: z.string().optional(),
+  name: z.string().optional(),
+  network: z.enum(networks).optional(),
+  privateKey: z.string().optional(),
+  receiver: z.string(),
+});
+
+export const commonDepositOptionsSchema = commonDepositObjectSchema.refine(
+  (data) => data.mnemonic || data.privateKey || data.name,
+  {
+    message: "Either mnemonic, private key or name must be provided",
+  }
+);
