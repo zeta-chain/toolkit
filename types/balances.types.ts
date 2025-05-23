@@ -85,9 +85,9 @@ export interface MulticallContract extends OmitIndexSignature<Contract> {
   aggregate?: ContractMethod<[calls: Call[]], AggregateResult, AggregateResult>;
 }
 
-export interface EsploraResponse {
-  chain_stats: {
-    funded_txo_sum: string;
-    spent_txo_sum: string;
-  };
+export interface GetBalancesOptions {
+  btcAddress?: string;
+  evmAddress?: string;
+  solanaAddress?: string;
+  suiAddress?: string;
 }

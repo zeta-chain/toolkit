@@ -4,6 +4,8 @@ import { z } from "zod";
 import {
   evmAddressSchema,
   namePkRefineRule,
+  stringArraySchema,
+  typesAndValuesLengthRefineRule,
   validAmountSchema,
 } from "../../../../types/shared.schema";
 import {
@@ -20,17 +22,24 @@ import {
   prepareTxOptions,
   setupEvmTransaction,
 } from "../../../../utils/evm.command.helpers";
+import { parseAbiValues } from "../../../../utils/parseAbiValues";
 
-const depositOptionsSchema = baseEvmOptionsSchema
+const depositAndCallOptionsSchema = baseEvmOptionsSchema
   .extend({
     amount: validAmountSchema,
     erc20: evmAddressSchema.optional(),
+    types: stringArraySchema,
+    values: stringArraySchema.min(1, "At least one value is required"),
+  })
+  .refine(typesAndValuesLengthRefineRule.rule, {
+    message: typesAndValuesLengthRefineRule.message,
+    path: typesAndValuesLengthRefineRule.path,
   })
   .refine(namePkRefineRule);
 
-type DepositOptions = z.infer<typeof depositOptionsSchema>;
+type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
-const main = async (options: DepositOptions) => {
+const main = async (options: DepositAndCallOptions) => {
   try {
     const { client, provider, signer, chainId } = setupEvmTransaction(options);
 
@@ -50,21 +59,33 @@ const main = async (options: DepositOptions) => {
       revertMessage: options.revertMessage,
     });
 
+    const stringifiedTypes = JSON.stringify(options.types);
+
+    console.log(`Contract call details:
+Function parameters: ${options.values.join(", ")}
+Parameter types: ${stringifiedTypes}
+`);
+
     const isConfirmed = await confirmEvmTransaction(options);
 
     if (!isConfirmed) return;
 
-    const tx = await client.evmDeposit({
+    const values = parseAbiValues(stringifiedTypes, options.values);
+
+    const tx = await client.evmDepositAndCall({
       amount: options.amount,
       erc20: options.erc20,
+      gatewayEvm: options.gateway,
       receiver: options.receiver,
       revertOptions: prepareRevertOptions(options, signer),
       txOptions: prepareTxOptions(options),
+      types: options.types,
+      values,
     });
     console.log("Transaction hash:", tx.hash);
   } catch (error) {
     handleError({
-      context: "Error depositing to EVM",
+      context: "Error during depositAndCall to EVM",
       error,
       shouldThrow: false,
     });
@@ -72,20 +93,30 @@ const main = async (options: DepositOptions) => {
   }
 };
 
-export const depositCommand = new Command("deposit").description(
-  "Deposit tokens to ZetaChain from an EVM-compatible chain"
+export const depositAndCallCommand = new Command(
+  "deposit-and-call"
+).description(
+  "Deposit tokens and call a contract on ZetaChain from an EVM-compatible chain"
 );
 
-addCommonEvmCommandOptions(depositCommand)
+addCommonEvmCommandOptions(depositAndCallCommand)
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
   .option(
     "--erc20 <address>",
     "ERC20 token address (optional for native token deposits)"
   )
+  .requiredOption(
+    "--types <types...>",
+    "List of parameter types (e.g. uint256 address)"
+  )
+  .requiredOption(
+    "--values <values...>",
+    "Parameter values for the function call"
+  )
   .action(async (options) => {
     const validatedOptions = validateAndParseSchema(
       options,
-      depositOptionsSchema,
+      depositAndCallOptionsSchema,
       {
         exitOnError: true,
       }

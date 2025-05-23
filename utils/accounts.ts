@@ -1,4 +1,8 @@
 import confirm from "@inquirer/confirm";
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
+import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
 import { Keypair } from "@solana/web3.js";
 import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
@@ -14,6 +18,7 @@ import {
   BitcoinAccountData,
   EVMAccountData,
   SolanaAccountData,
+  SuiAccountData,
 } from "../types/accounts.types";
 import {
   safeExists,
@@ -43,7 +48,11 @@ export const accountExists = (
  * @typeparam T The expected account data type
  */
 export const getAccountData = <
-  T extends EVMAccountData | SolanaAccountData | BitcoinAccountData
+  T extends
+    | EVMAccountData
+    | SolanaAccountData
+    | BitcoinAccountData
+    | SuiAccountData
 >(
   accountType: (typeof AvailableAccountTypes)[number],
   accountName: string
@@ -62,72 +71,63 @@ export const getAccountData = <
   }
 };
 
-const createEVMAccount = (): AccountData => {
-  const wallet = ethers.Wallet.createRandom();
+const createEVMAccount = (privateKey?: string): AccountData => {
+  const wallet = privateKey
+    ? new ethers.Wallet(privateKey)
+    : ethers.Wallet.createRandom();
   return {
     address: wallet.address,
-    mnemonic: wallet.mnemonic?.phrase,
+    mnemonic: "mnemonic" in wallet ? wallet.mnemonic?.phrase : undefined,
     privateKey: wallet.privateKey,
   };
 };
 
-const createSolanaAccount = (): AccountData => {
-  const keypair = Keypair.generate();
+const createSolanaAccount = (privateKey?: string): AccountData => {
+  const keypair = privateKey
+    ? Keypair.fromSecretKey(Buffer.from(privateKey, "hex"))
+    : Keypair.generate();
   return {
+    address: keypair.publicKey.toBase58(),
+    privateKey: `0x${Buffer.from(keypair.secretKey).toString("hex")}`,
+    privateKeyEncoding: "hex",
+    privateKeyScheme: "ed25519",
     publicKey: keypair.publicKey.toBase58(),
-    secretKey: Buffer.from(keypair.secretKey).toString("hex"),
   };
 };
 
-const createBitcoinAccount = (): AccountData => {
-  const ECPair = ECPairFactory(ecc);
+const createSUIAccount = (privateKey?: string): AccountData => {
+  let keypair: Ed25519Keypair | Secp256k1Keypair | Secp256r1Keypair;
 
-  // Generate a random keypair
-  const keyPair = ECPair.makeRandom();
+  if (privateKey) {
+    const pair = decodeSuiPrivateKey(privateKey);
 
-  // Store the raw private key bytes (hex encoded for storage)
-  const privateKey = keyPair.privateKey?.toString("hex") || "";
-  if (!privateKey) {
-    throw new Error("Failed to generate Bitcoin private key");
+    if (pair.schema === "ED25519") {
+      keypair = Ed25519Keypair.fromSecretKey(pair.secretKey);
+    } else if (pair.schema === "Secp256k1") {
+      keypair = Secp256k1Keypair.fromSecretKey(pair.secretKey);
+    } else if (pair.schema === "Secp256r1") {
+      keypair = Secp256r1Keypair.fromSecretKey(pair.secretKey);
+    } else {
+      throw new Error(`Unsupported key schema: ${pair.schema}`);
+    }
+  } else {
+    keypair = new Ed25519Keypair();
   }
 
-  // Create testnet WIF
-  const testnetWIF = ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"), {
-    network: bitcoin.networks.testnet,
-  }).toWIF();
-
-  // Create mainnet WIF
-  const mainnetWIF = ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"), {
-    network: bitcoin.networks.bitcoin,
-  }).toWIF();
-
-  // Generate a SegWit (P2WPKH) address for mainnet
-  const { address: mainnetAddress } = bitcoin.payments.p2wpkh({
-    network: bitcoin.networks.bitcoin,
-    pubkey: keyPair.publicKey,
-  });
-
-  // Generate a SegWit (P2WPKH) address for testnet
-  const { address: testnetAddress } = bitcoin.payments.p2wpkh({
-    network: bitcoin.networks.testnet,
-    pubkey: keyPair.publicKey,
-  });
-
-  if (!mainnetAddress || !testnetAddress)
-    throw new Error("Unable to generate Bitcoin addresses");
-
+  const secretKey = keypair.getSecretKey();
   return {
-    mainnetAddress,
-    mainnetWIF,
-    privateKey,
-    testnetAddress,
-    testnetWIF,
+    address: keypair.toSuiAddress(),
+    privateKey: secretKey,
+    privateKeyEncoding: "hex",
+    privateKeyScheme: keypair.getKeyScheme(),
+    publicKey: keypair.getPublicKey().toBase64(),
   };
 };
 
 export const createAccountForType = async (
   type: (typeof AvailableAccountTypes)[number],
-  name: string
+  name: string,
+  privateKey?: string
 ): Promise<void> => {
   try {
     const baseDir = getAccountTypeDir(type);
@@ -149,29 +149,25 @@ export const createAccountForType = async (
     let keyData: AccountData;
 
     if (type === "evm") {
-      keyData = createEVMAccount();
+      keyData = createEVMAccount(privateKey);
     } else if (type === "solana") {
-      keyData = createSolanaAccount();
+      keyData = createSolanaAccount(privateKey);
+    } else if (type === "sui") {
+      keyData = createSUIAccount(privateKey);
     } else if (type === "bitcoin") {
       // Default to testnet for Bitcoin
-      keyData = createBitcoinAccount();
+      keyData = createBitcoinAccount(privateKey);
     } else {
       // Type assertion to help TypeScript understand this isn't 'never'
       throw new Error(`Unsupported account type: ${type as string}`);
     }
-
     safeWriteFile(keyPath, keyData);
     console.log(`${type.toUpperCase()} account created successfully!`);
     console.log(`Key saved to: ${keyPath}`);
 
-    if (type === "evm") {
-      console.log(`Address: ${keyData.address}`);
-    } else if (type === "solana") {
-      console.log(`Public Key: ${keyData.publicKey}`);
-    } else if (type === "bitcoin") {
-      console.log(`Address: ${keyData.mainnetAddress}`);
-      console.log(`Testnet Address: ${keyData.testnetAddress}`);
-    }
+    const address =
+      type === "bitcoin" ? keyData.mainnetAddress : keyData.address;
+    console.log(`Address: ${address}`);
   } catch (error: unknown) {
     handleError({
       context: "Failed to create or save account",
@@ -179,6 +175,60 @@ export const createAccountForType = async (
       shouldThrow: true,
     });
   }
+};
+
+const createBitcoinAccount = (privateKey?: string): AccountData => {
+  const ECPair = ECPairFactory(ecc);
+
+  // Generate or use provided keypair
+  const keyPair = privateKey
+    ? ECPair.fromPrivateKey(Buffer.from(privateKey, "hex"))
+    : ECPair.makeRandom();
+
+  // Store the raw private key bytes (hex encoded for storage)
+  const privateKeyBytes = keyPair.privateKey?.toString("hex") || "";
+  if (!privateKeyBytes) {
+    throw new Error("Failed to generate Bitcoin private key");
+  }
+
+  // Create testnet WIF
+  const testnetWIF = ECPair.fromPrivateKey(
+    Buffer.from(privateKeyBytes, "hex"),
+    {
+      network: bitcoin.networks.testnet,
+    }
+  ).toWIF();
+
+  // Create mainnet WIF
+  const mainnetWIF = ECPair.fromPrivateKey(
+    Buffer.from(privateKeyBytes, "hex"),
+    {
+      network: bitcoin.networks.bitcoin,
+    }
+  ).toWIF();
+
+  // Generate a SegWit (P2WPKH) address for mainnet
+  const { address: mainnetAddress } = bitcoin.payments.p2wpkh({
+    network: bitcoin.networks.bitcoin,
+    pubkey: keyPair.publicKey,
+  });
+
+  // Generate a SegWit (P2WPKH) address for testnet
+  const { address: testnetAddress } = bitcoin.payments.p2wpkh({
+    network: bitcoin.networks.testnet,
+    pubkey: keyPair.publicKey,
+  });
+
+  if (!mainnetAddress || !testnetAddress)
+    throw new Error("Unable to generate Bitcoin addresses");
+
+  return {
+    mainnetAddress,
+    mainnetWIF,
+    privateKey: privateKeyBytes,
+    testnetAddress,
+    testnetWIF,
+  };
 };
 
 export const listChainAccounts = (
@@ -197,7 +247,7 @@ export const listChainAccounts = (
     if (chainType === "evm") {
       return [
         {
-          address: (keyData as EVMAccountData).address,
+          address: (keyData as AccountData).address,
           name,
           type: chainType,
         },
@@ -205,7 +255,15 @@ export const listChainAccounts = (
     } else if (chainType === "solana") {
       return [
         {
-          address: (keyData as SolanaAccountData).publicKey,
+          address: (keyData as AccountData).address,
+          name,
+          type: chainType,
+        },
+      ];
+    } else if (chainType === "sui") {
+      return [
+        {
+          address: (keyData as AccountData).address,
           name,
           type: chainType,
         },
@@ -214,12 +272,12 @@ export const listChainAccounts = (
       // Return both mainnet and testnet addresses as separate entries
       return [
         {
-          address: (keyData as BitcoinAccountData).mainnetAddress,
+          address: (keyData as AccountData).mainnetAddress,
           name,
           type: "bitcoin",
         },
         {
-          address: (keyData as BitcoinAccountData).testnetAddress,
+          address: (keyData as AccountData).testnetAddress,
           name,
           type: "bitcoin",
         },
@@ -229,5 +287,7 @@ export const listChainAccounts = (
     return [];
   });
 
-  return accounts;
+  return accounts.filter(
+    (account): account is AccountInfo => account.address !== undefined
+  );
 };

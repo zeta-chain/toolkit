@@ -41,6 +41,7 @@ export interface FormatAddressesOptions {
   bitcoin?: string;
   evm?: string;
   solana?: string;
+  sui?: string;
 }
 
 export const formatAddresses = (options: FormatAddressesOptions): string => {
@@ -59,6 +60,11 @@ export const formatAddresses = (options: FormatAddressesOptions): string => {
   if (options.solana) {
     const solanaStr = `Solana: \x1b[35m${options.solana}\x1b[0m`;
     parts.push(solanaStr);
+  }
+
+  if (options.sui) {
+    const suiStr = `Sui: \x1b[32m${options.sui}\x1b[0m`;
+    parts.push(suiStr);
   }
 
   return parts.join("\n");
@@ -105,7 +111,7 @@ export const printEvmTransactionDetails = async (
   signer: ethers.Wallet,
   chainId: number,
   options: {
-    amount: string;
+    amount?: string;
     callOnRevert: boolean;
     erc20?: string;
     onRevertGasLimit: string;
@@ -134,9 +140,12 @@ export const printEvmTransactionDetails = async (
 
   console.log(`
 From:   ${signer.address} on ${getChainName(chainId)}
-To:     ${options.receiver} on ZetaChain
-Amount: ${options.amount} ${tokenSymbol}${
-    !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
+To:     ${options.receiver} on ZetaChain${
+    options.amount
+      ? `\nAmount: ${options.amount} ${tokenSymbol}${
+          !options.callOnRevert ? `\nRefund: ${signer.address}` : ""
+        }`
+      : ""
   }
 Call on revert: ${options.callOnRevert ? "true" : "false"}${
     options.callOnRevert

@@ -1,6 +1,8 @@
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
+
 export const evmAddressSchema = z
   .string()
   .refine((val) => ethers.isAddress(val), "Must be a valid EVM address");
@@ -57,7 +59,16 @@ export const evmPrivateKeySchema = z
     },
     { message: "Invalid private key (must be in secp256k1 range)" }
   );
-
+/**
+ * Validation rule for Zod schema refinement that ensures only one of name or privateKey is provided.
+ * This prevents users from specifying both a named account and a private key at the same time.
+ */
+export const namePkRefineRule = (data: {
+  name: string;
+  privateKey?: string;
+}) => {
+  return !(data.privateKey && data.name !== DEFAULT_ACCOUNT_NAME);
+};
 export const typesAndValuesLengthRefineRule = {
   message:
     "If provided, the 'types' and 'values' arrays must both exist and have the same length",
@@ -81,6 +92,25 @@ export const typesAndDataExclusivityRefineRule = {
   rule: (data: { data?: string; types?: string[]; values?: string[] }) => {
     // Prevent providing both data and types/values
     if (data.data && (data.types || data.values)) {
+      return false;
+    }
+
+    return true;
+  },
+};
+
+export const functionTypesValuesConsistencyRule = {
+  message:
+    "If providing --function, you must also provide --types and --values (and vice versa)",
+  path: ["function"],
+  rule: (data: { function?: string; types?: string[]; values?: string[] }) => {
+    // If function is provided, both types and values must be provided
+    if (data.function && (!data.types || !data.values)) {
+      return false;
+    }
+
+    // If types or values are provided, function must be provided
+    if ((data.types || data.values) && !data.function) {
       return false;
     }
 
