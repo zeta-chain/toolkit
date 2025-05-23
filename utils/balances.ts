@@ -795,6 +795,10 @@ export const hasSufficientBalanceEvm = async (
   return { balance, decimals, hasEnoughBalance };
 };
 
+interface TonApiResponse {
+  balance: string;
+}
+
 /**
  * Gets TON native token balances
  */
@@ -817,13 +821,16 @@ export const getTonBalances = async (
         const network = token.chain_name?.replace("ton_", "") || "testnet";
         const API = network === "mainnet" ? TON_TESTNET_API : TON_MAINNET_API;
 
-        const { data } = await axios.get(`${API}/${tonAddress}`, {
-          headers: {
-            Accept: "application/json",
-          },
-        });
+        const { data } = await axios.get<TonApiResponse>(
+          `${API}/${tonAddress}`,
+          {
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
 
-        if (!data || !data.balance) {
+        if (!data || typeof data.balance !== "string") {
           throw new Error("Invalid response from TON API");
         }
 
