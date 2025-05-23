@@ -26,9 +26,11 @@ const main = async (options: DepositOptions) => {
   );
   const utxos = await fetchUtxos(address, options.bitcoinApi);
 
-  const memo = options.data?.startsWith("0x")
-    ? options.data.slice(2)
-    : options.data;
+  const receiver = options.receiver?.startsWith("0x")
+    ? options.receiver.slice(2)
+    : options.receiver;
+
+  const memo = receiver || "";
 
   const amount = Number(ethers.parseUnits(options.amount, 8));
   const networkFee = Number(options.networkFee);
