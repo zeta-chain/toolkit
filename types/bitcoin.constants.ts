@@ -41,6 +41,7 @@ export const BITCOIN_LIMITS = {
   DUST_THRESHOLD: {
     P2TR: 330,
     P2WPKH: 294,
+    ZETACHAIN: 1000,
   },
   // Minimum amount for commit output
   ESTIMATED_REVEAL_FEE: 5000,

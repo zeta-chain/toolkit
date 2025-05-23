@@ -2,25 +2,32 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { BITCOIN_LIMITS } from "../../../../types/bitcoin.constants";
-import { depositAndCallOptionsSchema } from "../../../../types/bitcoin.types";
+import { BITCOIN_FEES } from "../../../../../types/bitcoin.constants";
+import { inscriptionDepositAndCallOptionsSchema } from "../../../../../types/bitcoin.types";
 import {
   addCommonOptions,
-  createAndBroadcastTransactions,
+  broadcastBtcTransaction,
   displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
-} from "../../../../utils/bitcoin.command.helpers";
-import { calculateFees } from "../../../../utils/bitcoin.helpers";
+} from "../../../../../utils/bitcoin.command.helpers";
+import {
+  calculateRevealFee,
+  makeCommitTransaction,
+  makeRevealTransaction,
+  safeParseBitcoinAmount,
+} from "../../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
   EncodingFormat,
   OpCode,
   trimOx,
-} from "../../../../utils/bitcoinEncode";
-import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+} from "../../../../../utils/bitcoinEncode";
+import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
-type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
+type DepositAndCallOptions = z.infer<
+  typeof inscriptionDepositAndCallOptionsSchema
+>;
 
 /**
  * Main function that executes the deposit-and-call operation.
@@ -33,8 +40,7 @@ const main = async (options: DepositAndCallOptions) => {
     options.privateKey,
     options.name
   );
-  const utxos = await fetchUtxos(address, options.api);
-
+  const utxos = await fetchUtxos(address, options.bitcoinApi);
   let data;
   let payload;
   if (
@@ -63,37 +69,72 @@ const main = async (options: DepositAndCallOptions) => {
     );
   }
 
-  const amount =
-    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE;
+  const amount = safeParseBitcoinAmount(options.amount);
+  const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
 
-  const { commitFee, revealFee, totalFee } = calculateFees(data);
-
-  // Display transaction information and confirm
-  await displayAndConfirmTransaction({
-    amount: options.amount,
-    commitFee,
-    encodedMessage: payload,
-    encodingFormat: "ABI",
-    gateway: options.gateway,
-    network: "Signet",
-    operation: "DepositAndCall",
-    rawInscriptionData: data.toString("hex"),
-    receiver: options.receiver,
-    revealFee,
-    revertAddress: options.revertAddress,
-    sender: address,
-    totalFee,
-  });
-
-  await createAndBroadcastTransactions(
+  const commit = await makeCommitTransaction(
     key,
     utxos,
     address,
     data,
-    options.api,
-    amount,
-    options.gateway
+    options.bitcoinApi,
+    amount
   );
+
+  const { revealFee, vsize } = calculateRevealFee(
+    {
+      controlBlock: commit.controlBlock,
+      internalKey: commit.internalKey,
+      leafScript: commit.leafScript,
+    },
+    BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
+  );
+
+  const depositFee = Math.ceil((68 * 2 * revealFee) / vsize);
+
+  await displayAndConfirmTransaction({
+    amount: options.amount,
+    depositFee,
+    encodedMessage: payload,
+    encodingFormat: "ABI",
+    gateway: options.gateway,
+    inscriptionCommitFee: inscriptionFee,
+    inscriptionRevealFee: revealFee,
+    network: options.bitcoinApi,
+    operation: "DepositAndCall",
+    rawInscriptionData: data.toString("hex"),
+    receiver: options.receiver,
+    revertAddress: options.revertAddress,
+    sender: address,
+  });
+
+  const commitTxid = await broadcastBtcTransaction(
+    commit.txHex,
+    options.bitcoinApi
+  );
+
+  console.log("Commit TXID:", commitTxid);
+
+  const revealHex = makeRevealTransaction(
+    commitTxid,
+    0,
+    amount + revealFee + depositFee,
+    options.gateway,
+    BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE,
+    {
+      controlBlock: commit.controlBlock,
+      internalKey: commit.internalKey,
+      leafScript: commit.leafScript,
+    },
+    key
+  );
+
+  const revealTxid = await broadcastBtcTransaction(
+    revealHex,
+    options.bitcoinApi
+  );
+
+  console.log("Reveal TXID:", revealTxid);
 };
 
 /**
@@ -102,9 +143,7 @@ const main = async (options: DepositAndCallOptions) => {
  */
 export const depositAndCallCommand = new Command()
   .name("deposit-and-call")
-  .description(
-    "Deposit BTC and call a contract on ZetaChain (using inscriptions)"
-  )
+  .description("Deposit BTC and call a contract on ZetaChain")
   .option("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
@@ -126,7 +165,7 @@ export const depositAndCallCommand = new Command()
   .action(async (opts) => {
     const validated = validateAndParseSchema(
       opts,
-      depositAndCallOptionsSchema,
+      inscriptionDepositAndCallOptionsSchema,
       {
         exitOnError: true,
       }
