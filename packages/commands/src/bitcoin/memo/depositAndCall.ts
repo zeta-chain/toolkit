@@ -2,7 +2,6 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { BITCOIN_LIMITS } from "../../../../../types/bitcoin.constants";
 import { memoDepositAndCallOptionsSchema } from "../../../../../types/bitcoin.types";
 import {
   addCommonOptions,

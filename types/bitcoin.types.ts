@@ -115,12 +115,12 @@ export const memoDepositAndCallOptionsSchema = z.object({
   amount: validAmountSchema,
   bitcoinApi: z.string().url(),
   data: hexStringSchema.optional(),
+  gasPriceApi: z.string().url(),
   gateway: z.string(),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   networkFee: z.string(),
   privateKey: z.string().optional(),
   receiver: z.string().optional(),
-  gasPriceApi: z.string().url(),
 });
 
 export const memoDepositOptionsSchema = z.object({
@@ -129,21 +129,21 @@ export const memoDepositOptionsSchema = z.object({
   }),
   bitcoinApi: z.string().url(),
   data: hexStringSchema.optional(),
+  gasPriceApi: z.string().url(),
   gateway: z.string(),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   networkFee: z.string(),
   privateKey: z.string().optional(),
   receiver: z.string().optional(),
-  gasPriceApi: z.string().url(),
 });
 
 export const memoCallOptionsSchema = z.object({
   bitcoinApi: z.string().url(),
   data: hexStringSchema.optional(),
+  gasPriceApi: z.string().url(),
   gateway: z.string(),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   networkFee: z.string(),
   privateKey: z.string().optional(),
   receiver: z.string().optional(),
-  gasPriceApi: z.string().url(),
 });

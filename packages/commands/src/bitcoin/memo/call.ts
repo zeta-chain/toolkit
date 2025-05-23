@@ -1,7 +1,6 @@
 import { Command, Option } from "commander";
 import { z } from "zod";
 
-import { BITCOIN_LIMITS } from "../../../../../types/bitcoin.constants";
 import { memoCallOptionsSchema } from "../../../../../types/bitcoin.types";
 import {
   addCommonOptions,
