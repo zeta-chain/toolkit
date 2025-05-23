@@ -52,28 +52,13 @@ export interface BtcTxById {
   weight: number;
 }
 
-export const bitcoinMethods = ["inscription", "memo"] as const;
-
-const memoDataRefineRule = {
-  message:
-    "When using --method memo, you must provide --data with the address of the recipient on ZetaChain.",
-  path: ["data"],
-  rule: (data: { data?: string; method: string }) => {
-    if (data.method === "memo") {
-      return !!data.data;
-    }
-    return true;
-  },
-};
-
-export const depositAndCallOptionsSchema = z
+export const inscriptionDepositAndCallOptionsSchema = z
   .object({
     amount: validAmountSchema,
     bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
     gasPriceApi: z.string().url(),
     gateway: z.string(),
-    method: z.enum(bitcoinMethods).default("inscription"),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
     receiver: z.string().optional(),
@@ -88,39 +73,28 @@ export const depositAndCallOptionsSchema = z
   .refine(typesAndDataExclusivityRefineRule.rule, {
     message: typesAndDataExclusivityRefineRule.message,
     path: typesAndDataExclusivityRefineRule.path,
-  })
-  .refine(memoDataRefineRule.rule, {
-    message: memoDataRefineRule.message,
-    path: memoDataRefineRule.path,
   });
 
-export const depositOptionsSchema = z
-  .object({
-    amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Amount must be a valid positive number",
-    }),
-    bitcoinApi: z.string().url(),
-    data: hexStringSchema.optional(),
-    gasPriceApi: z.string().url(),
-    gateway: z.string(),
-    method: z.enum(bitcoinMethods).default("inscription"),
-    name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
-    privateKey: z.string().optional(),
-    receiver: z.string().optional(),
-    revertAddress: z.string().optional(),
-  })
-  .refine(memoDataRefineRule.rule, {
-    message: memoDataRefineRule.message,
-    path: memoDataRefineRule.path,
-  });
+export const inscriptionDepositOptionsSchema = z.object({
+  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Amount must be a valid positive number",
+  }),
+  bitcoinApi: z.string().url(),
+  data: hexStringSchema.optional(),
+  gasPriceApi: z.string().url(),
+  gateway: z.string(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+  privateKey: z.string().optional(),
+  receiver: z.string().optional(),
+  revertAddress: z.string().optional(),
+});
 
-export const callOptionsSchema = z
+export const inscriptionCallOptionsSchema = z
   .object({
     bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
     gasPriceApi: z.string().url(),
     gateway: z.string(),
-    method: z.enum(bitcoinMethods).default("inscription"),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
     receiver: z.string().optional(),
@@ -135,8 +109,41 @@ export const callOptionsSchema = z
   .refine(typesAndDataExclusivityRefineRule.rule, {
     message: typesAndDataExclusivityRefineRule.message,
     path: typesAndDataExclusivityRefineRule.path,
-  })
-  .refine(memoDataRefineRule.rule, {
-    message: memoDataRefineRule.message,
-    path: memoDataRefineRule.path,
   });
+
+export const memoDepositAndCallOptionsSchema = z.object({
+  amount: validAmountSchema,
+  bitcoinApi: z.string().url(),
+  data: hexStringSchema.optional(),
+  gateway: z.string(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+  networkFee: z.string(),
+  privateKey: z.string().optional(),
+  receiver: z.string().optional(),
+  gasPriceApi: z.string().url(),
+});
+
+export const memoDepositOptionsSchema = z.object({
+  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Amount must be a valid positive number",
+  }),
+  bitcoinApi: z.string().url(),
+  data: hexStringSchema.optional(),
+  gateway: z.string(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+  networkFee: z.string(),
+  privateKey: z.string().optional(),
+  receiver: z.string().optional(),
+  gasPriceApi: z.string().url(),
+});
+
+export const memoCallOptionsSchema = z.object({
+  bitcoinApi: z.string().url(),
+  data: hexStringSchema.optional(),
+  gateway: z.string(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+  networkFee: z.string(),
+  privateKey: z.string().optional(),
+  receiver: z.string().optional(),
+  gasPriceApi: z.string().url(),
+});

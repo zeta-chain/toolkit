@@ -9,7 +9,6 @@ import * as ecc from "tiny-secp256k1";
 import { BitcoinAccountData } from "../types/accounts.types";
 import { BITCOIN_FEES } from "../types/bitcoin.constants";
 import type { BtcUtxo } from "../types/bitcoin.types";
-import { bitcoinMethods } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { getAccountData } from "./accounts";
 import {
@@ -127,7 +126,8 @@ Raw Inscription Data: ${info.rawInscriptionData}
  */
 export const displayAndConfirmMemoTransaction = async (
   amount: number,
-  fee: number,
+  networkFee: number,
+  depositFee: number,
   gateway: string,
   sender: string,
   memo: string
@@ -139,10 +139,11 @@ Sender: ${sender}
 Operation: Memo Transaction
 Memo: ${memo}
 Deposit Amount: ${amount} sats (${(amount / 100000000).toFixed(8)} BTC)
-Deposit Fee: ${fee} sats (${(fee / 100000000).toFixed(8)} BTC)
-Deposit Total: ${amount + fee} sats (${(
+Network Fee: ${networkFee} sats (${(networkFee / 100000000).toFixed(8)} BTC)
+Deposit Fee: ${depositFee} sats (${(depositFee / 100000000).toFixed(8)} BTC)
+Deposit Total: ${amount + depositFee} sats (${(
     amount / 100000000 +
-    fee / 100000000
+    depositFee / 100000000
   ).toFixed(8)} BTC)
 `);
 
@@ -232,11 +233,6 @@ export const addCommonOptions = (command: Command) => {
       new Option("--name <name>", "Account name")
         .default(DEFAULT_ACCOUNT_NAME)
         .conflicts(["private-key"])
-    )
-    .addOption(
-      new Option("--method <method>", "Method")
-        .choices(bitcoinMethods)
-        .default("inscription")
     );
 };
 

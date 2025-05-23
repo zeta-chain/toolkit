@@ -33,72 +33,63 @@ export const bitcoinMakeTransactionWithMemo = async (
   gateway: string,
   key: bitcoin.Signer,
   amount: number,
-  fee: number,
+  depositFee: number,
+  networkFee: number,
   utxos: BtcUtxo[],
-  address: string,
+  changeAddr: string,
   api: string,
-  m: string = ""
+  m = ""
 ) => {
   const TESTNET = bitcoin.networks.testnet;
   const memo = Buffer.from(m, "hex");
 
-  if (!memo || memo.length < 20) throw new Error(errorNoReceiver);
+  if (memo.length < 20) throw new Error(errorNoReceiver);
   if (memo.length > 80) throw new Error(errorTooLong);
 
-  utxos.sort((a, b) => a.value - b.value); // sort by value, ascending
-  const totalAmount = amount + fee;
-  const memoAmount = 0; // Use 0 satoshis for OP_RETURN output
-  const total = amount + totalAmount;
+  utxos.sort((a, b) => a.value - b.value);
+  const need = amount + depositFee + networkFee;
   let sum = 0;
-  const pickUtxos = [];
-  for (let i = 0; i < utxos.length; i++) {
-    const utxo = utxos[i];
-    sum += utxo.value;
-    pickUtxos.push(utxo);
-    if (sum >= total) break;
+  const picked: BtcUtxo[] = [];
+  for (const u of utxos) {
+    sum += u.value;
+    picked.push(u);
+    if (sum >= need) break;
   }
-  if (sum < total) throw new Error("Not enough funds");
-  const change = sum - total;
-  const txs = []; // txs corresponding to the utxos
-  for (let i = 0; i < pickUtxos.length; i++) {
-    const utxo = pickUtxos[i];
-    const p1Response = await axios.get<BtcTxById>(`${api}/tx/${utxo.txid}`);
-    const data = p1Response.data;
-    txs.push(data);
-  }
+  if (sum < need) throw new Error("Not enough funds");
 
-  // try creating a transaction
+  const change = sum - amount - depositFee - networkFee;
+
+  const prevTxs = await Promise.all(
+    picked.map((u) =>
+      axios.get<BtcTxById>(`${api}/tx/${u.txid}`).then((r) => r.data)
+    )
+  );
+
   const psbt = new bitcoin.Psbt({ network: TESTNET });
-  psbt.addOutput({ address: gateway, value: amount });
-  if (memo.length > 0) {
-    const embed = bitcoin.payments.embed({ data: [memo] });
-    if (!embed.output) throw new Error("Unable to embed memo");
-    psbt.addOutput({ script: embed.output, value: memoAmount });
-  }
+
+  psbt.addOutput({ address: gateway, value: amount + depositFee });
+
+  const embed = bitcoin.payments.embed({ data: [memo] });
+  if (!embed.output) throw new Error("Unable to embed memo");
+  psbt.addOutput({ script: embed.output, value: 0 });
+
   if (change > 0) {
-    psbt.addOutput({ address, value: change });
+    psbt.addOutput({ address: changeAddr, value: change });
   }
 
-  for (let i = 0; i < pickUtxos.length; i++) {
-    const utxo = pickUtxos[i];
-    const witnessUtxo = {
-      script: Buffer.from(txs[i].vout[utxo.vout].scriptpubkey, "hex"),
-      value: utxo.value,
-    };
+  picked.forEach((u, i) => {
+    psbt.addInput({
+      hash: prevTxs[i].txid,
+      index: u.vout,
+      witnessUtxo: {
+        script: Buffer.from(prevTxs[i].vout[u.vout].scriptpubkey, "hex"),
+        value: u.value,
+      },
+    });
+  });
 
-    const inputData = {
-      hash: txs[i].txid || "",
-      index: utxo.vout || 0,
-      witnessUtxo,
-    };
-
-    inputData.witnessUtxo = witnessUtxo;
-    psbt.addInput(inputData);
-  }
-  for (let i = 0; i < pickUtxos.length; i++) {
-    psbt.signInput(i, key);
-  }
-
+  picked.forEach((_, i) => psbt.signInput(i, key));
   psbt.finalizeAllInputs();
+
   return psbt.extractTransaction().toHex();
 };
