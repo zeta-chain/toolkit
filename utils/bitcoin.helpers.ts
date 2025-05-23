@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as bitcoin from "bitcoinjs-lib";
+import { ethers } from "ethers";
 
 import {
   BITCOIN_FEES,
@@ -308,4 +309,26 @@ export const calculateFees = async (data: Buffer, api: string) => {
  */
 export const calculateDepositFee = (txFee: number, txVsize: number): number => {
   return Math.ceil((txFee / txVsize) * 68 * 2);
+};
+
+/**
+ * Safely converts a Bitcoin amount from string to number.
+ * Validates that the amount doesn't exceed JavaScript's safe integer limit.
+ *
+ * @param amount - The Bitcoin amount as a string (e.g. "1.5" for 1.5 BTC)
+ * @param decimals - Number of decimal places (default: 8 for Bitcoin)
+ * @returns The amount in satoshis as a number
+ * @throws Error if the amount exceeds JavaScript's safe integer limit
+ */
+export const safeParseBitcoinAmount = (
+  amount: string,
+  decimals: number = 8
+): number => {
+  const parsedAmount = ethers.parseUnits(amount, decimals);
+
+  if (parsedAmount > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new Error("Amount exceeds maximum safe integer limit");
+  }
+
+  return Number(parsedAmount);
 };

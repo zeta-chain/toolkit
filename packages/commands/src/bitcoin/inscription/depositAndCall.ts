@@ -15,6 +15,7 @@ import {
   calculateRevealFee,
   makeCommitTransaction,
   makeRevealTransaction,
+  safeParseBitcoinAmount,
 } from "../../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
@@ -68,7 +69,7 @@ const main = async (options: DepositAndCallOptions) => {
     );
   }
 
-  const amount = Number(ethers.parseUnits(options.amount, 8));
+  const amount = safeParseBitcoinAmount(options.amount);
   const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
 
   const commit = await makeCommitTransaction(

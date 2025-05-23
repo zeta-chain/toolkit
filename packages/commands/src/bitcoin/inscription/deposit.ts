@@ -1,5 +1,4 @@
 import { Command, Option } from "commander";
-import { ethers } from "ethers";
 import { z } from "zod";
 
 import { BITCOIN_FEES } from "../../../../../types/bitcoin.constants";
@@ -15,6 +14,7 @@ import {
   calculateRevealFee,
   makeCommitTransaction,
   makeRevealTransaction,
+  safeParseBitcoinAmount,
 } from "../../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
@@ -51,7 +51,7 @@ const main = async (options: DepositOptions) => {
     throw new Error("Provide either --receiver or receiver encoded in --data");
   }
 
-  const amount = Number(ethers.parseUnits(options.amount, 8));
+  const amount = safeParseBitcoinAmount(options.amount);
   const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
 
   const commit = await makeCommitTransaction(

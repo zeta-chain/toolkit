@@ -1,5 +1,4 @@
 import { Command, Option } from "commander";
-import { ethers } from "ethers";
 import { z } from "zod";
 
 import { memoDepositOptionsSchema } from "../../../../../types/bitcoin.types";
@@ -11,6 +10,7 @@ import {
   fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../../utils/bitcoin.command.helpers";
+import { safeParseBitcoinAmount } from "../../../../../utils/bitcoin.helpers";
 import {
   bitcoinMakeTransactionWithMemo,
   getDepositFee,
@@ -28,7 +28,7 @@ const main = async (options: DepositOptions) => {
 
   const memo = constructMemo(options.receiver);
 
-  const amount = Number(ethers.parseUnits(options.amount, 8));
+  const amount = safeParseBitcoinAmount(options.amount);
   const networkFee = Number(options.networkFee);
   const depositFee = await getDepositFee(options.gasPriceApi);
 
