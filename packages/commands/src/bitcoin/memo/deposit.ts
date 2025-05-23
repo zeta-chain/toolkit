@@ -67,7 +67,7 @@ const main = async (options: DepositOptions) => {
 export const depositCommand = new Command()
   .name("deposit")
   .description("Deposit BTC to ZetaChain")
-  .option("-r, --receiver <address>", "ZetaChain receiver address")
+  .requiredOption("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
     "Bitcoin gateway (TSS) address",
@@ -75,7 +75,7 @@ export const depositCommand = new Command()
   )
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .addOption(new Option("--data <data>", "Pass raw data"))
-  .option("--network-fee <fee>", "Network fee (in sats)", "300")
+  .option("--network-fee <fee>", "Network fee (in sats)", "1750")
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, memoDepositOptionsSchema, {
       exitOnError: true,

@@ -85,7 +85,7 @@ export const depositAndCallCommand = new Command()
   )
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .addOption(new Option("--data <data>", "Pass raw data"))
-  .option("--network-fee <fee>", "Network fee (in sats)", "300")
+  .option("--network-fee <fee>", "Network fee (in sats)", "1750")
   .action(async (opts) => {
     const validated = validateAndParseSchema(
       opts,
