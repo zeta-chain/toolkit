@@ -18,6 +18,9 @@ import { ForeignCoin } from "../types/foreignCoins.types";
 import { ObserverSupportedChain } from "../types/supportedChains.types";
 import { handleError } from "./handleError";
 
+export const TON_MAINNET_API = "https://tonapi.io/v2/accounts";
+export const TON_TESTNET_API = "https://testnet.tonapi.io/v2/accounts";
+
 export interface UTXO {
   txid: string;
   value: number;
@@ -790,4 +793,59 @@ export const hasSufficientBalanceEvm = async (
   const hasEnoughBalance = balance >= parsedAmount;
 
   return { balance, decimals, hasEnoughBalance };
+};
+
+/**
+ * Gets TON native token balances
+ */
+export const getTonBalances = async (
+  tokens: Token[],
+  tonAddress: string
+): Promise<TokenBalance[]> => {
+  const tonChainNames = ["ton_mainnet", "ton_testnet"];
+
+  const tonTokens = tokens.filter(
+    (token) =>
+      token.coin_type === "Gas" &&
+      token.chain_name &&
+      tonChainNames.includes(token.chain_name)
+  );
+
+  const balanceResults = await Promise.all(
+    tonTokens.map(async (token) => {
+      try {
+        const network = token.chain_name?.replace("ton_", "") || "testnet";
+        const API = network === "mainnet" ? TON_TESTNET_API : TON_MAINNET_API;
+
+        const { data } = await axios.get(`${API}/${tonAddress}`, {
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!data || !data.balance) {
+          throw new Error("Invalid response from TON API");
+        }
+
+        // TON API returns balance in nanoTON (1 TON = 10^9 nanoTON)
+        const balance = ethers.formatUnits(BigInt(data.balance), 9);
+
+        return {
+          ...token,
+          balance,
+          id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
+        };
+      } catch (error) {
+        console.error(
+          `Failed to get TON balance for ${token.chain_name}:`,
+          error
+        );
+        return null;
+      }
+    })
+  );
+
+  return balanceResults.filter(
+    (result): result is TokenBalance => result !== null
+  );
 };
