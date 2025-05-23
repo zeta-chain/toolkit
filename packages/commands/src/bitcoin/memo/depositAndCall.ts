@@ -6,6 +6,7 @@ import { memoDepositAndCallOptionsSchema } from "../../../../../types/bitcoin.ty
 import {
   addCommonOptions,
   broadcastBtcTransaction,
+  constructMemo,
   displayAndConfirmMemoTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -31,15 +32,7 @@ const main = async (options: DepositAndCallOptions) => {
   );
   const utxos = await fetchUtxos(address, options.bitcoinApi);
 
-  const data = options.data?.startsWith("0x")
-    ? options.data.slice(2)
-    : options.data;
-
-  const receiver = options.receiver?.startsWith("0x")
-    ? options.receiver.slice(2)
-    : options.receiver;
-
-  const memo = receiver + (data || "");
+  const memo = constructMemo(options.receiver, options.data);
 
   const amount = Number(ethers.parseUnits(options.amount, 8));
   const networkFee = Number(options.networkFee);
@@ -76,7 +69,7 @@ const main = async (options: DepositAndCallOptions) => {
 export const depositAndCallCommand = new Command()
   .name("deposit-and-call")
   .description("Deposit BTC and call a contract on ZetaChain")
-  .option("-r, --receiver <address>", "ZetaChain receiver address")
+  .requiredOption("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
     "Bitcoin gateway (TSS) address",

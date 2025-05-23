@@ -5,6 +5,7 @@ import { memoCallOptionsSchema } from "../../../../../types/bitcoin.types";
 import {
   addCommonOptions,
   broadcastBtcTransaction,
+  constructMemo,
   displayAndConfirmMemoTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -30,15 +31,7 @@ const main = async (options: CallOptions) => {
   );
   const utxos = await fetchUtxos(address, options.bitcoinApi);
 
-  const data = options.data?.startsWith("0x")
-    ? options.data.slice(2)
-    : options.data;
-
-  const receiver = options.receiver?.startsWith("0x")
-    ? options.receiver.slice(2)
-    : options.receiver;
-
-  const memo = receiver + (data || "");
+  const memo = constructMemo(options.receiver, options.data);
 
   const amount = 0;
   const networkFee = Number(options.networkFee);

@@ -120,7 +120,7 @@ export const memoDepositAndCallOptionsSchema = z.object({
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   networkFee: z.string(),
   privateKey: z.string().optional(),
-  receiver: z.string().optional(),
+  receiver: z.string(),
 });
 
 export const memoDepositOptionsSchema = z.object({
@@ -134,7 +134,7 @@ export const memoDepositOptionsSchema = z.object({
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   networkFee: z.string(),
   privateKey: z.string().optional(),
-  receiver: z.string().optional(),
+  receiver: z.string(),
 });
 
 export const memoCallOptionsSchema = z.object({
@@ -145,5 +145,5 @@ export const memoCallOptionsSchema = z.object({
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   networkFee: z.string(),
   privateKey: z.string().optional(),
-  receiver: z.string().optional(),
+  receiver: z.string(),
 });

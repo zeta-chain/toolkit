@@ -6,6 +6,7 @@ import { memoDepositOptionsSchema } from "../../../../../types/bitcoin.types";
 import {
   addCommonOptions,
   broadcastBtcTransaction,
+  constructMemo,
   displayAndConfirmMemoTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -25,11 +26,7 @@ const main = async (options: DepositOptions) => {
   );
   const utxos = await fetchUtxos(address, options.bitcoinApi);
 
-  const receiver = options.receiver?.startsWith("0x")
-    ? options.receiver.slice(2)
-    : options.receiver;
-
-  const memo = receiver || "";
+  const memo = constructMemo(options.receiver);
 
   const amount = Number(ethers.parseUnits(options.amount, 8));
   const networkFee = Number(options.networkFee);
