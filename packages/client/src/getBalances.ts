@@ -11,6 +11,7 @@ import {
   getSolanaBalances,
   getSplTokenBalances,
   getSuiBalances,
+  getTonBalances,
   prepareMulticallContexts,
 } from "../../../utils/balances";
 import { ZetaChainClient } from "./client";
@@ -23,6 +24,7 @@ import { ZetaChainClient } from "./client";
  * @param options.btcAddress Bitcoin address
  * @param options.solanaAddress Solana address
  * @param options.suiAddress Sui address
+ * @param options.tonAddress TON address
  * @returns Array of token balances
  */
 export const getBalances = async function (
@@ -32,11 +34,13 @@ export const getBalances = async function (
     btcAddress,
     solanaAddress,
     suiAddress,
+    tonAddress,
   }: {
     btcAddress?: string;
     evmAddress?: string;
     solanaAddress?: string;
     suiAddress?: string;
+    tonAddress?: string;
   }
 ): Promise<TokenBalance[]> {
   const foreignCoins = await this.getForeignCoins();
@@ -138,6 +142,12 @@ export const getBalances = async function (
   if (suiAddress) {
     const suiBalances = await getSuiBalances(allTokens, suiAddress);
     balances.push(...suiBalances);
+  }
+
+  // Get TON balances
+  if (tonAddress) {
+    const tonBalances = await getTonBalances(allTokens, tonAddress);
+    balances.push(...tonBalances);
   }
 
   return balances;
