@@ -87,28 +87,33 @@ export const fetchUtxos = async (
   return (await axios.get<BtcUtxo[]>(`${api}/address/${address}/utxo`)).data;
 };
 
+const formatBTC = (sats: number) => ethers.formatUnits(BigInt(sats), 8);
+
 /**
  * Displays transaction details to the user and asks for confirmation before proceeding
  */
 export const displayAndConfirmTransaction = async (info: TransactionInfo) => {
   const notApplicable = "encoded in raw inscription data";
+  const amountInSats = info.amount
+    ? Number(ethers.parseUnits(info.amount, 8))
+    : 0;
+  const totalSats =
+    amountInSats +
+    info.inscriptionCommitFee +
+    info.inscriptionRevealFee +
+    info.depositFee;
 
   console.log(`
 Network: ${info.network}
-${
-  info.amount
-    ? `Amount: ${info.amount} BTC (${ethers.parseUnits(info.amount, 8)} sats)`
-    : ""
-}
-Inscription Commit Fee: ${info.inscriptionCommitFee} sats
-Inscription Reveal Fee: ${info.inscriptionRevealFee} sats
-Deposit Fee: ${info.depositFee} sats
-Total: ${
-    Number(ethers.parseUnits(info.amount, 8)) +
-    info.inscriptionCommitFee +
-    info.inscriptionRevealFee +
-    info.depositFee
-  } sats
+${info.amount ? `Amount: ${info.amount} BTC (${amountInSats} sats)` : ""}
+Inscription Commit Fee: ${info.inscriptionCommitFee} sats (${formatBTC(
+    info.inscriptionCommitFee
+  )} BTC)
+Inscription Reveal Fee: ${info.inscriptionRevealFee} sats (${formatBTC(
+    info.inscriptionRevealFee
+  )} BTC)
+Deposit Fee: ${info.depositFee} sats (${formatBTC(info.depositFee)} BTC)
+Total: ${totalSats} sats (${formatBTC(totalSats)} BTC)
 Gateway: ${info.gateway}
 Sender: ${info.sender}
 Receiver: ${info.receiver || notApplicable}
@@ -132,19 +137,18 @@ export const displayAndConfirmMemoTransaction = async (
   sender: string,
   memo: string
 ) => {
+  const totalAmount = amount + depositFee;
+
   console.log(`
 Network: Signet
 Gateway: ${gateway}
 Sender: ${sender}
 Operation: Memo Transaction
 Memo: ${memo}
-Deposit Amount: ${amount} sats (${(amount / 100000000).toFixed(8)} BTC)
-Network Fee: ${networkFee} sats (${(networkFee / 100000000).toFixed(8)} BTC)
-Deposit Fee: ${depositFee} sats (${(depositFee / 100000000).toFixed(8)} BTC)
-Deposit Total: ${amount + depositFee} sats (${(
-    amount / 100000000 +
-    depositFee / 100000000
-  ).toFixed(8)} BTC)
+Deposit Amount: ${amount} sats (${formatBTC(amount)} BTC)
+Network Fee: ${networkFee} sats (${formatBTC(networkFee)} BTC)
+Deposit Fee: ${depositFee} sats (${formatBTC(depositFee)} BTC)
+Deposit Total: ${totalAmount} sats (${formatBTC(totalAmount)} BTC)
 `);
 
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
