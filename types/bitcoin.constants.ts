@@ -58,3 +58,5 @@ export const BITCOIN_FEES = {
 };
 
 export const ESTIMATED_VIRTUAL_SIZE = 68;
+export const EVM_ADDRESS_LENGTH = 20;
+export const MAX_MEMO_LENGTH = 80;

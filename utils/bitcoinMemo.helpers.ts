@@ -1,7 +1,11 @@
 import axios from "axios";
 import * as bitcoin from "bitcoinjs-lib";
 
-import { ESTIMATED_VIRTUAL_SIZE } from "../types/bitcoin.constants";
+import {
+  ESTIMATED_VIRTUAL_SIZE,
+  EVM_ADDRESS_LENGTH,
+  MAX_MEMO_LENGTH,
+} from "../types/bitcoin.constants";
 import type {
   BitcoinTxParams,
   BtcTxById,
@@ -15,7 +19,7 @@ interface GasPriceResponse {
   };
 }
 
-const errorTooLong =
+const errorMemoTooLong =
   "Invalid memo: too long. Please, use less than 80 bytes (including the 20 bytes of the receiver address) or use inscription.";
 
 const errorNoReceiver =
@@ -40,8 +44,8 @@ export const bitcoinMakeTransactionWithMemo = async (
   const TESTNET = bitcoin.networks.testnet;
   const memo = Buffer.from(params.memo || "", "hex");
 
-  if (memo.length < 20) throw new Error(errorNoReceiver);
-  if (memo.length > 80) throw new Error(errorTooLong);
+  if (memo.length < EVM_ADDRESS_LENGTH) throw new Error(errorNoReceiver);
+  if (memo.length > MAX_MEMO_LENGTH) throw new Error(errorMemoTooLong);
 
   params.utxos.sort((a, b) => a.value - b.value);
   const need = params.amount + params.depositFee + params.networkFee;
