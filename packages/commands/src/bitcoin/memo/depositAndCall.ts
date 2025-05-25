@@ -47,17 +47,17 @@ const main = async (options: DepositAndCallOptions) => {
     memo || ""
   );
 
-  const tx = await bitcoinMakeTransactionWithMemo(
-    options.gateway,
-    key,
+  const tx = await bitcoinMakeTransactionWithMemo({
+    address,
     amount,
+    api: options.bitcoinApi,
     depositFee,
+    gateway: options.gateway,
+    key,
+    memo,
     networkFee,
     utxos,
-    address,
-    options.bitcoinApi,
-    memo
-  );
+  });
   const txid = await broadcastBtcTransaction(tx, options.bitcoinApi);
   console.log(`Transaction hash: ${txid}`);
 };

@@ -1,7 +1,11 @@
 import axios from "axios";
 import * as bitcoin from "bitcoinjs-lib";
 
-import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
+import type {
+  BitcoinTxParams,
+  BtcTxById,
+  BtcUtxo,
+} from "../types/bitcoin.types";
 
 interface GasPriceResponse {
   GasPrice: {
@@ -30,51 +34,46 @@ export const getDepositFee = async (api: string) => {
 };
 
 export const bitcoinMakeTransactionWithMemo = async (
-  gateway: string,
-  key: bitcoin.Signer,
-  amount: number,
-  depositFee: number,
-  networkFee: number,
-  utxos: BtcUtxo[],
-  changeAddr: string,
-  api: string,
-  m = ""
+  params: BitcoinTxParams
 ) => {
   const TESTNET = bitcoin.networks.testnet;
-  const memo = Buffer.from(m, "hex");
+  const memo = Buffer.from(params.memo || "", "hex");
 
   if (memo.length < 20) throw new Error(errorNoReceiver);
   if (memo.length > 80) throw new Error(errorTooLong);
 
-  utxos.sort((a, b) => a.value - b.value);
-  const need = amount + depositFee + networkFee;
+  params.utxos.sort((a, b) => a.value - b.value);
+  const need = params.amount + params.depositFee + params.networkFee;
   let sum = 0;
   const picked: BtcUtxo[] = [];
-  for (const u of utxos) {
+  for (const u of params.utxos) {
     sum += u.value;
     picked.push(u);
     if (sum >= need) break;
   }
   if (sum < need) throw new Error("Not enough funds");
 
-  const change = sum - amount - depositFee - networkFee;
+  const change = sum - params.amount - params.depositFee - params.networkFee;
 
   const prevTxs = await Promise.all(
     picked.map((u) =>
-      axios.get<BtcTxById>(`${api}/tx/${u.txid}`).then((r) => r.data)
+      axios.get<BtcTxById>(`${params.api}/tx/${u.txid}`).then((r) => r.data)
     )
   );
 
   const psbt = new bitcoin.Psbt({ network: TESTNET });
 
-  psbt.addOutput({ address: gateway, value: amount + depositFee });
+  psbt.addOutput({
+    address: params.gateway,
+    value: params.amount + params.depositFee,
+  });
 
   const embed = bitcoin.payments.embed({ data: [memo] });
   if (!embed.output) throw new Error("Unable to embed memo");
   psbt.addOutput({ script: embed.output, value: 0 });
 
   if (change > 0) {
-    psbt.addOutput({ address: changeAddr, value: change });
+    psbt.addOutput({ address: params.address, value: change });
   }
 
   picked.forEach((u, i) => {
@@ -88,7 +87,7 @@ export const bitcoinMakeTransactionWithMemo = async (
     });
   });
 
-  picked.forEach((_, i) => psbt.signInput(i, key));
+  picked.forEach((_, i) => psbt.signInput(i, params.key));
   psbt.finalizeAllInputs();
 
   return psbt.extractTransaction().toHex();

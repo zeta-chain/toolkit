@@ -1,3 +1,4 @@
+import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
@@ -7,6 +8,18 @@ import {
   typesAndValuesLengthRefineRule,
   validAmountSchema,
 } from "./shared.schema";
+
+export interface BitcoinTxParams {
+  address: string;
+  amount: number;
+  api: string;
+  depositFee: number;
+  gateway: string;
+  key: bitcoin.Signer;
+  memo?: string;
+  networkFee: number;
+  utxos: BtcUtxo[];
+}
 
 export interface BtcUtxo {
   status: {
