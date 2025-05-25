@@ -1,4 +1,5 @@
 import { Command, Option } from "commander";
+import { handleError } from "utils";
 import { z } from "zod";
 
 import { BITCOIN_FEES } from "../../../../../types/bitcoin.constants";
@@ -26,96 +27,107 @@ import { validateAndParseSchema } from "../../../../../utils/validateAndParseSch
 type DepositOptions = z.infer<typeof inscriptionDepositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
-  const { key, address } = setupBitcoinKeyPair(
-    options.privateKey,
-    options.name
-  );
-  const utxos = await fetchUtxos(address, options.bitcoinApi);
-
-  const revertAddress = options.revertAddress || address;
-  let data;
-  if (options.receiver && revertAddress) {
-    data = Buffer.from(
-      bitcoinEncode(
-        options.receiver,
-        Buffer.from(""), // Empty payload for deposit
-        revertAddress,
-        OpCode.Deposit,
-        EncodingFormat.EncodingFmtABI
-      ),
-      "hex"
+  try {
+    const { key, address } = setupBitcoinKeyPair(
+      options.privateKey,
+      options.name
     );
-  } else if (options.data) {
-    data = Buffer.from(options.data, "hex");
-  } else {
-    throw new Error("Provide either --receiver or receiver encoded in --data");
+    const utxos = await fetchUtxos(address, options.bitcoinApi);
+
+    const revertAddress = options.revertAddress || address;
+    let data;
+    if (options.receiver && revertAddress) {
+      data = Buffer.from(
+        bitcoinEncode(
+          options.receiver,
+          Buffer.from(""), // Empty payload for deposit
+          revertAddress,
+          OpCode.Deposit,
+          EncodingFormat.EncodingFmtABI
+        ),
+        "hex"
+      );
+    } else if (options.data) {
+      data = Buffer.from(options.data, "hex");
+    } else {
+      throw new Error(
+        "Provide either --receiver or receiver encoded in --data"
+      );
+    }
+
+    const amount = safeParseBitcoinAmount(options.amount);
+    const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
+
+    const commit = await makeCommitTransaction(
+      key,
+      utxos,
+      address,
+      data,
+      options.bitcoinApi,
+      amount
+    );
+
+    const { revealFee, vsize } = calculateRevealFee(
+      {
+        controlBlock: commit.controlBlock,
+        internalKey: commit.internalKey,
+        leafScript: commit.leafScript,
+      },
+      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
+    );
+
+    const depositFee = Math.ceil((68 * 2 * revealFee) / vsize);
+
+    await displayAndConfirmTransaction({
+      amount: options.amount,
+      depositFee,
+      encodingFormat: "ABI",
+      gateway: options.gateway,
+      inscriptionCommitFee: inscriptionFee,
+      inscriptionRevealFee: revealFee,
+      network: options.bitcoinApi,
+      operation: "Deposit",
+      rawInscriptionData: data.toString("hex"),
+      receiver: options.receiver,
+      revertAddress,
+      sender: address,
+    });
+
+    const commitTxid = await broadcastBtcTransaction(
+      commit.txHex,
+      options.bitcoinApi
+    );
+
+    console.log("Commit TXID:", commitTxid);
+
+    const revealHex = makeRevealTransaction(
+      commitTxid,
+      0,
+      amount + revealFee + depositFee,
+      options.gateway,
+      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE,
+      {
+        controlBlock: commit.controlBlock,
+        internalKey: commit.internalKey,
+        leafScript: commit.leafScript,
+      },
+      key
+    );
+
+    const revealTxid = await broadcastBtcTransaction(
+      revealHex,
+      options.bitcoinApi
+    );
+
+    console.log("Reveal TXID:", revealTxid);
+  } catch (error) {
+    handleError({
+      context: "Error making a Bitcoin inscription deposit",
+      error,
+      shouldThrow: false,
+    });
+    process.exit(1);
   }
-
-  const amount = safeParseBitcoinAmount(options.amount);
-  const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
-
-  const commit = await makeCommitTransaction(
-    key,
-    utxos,
-    address,
-    data,
-    options.bitcoinApi,
-    amount
-  );
-
-  const { revealFee, vsize } = calculateRevealFee(
-    {
-      controlBlock: commit.controlBlock,
-      internalKey: commit.internalKey,
-      leafScript: commit.leafScript,
-    },
-    BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
-  );
-
-  const depositFee = Math.ceil((68 * 2 * revealFee) / vsize);
-
-  await displayAndConfirmTransaction({
-    amount: options.amount,
-    depositFee,
-    encodingFormat: "ABI",
-    gateway: options.gateway,
-    inscriptionCommitFee: inscriptionFee,
-    inscriptionRevealFee: revealFee,
-    network: options.bitcoinApi,
-    operation: "Deposit",
-    rawInscriptionData: data.toString("hex"),
-    receiver: options.receiver,
-    revertAddress,
-    sender: address,
-  });
-
-  const commitTxid = await broadcastBtcTransaction(
-    commit.txHex,
-    options.bitcoinApi
-  );
-
-  console.log("Commit TXID:", commitTxid);
-
-  const revealHex = makeRevealTransaction(
-    commitTxid,
-    0,
-    amount + revealFee + depositFee,
-    options.gateway,
-    BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE,
-    {
-      controlBlock: commit.controlBlock,
-      internalKey: commit.internalKey,
-      leafScript: commit.leafScript,
-    },
-    key
-  );
-
-  const revealTxid = await broadcastBtcTransaction(
-    revealHex,
-    options.bitcoinApi
-  );
-
-  console.log("Reveal TXID:", revealTxid);
 };
 
 /**

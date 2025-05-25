@@ -1,4 +1,5 @@
 import { Command, Option } from "commander";
+import { handleError } from "utils";
 import { z } from "zod";
 
 import { memoCallOptionsSchema } from "../../../../../types/bitcoin.types";
@@ -25,40 +26,49 @@ type CallOptions = z.infer<typeof memoCallOptionsSchema>;
  * @param options - Command options including amounts, addresses, and contract parameters
  */
 const main = async (options: CallOptions) => {
-  const { key, address } = setupBitcoinKeyPair(
-    options.privateKey,
-    options.name
-  );
-  const utxos = await fetchUtxos(address, options.bitcoinApi);
+  try {
+    const { key, address } = setupBitcoinKeyPair(
+      options.privateKey,
+      options.name
+    );
+    const utxos = await fetchUtxos(address, options.bitcoinApi);
 
-  const memo = constructMemo(options.receiver, options.data);
+    const memo = constructMemo(options.receiver, options.data);
 
-  const amount = 0;
-  const networkFee = Number(options.networkFee);
-  const depositFee = await getDepositFee(options.gasPriceApi);
+    const amount = 0;
+    const networkFee = Number(options.networkFee);
+    const depositFee = await getDepositFee(options.gasPriceApi);
 
-  await displayAndConfirmMemoTransaction(
-    amount,
-    networkFee,
-    depositFee,
-    options.gateway,
-    address,
-    memo || ""
-  );
+    await displayAndConfirmMemoTransaction(
+      amount,
+      networkFee,
+      depositFee,
+      options.gateway,
+      address,
+      memo || ""
+    );
 
-  const tx = await bitcoinMakeTransactionWithMemo({
-    address,
-    amount,
-    api: options.bitcoinApi,
-    depositFee,
-    gateway: options.gateway,
-    key,
-    memo,
-    networkFee,
-    utxos,
-  });
-  const txid = await broadcastBtcTransaction(tx, options.bitcoinApi);
-  console.log(`Transaction hash: ${txid}`);
+    const tx = await bitcoinMakeTransactionWithMemo({
+      address,
+      amount,
+      api: options.bitcoinApi,
+      depositFee,
+      gateway: options.gateway,
+      key,
+      memo,
+      networkFee,
+      utxos,
+    });
+    const txid = await broadcastBtcTransaction(tx, options.bitcoinApi);
+    console.log(`Transaction hash: ${txid}`);
+  } catch (error) {
+    handleError({
+      context: "Error making a Bitcoin memo call",
+      error,
+      shouldThrow: false,
+    });
+    process.exit(1);
+  }
 };
 
 /**
