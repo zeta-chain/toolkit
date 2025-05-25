@@ -302,16 +302,6 @@ export const calculateFees = async (data: Buffer, api: string) => {
 };
 
 /**
- * Calculates the deposit fee for a Bitcoin transaction
- * @param txFee - Total transaction fee (totalInputValue - totalOutputValue)
- * @param txVsize - Virtual size of the transaction in vbytes
- * @returns The calculated deposit fee in satoshis
- */
-export const calculateDepositFee = (txFee: number, txVsize: number): number => {
-  return Math.ceil((txFee / txVsize) * 68 * 2);
-};
-
-/**
  * Safely converts a Bitcoin amount from string to number.
  * Validates that the amount doesn't exceed JavaScript's safe integer limit.
  *
