@@ -99,7 +99,7 @@ export const inscriptionDepositOptionsSchema = z.object({
   gateway: z.string(),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
-  receiver: evmAddressSchema,
+  receiver: evmAddressSchema.optional(),
   revertAddress: z.string().optional(),
 });
 
@@ -111,7 +111,7 @@ export const inscriptionCallOptionsSchema = z
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
-    receiver: evmAddressSchema,
+    receiver: evmAddressSchema.optional(),
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
