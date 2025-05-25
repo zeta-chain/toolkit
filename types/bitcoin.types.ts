@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 import {
+  evmAddressSchema,
   hexStringSchema,
   typesAndDataExclusivityRefineRule,
   typesAndValuesLengthRefineRule,
@@ -74,7 +75,7 @@ export const inscriptionDepositAndCallOptionsSchema = z
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
-    receiver: z.string().optional(),
+    receiver: evmAddressSchema.optional(),
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
@@ -98,7 +99,7 @@ export const inscriptionDepositOptionsSchema = z.object({
   gateway: z.string(),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
-  receiver: z.string().optional(),
+  receiver: evmAddressSchema,
   revertAddress: z.string().optional(),
 });
 
@@ -110,7 +111,7 @@ export const inscriptionCallOptionsSchema = z
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
-    receiver: z.string().optional(),
+    receiver: evmAddressSchema,
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
@@ -133,7 +134,7 @@ export const memoDepositAndCallOptionsSchema = z.object({
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   networkFee: z.string(),
   privateKey: z.string().optional(),
-  receiver: z.string(),
+  receiver: evmAddressSchema,
 });
 
 export const memoDepositOptionsSchema = z.object({
@@ -147,7 +148,7 @@ export const memoDepositOptionsSchema = z.object({
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   networkFee: z.string(),
   privateKey: z.string().optional(),
-  receiver: z.string(),
+  receiver: evmAddressSchema,
 });
 
 export const memoCallOptionsSchema = z.object({
@@ -158,5 +159,5 @@ export const memoCallOptionsSchema = z.object({
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   networkFee: z.string(),
   privateKey: z.string().optional(),
-  receiver: z.string(),
+  receiver: evmAddressSchema,
 });
