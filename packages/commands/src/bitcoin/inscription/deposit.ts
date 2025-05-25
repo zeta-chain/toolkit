@@ -1,9 +1,9 @@
 import { Command, Option } from "commander";
-import { handleError } from "utils";
 import { z } from "zod";
 
 import { BITCOIN_FEES } from "../../../../../types/bitcoin.constants";
 import { inscriptionDepositOptionsSchema } from "../../../../../types/bitcoin.types";
+import { handleError } from "../../../../../utils";
 import {
   addCommonOptions,
   broadcastBtcTransaction,

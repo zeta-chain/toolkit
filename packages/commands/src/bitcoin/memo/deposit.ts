@@ -1,8 +1,8 @@
 import { Command, Option } from "commander";
-import { handleError } from "utils";
 import { z } from "zod";
 
 import { memoDepositOptionsSchema } from "../../../../../types/bitcoin.types";
+import { handleError } from "../../../../../utils";
 import {
   addCommonOptions,
   broadcastBtcTransaction,

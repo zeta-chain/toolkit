@@ -1,10 +1,10 @@
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
-import { handleError } from "utils";
 import { z } from "zod";
 
 import { BITCOIN_FEES } from "../../../../../types/bitcoin.constants";
 import { inscriptionCallOptionsSchema } from "../../../../../types/bitcoin.types";
+import { handleError } from "../../../../../utils";
 import {
   addCommonOptions,
   broadcastBtcTransaction,
