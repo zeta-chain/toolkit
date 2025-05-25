@@ -56,3 +56,5 @@ export const BITCOIN_FEES = {
   DEFAULT_REVEAL_FEE_RATE: 10,
   MIN_TOTAL_FEE: 20000, // Minimum total fee for both transactions
 };
+
+export const ESTIMATED_VIRTUAL_SIZE = 68;

@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as bitcoin from "bitcoinjs-lib";
 
+import { ESTIMATED_VIRTUAL_SIZE } from "../types/bitcoin.constants";
 import type {
   BitcoinTxParams,
   BtcTxById,
@@ -26,7 +27,7 @@ export const getDepositFee = async (api: string) => {
     const gasPrice = response.data.GasPrice;
     const medianIndex = parseInt(gasPrice.median_index);
     const medianGasPrice = parseInt(gasPrice.prices[medianIndex]);
-    return medianGasPrice * 68;
+    return medianGasPrice * ESTIMATED_VIRTUAL_SIZE;
   } catch (error) {
     console.error("Error fetching gas price:", error);
     throw error;
