@@ -7,19 +7,16 @@ import { EVMAccountData } from "../../../types/accounts.types";
 import { faucetOptionsSchema } from "../../../types/faucet.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../utils";
-import { getAccountData } from "../../../utils/accounts";
+import { resolveEvmAddress } from "../../../utils/addressResolver";
 
 type FaucetOptions = z.infer<typeof faucetOptionsSchema>;
 
 const main = async (options: FaucetOptions) => {
   try {
-    let address;
-    if (options.address) {
-      address = options.address;
-    } else if (options.name) {
-      const account = getAccountData<EVMAccountData>("evm", options.name);
-      address = account?.address;
-    }
+    const address = resolveEvmAddress({
+      evmAddress: options.address,
+      accountName: options.name,
+    });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await drip({ address });
   } catch (error) {
