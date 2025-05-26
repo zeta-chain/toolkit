@@ -3,7 +3,6 @@ import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
 import { Command, Option } from "commander";
 import { z } from "zod";
 
-import { EVMAccountData } from "../../../types/accounts.types";
 import { faucetOptionsSchema } from "../../../types/faucet.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../utils";
@@ -14,8 +13,8 @@ type FaucetOptions = z.infer<typeof faucetOptionsSchema>;
 const main = async (options: FaucetOptions) => {
   try {
     const address = resolveEvmAddress({
-      evmAddress: options.address,
       accountName: options.name,
+      evmAddress: options.address,
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await drip({ address });
