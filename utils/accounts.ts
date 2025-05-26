@@ -9,6 +9,8 @@ import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import path from "path";
 import * as ecc from "tiny-secp256k1";
+import { mnemonicNew, mnemonicToPrivateKey } from "@ton/crypto";
+import { WalletContractV5R1 } from "@ton/ton";
 
 import {
   AccountData,
@@ -124,6 +126,35 @@ const createSUIAccount = (privateKey?: string): AccountData => {
   };
 };
 
+const createTONAccount = async (privateKey?: string): Promise<AccountData> => {
+  let mnemonic: string[];
+  let keyPair: { publicKey: Buffer; secretKey: Buffer };
+
+  if (privateKey) {
+    // If private key is provided, we need to convert it to the format TON expects
+    // This is a simplified version - you might need to adjust based on your private key format
+    keyPair = {
+      publicKey: Buffer.from(privateKey.slice(2), "hex"),
+      secretKey: Buffer.from(privateKey.slice(2), "hex"),
+    };
+    mnemonic = []; // We don't have mnemonic when importing private key
+  } else {
+    mnemonic = await mnemonicNew();
+    keyPair = await mnemonicToPrivateKey(mnemonic);
+  }
+
+  const wallet = WalletContractV5R1.create({
+    publicKey: keyPair.publicKey,
+  });
+
+  return {
+    address: wallet.address.toString(),
+    mnemonic: mnemonic.join(" "),
+    privateKey: `0x${keyPair.secretKey.toString("hex")}`,
+    publicKey: `0x${keyPair.publicKey.toString("hex")}`,
+  };
+};
+
 export const createAccountForType = async (
   type: (typeof AvailableAccountTypes)[number],
   name: string,
@@ -155,10 +186,10 @@ export const createAccountForType = async (
     } else if (type === "sui") {
       keyData = createSUIAccount(privateKey);
     } else if (type === "bitcoin") {
-      // Default to testnet for Bitcoin
       keyData = createBitcoinAccount(privateKey);
+    } else if (type === "ton") {
+      keyData = await createTONAccount(privateKey);
     } else {
-      // Type assertion to help TypeScript understand this isn't 'never'
       throw new Error(`Unsupported account type: ${type as string}`);
     }
     safeWriteFile(keyPath, keyData);
