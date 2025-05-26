@@ -6,21 +6,29 @@ import { z } from "zod";
 import { EVMAccountData } from "../../../types/accounts.types";
 import { faucetOptionsSchema } from "../../../types/faucet.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../types/shared.constants";
-import { validateAndParseSchema } from "../../../utils";
+import { handleError, validateAndParseSchema } from "../../../utils";
 import { getAccountData } from "../../../utils/accounts";
 
 type FaucetOptions = z.infer<typeof faucetOptionsSchema>;
 
 const main = async (options: FaucetOptions) => {
-  let address;
-  if (options.address) {
-    address = options.address;
-  } else if (options.name) {
-    const account = getAccountData<EVMAccountData>("evm", options.name);
-    address = account?.address;
+  try {
+    let address;
+    if (options.address) {
+      address = options.address;
+    } else if (options.name) {
+      const account = getAccountData<EVMAccountData>("evm", options.name);
+      address = account?.address;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await drip({ address });
+  } catch (error) {
+    handleError({
+      context: "Error requesting tokens from faucet",
+      error,
+      shouldThrow: false,
+    });
   }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  await drip({ address });
 };
 
 export const faucetCommand = new Command()
