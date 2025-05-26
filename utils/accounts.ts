@@ -129,18 +129,36 @@ const createSUIAccount = (privateKey?: string): AccountData => {
 const createTONAccount = async (privateKey?: string): Promise<AccountData> => {
   let mnemonic: string[];
   let keyPair: { publicKey: Buffer; secretKey: Buffer };
+  let fullPrivateKey: string;
 
   if (privateKey) {
-    // If private key is provided, we need to convert it to the format TON expects
-    // This is a simplified version - you might need to adjust based on your private key format
+    const cleanPrivateKey = privateKey.startsWith("0x")
+      ? privateKey.slice(2)
+      : privateKey;
+
+    const privateKeyBuffer = Buffer.from(cleanPrivateKey, "hex");
+
+    if (privateKeyBuffer.length !== 64) {
+      throw new Error(
+        "TON key must be 64 bytes long (32 bytes private key + 32 bytes public key)"
+      );
+    }
+
+    // In TON's format, the first 32 bytes are the private key seed
+    // and the last 32 bytes are the public key
+    const privateKeySeed = privateKeyBuffer.slice(0, 32);
+    const publicKeyPart = privateKeyBuffer.slice(32);
+
     keyPair = {
-      publicKey: Buffer.from(privateKey.slice(2), "hex"),
-      secretKey: Buffer.from(privateKey.slice(2), "hex"),
+      secretKey: privateKeySeed,
+      publicKey: publicKeyPart,
     };
     mnemonic = []; // We don't have mnemonic when importing private key
+    fullPrivateKey = `0x${privateKeySeed.toString("hex")}`;
   } else {
     mnemonic = await mnemonicNew();
     keyPair = await mnemonicToPrivateKey(mnemonic);
+    fullPrivateKey = `0x${keyPair.secretKey.toString("hex")}`;
   }
 
   const wallet = WalletContractV5R1.create({
@@ -150,7 +168,7 @@ const createTONAccount = async (privateKey?: string): Promise<AccountData> => {
   return {
     address: wallet.address.toString(),
     mnemonic: mnemonic.join(" "),
-    privateKey: `0x${keyPair.secretKey.toString("hex")}`,
+    privateKey: fullPrivateKey,
     publicKey: `0x${keyPair.publicKey.toString("hex")}`,
   };
 };
