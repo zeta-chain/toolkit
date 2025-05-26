@@ -328,6 +328,14 @@ export const listChainAccounts = (
           type: "bitcoin",
         },
       ];
+    } else if (chainType === "ton") {
+      return [
+        {
+          address: (keyData as AccountData).address,
+          name,
+          type: chainType,
+        },
+      ];
     }
 
     return [];
