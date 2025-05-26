@@ -16,6 +16,7 @@ export const AvailableAccountTypes = [
   "solana",
   "sui",
   "bitcoin",
+  "ton",
 ] as const;
 
 // Define schemas for account data types
@@ -50,10 +51,18 @@ const suiAccountDataSchema = z.object({
   publicKey: z.string(),
 });
 
+const tonAccountDataSchema = z.object({
+  address: z.string(),
+  mnemonic: z.string(),
+  privateKey: z.string(),
+  publicKey: z.string(),
+});
+
 export type EVMAccountData = z.infer<typeof evmAccountDataSchema>;
 export type SolanaAccountData = z.infer<typeof solanaAccountDataSchema>;
 export type BitcoinAccountData = z.infer<typeof bitcoinAccountDataSchema>;
 export type SuiAccountData = z.infer<typeof suiAccountDataSchema>;
+export type TONAccountData = z.infer<typeof tonAccountDataSchema>;
 export const accountNameSchema = z
   .string()
   .min(1, "Account name is required")
