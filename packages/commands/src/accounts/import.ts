@@ -12,15 +12,16 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 
 const importAccountOptionsSchema = z.object({
   name: accountNameSchema,
-  privateKey: z.string().min(1, "Private key is required"),
+  privateKey: z.string().optional(),
   type: accountTypeSchema,
+  mnemonic: z.string().optional(),
 });
 
 type ImportAccountOptions = z.infer<typeof importAccountOptionsSchema>;
 
 const main = async (options: ImportAccountOptions) => {
-  const { type, name, privateKey } = options;
-  await createAccountForType(type, name, privateKey);
+  const { type, name, privateKey, mnemonic } = options;
+  await createAccountForType(type, name, privateKey, mnemonic);
 };
 
 export const importAccountsCommand = new Command("import")
@@ -29,7 +30,8 @@ export const importAccountsCommand = new Command("import")
     new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
   .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
-  .requiredOption("--private-key <key>", "Private key in hex format")
+  .option("--private-key <key>", "Private key in hex format")
+  .option("--mnemonic <phrase>", "Mnemonic phrase (only for TON wallets)")
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, importAccountOptionsSchema, {
       exitOnError: true,

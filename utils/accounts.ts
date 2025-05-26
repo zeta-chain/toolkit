@@ -5,7 +5,8 @@ import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
 import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
 import { Keypair } from "@solana/web3.js";
 import { mnemonicNew, mnemonicToPrivateKey } from "@ton/crypto";
-import { WalletContractV5R1 } from "@ton/ton";
+import { WalletContractV2R2, WalletContractV4 } from "@ton/ton";
+import { mnemonicToWalletKey } from "@ton/crypto";
 import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
@@ -126,48 +127,44 @@ const createSUIAccount = (privateKey?: string): AccountData => {
   };
 };
 
-const createTONAccount = async (privateKey?: string): Promise<AccountData> => {
-  let mnemonic: string[];
+const createTONAccount = async (
+  privateKey?: string,
+  mnemonic?: string
+): Promise<AccountData> => {
+  let mnemonicArray: string[];
   let keyPair: { publicKey: Buffer; secretKey: Buffer };
   let fullPrivateKey: string;
 
   if (privateKey) {
-    const cleanPrivateKey = privateKey.startsWith("0x")
+    const clean = privateKey.startsWith("0x")
       ? privateKey.slice(2)
       : privateKey;
-
-    const privateKeyBuffer = Buffer.from(cleanPrivateKey, "hex");
-
-    if (privateKeyBuffer.length !== 64) {
-      throw new Error(
-        "TON key must be 64 bytes long (32 bytes private key + 32 bytes public key)"
-      );
-    }
-
-    // In TON's format, the first 32 bytes are the private key seed
-    // and the last 32 bytes are the public key
-    const privateKeySeed = privateKeyBuffer.slice(0, 32);
-    const publicKeyPart = privateKeyBuffer.slice(32);
-
-    keyPair = {
-      publicKey: publicKeyPart,
-      secretKey: privateKeySeed,
-    };
-    mnemonic = []; // We don't have mnemonic when importing private key
-    fullPrivateKey = `0x${privateKeySeed.toString("hex")}`;
+    const buf = Buffer.from(clean, "hex");
+    if (buf.length !== 64)
+      throw new Error("TON key must be 64 bytes (32 + 32)");
+    keyPair = { secretKey: buf.slice(0, 32), publicKey: buf.slice(32) };
+    mnemonicArray = mnemonic ? mnemonic.split(" ") : [];
+    fullPrivateKey = `0x${keyPair.secretKey.toString("hex")}`;
   } else {
-    mnemonic = await mnemonicNew();
-    keyPair = await mnemonicToPrivateKey(mnemonic);
+    mnemonicArray = mnemonic ? mnemonic.split(" ") : await mnemonicNew();
+    keyPair = await mnemonicToWalletKey(mnemonicArray);
     fullPrivateKey = `0x${keyPair.secretKey.toString("hex")}`;
   }
 
-  const wallet = WalletContractV5R1.create({
+  const wallet = WalletContractV4.create({
     publicKey: keyPair.publicKey,
+    workchain: 0,
+  });
+
+  const address = wallet.address.toString({
+    urlSafe: true,
+    bounceable: false,
+    testOnly: true,
   });
 
   return {
-    address: wallet.address.toString(),
-    mnemonic: mnemonic.join(" "),
+    address,
+    mnemonic: mnemonicArray.join(" "),
     privateKey: fullPrivateKey,
     publicKey: `0x${keyPair.publicKey.toString("hex")}`,
   };
@@ -176,7 +173,8 @@ const createTONAccount = async (privateKey?: string): Promise<AccountData> => {
 export const createAccountForType = async (
   type: (typeof AvailableAccountTypes)[number],
   name: string,
-  privateKey?: string
+  privateKey?: string,
+  mnemonic?: string
 ): Promise<void> => {
   try {
     const baseDir = getAccountTypeDir(type);
@@ -206,7 +204,7 @@ export const createAccountForType = async (
     } else if (type === "bitcoin") {
       keyData = createBitcoinAccount(privateKey);
     } else if (type === "ton") {
-      keyData = await createTONAccount(privateKey);
+      keyData = await createTONAccount(privateKey, mnemonic);
     } else {
       throw new Error(`Unsupported account type: ${type as string}`);
     }
