@@ -4,13 +4,13 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
 import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
 import { Keypair } from "@solana/web3.js";
+import { mnemonicNew, mnemonicToPrivateKey } from "@ton/crypto";
+import { WalletContractV5R1 } from "@ton/ton";
 import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import path from "path";
 import * as ecc from "tiny-secp256k1";
-import { mnemonicNew, mnemonicToPrivateKey } from "@ton/crypto";
-import { WalletContractV5R1 } from "@ton/ton";
 
 import {
   AccountData,
@@ -150,8 +150,8 @@ const createTONAccount = async (privateKey?: string): Promise<AccountData> => {
     const publicKeyPart = privateKeyBuffer.slice(32);
 
     keyPair = {
-      secretKey: privateKeySeed,
       publicKey: publicKeyPart,
+      secretKey: privateKeySeed,
     };
     mnemonic = []; // We don't have mnemonic when importing private key
     fullPrivateKey = `0x${privateKeySeed.toString("hex")}`;
