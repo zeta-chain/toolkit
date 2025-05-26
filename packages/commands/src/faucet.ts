@@ -1,53 +1,38 @@
-import { Command } from "commander";
-// @ts-ignore
+// @ts-expect-error - The drip function from faucet-cli is not properly typed
 import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
+import { Command, Option } from "commander";
 import { z } from "zod";
 
-import { evmAddressSchema } from "../../../types/shared.schema";
+import { EVMAccountData } from "../../../types/accounts.types";
+import { faucetOptionsSchema } from "../../../types/faucet.types";
+import { DEFAULT_ACCOUNT_NAME } from "../../../types/shared.constants";
 import { validateAndParseSchema } from "../../../utils";
 import { getAccountData } from "../../../utils/accounts";
-import { EVMAccountData } from "../../../types/accounts.types";
-import { DEFAULT_ACCOUNT_NAME } from "../../../types/shared.constants";
-import { handleError } from "../../../utils";
-
-const faucetOptionsSchema = z.object({
-  address: evmAddressSchema.optional(),
-  name: z.string().optional(),
-});
 
 type FaucetOptions = z.infer<typeof faucetOptionsSchema>;
 
 const main = async (options: FaucetOptions) => {
-  try {
-    let address;
-    if (options.address) {
-      address = options.address;
-    } else if (options.name) {
-      const account = getAccountData<EVMAccountData>("evm", options.name);
-      address = account?.address;
-    }
-    await drip({ address });
-  } catch (error) {
-    handleError({
-      context: "Error requesting tokens from faucet",
-      error,
-      shouldThrow: false,
-    });
-    process.exit(1);
+  let address;
+  if (options.address) {
+    address = options.address;
+  } else if (options.name) {
+    const account = getAccountData<EVMAccountData>("evm", options.name);
+    address = account?.address;
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  await drip({ address });
 };
 
 export const faucetCommand = new Command()
   .name("faucet")
-  .description("Request ZETA tokens from the faucet on a specific chain.")
-  .option(
-    "--address <address>",
-    "Recipient address. (default: address from default account)"
+  .description("Request testnet ZETA tokens from the faucet.")
+  .addOption(
+    new Option("--address <address>", "Recipient address.").conflicts(["name"])
   )
-  .option(
-    "--name <name>",
-    "Account name to use if address not provided",
-    DEFAULT_ACCOUNT_NAME
+  .addOption(
+    new Option("--name <name>", "Account name to use if address not provided")
+      .default(DEFAULT_ACCOUNT_NAME)
+      .conflicts(["address"])
   )
   .action(async (options) => {
     const validatedOptions = validateAndParseSchema(
