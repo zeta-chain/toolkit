@@ -819,8 +819,7 @@ export const getTonBalances = async (
     tonTokens.map(async (token) => {
       try {
         const network = token.chain_name?.replace("ton_", "") || "testnet";
-        const API = network === "mainnet" ? TON_TESTNET_API : TON_MAINNET_API;
-
+        const API = network === "mainnet" ? TON_MAINNET_API : TON_TESTNET_API;
         const { data } = await axios.get<TonApiResponse>(
           `${API}/${tonAddress}`,
           {
