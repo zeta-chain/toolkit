@@ -11,10 +11,10 @@ import { createAccountForType } from "../../../../utils/accounts";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 const importAccountOptionsSchema = z.object({
+  mnemonic: z.string().optional(),
   name: accountNameSchema,
   privateKey: z.string().optional(),
   type: accountTypeSchema,
-  mnemonic: z.string().optional(),
 });
 
 type ImportAccountOptions = z.infer<typeof importAccountOptionsSchema>;

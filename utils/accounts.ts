@@ -4,9 +4,8 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
 import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
 import { Keypair } from "@solana/web3.js";
-import { mnemonicNew, mnemonicToPrivateKey } from "@ton/crypto";
-import { WalletContractV2R2, WalletContractV4 } from "@ton/ton";
-import { mnemonicToWalletKey } from "@ton/crypto";
+import { mnemonicNew, mnemonicToWalletKey } from "@ton/crypto";
+import { WalletContractV4 } from "@ton/ton";
 import * as bitcoin from "bitcoinjs-lib";
 import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
@@ -142,7 +141,7 @@ const createTONAccount = async (
     const buf = Buffer.from(clean, "hex");
     if (buf.length !== 64)
       throw new Error("TON key must be 64 bytes (32 + 32)");
-    keyPair = { secretKey: buf.slice(0, 32), publicKey: buf.slice(32) };
+    keyPair = { publicKey: buf.slice(32), secretKey: buf.slice(0, 32) };
     mnemonicArray = mnemonic ? mnemonic.split(" ") : [];
     fullPrivateKey = `0x${keyPair.secretKey.toString("hex")}`;
   } else {
@@ -157,9 +156,9 @@ const createTONAccount = async (
   });
 
   const address = wallet.address.toString({
-    urlSafe: true,
     bounceable: false,
     testOnly: true,
+    urlSafe: true,
   });
 
   return {
