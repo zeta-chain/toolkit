@@ -47,19 +47,6 @@ const main = async (options: DepositOptions) => {
   const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
 
   await gateway.sendDeposit(sender, toNano(options.amount), options.receiver);
-
-  const transactions = await client.getTransactions(wallet.address, {
-    limit: 1,
-  });
-
-  if (transactions.length > 0) {
-    const tx = transactions[0];
-    const formattedHash = `${tx.lt}:${tx.hash().toString("hex")}`;
-    console.log(`Transaction hash: ${formattedHash}`);
-    return formattedHash;
-  }
-
-  throw new Error("Failed to get transaction hash");
 };
 
 export const depositCommand = new Command("deposit")
