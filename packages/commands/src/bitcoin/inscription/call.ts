@@ -99,7 +99,7 @@ const main = async (options: CallOptions) => {
       inscriptionCommitFee: inscriptionFee,
       inscriptionRevealFee: revealFee,
       network: options.bitcoinApi,
-      operation: "DepositAndCall",
+      operation: "Call",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
       revertAddress: options.revertAddress,
