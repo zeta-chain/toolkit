@@ -1,7 +1,10 @@
 import { Command, Option } from "commander";
 import { z } from "zod";
 
-import { BITCOIN_FEES } from "../../../../../types/bitcoin.constants";
+import {
+  BITCOIN_FEES,
+  ESTIMATED_VIRTUAL_SIZE,
+} from "../../../../../types/bitcoin.constants";
 import { inscriptionDepositOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
@@ -76,7 +79,9 @@ const main = async (options: DepositOptions) => {
       BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
     );
 
-    const depositFee = Math.ceil((68 * 2 * revealFee) / vsize);
+    const depositFee = Math.ceil(
+      (ESTIMATED_VIRTUAL_SIZE * 2 * revealFee) / vsize
+    );
 
     await displayAndConfirmTransaction({
       amount: options.amount,

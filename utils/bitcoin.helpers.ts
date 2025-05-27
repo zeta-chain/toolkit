@@ -8,6 +8,7 @@ import {
   BITCOIN_NETWORKS,
   BITCOIN_SCRIPT,
   BITCOIN_TX,
+  ESTIMATED_VIRTUAL_SIZE,
 } from "../types/bitcoin.constants";
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
 import { getDepositFee } from "./bitcoinMemo.helpers";
@@ -141,7 +142,9 @@ export const makeCommitTransaction = async (
     },
     BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
   );
-  const depositFee = Math.ceil((68 * 2 * revealFee) / vsize);
+  const depositFee = Math.ceil(
+    (ESTIMATED_VIRTUAL_SIZE * 2 * revealFee) / vsize
+  );
   const amountSat = amount + revealFee + depositFee;
 
   /* pick utxos */
