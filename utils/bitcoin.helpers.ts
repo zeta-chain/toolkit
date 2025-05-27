@@ -147,11 +147,11 @@ export const makeCommitTransaction = async (
   );
   const amountSat = amount + revealFee + depositFee;
 
-  /* pick utxos */
-  utxos.sort((a, b) => a.value - b.value);
+  const sortedUtxos = utxos.sort((a, b) => a.value - b.value);
+
   let inTotal = 0;
   const picks: BtcUtxo[] = [];
-  for (const u of utxos) {
+  for (const u of sortedUtxos) {
     inTotal += u.value;
     picks.push(u);
     if (inTotal >= amountSat + feeSat) break;

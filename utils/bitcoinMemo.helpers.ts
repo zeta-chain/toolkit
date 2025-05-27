@@ -47,11 +47,11 @@ export const bitcoinMakeTransactionWithMemo = async (
   if (memo.length < EVM_ADDRESS_LENGTH) throw new Error(errorNoReceiver);
   if (memo.length > MAX_MEMO_LENGTH) throw new Error(errorMemoTooLong);
 
-  params.utxos.sort((a, b) => a.value - b.value);
+  const sortedUtxos = params.utxos.sort((a, b) => a.value - b.value);
   const need = params.amount + params.depositFee + params.networkFee;
   let sum = 0;
   const picked: BtcUtxo[] = [];
-  for (const u of params.utxos) {
+  for (const u of sortedUtxos) {
     sum += u.value;
     picked.push(u);
     if (sum >= need) break;
