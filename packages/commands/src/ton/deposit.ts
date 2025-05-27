@@ -9,6 +9,7 @@ import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema
 
 const DEFAULT_GATEWAY_ADDR =
   "0:7a4d41496726aadb227cf4d313c95912f1fe6cc742c18ebde306ff59881d8816";
+const DEFAULT_ENDPOINT = "https://testnet.toncenter.com/api/v2/jsonRPC";
 
 const depositOptionsSchema = z.object({
   amount: z.string(),
@@ -20,13 +21,16 @@ const depositOptionsSchema = z.object({
       "EVM address must be 0x-prefixed 20-byte hex"
     ),
   gateway: z.string(),
+  endpoint: z.string(),
+  apiKey: z.string().optional(),
 });
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   const client = new TonClient({
-    endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
+    endpoint: options.endpoint,
+    ...(options.apiKey && { apiKey: options.apiKey }),
   });
 
   const keyPair = await mnemonicToWalletKey(options.mnemonic.split(" "));
@@ -42,8 +46,7 @@ const main = async (options: DepositOptions) => {
   const gatewayAddr = Address.parse(options.gateway);
   const gateway = client.open(await Gateway.createFromAddress(gatewayAddr));
 
-  const receiverEVM = Buffer.from(options.receiver.slice(2), "hex").toString();
-  await gateway.sendDeposit(sender, toNano(options.amount), receiverEVM);
+  await gateway.sendDeposit(sender, toNano(options.amount), options.receiver);
 };
 
 export const depositCommand = new Command("deposit")
@@ -56,6 +59,8 @@ export const depositCommand = new Command("deposit")
     "Gateway contract address",
     DEFAULT_GATEWAY_ADDR
   )
+  .option("--endpoint <endpoint>", "TON RPC endpoint", DEFAULT_ENDPOINT)
+  .option("--api-key <apiKey>", "TON RPC API key")
   .action(async (raw) => {
     const options = validateAndParseSchema(raw, depositOptionsSchema, {
       exitOnError: true,
