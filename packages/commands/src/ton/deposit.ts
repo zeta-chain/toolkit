@@ -6,24 +6,11 @@ import { Command } from "commander";
 import { z } from "zod";
 
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { depositOptionsSchema } from "../../../../types/ton.types";
 
 const DEFAULT_GATEWAY_ADDR =
   "0:7a4d41496726aadb227cf4d313c95912f1fe6cc742c18ebde306ff59881d8816";
 const DEFAULT_ENDPOINT = "https://testnet.toncenter.com/api/v2/jsonRPC";
-
-const depositOptionsSchema = z.object({
-  amount: z.string(),
-  apiKey: z.string().optional(),
-  endpoint: z.string(),
-  gateway: z.string(),
-  mnemonic: z.string(),
-  receiver: z
-    .string()
-    .regex(
-      /^0x[0-9a-fA-F]{40}$/,
-      "EVM address must be 0x-prefixed 20-byte hex"
-    ),
-});
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
