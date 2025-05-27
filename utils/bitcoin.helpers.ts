@@ -189,11 +189,7 @@ export const makeCommitTransaction = async (
 };
 
 export const getTxVirtualSize = (tx: bitcoin.Transaction): number => {
-  const baseSize = tx.byteLength(false); // no witness data
-  const totalSize = tx.byteLength(); // with witness data
-  const weight = baseSize * 3 + totalSize;
-  const vSize = Math.ceil(weight / 4);
-  return vSize;
+  return tx.virtualSize();
 };
 
 export const calculateRevealFee = (
