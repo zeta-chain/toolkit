@@ -13,6 +13,9 @@ const DEFAULT_ENDPOINT = "https://testnet.toncenter.com/api/v2/jsonRPC";
 
 const depositOptionsSchema = z.object({
   amount: z.string(),
+  apiKey: z.string().optional(),
+  endpoint: z.string(),
+  gateway: z.string(),
   mnemonic: z.string(),
   receiver: z
     .string()
@@ -20,9 +23,6 @@ const depositOptionsSchema = z.object({
       /^0x[0-9a-fA-F]{40}$/,
       "EVM address must be 0x-prefixed 20-byte hex"
     ),
-  gateway: z.string(),
-  endpoint: z.string(),
-  apiKey: z.string().optional(),
 });
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
@@ -44,7 +44,7 @@ const main = async (options: DepositOptions) => {
   const sender = openedWallet.sender(keyPair.secretKey);
 
   const gatewayAddr = Address.parse(options.gateway);
-  const gateway = client.open(await Gateway.createFromAddress(gatewayAddr));
+  const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
 
   await gateway.sendDeposit(sender, toNano(options.amount), options.receiver);
 };
