@@ -188,10 +188,6 @@ export const makeCommitTransaction = async (
   };
 };
 
-export const getTxVirtualSize = (tx: bitcoin.Transaction): number => {
-  return tx.virtualSize();
-};
-
 export const calculateRevealFee = (
   commitData: { controlBlock: Buffer; internalKey: Buffer; leafScript: Buffer },
   feeRate: number
