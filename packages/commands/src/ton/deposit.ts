@@ -44,11 +44,6 @@ const main = async (options: DepositOptions) => {
 
   const receiverEVM = Buffer.from(options.receiver.slice(2), "hex").toString();
   await gateway.sendDeposit(sender, toNano(options.amount), receiverEVM);
-
-  console.log(
-    `✅ Sent deposit of ${options.amount} TON → ${options.receiver}. ` +
-      "Watch the tx in the Ton explorer; the EVM side will emit once confirmations finalise."
-  );
 };
 
 export const depositCommand = new Command("deposit")
