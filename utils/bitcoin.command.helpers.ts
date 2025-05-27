@@ -216,7 +216,7 @@ export const createAndBroadcastTransactions = async (
 /**
  * Adds common Bitcoin-related command options to a Commander command
  */
-export const addCommonOptions = (command: Command) => {
+export const addCommonBitcoinCommandOptions = (command: Command) => {
   return command
     .option(
       "--bitcoin-api <url>",

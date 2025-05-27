@@ -4,7 +4,7 @@ import { z } from "zod";
 import { memoDepositOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonOptions,
+  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
   constructMemo,
   displayAndConfirmMemoTransaction,
@@ -89,4 +89,4 @@ export const depositCommand = new Command()
     await main(validated);
   });
 
-addCommonOptions(depositCommand);
+addCommonBitcoinCommandOptions(depositCommand);

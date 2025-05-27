@@ -9,7 +9,7 @@ import {
 import { inscriptionCallOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonOptions,
+  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
   displayAndConfirmTransaction,
   fetchUtxos,
@@ -183,4 +183,4 @@ export const callCommand = new Command()
     await main(validated);
   });
 
-addCommonOptions(callCommand);
+addCommonBitcoinCommandOptions(callCommand);

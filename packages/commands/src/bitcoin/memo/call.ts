@@ -4,7 +4,7 @@ import { z } from "zod";
 import { memoCallOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonOptions,
+  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
   constructMemo,
   displayAndConfirmMemoTransaction,
@@ -93,4 +93,4 @@ export const callCommand = new Command()
     await main(validated);
   });
 
-addCommonOptions(callCommand);
+addCommonBitcoinCommandOptions(callCommand);
