@@ -7,6 +7,9 @@ import { z } from "zod";
 
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
+const DEFAULT_GATEWAY_ADDR =
+  "0:7a4d41496726aadb227cf4d313c95912f1fe6cc742c18ebde306ff59881d8816";
+
 const depositOptionsSchema = z.object({
   amount: z.string(),
   mnemonic: z.string(),
@@ -16,13 +19,10 @@ const depositOptionsSchema = z.object({
       /^0x[0-9a-fA-F]{40}$/,
       "EVM address must be 0x-prefixed 20-byte hex"
     ),
+  gateway: z.string(),
 });
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
-
-const GATEWAY_ADDR = Address.parse(
-  "0:7a4d41496726aadb227cf4d313c95912f1fe6cc742c18ebde306ff59881d8816"
-);
 
 const main = async (options: DepositOptions) => {
   const client = new TonClient({
@@ -39,7 +39,8 @@ const main = async (options: DepositOptions) => {
   const openedWallet = client.open(wallet);
   const sender = openedWallet.sender(keyPair.secretKey);
 
-  const gateway = client.open(await Gateway.createFromAddress(GATEWAY_ADDR));
+  const gatewayAddr = Address.parse(options.gateway);
+  const gateway = client.open(await Gateway.createFromAddress(gatewayAddr));
 
   const receiverEVM = Buffer.from(options.receiver.slice(2), "hex").toString();
   await gateway.sendDeposit(sender, toNano(options.amount), receiverEVM);
@@ -55,6 +56,11 @@ export const depositCommand = new Command("deposit")
   .requiredOption("--amount <amount>", "Amount in TON")
   .requiredOption("--receiver <receiver>", "Destination 0x-EVM address")
   .requiredOption("--mnemonic <mnemonic>", "24-word seed of the paying wallet")
+  .option(
+    "--gateway <gateway>",
+    "Gateway contract address",
+    DEFAULT_GATEWAY_ADDR
+  )
   .action(async (raw) => {
     const options = validateAndParseSchema(raw, depositOptionsSchema, {
       exitOnError: true,
