@@ -19,6 +19,8 @@ import {
   solanaDepositOptionsSchema,
   createSolanaCommandWithCommonOptions,
 } from "../../../../utils/solana.commands.helpers";
+import { SolanaAccountData } from "../../../../types/accounts.types";
+import { getAccountData } from "../../../../utils/accounts";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
 
@@ -32,6 +34,14 @@ const main = async (options: DepositOptions) => {
     keypair = keypairFromPrivateKey(options.privateKey);
   } else if (options.mnemonic) {
     keypair = await keypairFromMnemonic(options.mnemonic);
+  } else if (options.name) {
+    const privateKey = getAccountData<SolanaAccountData>(
+      "solana",
+      options.name
+    )?.privateKey;
+    keypair = keypairFromPrivateKey(privateKey!);
+  } else {
+    throw new Error("No account provided");
   }
 
   let API = "http://localhost:8899";
