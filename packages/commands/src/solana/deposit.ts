@@ -8,8 +8,6 @@ import {
 import { clusterApiUrl, PublicKey } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
-import * as bip39 from "bip39";
-import bs58 from "bs58";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
@@ -19,30 +17,13 @@ import {
   SOLANA_TOKEN_PROGRAM,
 } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
-import { solanaDepositOptionsSchema } from "../../../../utils/solana.commands.helpers";
+import {
+  keypairFromMnemonic,
+  keypairFromPrivateKey,
+  solanaDepositOptionsSchema,
+} from "../../../../utils/solana.commands.helpers";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
-
-export const keypairFromMnemonic = async (
-  mnemonic: string
-): Promise<anchor.web3.Keypair> => {
-  const seed = await bip39.mnemonicToSeed(mnemonic);
-  const seedSlice = new Uint8Array(seed).slice(0, 32);
-  return anchor.web3.Keypair.fromSeed(seedSlice);
-};
-
-export const keypairFromPrivateKey = (
-  privateKey: string
-): anchor.web3.Keypair => {
-  try {
-    const decodedKey = bs58.decode(privateKey);
-    return anchor.web3.Keypair.fromSecretKey(decodedKey);
-  } catch (error) {
-    throw new Error(
-      "Invalid private key format. Expected base58-encoded private key."
-    );
-  }
-};
 
 const main = async (options: DepositOptions) => {
   // Mainnet and devnet use the same IDL
