@@ -98,3 +98,22 @@ export const typesAndDataExclusivityRefineRule = {
     return true;
   },
 };
+
+export const functionTypesValuesConsistencyRule = {
+  message:
+    "If providing --function, you must also provide --types and --values (and vice versa)",
+  path: ["function"],
+  rule: (data: { function?: string; types?: string[]; values?: string[] }) => {
+    // If function is provided, both types and values must be provided
+    if (data.function && (!data.types || !data.values)) {
+      return false;
+    }
+
+    // If types or values are provided, function must be provided
+    if ((data.types || data.values) && !data.function) {
+      return false;
+    }
+
+    return true;
+  },
+};

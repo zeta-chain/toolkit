@@ -1,3 +1,4 @@
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
@@ -89,6 +90,16 @@ export const collectTokensFromForeignCoins = (
         const svmToken: Token = {
           chain_id: foreignCoin.foreign_chain_id,
           coin_type: "SPL",
+          contract: foreignCoin.asset,
+          decimals: foreignCoin.decimals,
+          symbol: foreignCoin.symbol,
+          zrc20: foreignCoin.zrc20_contract_address,
+        };
+        return [svmToken, zrc20Token];
+      } else if (supportedChain?.vm === "mvm_sui") {
+        const svmToken: Token = {
+          chain_id: foreignCoin.foreign_chain_id,
+          coin_type: "SUI",
           contract: foreignCoin.asset,
           decimals: foreignCoin.decimals,
           symbol: foreignCoin.symbol,
@@ -511,6 +522,84 @@ export const getSolanaBalances = async (
       } catch (error) {
         console.error(
           `Failed to get SOL balance for ${token.chain_name}:`,
+          error
+        );
+        // Return null for failed requests
+        return null;
+      }
+    })
+  );
+
+  // Filter out null values from failures
+  return balanceResults.filter(
+    (result): result is TokenBalance => result !== null
+  );
+};
+
+/**
+ * Gets Sui native SUI and fungible token balances
+ */
+export const getSuiBalances = async (
+  tokens: Token[],
+  suiAddress: string
+): Promise<TokenBalance[]> => {
+  const suiChainNames = ["sui_mainnet", "sui_testnet"];
+
+  const suiTokens = tokens.filter(
+    (token) => token.chain_name && suiChainNames.includes(token.chain_name)
+  );
+
+  const balanceResults = await Promise.all(
+    suiTokens.map(async (token) => {
+      try {
+        const network =
+          (token.chain_name?.replace("sui_", "") as "mainnet" | "testnet") ||
+          "testnet";
+        const client = new SuiClient({ url: getFullnodeUrl(network) });
+
+        if (token.coin_type === "Gas") {
+          const coins = await client.getCoins({
+            coinType: "0x2::sui::SUI",
+            owner: suiAddress,
+          });
+
+          let totalBalance = BigInt(0);
+          for (const coin of coins.data) {
+            totalBalance += BigInt(coin.balance);
+          }
+
+          const balance = ethers.formatUnits(totalBalance, 9);
+
+          return {
+            ...token,
+            balance,
+            id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
+          };
+        } else if (token.coin_type === "SUI" && token.contract) {
+          const coinType = `0x${token.contract}`;
+          const coins = await client.getCoins({
+            coinType,
+            owner: suiAddress,
+          });
+
+          let totalBalance = BigInt(0);
+          for (const coin of coins.data) {
+            totalBalance += BigInt(coin.balance);
+          }
+
+          const balance = ethers.formatUnits(totalBalance, token.decimals);
+
+          return {
+            ...token,
+            balance,
+            id: parseTokenId(token.chain_id?.toString() || "", token.symbol),
+          };
+        }
+
+        return null;
+      } catch (error) {
+        console.error(
+          `Failed to get SUI balance for ${token.symbol} on ${token.chain_name}:`,
           error
         );
         // Return null for failed requests

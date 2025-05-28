@@ -14,10 +14,10 @@ import {
 import {
   addCommonEvmCommandOptions,
   baseEvmOptionsSchema,
-  confirmTransaction,
+  confirmEvmTransaction,
   prepareRevertOptions,
   prepareTxOptions,
-  setupTransaction,
+  setupEvmTransaction,
 } from "../../../../utils/evm.command.helpers";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 
@@ -36,7 +36,7 @@ type CallOptions = z.infer<typeof callOptionsSchema>;
 
 const main = async (options: CallOptions) => {
   try {
-    const { client, signer, chainId } = setupTransaction(options);
+    const { client, signer, chainId } = setupEvmTransaction(options);
 
     await printEvmTransactionDetails(signer, chainId, {
       callOnRevert: options.callOnRevert,
@@ -52,7 +52,7 @@ Function parameters: ${options.values.join(", ")}
 Parameter types: ${stringifiedTypes}
 `);
 
-    const isConfirmed = await confirmTransaction(options);
+    const isConfirmed = await confirmEvmTransaction(options);
 
     if (!isConfirmed) return;
 
