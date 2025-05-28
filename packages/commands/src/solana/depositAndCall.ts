@@ -73,6 +73,14 @@ const main = async (options: DepositAndCallOptions) => {
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const encodedParameters = abiCoder.encode(options.types, values);
 
+    let revertOptions = {
+      revertAddress: new PublicKey(options.revertAddress!),
+      abortAddress: ethers.getBytes(options.abortAddress),
+      callOnRevert: options.callOnRevert ?? false,
+      revertMessage: Buffer.from(options.revertMessage ?? "", "utf8"),
+      onRevertGasLimit: new anchor.BN(options.onRevertGasLimit),
+    };
+
     if (options.mint) {
       const mintInfo = await connection.getTokenSupply(
         new PublicKey(options.mint)
@@ -128,7 +136,7 @@ const main = async (options: DepositAndCallOptions) => {
           new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
           receiverBytes,
           Buffer.from(encodedParameters),
-          null
+          revertOptions
         )
         .accounts({
           from,
@@ -157,7 +165,7 @@ const main = async (options: DepositAndCallOptions) => {
           new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
           receiverBytes,
           Buffer.from(encodedParameters),
-          null
+          revertOptions
         )
         .accounts({})
         .rpc();
@@ -192,6 +200,15 @@ export const depositAndCallCommand = createSolanaCommandWithCommonOptions(
   .requiredOption(
     "--values <values...>",
     "Parameter values for the function call"
+  )
+  .option("--revert-address <revertAddress>", "Revert address")
+  .option("--abort-address <abortAddress>", "Abort address", ethers.ZeroAddress)
+  .option("--call-on-revert <callOnRevert>", "Call on revert")
+  .option("--revert-message <revertMessage>", "Revert message")
+  .option(
+    "--on-revert-gas-limit <onRevertGasLimit>",
+    "On revert gas limit",
+    "0"
   )
   .option("--mint <mint>", "SPL token mint address")
   .action(async (options) => {
