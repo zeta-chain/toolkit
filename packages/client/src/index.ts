@@ -1,5 +1,4 @@
 export * from "./client";
-export * from "./encodeToBytes";
 export * from "./evmCall";
 export * from "./evmDeposit";
 export * from "./evmDepositAndCall";

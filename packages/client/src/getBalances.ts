@@ -1,4 +1,5 @@
 import { TokenBalance } from "../../../types/balances.types";
+import { ObserverSupportedChain } from "../../../types/supportedChains.types";
 import {
   addZetaTokens,
   collectTokensFromForeignCoins,
@@ -9,6 +10,7 @@ import {
   getNativeEvmTokenBalances,
   getSolanaBalances,
   getSplTokenBalances,
+  getSuiBalances,
   prepareMulticallContexts,
 } from "../../../utils/balances";
 import { ZetaChainClient } from "./client";
@@ -20,6 +22,7 @@ import { ZetaChainClient } from "./client";
  * @param options.evmAddress EVM address
  * @param options.btcAddress Bitcoin address
  * @param options.solanaAddress Solana address
+ * @param options.suiAddress Sui address
  * @returns Array of token balances
  */
 export const getBalances = async function (
@@ -28,105 +31,113 @@ export const getBalances = async function (
     evmAddress,
     btcAddress,
     solanaAddress,
-  }: { btcAddress?: string; evmAddress?: string; solanaAddress?: string }
+    suiAddress,
+  }: {
+    btcAddress?: string;
+    evmAddress?: string;
+    solanaAddress?: string;
+    suiAddress?: string;
+  }
 ): Promise<TokenBalance[]> {
-  // Helper functions to preserve 'this' context when passed as callbacks
-  // These ensure methods maintain the correct client context when used in other functions
-  const getEndpoint = (type: string, chainName: string): string =>
-    this.getEndpoint(type, chainName);
-
-  const getChains = () => this.getChains();
-  const getChainId = (name: string) => this.getChainId(name);
-
-  // Step 1: Gather data
-  const zetaChainId = getChainId(`zeta_${this.network}`);
-  const supportedChains = await this.getSupportedChains();
   const foreignCoins = await this.getForeignCoins();
+  const supportedChains = await this.getSupportedChains();
+  const zetaChainId = this.getChainId(`zeta_${this.network}`);
+  if (!zetaChainId) {
+    throw new Error("Failed to get ZetaChain ID");
+  }
+  const chainIdString = zetaChainId.toString();
 
-  // Step 2: Collect and prepare tokens
-  // Handle potential null values for zetaChainId
-  const chainIdString =
-    typeof zetaChainId === "number"
-      ? zetaChainId.toString()
-      : zetaChainId || "";
-
-  // Collect and prepare all tokens in a single step
-  const tokens = enrichTokens(
-    [
-      ...collectTokensFromForeignCoins(
-        foreignCoins,
-        supportedChains,
-        chainIdString
-      ),
-      ...addZetaTokens(supportedChains, getChains(), chainIdString),
-    ],
-    supportedChains
+  const tokens = collectTokensFromForeignCoins(
+    foreignCoins,
+    supportedChains,
+    chainIdString
   );
+  const zetaTokens = addZetaTokens(supportedChains, this.chains, chainIdString);
+  const allTokens = enrichTokens([...tokens, ...zetaTokens], supportedChains);
 
-  // Initialize the array of balances that we'll build up
-  let balances: TokenBalance[] = [];
+  const balances: TokenBalance[] = [];
 
-  // Step 3: Get EVM token balances
+  // Get EVM token balances
   if (evmAddress) {
-    const multicallContexts = prepareMulticallContexts(tokens, evmAddress);
+    const evmTokens = allTokens.filter(
+      (token) =>
+        token.chain_name &&
+        supportedChains.find(
+          (chain: ObserverSupportedChain) => chain.name === token.chain_name
+        )?.vm === "evm"
+    );
 
-    // Process each chain with multicall, falling back to individual calls if needed
-    for (const chainName of Object.keys(multicallContexts)) {
-      const rpc = getEndpoint("evm", chainName);
-      const multicallResults = await getEvmTokenBalancesWithMulticall(
-        chainName,
-        rpc,
-        multicallContexts[chainName],
-        tokens
+    const multicallContexts = prepareMulticallContexts(evmTokens, evmAddress);
+
+    for (const [chainName, contexts] of Object.entries(multicallContexts)) {
+      const chain = supportedChains.find(
+        (c: ObserverSupportedChain) => c.name === chainName
       );
+      if (!chain) continue;
 
-      if (multicallResults.length > 0) {
-        balances = balances.concat(multicallResults);
-      } else {
-        // Fallback to individual calls if multicall fails
-        const individualResults = await getEvmTokenBalancesFallback(
+      const rpc = this.getEndpoint("evm", chain.name);
+      let chainBalances: TokenBalance[];
+
+      try {
+        chainBalances = await getEvmTokenBalancesWithMulticall(
           chainName,
           rpc,
-          tokens,
+          contexts,
+          evmTokens
+        );
+      } catch (error) {
+        console.error(
+          `Multicall failed for ${chainName}, falling back to individual calls:`,
+          error
+        );
+        chainBalances = await getEvmTokenBalancesFallback(
+          chainName,
+          rpc,
+          evmTokens,
           evmAddress
         );
-        balances = balances.concat(individualResults);
       }
+
+      balances.push(...chainBalances);
     }
 
     // Get native EVM token balances
     const nativeBalances = await getNativeEvmTokenBalances(
-      tokens,
+      allTokens,
       evmAddress,
-      getEndpoint,
-      getChains()
+      this.getEndpoint.bind(this),
+      this.chains
     );
-    balances = balances.concat(nativeBalances);
+    balances.push(...nativeBalances);
   }
 
-  // Step 4: Get BTC balances
+  // Get Bitcoin balances
   if (btcAddress) {
-    const btcBalances = await getBtcBalances(tokens, btcAddress, getEndpoint);
-    balances = balances.concat(btcBalances);
+    const btcBalances = await getBtcBalances(allTokens, btcAddress);
+    balances.push(...btcBalances);
   }
 
-  // Step 5: Get Solana balances
+  // Get Solana balances
   if (solanaAddress) {
-    // Get native SOL balances
-    const solBalances = await getSolanaBalances(
-      tokens,
+    const solanaBalances = await getSolanaBalances(
+      allTokens,
       solanaAddress,
-      getEndpoint
+      this.getEndpoint.bind(this)
     );
-    balances = balances.concat(solBalances);
+    balances.push(...solanaBalances);
 
-    // Get SPL token balances
     const splBalances = await getSplTokenBalances(
-      tokens,
+      allTokens,
       solanaAddress,
-      getEndpoint
+      this.getEndpoint.bind(this)
     );
-    balances = balances.concat(splBalances);
+    balances.push(...splBalances);
+  }
+
+  // Get Sui balances
+  if (suiAddress) {
+    const suiBalances = await getSuiBalances(allTokens, suiAddress);
+    balances.push(...suiBalances);
   }
 
   return balances;

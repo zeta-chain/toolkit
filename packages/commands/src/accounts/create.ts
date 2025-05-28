@@ -9,7 +9,6 @@ import {
 import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import { createAccountForType } from "../../../../utils/accounts";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-
 const createAccountOptionsSchema = z.object({
   name: accountNameSchema,
   type: accountTypeSchema.optional(),
@@ -24,9 +23,9 @@ const main = async (options: CreateAccountOptions) => {
     await createAccountForType(type, name);
   } else {
     console.log("Creating accounts for all supported types...");
-    await createAccountForType("evm", name);
-    await createAccountForType("solana", name);
-    await createAccountForType("bitcoin", name);
+    for (const accountType of AvailableAccountTypes) {
+      await createAccountForType(accountType, name);
+    }
   }
 };
 

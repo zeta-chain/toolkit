@@ -23,6 +23,13 @@ describe("toHexString", () => {
     expect(toHexString("🚀")).toBe("0xf09f9a80"); // Rocket emoji in hex
   });
 
+  it("should correctly encode Solana account addresses", () => {
+    const solanaAddr = "HzmjfpWytYAcppQkYyp611BDf6vXUUFMMhRF7ndHYCMi";
+    expect(toHexString(solanaAddr)).toBe(
+      "0x487a6d6a66705779745941637070516b5979703631314244663676585555464d4d685246376e644859434d69"
+    );
+  });
+
   it("should handle strings with spaces", () => {
     expect(toHexString("hello world")).toBe("0x68656c6c6f20776f726c64"); // "hello world" in hex
     expect(toHexString("  ")).toBe("0x2020"); // Two spaces in hex

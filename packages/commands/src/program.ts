@@ -2,19 +2,25 @@
 import { Command } from "commander";
 
 import { accountsCommand } from "./accounts";
-import { balancesCommand } from "./balances";
+import { bitcoinCommand } from "./bitcoin";
+import { evmCommand } from "./evm";
+import { poolsCommand } from "./pools";
+import { queryCommand } from "./query";
 import { solanaCommand } from "./solana";
 import { suiCommand } from "./sui";
-import { poolsCommand } from "./pools";
+import { zetachainCommand } from "./zetachain";
 
 export const toolkitCommand = new Command("toolkit")
   .description("Local development environment")
   .helpCommand(false);
 
 toolkitCommand.addCommand(accountsCommand);
-toolkitCommand.addCommand(balancesCommand);
+toolkitCommand.addCommand(bitcoinCommand);
+toolkitCommand.addCommand(evmCommand);
+toolkitCommand.addCommand(poolsCommand);
+toolkitCommand.addCommand(queryCommand);
 toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(suiCommand);
-toolkitCommand.addCommand(poolsCommand);
+toolkitCommand.addCommand(zetachainCommand);
 
 toolkitCommand.parse(process.argv);
