@@ -8,19 +8,16 @@ import {
 import { clusterApiUrl, PublicKey } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
-import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import {
-  SOLANA_NETWORKS,
-  SOLANA_TOKEN_PROGRAM,
-} from "../../../../types/shared.constants";
+import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import {
   keypairFromMnemonic,
   keypairFromPrivateKey,
   solanaDepositOptionsSchema,
+  createSolanaCommandWithCommonOptions,
 } from "../../../../utils/solana.commands.helpers";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
@@ -157,28 +154,15 @@ const main = async (options: DepositOptions) => {
   }
 };
 
-export const depositCommand = new Command("deposit")
+export const depositCommand = createSolanaCommandWithCommonOptions("deposit")
   .description("Deposit tokens from Solana")
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
-  .requiredOption("--recipient <recipient>", "Recipient address")
-  .addOption(
-    new Option("--mnemonic <mnemonic>", "Mnemonic").conflicts(["private-key"])
-  )
-  .addOption(
-    new Option(
-      "--private-key <privateKey>",
-      "Private key in base58 format"
-    ).conflicts(["mnemonic"])
-  )
   .option(
     "--token-program <tokenProgram>",
     "Token program",
     SOLANA_TOKEN_PROGRAM
   )
   .option("--mint <mint>", "SPL token mint address")
-  .addOption(
-    new Option("--network <network>", "Solana network").choices(SOLANA_NETWORKS)
-  )
   .action(async (options) => {
     const validatedOptions = validateAndParseSchema(
       options,

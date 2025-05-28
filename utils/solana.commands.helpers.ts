@@ -1,9 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as bip39 from "bip39";
 import bs58 from "bs58";
+import { Command, Option } from "commander";
 import { z } from "zod";
 
-import { SOLANA_TOKEN_PROGRAM } from "../types/shared.constants";
+import {
+  SOLANA_NETWORKS,
+  SOLANA_TOKEN_PROGRAM,
+} from "../types/shared.constants";
 
 export const solanaDepositOptionsSchema = z
   .object({
@@ -38,4 +42,23 @@ export const keypairFromPrivateKey = (
       "Invalid private key format. Expected base58-encoded private key."
     );
   }
+};
+
+export const createSolanaCommandWithCommonOptions = (name: string): Command => {
+  return new Command(name)
+    .requiredOption("--recipient <recipient>", "Recipient address")
+    .addOption(
+      new Option("--mnemonic <mnemonic>", "Mnemonic").conflicts(["private-key"])
+    )
+    .addOption(
+      new Option(
+        "--private-key <privateKey>",
+        "Private key in base58 format"
+      ).conflicts(["mnemonic"])
+    )
+    .addOption(
+      new Option("--network <network>", "Solana network").choices(
+        SOLANA_NETWORKS
+      )
+    );
 };
