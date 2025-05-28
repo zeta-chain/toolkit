@@ -11,16 +11,16 @@ import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gate
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { SolanaAccountData } from "../../../../types/accounts.types";
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
+import { getAccountData } from "../../../../utils/accounts";
 import {
+  createSolanaCommandWithCommonOptions,
   keypairFromMnemonic,
   keypairFromPrivateKey,
   solanaDepositOptionsSchema,
-  createSolanaCommandWithCommonOptions,
 } from "../../../../utils/solana.commands.helpers";
-import { SolanaAccountData } from "../../../../types/accounts.types";
-import { getAccountData } from "../../../../utils/accounts";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
 
