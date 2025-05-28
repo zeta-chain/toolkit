@@ -28,6 +28,9 @@ export const solanaDepositOptionsSchema = z
 export const keypairFromMnemonic = async (
   mnemonic: string
 ): Promise<anchor.web3.Keypair> => {
+  if (!bip39.validateMnemonic(mnemonic)) {
+    throw new Error("Invalid mnemonic phrase");
+  }
   const seed = await bip39.mnemonicToSeed(mnemonic);
   const seedSlice = new Uint8Array(seed).slice(0, 32);
   return anchor.web3.Keypair.fromSeed(seedSlice);
