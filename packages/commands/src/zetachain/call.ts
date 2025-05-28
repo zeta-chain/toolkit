@@ -6,7 +6,6 @@ import {
   hexStringSchema,
   namePkRefineRule,
   stringArraySchema,
-  typesAndDataExclusivityRefineRule,
   typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../utils";
@@ -31,10 +30,6 @@ const callOptionsSchema = baseZetachainOptionsSchema
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
     path: typesAndValuesLengthRefineRule.path,
-  })
-  .refine(typesAndDataExclusivityRefineRule.rule, {
-    message: typesAndDataExclusivityRefineRule.message,
-    path: typesAndDataExclusivityRefineRule.path,
   })
   .refine(functionTypesValuesConsistencyRule.rule, {
     message: functionTypesValuesConsistencyRule.message,
