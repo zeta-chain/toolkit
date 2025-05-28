@@ -7,6 +7,7 @@ import {
   addCommonZetachainCommandOptions,
   baseZetachainOptionsSchema,
   confirmZetachainTransaction,
+  getZevmGatewayAddress,
   prepareRevertOptions,
   prepareTxOptions,
   setupZetachainTransaction,
@@ -24,10 +25,16 @@ const main = async (options: WithdrawOptions) => {
   try {
     const { client } = setupZetachainTransaction(options);
 
+    const gatewayZetaChain = getZevmGatewayAddress(
+      options.network,
+      options.gatewayZetachain
+    );
+
     console.log(`Withdraw details:
 Amount: ${options.amount}
 Receiver: ${options.receiver}
 ZRC20: ${options.zrc20}
+ZetaChain Gateway: ${gatewayZetaChain}
 `);
 
     const isConfirmed = await confirmZetachainTransaction(options);
@@ -35,7 +42,7 @@ ZRC20: ${options.zrc20}
 
     const response = await client.zetachainWithdraw({
       amount: options.amount,
-      gatewayZetaChain: options.gatewayZetachain,
+      gatewayZetaChain,
       receiver: options.receiver,
       revertOptions: prepareRevertOptions(options),
       txOptions: prepareTxOptions(options),

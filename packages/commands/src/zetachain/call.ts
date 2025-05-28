@@ -14,6 +14,7 @@ import {
   addCommonZetachainCommandOptions,
   baseZetachainOptionsSchema,
   confirmZetachainTransaction,
+  getZevmGatewayAddress,
   prepareCallOptions,
   prepareRevertOptions,
   prepareTxOptions,
@@ -43,15 +44,21 @@ const main = async (options: CallOptions) => {
   try {
     const { client } = setupZetachainTransaction(options);
 
+    const gatewayZetaChain = getZevmGatewayAddress(
+      options.network,
+      options.gatewayZetachain
+    );
+
     if (options.data) {
       console.log(`Contract call details:
 Raw data: ${options.data}
+ZetaChain Gateway: ${gatewayZetaChain}
 `);
 
       const response = await client.zetachainCall({
         callOptions: prepareCallOptions(options),
         data: options.data,
-        gatewayZetaChain: options.gatewayZetachain,
+        gatewayZetaChain,
         receiver: options.receiver,
         revertOptions: prepareRevertOptions(options),
         txOptions: prepareTxOptions(options),
@@ -66,6 +73,7 @@ Raw data: ${options.data}
 Function: ${options.function}
 Function parameters: ${options.values?.join(", ")}
 Parameter types: ${stringifiedTypes}
+ZetaChain Gateway: ${gatewayZetaChain}
 `);
 
       const isConfirmed = await confirmZetachainTransaction(options);
