@@ -29,9 +29,6 @@ import {
 } from "../../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
-const encodingFormatSchema = z.nativeEnum(EncodingFormat);
-type EncodingFormatType = z.infer<typeof encodingFormatSchema>;
-
 type DepositAndCallOptions = z.infer<
   typeof inscriptionDepositAndCallOptionsSchema
 >;

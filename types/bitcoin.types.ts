@@ -11,6 +11,16 @@ import {
 } from "./shared.schema";
 import { EncodingFormat } from "../utils/bitcoinEncode";
 
+const enumKeys = Object.keys(EncodingFormat).filter(
+  (k) => isNaN(Number(k)) // filters out numeric reverse mappings
+) as [keyof typeof EncodingFormat, ...Array<keyof typeof EncodingFormat>];
+
+const encodingFormatSchema = z
+  .enum(enumKeys)
+  .transform((val) => EncodingFormat[val]);
+
+type EncodingFormatType = z.infer<typeof encodingFormatSchema>;
+
 export interface BitcoinTxParams {
   address: string;
   amount: number;
@@ -80,13 +90,7 @@ export const inscriptionDepositAndCallOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
-    encodingFormat: z
-      .enum([
-        "EncodingFmtABI",
-        "EncodingFmtCompactLong",
-        "EncodingFmtCompactShort",
-      ])
-      .transform((val) => EncodingFormat[val as keyof typeof EncodingFormat]),
+    encodingFormat: encodingFormatSchema,
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
@@ -109,13 +113,7 @@ export const inscriptionDepositOptionsSchema = z.object({
   privateKey: z.string().optional(),
   receiver: evmAddressSchema.optional(),
   revertAddress: z.string().optional(),
-  encodingFormat: z
-    .enum([
-      "EncodingFmtABI",
-      "EncodingFmtCompactLong",
-      "EncodingFmtCompactShort",
-    ])
-    .transform((val) => EncodingFormat[val as keyof typeof EncodingFormat]),
+  encodingFormat: encodingFormatSchema,
 });
 
 export const inscriptionCallOptionsSchema = z
@@ -130,13 +128,7 @@ export const inscriptionCallOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
-    encodingFormat: z
-      .enum([
-        "EncodingFmtABI",
-        "EncodingFmtCompactLong",
-        "EncodingFmtCompactShort",
-      ])
-      .transform((val) => EncodingFormat[val as keyof typeof EncodingFormat]),
+    encodingFormat: encodingFormatSchema,
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,

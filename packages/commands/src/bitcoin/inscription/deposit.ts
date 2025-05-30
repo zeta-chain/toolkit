@@ -46,7 +46,7 @@ const main = async (options: DepositOptions) => {
           Buffer.from(""), // Empty payload for deposit
           revertAddress,
           OpCode.Deposit,
-          EncodingFormat.EncodingFmtABI
+          options.encodingFormat
         ),
         "hex"
       );
@@ -156,8 +156,8 @@ export const depositCommand = new Command()
   )
   .addOption(
     new Option("--encoding-format <format>", "Encoding format")
-      .choices(Object.keys(EncodingFormat))
-      .default(EncodingFormat.EncodingFmtABI)
+      .choices(Object.keys(EncodingFormat).filter((key) => isNaN(Number(key))))
+      .default("EncodingFmtABI")
   )
   .action(async (opts) => {
     const validated = validateAndParseSchema(
