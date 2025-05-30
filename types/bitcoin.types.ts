@@ -83,101 +83,73 @@ export interface BtcTxById {
   weight: number;
 }
 
-export const inscriptionDepositAndCallOptionsSchema = z
-  .object({
+export const baseBitcoinOptionsSchema = z.object({
+  bitcoinApi: z.string().url().optional().default(DEFAULT_BITCOIN_API),
+  gasPriceApi: z.string().url().optional().default(DEFAULT_GAS_PRICE_API),
+  gateway: z.string(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+  privateKey: z.string().optional(),
+});
+
+export const baseBitcoinInscriptionOptionsSchema =
+  baseBitcoinOptionsSchema.extend({
+    data: hexStringSchema.optional(),
+    format: encodingFormatSchema,
+    receiver: evmAddressSchema.optional(),
+    revertAddress: z.string().optional(),
+  });
+
+const withCommonBitcoinInscriptionRefines = <T extends z.ZodTypeAny>(
+  schema: T
+) =>
+  schema
+    .refine(typesAndValuesLengthRefineRule.rule, {
+      message: typesAndValuesLengthRefineRule.message,
+      path: typesAndValuesLengthRefineRule.path,
+    })
+    .refine(typesAndDataExclusivityRefineRule.rule, {
+      message: typesAndDataExclusivityRefineRule.message,
+      path: typesAndDataExclusivityRefineRule.path,
+    });
+
+export const inscriptionDepositAndCallOptionsSchema =
+  withCommonBitcoinInscriptionRefines(
+    baseBitcoinInscriptionOptionsSchema.extend({
+      amount: validAmountSchema,
+      types: z.array(z.string()).optional(),
+      values: z.array(z.string()).optional(),
+    })
+  );
+
+export const inscriptionDepositOptionsSchema =
+  baseBitcoinInscriptionOptionsSchema.extend({
+    amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "Amount must be a valid positive number",
+    }),
+  });
+
+export const inscriptionCallOptionsSchema = withCommonBitcoinInscriptionRefines(
+  baseBitcoinInscriptionOptionsSchema.extend({
+    types: z.array(z.string()).optional(),
+    values: z.array(z.string()).optional(),
+  })
+);
+
+export const baseBitcoinMemoOptionsSchema = baseBitcoinOptionsSchema.extend({
+  networkFee: z.string(),
+  receiver: evmAddressSchema,
+});
+
+export const memoDepositAndCallOptionsSchema =
+  baseBitcoinMemoOptionsSchema.extend({
     amount: validAmountSchema,
-    bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
-    format: encodingFormatSchema,
-    gasPriceApi: z.string().url().optional(),
-    gateway: z.string(),
-    name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
-    privateKey: z.string().optional(),
-    receiver: evmAddressSchema.optional(),
-    revertAddress: z.string().optional(),
-    types: z.array(z.string()).optional(),
-    values: z.array(z.string()).optional(),
-  })
-  .refine(typesAndValuesLengthRefineRule.rule, {
-    message: typesAndValuesLengthRefineRule.message,
-    path: typesAndValuesLengthRefineRule.path,
-  })
-  .refine(typesAndDataExclusivityRefineRule.rule, {
-    message: typesAndDataExclusivityRefineRule.message,
-    path: typesAndDataExclusivityRefineRule.path,
   });
 
-export const inscriptionDepositOptionsSchema = z.object({
-  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Amount must be a valid positive number",
-  }),
-  bitcoinApi: z.string().url().optional().default(DEFAULT_BITCOIN_API),
-  data: hexStringSchema.optional(),
-  format: encodingFormatSchema,
-  gasPriceApi: z.string().url().optional().default(DEFAULT_GAS_PRICE_API),
-  gateway: z.string(),
-  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
-  privateKey: z.string().optional(),
-  receiver: evmAddressSchema.optional(),
-  revertAddress: z.string().optional(),
-});
-
-export const inscriptionCallOptionsSchema = z
-  .object({
-    bitcoinApi: z.string().url().optional().default(DEFAULT_BITCOIN_API),
-    data: hexStringSchema.optional(),
-    format: encodingFormatSchema,
-    gasPriceApi: z.string().url().optional().default(DEFAULT_GAS_PRICE_API),
-    gateway: z.string(),
-    name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
-    privateKey: z.string().optional(),
-    receiver: evmAddressSchema.optional(),
-    revertAddress: z.string().optional(),
-    types: z.array(z.string()).optional(),
-    values: z.array(z.string()).optional(),
-  })
-  .refine(typesAndValuesLengthRefineRule.rule, {
-    message: typesAndValuesLengthRefineRule.message,
-    path: typesAndValuesLengthRefineRule.path,
-  })
-  .refine(typesAndDataExclusivityRefineRule.rule, {
-    message: typesAndDataExclusivityRefineRule.message,
-    path: typesAndDataExclusivityRefineRule.path,
-  });
-
-export const memoDepositAndCallOptionsSchema = z.object({
+export const memoDepositOptionsSchema = baseBitcoinMemoOptionsSchema.extend({
   amount: validAmountSchema,
-  bitcoinApi: z.string().url().optional().default(DEFAULT_BITCOIN_API),
-  data: hexStringSchema.optional(),
-  gasPriceApi: z.string().url().optional().default(DEFAULT_GAS_PRICE_API),
-  gateway: z.string(),
-  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
-  networkFee: z.string(),
-  privateKey: z.string().optional(),
-  receiver: evmAddressSchema,
 });
 
-export const memoDepositOptionsSchema = z.object({
-  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Amount must be a valid positive number",
-  }),
-  bitcoinApi: z.string().url().optional().default(DEFAULT_BITCOIN_API),
+export const memoCallOptionsSchema = baseBitcoinMemoOptionsSchema.extend({
   data: hexStringSchema.optional(),
-  gasPriceApi: z.string().url().optional().default(DEFAULT_GAS_PRICE_API),
-  gateway: z.string(),
-  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
-  networkFee: z.string(),
-  privateKey: z.string().optional(),
-  receiver: evmAddressSchema,
-});
-
-export const memoCallOptionsSchema = z.object({
-  bitcoinApi: z.string().url().optional().default(DEFAULT_BITCOIN_API),
-  data: hexStringSchema.optional(),
-  gasPriceApi: z.string().url().optional().default(DEFAULT_GAS_PRICE_API),
-  gateway: z.string(),
-  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
-  networkFee: z.string(),
-  privateKey: z.string().optional(),
-  receiver: evmAddressSchema,
 });
