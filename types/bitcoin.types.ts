@@ -19,6 +19,10 @@ const encodingFormatSchema = z
   .enum(enumKeys)
   .transform((val) => EncodingFormat[val]);
 
+export const formatEncodingChoices = Object.keys(EncodingFormat).filter((key) =>
+  isNaN(Number(key))
+);
+
 export interface BitcoinTxParams {
   address: string;
   amount: number;

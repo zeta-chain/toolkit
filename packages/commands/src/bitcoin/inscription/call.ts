@@ -6,7 +6,10 @@ import {
   BITCOIN_FEES,
   ESTIMATED_VIRTUAL_SIZE,
 } from "../../../../../types/bitcoin.constants";
-import { inscriptionCallOptionsSchema } from "../../../../../types/bitcoin.types";
+import {
+  formatEncodingChoices,
+  inscriptionCallOptionsSchema,
+} from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
   addCommonBitcoinCommandOptions,
@@ -22,7 +25,6 @@ import {
 } from "../../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
-  EncodingFormat,
   OpCode,
   trimOx,
 } from "../../../../../utils/bitcoinEncode";
@@ -160,8 +162,8 @@ export const callCommand = new Command()
   .option("-a, --revert-address <address>", "Revert address")
   .addOption(
     new Option("--encoding-format <format>", "Encoding format")
-      .choices(Object.keys(EncodingFormat).filter((key) => isNaN(Number(key))))
-      .default("EncodingFmtABI")
+      .choices(formatEncodingChoices)
+      .default("ABI")
   )
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([

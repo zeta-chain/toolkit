@@ -6,7 +6,10 @@ import {
   BITCOIN_FEES,
   ESTIMATED_VIRTUAL_SIZE,
 } from "../../../../../types/bitcoin.constants";
-import { inscriptionDepositAndCallOptionsSchema } from "../../../../../types/bitcoin.types";
+import {
+  formatEncodingChoices,
+  inscriptionDepositAndCallOptionsSchema,
+} from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
   addCommonBitcoinCommandOptions,
@@ -23,7 +26,6 @@ import {
 } from "../../../../../utils/bitcoin.helpers";
 import {
   bitcoinEncode,
-  EncodingFormat,
   OpCode,
   trimOx,
 } from "../../../../../utils/bitcoinEncode";
@@ -166,8 +168,8 @@ export const depositAndCallCommand = new Command()
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .addOption(
     new Option("--encoding-format <format>", "Encoding format")
-      .choices(Object.keys(EncodingFormat).filter((key) => isNaN(Number(key))))
-      .default("EncodingFmtABI")
+      .choices(formatEncodingChoices)
+      .default("ABI")
   )
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([

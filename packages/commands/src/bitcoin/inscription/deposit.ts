@@ -5,7 +5,10 @@ import {
   BITCOIN_FEES,
   ESTIMATED_VIRTUAL_SIZE,
 } from "../../../../../types/bitcoin.constants";
-import { inscriptionDepositOptionsSchema } from "../../../../../types/bitcoin.types";
+import {
+  formatEncodingChoices,
+  inscriptionDepositOptionsSchema,
+} from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
   addCommonBitcoinCommandOptions,
@@ -20,11 +23,7 @@ import {
   makeRevealTransaction,
   safeParseBitcoinAmount,
 } from "../../../../../utils/bitcoin.helpers";
-import {
-  bitcoinEncode,
-  EncodingFormat,
-  OpCode,
-} from "../../../../../utils/bitcoinEncode";
+import { bitcoinEncode, OpCode } from "../../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
 type DepositOptions = z.infer<typeof inscriptionDepositOptionsSchema>;
@@ -156,8 +155,8 @@ export const depositCommand = new Command()
   )
   .addOption(
     new Option("--encoding-format <format>", "Encoding format")
-      .choices(Object.keys(EncodingFormat).filter((key) => isNaN(Number(key))))
-      .default("EncodingFmtABI")
+      .choices(formatEncodingChoices)
+      .default("ABI")
   )
   .action(async (opts) => {
     const validated = validateAndParseSchema(
