@@ -39,7 +39,7 @@ const main = async (options: DepositOptions) => {
 
     const revertAddress = options.revertAddress || address;
     let data;
-    if (options.receiver && revertAddress) {
+    if (options.receiver) {
       data = Buffer.from(
         bitcoinEncode(
           options.receiver,
