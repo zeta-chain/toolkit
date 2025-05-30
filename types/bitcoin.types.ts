@@ -2,6 +2,10 @@ import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
 import { EncodingFormat } from "../utils/bitcoinEncode";
+import {
+  DEFAULT_BITCOIN_API,
+  DEFAULT_GAS_PRICE_API,
+} from "./bitcoin.constants";
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 import {
   evmAddressSchema,
@@ -10,10 +14,6 @@ import {
   typesAndValuesLengthRefineRule,
   validAmountSchema,
 } from "./shared.schema";
-import {
-  DEFAULT_BITCOIN_API,
-  DEFAULT_GAS_PRICE_API,
-} from "./bitcoin.constants";
 
 const enumKeys = Object.keys(EncodingFormat).filter(
   (k) => isNaN(Number(k)) // filters out numeric reverse mappings
@@ -85,10 +85,10 @@ export interface BtcTxById {
 
 export const inscriptionDepositAndCallOptionsSchema = z
   .object({
-    format: encodingFormatSchema,
     amount: validAmountSchema,
     bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
+    format: encodingFormatSchema,
     gasPriceApi: z.string().url().optional(),
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),

@@ -13,7 +13,7 @@ import {
   DEFAULT_GAS_PRICE_API,
   DEFAULT_GATEWAY,
 } from "../types/bitcoin.constants";
-import { formatEncodingChoices, type BtcUtxo } from "../types/bitcoin.types";
+import { type BtcUtxo, formatEncodingChoices } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { EncodingFormat } from "../utils/bitcoinEncode";
 import { getAccountData } from "./accounts";

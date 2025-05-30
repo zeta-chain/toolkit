@@ -1,4 +1,3 @@
-import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
@@ -6,10 +5,7 @@ import {
   BITCOIN_FEES,
   ESTIMATED_VIRTUAL_SIZE,
 } from "../../../../../types/bitcoin.constants";
-import {
-  formatEncodingChoices,
-  inscriptionDepositAndCallOptionsSchema,
-} from "../../../../../types/bitcoin.types";
+import { inscriptionDepositAndCallOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
   broadcastBtcTransaction,

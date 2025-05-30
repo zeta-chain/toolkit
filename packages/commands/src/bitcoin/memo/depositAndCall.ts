@@ -1,4 +1,3 @@
-import { Command, Option } from "commander";
 import { z } from "zod";
 
 import { memoDepositAndCallOptionsSchema } from "../../../../../types/bitcoin.types";
