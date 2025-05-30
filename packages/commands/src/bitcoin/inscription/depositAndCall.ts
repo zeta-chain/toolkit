@@ -66,7 +66,7 @@ const main = async (options: DepositAndCallOptions) => {
     } else if (options.data) {
       data = Buffer.from(options.data, "hex");
     } else {
-      throw new Error("Provide either data or types, values, receiver");
+      throw new Error("Provide either --data or --types, --values, --receiver");
     }
 
     const amount = safeParseBitcoinAmount(options.amount);

@@ -53,9 +53,7 @@ const main = async (options: DepositOptions) => {
     } else if (options.data) {
       data = Buffer.from(options.data, "hex");
     } else {
-      throw new Error(
-        "Provide either --receiver or receiver encoded in --data"
-      );
+      throw new Error("Provide either --data or --receiver");
     }
 
     const amount = safeParseBitcoinAmount(options.amount);
