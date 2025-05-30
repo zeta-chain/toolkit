@@ -11,8 +11,8 @@ import {
 } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
+  createBitcoinInscriptionCommandWithCommonOptions,
   displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -136,28 +136,11 @@ const main = async (options: DepositOptions) => {
  * Command definition for deposit
  * This allows users to deposit BTC to EOAs and contracts on ZetaChain
  */
-export const depositCommand = new Command()
-  .name("deposit")
+export const depositCommand = createBitcoinInscriptionCommandWithCommonOptions(
+  "deposit"
+)
   .description("Deposit BTC to ZetaChain")
-  .option("-r, --receiver <address>", "ZetaChain receiver address")
-  .requiredOption(
-    "-g, --gateway <address>",
-    "Bitcoin gateway (TSS) address",
-    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
-  )
-  .option("-a, --revert-address <address>", "Revert address")
-  .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
-  .addOption(
-    new Option("--data <data>", "Pass raw data").conflicts([
-      "revert-address",
-      "receiver",
-    ])
-  )
-  .addOption(
-    new Option("--format <format>", "Encoding format")
-      .choices(formatEncodingChoices)
-      .default("ABI")
-  )
+  .requiredOption("-a, --amount <btcAmount>", "BTC amount to send (in BTC)")
   .action(async (opts) => {
     const validated = validateAndParseSchema(
       opts,
@@ -168,5 +151,3 @@ export const depositCommand = new Command()
     );
     await main(validated);
   });
-
-addCommonBitcoinCommandOptions(depositCommand);

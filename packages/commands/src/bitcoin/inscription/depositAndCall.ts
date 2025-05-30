@@ -12,8 +12,8 @@ import {
 } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
+  createBitcoinInscriptionCommandWithCommonOptions,
   displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -153,41 +153,19 @@ const main = async (options: DepositAndCallOptions) => {
  * Command definition for deposit-and-call
  * This allows users to deposit BTC and call a contract on ZetaChain using Bitcoin inscriptions
  */
-export const depositAndCallCommand = new Command()
-  .name("deposit-and-call")
-  .description("Deposit BTC and call a contract on ZetaChain")
-  .option("-r, --receiver <address>", "ZetaChain receiver address")
-  .requiredOption(
-    "-g, --gateway <address>",
-    "Bitcoin gateway (TSS) address",
-    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
-  )
-  .option("-t, --types <types...>", "ABI types")
-  .option("-v, --values <values...>", "Values corresponding to types")
-  .option("-a, --revert-address <address>", "Revert address")
-  .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
-  .addOption(
-    new Option("--format <format>", "Encoding format")
-      .choices(formatEncodingChoices)
-      .default("ABI")
-  )
-  .addOption(
-    new Option("--data <data>", "Pass raw data").conflicts([
-      "types",
-      "values",
-      "revert-address",
-      "receiver",
-    ])
-  )
-  .action(async (opts) => {
-    const validated = validateAndParseSchema(
-      opts,
-      inscriptionDepositAndCallOptionsSchema,
-      {
-        exitOnError: true,
-      }
-    );
-    await main(validated);
-  });
-
-addCommonBitcoinCommandOptions(depositAndCallCommand);
+export const depositAndCallCommand =
+  createBitcoinInscriptionCommandWithCommonOptions("deposit-and-call")
+    .description("Deposit BTC and call a contract on ZetaChain")
+    .option("-t, --types <types...>", "ABI types")
+    .option("-v, --values <values...>", "Values corresponding to types")
+    .requiredOption("-a, --amount <btcAmount>", "BTC amount to send (in BTC)")
+    .action(async (opts) => {
+      const validated = validateAndParseSchema(
+        opts,
+        inscriptionDepositAndCallOptionsSchema,
+        {
+          exitOnError: true,
+        }
+      );
+      await main(validated);
+    });

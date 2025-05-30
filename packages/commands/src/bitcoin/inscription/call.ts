@@ -12,8 +12,8 @@ import {
 } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
+  createBitcoinInscriptionCommandWithCommonOptions,
   displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -148,31 +148,12 @@ const main = async (options: CallOptions) => {
  * Command definition for call
  * This allows users to call contracts on ZetaChain
  */
-export const callCommand = new Command()
-  .name("call")
+export const callCommand = createBitcoinInscriptionCommandWithCommonOptions(
+  "call"
+)
   .description("Call a contract on ZetaChain")
-  .option("-r, --receiver <address>", "ZetaChain receiver address")
-  .requiredOption(
-    "-g, --gateway <address>",
-    "Bitcoin gateway (TSS) address",
-    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
-  )
   .option("-t, --types <types...>", "ABI types")
   .option("-v, --values <values...>", "Values corresponding to types")
-  .option("-a, --revert-address <address>", "Revert address")
-  .addOption(
-    new Option("--format <format>", "Encoding format")
-      .choices(formatEncodingChoices)
-      .default("ABI")
-  )
-  .addOption(
-    new Option("--data <data>", "Pass raw data").conflicts([
-      "types",
-      "values",
-      "revert-address",
-      "receiver",
-    ])
-  )
   .action(async (opts) => {
     const validated = validateAndParseSchema(
       opts,
@@ -183,5 +164,3 @@ export const callCommand = new Command()
     );
     await main(validated);
   });
-
-addCommonBitcoinCommandOptions(callCommand);

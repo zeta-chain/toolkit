@@ -4,9 +4,9 @@ import { z } from "zod";
 import { memoDepositAndCallOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
   constructMemo,
+  createBitcoinMemoCommandWithCommonOptions,
   displayAndConfirmMemoTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -76,18 +76,11 @@ const main = async (options: DepositAndCallOptions) => {
  * Command definition for deposit-and-call
  * This allows users to deposit BTC and call a contract on ZetaChain using Bitcoin inscriptions
  */
-export const depositAndCallCommand = new Command()
-  .name("deposit-and-call")
+export const depositAndCallCommand = createBitcoinMemoCommandWithCommonOptions(
+  "deposit-and-call"
+)
   .description("Deposit BTC and call a contract on ZetaChain")
-  .requiredOption("-r, --receiver <address>", "ZetaChain receiver address")
-  .requiredOption(
-    "-g, --gateway <address>",
-    "Bitcoin gateway (TSS) address",
-    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
-  )
-  .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
-  .addOption(new Option("--data <data>", "Pass raw data"))
-  .option("--network-fee <fee>", "Network fee (in sats)", "1750")
+  .requiredOption("-a, --amount <btcAmount>", "BTC amount to send (in BTC)")
   .action(async (opts) => {
     const validated = validateAndParseSchema(
       opts,
@@ -98,5 +91,3 @@ export const depositAndCallCommand = new Command()
     );
     await main(validated);
   });
-
-addCommonBitcoinCommandOptions(depositAndCallCommand);
