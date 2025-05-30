@@ -61,7 +61,7 @@ const main = async (options: DepositAndCallOptions) => {
           Buffer.from(trimOx(payload), "hex"),
           revertAddress,
           OpCode.DepositAndCall,
-          options.encodingFormat
+          options.format
         ),
         "hex"
       );
@@ -100,7 +100,7 @@ const main = async (options: DepositAndCallOptions) => {
       amount: options.amount,
       depositFee,
       encodedMessage: payload,
-      encodingFormat: options.encodingFormat,
+      encodingFormat: options.format,
       gateway: options.gateway,
       inscriptionCommitFee: inscriptionFee,
       inscriptionRevealFee: revealFee,
@@ -167,7 +167,7 @@ export const depositAndCallCommand = new Command()
   .option("-a, --revert-address <address>", "Revert address")
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
   .addOption(
-    new Option("--encoding-format <format>", "Encoding format")
+    new Option("--format <format>", "Encoding format")
       .choices(formatEncodingChoices)
       .default("ABI")
   )

@@ -45,7 +45,7 @@ const main = async (options: DepositOptions) => {
           Buffer.from(""), // Empty payload for deposit
           revertAddress,
           OpCode.Deposit,
-          options.encodingFormat
+          options.format
         ),
         "hex"
       );
@@ -83,7 +83,7 @@ const main = async (options: DepositOptions) => {
     await displayAndConfirmTransaction({
       amount: options.amount,
       depositFee,
-      encodingFormat: options.encodingFormat,
+      encodingFormat: options.format,
       gateway: options.gateway,
       inscriptionCommitFee: inscriptionFee,
       inscriptionRevealFee: revealFee,
@@ -154,7 +154,7 @@ export const depositCommand = new Command()
     ])
   )
   .addOption(
-    new Option("--encoding-format <format>", "Encoding format")
+    new Option("--format <format>", "Encoding format")
       .choices(formatEncodingChoices)
       .default("ABI")
   )
