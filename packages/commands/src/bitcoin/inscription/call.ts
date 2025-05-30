@@ -43,21 +43,17 @@ const main = async (options: CallOptions) => {
       options.name
     );
     const utxos = await fetchUtxos(address, options.bitcoinApi);
+    const revertAddress = options.revertAddress || address;
 
     let data;
     let payload;
-    if (
-      options.types &&
-      options.values &&
-      options.receiver &&
-      options.revertAddress
-    ) {
+    if (options.types && options.values && options.receiver) {
       payload = new ethers.AbiCoder().encode(options.types, options.values);
       data = Buffer.from(
         bitcoinEncode(
           options.receiver,
           Buffer.from(trimOx(payload), "hex"),
-          options.revertAddress,
+          revertAddress,
           OpCode.Call,
           EncodingFormat.EncodingFmtABI
         ),
@@ -66,9 +62,7 @@ const main = async (options: CallOptions) => {
     } else if (options.data) {
       data = Buffer.from(options.data, "hex");
     } else {
-      throw new Error(
-        "Provide either data or types, values, receiver, and revert address"
-      );
+      throw new Error("Provide either data or types, values, receiver");
     }
 
     const inscriptionFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
@@ -107,7 +101,7 @@ const main = async (options: CallOptions) => {
       operation: "Call",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
-      revertAddress: options.revertAddress,
+      revertAddress,
       sender: address,
     });
 

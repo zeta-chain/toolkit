@@ -46,21 +46,18 @@ const main = async (options: DepositAndCallOptions) => {
       options.name
     );
     const utxos = await fetchUtxos(address, options.bitcoinApi);
+    const revertAddress = options.revertAddress || address;
+
     let data;
     let payload;
-    if (
-      options.types &&
-      options.values &&
-      options.receiver &&
-      options.revertAddress
-    ) {
+    if (options.types && options.values && options.receiver) {
       // Encode contract call data for inscription
       payload = new ethers.AbiCoder().encode(options.types, options.values);
       data = Buffer.from(
         bitcoinEncode(
           options.receiver,
           Buffer.from(trimOx(payload), "hex"),
-          options.revertAddress,
+          revertAddress,
           OpCode.DepositAndCall,
           EncodingFormat.EncodingFmtABI
         ),
@@ -69,9 +66,7 @@ const main = async (options: DepositAndCallOptions) => {
     } else if (options.data) {
       data = Buffer.from(options.data, "hex");
     } else {
-      throw new Error(
-        "Provide either data or types, values, receiver, and revert address"
-      );
+      throw new Error("Provide either data or types, values, receiver");
     }
 
     const amount = safeParseBitcoinAmount(options.amount);
@@ -111,7 +106,7 @@ const main = async (options: DepositAndCallOptions) => {
       operation: "DepositAndCall",
       rawInscriptionData: data.toString("hex"),
       receiver: options.receiver,
-      revertAddress: options.revertAddress,
+      revertAddress,
       sender: address,
     });
 
