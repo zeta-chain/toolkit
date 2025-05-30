@@ -1,6 +1,7 @@
 import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
+import { EncodingFormat } from "../utils/bitcoinEncode";
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 import {
   evmAddressSchema,
@@ -9,7 +10,6 @@ import {
   typesAndValuesLengthRefineRule,
   validAmountSchema,
 } from "./shared.schema";
-import { EncodingFormat } from "../utils/bitcoinEncode";
 
 const enumKeys = Object.keys(EncodingFormat).filter(
   (k) => isNaN(Number(k)) // filters out numeric reverse mappings
@@ -18,8 +18,6 @@ const enumKeys = Object.keys(EncodingFormat).filter(
 const encodingFormatSchema = z
   .enum(enumKeys)
   .transform((val) => EncodingFormat[val]);
-
-type EncodingFormatType = z.infer<typeof encodingFormatSchema>;
 
 export interface BitcoinTxParams {
   address: string;
@@ -82,6 +80,7 @@ export const inscriptionDepositAndCallOptionsSchema = z
     amount: validAmountSchema,
     bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
+    encodingFormat: encodingFormatSchema,
     gasPriceApi: z.string().url(),
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
@@ -90,7 +89,6 @@ export const inscriptionDepositAndCallOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
-    encodingFormat: encodingFormatSchema,
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
@@ -107,19 +105,20 @@ export const inscriptionDepositOptionsSchema = z.object({
   }),
   bitcoinApi: z.string().url(),
   data: hexStringSchema.optional(),
+  encodingFormat: encodingFormatSchema,
   gasPriceApi: z.string().url(),
   gateway: z.string(),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
   receiver: evmAddressSchema.optional(),
   revertAddress: z.string().optional(),
-  encodingFormat: encodingFormatSchema,
 });
 
 export const inscriptionCallOptionsSchema = z
   .object({
     bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
+    encodingFormat: encodingFormatSchema,
     gasPriceApi: z.string().url(),
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
@@ -128,7 +127,6 @@ export const inscriptionCallOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
-    encodingFormat: encodingFormatSchema,
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,

@@ -10,6 +10,7 @@ import { BitcoinAccountData } from "../types/accounts.types";
 import { BITCOIN_FEES } from "../types/bitcoin.constants";
 import type { BtcUtxo } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
+import { EncodingFormat } from "../utils/bitcoinEncode";
 import { getAccountData } from "./accounts";
 import {
   makeCommitTransaction,
@@ -17,7 +18,6 @@ import {
   SIGNET,
 } from "./bitcoin.helpers";
 import { handleError } from "./handleError";
-import { EncodingFormat } from "../utils/bitcoinEncode";
 
 export interface BitcoinKeyPair {
   address: string;
