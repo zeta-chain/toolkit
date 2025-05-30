@@ -99,9 +99,13 @@ export const baseBitcoinInscriptionOptionsSchema =
     revertAddress: z.string().optional(),
   });
 
-const withCommonBitcoinInscriptionRefines = <T extends z.ZodTypeAny>(
-  schema: T
-) =>
+const withCommonBitcoinInscriptionRefines = <
+  TSchema extends z.ZodTypeAny,
+  TOut = z.infer<TSchema>,
+  TIn = z.input<TSchema>
+>(
+  schema: TSchema
+): z.ZodEffects<TSchema, TOut, TIn> =>
   schema
     .refine(typesAndValuesLengthRefineRule.rule, {
       message: typesAndValuesLengthRefineRule.message,
@@ -110,7 +114,7 @@ const withCommonBitcoinInscriptionRefines = <T extends z.ZodTypeAny>(
     .refine(typesAndDataExclusivityRefineRule.rule, {
       message: typesAndDataExclusivityRefineRule.message,
       path: typesAndDataExclusivityRefineRule.path,
-    });
+    }) as unknown as z.ZodEffects<TSchema, TOut, TIn>;
 
 export const inscriptionDepositAndCallOptionsSchema =
   withCommonBitcoinInscriptionRefines(
