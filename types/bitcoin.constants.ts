@@ -1,3 +1,8 @@
+export const DEFAULT_GATEWAY = "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur";
+export const DEFAULT_BITCOIN_API = "https://mempool.space/signet/api";
+export const DEFAULT_GAS_PRICE_API =
+  "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/gasPrice/18333";
+
 /**
  * Bitcoin network constants
  */
