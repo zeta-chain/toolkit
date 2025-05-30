@@ -84,7 +84,7 @@ const main = async (options: DepositOptions) => {
     await displayAndConfirmTransaction({
       amount: options.amount,
       depositFee,
-      encodingFormat: "ABI",
+      encodingFormat: options.encodingFormat,
       gateway: options.gateway,
       inscriptionCommitFee: inscriptionFee,
       inscriptionRevealFee: revealFee,
@@ -153,6 +153,11 @@ export const depositCommand = new Command()
       "revert-address",
       "receiver",
     ])
+  )
+  .addOption(
+    new Option("--encoding-format <format>", "Encoding format")
+      .choices(Object.keys(EncodingFormat))
+      .default(EncodingFormat.EncodingFmtABI)
   )
   .action(async (opts) => {
     const validated = validateAndParseSchema(

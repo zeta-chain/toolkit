@@ -17,6 +17,7 @@ import {
   SIGNET,
 } from "./bitcoin.helpers";
 import { handleError } from "./handleError";
+import { EncodingFormat } from "../utils/bitcoinEncode";
 
 export interface BitcoinKeyPair {
   address: string;
@@ -27,7 +28,7 @@ export interface TransactionInfo {
   amount: string;
   depositFee: number;
   encodedMessage?: string;
-  encodingFormat: string;
+  encodingFormat: EncodingFormat;
   gateway: string;
   inscriptionCommitFee: number;
   inscriptionRevealFee: number;

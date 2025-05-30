@@ -9,6 +9,7 @@ import {
   typesAndValuesLengthRefineRule,
   validAmountSchema,
 } from "./shared.schema";
+import { EncodingFormat } from "../utils/bitcoinEncode";
 
 export interface BitcoinTxParams {
   address: string;
@@ -79,6 +80,13 @@ export const inscriptionDepositAndCallOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
+    encodingFormat: z
+      .enum([
+        "EncodingFmtABI",
+        "EncodingFmtCompactLong",
+        "EncodingFmtCompactShort",
+      ])
+      .transform((val) => EncodingFormat[val as keyof typeof EncodingFormat]),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,
@@ -101,6 +109,13 @@ export const inscriptionDepositOptionsSchema = z.object({
   privateKey: z.string().optional(),
   receiver: evmAddressSchema.optional(),
   revertAddress: z.string().optional(),
+  encodingFormat: z
+    .enum([
+      "EncodingFmtABI",
+      "EncodingFmtCompactLong",
+      "EncodingFmtCompactShort",
+    ])
+    .transform((val) => EncodingFormat[val as keyof typeof EncodingFormat]),
 });
 
 export const inscriptionCallOptionsSchema = z
@@ -115,6 +130,13 @@ export const inscriptionCallOptionsSchema = z
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
+    encodingFormat: z
+      .enum([
+        "EncodingFmtABI",
+        "EncodingFmtCompactLong",
+        "EncodingFmtCompactShort",
+      ])
+      .transform((val) => EncodingFormat[val as keyof typeof EncodingFormat]),
   })
   .refine(typesAndValuesLengthRefineRule.rule, {
     message: typesAndValuesLengthRefineRule.message,

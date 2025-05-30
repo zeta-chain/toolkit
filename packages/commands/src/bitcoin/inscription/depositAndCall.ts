@@ -29,6 +29,9 @@ import {
 } from "../../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
+const encodingFormatSchema = z.nativeEnum(EncodingFormat);
+type EncodingFormatType = z.infer<typeof encodingFormatSchema>;
+
 type DepositAndCallOptions = z.infer<
   typeof inscriptionDepositAndCallOptionsSchema
 >;
@@ -59,7 +62,7 @@ const main = async (options: DepositAndCallOptions) => {
           Buffer.from(trimOx(payload), "hex"),
           revertAddress,
           OpCode.DepositAndCall,
-          EncodingFormat.EncodingFmtABI
+          options.encodingFormat
         ),
         "hex"
       );
@@ -98,7 +101,7 @@ const main = async (options: DepositAndCallOptions) => {
       amount: options.amount,
       depositFee,
       encodedMessage: payload,
-      encodingFormat: "ABI",
+      encodingFormat: options.encodingFormat,
       gateway: options.gateway,
       inscriptionCommitFee: inscriptionFee,
       inscriptionRevealFee: revealFee,
@@ -164,6 +167,11 @@ export const depositAndCallCommand = new Command()
   .option("-v, --values <values...>", "Values corresponding to types")
   .option("-a, --revert-address <address>", "Revert address")
   .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
+  .addOption(
+    new Option("--encoding-format <format>", "Encoding format")
+      .choices(Object.keys(EncodingFormat).filter((key) => isNaN(Number(key))))
+      .default("EncodingFmtABI")
+  )
   .addOption(
     new Option("--data <data>", "Pass raw data").conflicts([
       "types",
