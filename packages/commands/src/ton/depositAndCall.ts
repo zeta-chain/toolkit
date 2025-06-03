@@ -3,16 +3,16 @@ import { stringToCell } from "@ton/core/dist/boc/utils/strings";
 import { mnemonicToWalletKey } from "@ton/crypto";
 import { TonClient, WalletContractV4 } from "@ton/ton";
 import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-
-const DEFAULT_GATEWAY_ADDR =
-  "0:7a4d41496726aadb227cf4d313c95912f1fe6cc742c18ebde306ff59881d8816";
-const DEFAULT_ENDPOINT = "https://testnet.toncenter.com/api/v2/jsonRPC";
+import {
+  DEFAULT_GATEWAY_ADDR,
+  DEFAULT_ENDPOINT,
+} from "../../../../types/ton.constants";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
@@ -58,18 +58,28 @@ const main = async (options: DepositAndCallOptions) => {
 };
 
 export const depositAndCallCommand = new Command("deposit-and-call")
-  .description("Deposit TON -> ZetaChain via Gateway")
+  .description("Deposit TON and call a universal contract on ZetaChain")
   .requiredOption("--amount <amount>", "Amount in TON")
-  .requiredOption("--receiver <receiver>", "Destination 0x-EVM address")
+  .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
   .requiredOption("--mnemonic <mnemonic>", "24-word seed of the paying wallet")
   .option(
     "--gateway <gateway>",
     "Gateway contract address",
     DEFAULT_GATEWAY_ADDR
   )
-  .option("--types <types...>", "ABI types")
-  .option("--values <values...>", "Values corresponding to types")
-  .option("--data <data>", "Data to call the contract with")
+  .addOption(new Option("--types <types...>", "ABI types").conflicts(["data"]))
+  .addOption(
+    new Option(
+      "--values <values...>",
+      "Values corresponding to types"
+    ).conflicts(["data"])
+  )
+  .addOption(
+    new Option("--data <data>", "Data to call the contract with").conflicts([
+      "types",
+      "values",
+    ])
+  )
   .option("--endpoint <endpoint>", "TON RPC endpoint", DEFAULT_ENDPOINT)
   .option("--api-key <apiKey>", "TON RPC API key")
   .action(async (raw) => {

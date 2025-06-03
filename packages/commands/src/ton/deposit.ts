@@ -7,10 +7,10 @@ import { z } from "zod";
 
 import { depositOptionsSchema } from "../../../../types/ton.types";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-
-const DEFAULT_GATEWAY_ADDR =
-  "0:7a4d41496726aadb227cf4d313c95912f1fe6cc742c18ebde306ff59881d8816";
-const DEFAULT_ENDPOINT = "https://testnet.toncenter.com/api/v2/jsonRPC";
+import {
+  DEFAULT_GATEWAY_ADDR,
+  DEFAULT_ENDPOINT,
+} from "../../../../types/ton.constants";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
@@ -37,9 +37,9 @@ const main = async (options: DepositOptions) => {
 };
 
 export const depositCommand = new Command("deposit")
-  .description("Deposit TON -> ZetaChain via Gateway")
+  .description("Deposit TON to an EOA or a contract on ZetaChain")
   .requiredOption("--amount <amount>", "Amount in TON")
-  .requiredOption("--receiver <receiver>", "Destination 0x-EVM address")
+  .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
   .requiredOption("--mnemonic <mnemonic>", "24-word seed of the paying wallet")
   .option(
     "--gateway <gateway>",
