@@ -3,7 +3,7 @@ import { z } from "zod";
 export const depositOptionsSchema = z.object({
   amount: z.string(),
   apiKey: z.string().optional(),
-  endpoint: z.string(),
+  rpc: z.string(),
   gateway: z.string(),
   mnemonic: z.string(),
   receiver: z
@@ -18,7 +18,7 @@ export const depositAndCallOptionsSchema = z.object({
   amount: z.string(),
   apiKey: z.string().optional(),
   data: z.string().optional(),
-  endpoint: z.string(),
+  rpc: z.string(),
   gateway: z.string(),
   mnemonic: z.string(),
   receiver: z

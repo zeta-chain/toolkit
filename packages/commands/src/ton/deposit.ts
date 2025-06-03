@@ -16,7 +16,7 @@ type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   const client = new TonClient({
-    endpoint: options.endpoint,
+    endpoint: options.rpc,
     ...(options.apiKey && { apiKey: options.apiKey }),
   });
 
@@ -46,7 +46,7 @@ export const depositCommand = new Command("deposit")
     "Gateway contract address",
     DEFAULT_GATEWAY_ADDR
   )
-  .option("--endpoint <endpoint>", "TON RPC endpoint", DEFAULT_ENDPOINT)
+  .option("--rpc <rpc>", "TON RPC endpoint", DEFAULT_ENDPOINT)
   .option("--api-key <apiKey>", "TON RPC API key")
   .action(async (raw) => {
     const options = validateAndParseSchema(raw, depositOptionsSchema, {
