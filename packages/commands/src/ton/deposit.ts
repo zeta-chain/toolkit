@@ -5,12 +5,12 @@ import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
 import { Command } from "commander";
 import { z } from "zod";
 
+import {
+  DEFAULT_ENDPOINT,
+  DEFAULT_GATEWAY_ADDR,
+} from "../../../../types/ton.constants";
 import { depositOptionsSchema } from "../../../../types/ton.types";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-import {
-  DEFAULT_GATEWAY_ADDR,
-  DEFAULT_ENDPOINT,
-} from "../../../../types/ton.constants";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 

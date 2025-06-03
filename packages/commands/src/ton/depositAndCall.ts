@@ -7,12 +7,12 @@ import { Command, Option } from "commander";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
+import {
+  DEFAULT_ENDPOINT,
+  DEFAULT_GATEWAY_ADDR,
+} from "../../../../types/ton.constants";
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-import {
-  DEFAULT_GATEWAY_ADDR,
-  DEFAULT_ENDPOINT,
-} from "../../../../types/ton.constants";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
