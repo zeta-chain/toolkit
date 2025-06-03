@@ -1,15 +1,14 @@
-import { Address, beginCell, Cell, toNano } from "@ton/core";
+import { Address, beginCell, toNano } from "@ton/core";
+import { stringToCell } from "@ton/core/dist/boc/utils/strings";
 import { mnemonicToWalletKey } from "@ton/crypto";
 import { TonClient, WalletContractV4 } from "@ton/ton";
 import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
 import { Command } from "commander";
+import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
-import { stringToCell } from "@ton/core/dist/boc/utils/strings";
 
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-import { ethers } from "ethers";
-import { AbiCoder } from "ethers";
 
 const DEFAULT_GATEWAY_ADDR =
   "0:7a4d41496726aadb227cf4d313c95912f1fe6cc742c18ebde306ff59881d8816";
