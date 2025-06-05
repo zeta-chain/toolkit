@@ -89,9 +89,6 @@ const gatherCctxs = async (
   }
 };
 
-/**
- * CLI entry – clears screen and prints the **current** list each round.
- */
 const main = async (options: CctxOptions) => {
   const { hash, rpc, delay } = cctxOptionsSchema.parse(options);
 
