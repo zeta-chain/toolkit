@@ -196,6 +196,18 @@ export const toSmallestUnit = (amount: string, decimals = 9): bigint => {
     throw new Error("Invalid decimal amount");
   }
   const [whole = "0", fraction = ""] = amount.split(".");
+
+  // Check for precision loss
+  if (fraction.length > decimals) {
+    const truncatedPart = fraction.slice(decimals);
+    if (/[1-9]/.test(truncatedPart)) {
+      throw new Error(
+        `Precision loss detected: Input has ${fraction.length} decimal places but only ${decimals} are supported. ` +
+          `Non-zero digits would be lost: "${truncatedPart}"`
+      );
+    }
+  }
+
   const paddedFraction = (fraction + "0".repeat(decimals)).slice(0, decimals);
   const multiplier = BigInt(10) ** BigInt(decimals);
   return BigInt(whole) * multiplier + BigInt(paddedFraction);
