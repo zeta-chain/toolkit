@@ -25,8 +25,8 @@ import {
   bitcoinEncode,
   EncodingFormat,
   OpCode,
-  trimOx,
 } from "../../../../../utils/bitcoinEncode";
+import { trim0x } from "../../../../../utils/trim0x";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
 type DepositAndCallOptions = z.infer<
@@ -59,7 +59,7 @@ const main = async (options: DepositAndCallOptions) => {
       data = Buffer.from(
         bitcoinEncode(
           options.receiver,
-          Buffer.from(trimOx(payload), "hex"),
+          Buffer.from(trim0x(payload), "hex"),
           options.revertAddress,
           OpCode.DepositAndCall,
           EncodingFormat.EncodingFmtABI

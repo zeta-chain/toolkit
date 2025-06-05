@@ -15,6 +15,7 @@ export * from "./solanaAccounts";
 export * from "./toHexString";
 export * from "./trackCCTX";
 export * from "./transactions";
+export * from "./trim0x";
 export * from "./uniswap";
 export * from "./validateAndParseSchema";
 export * from "./validateSigner";
