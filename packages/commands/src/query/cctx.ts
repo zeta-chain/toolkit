@@ -43,9 +43,7 @@ const fetchCctx = async (
  * True if the CCTX is still in-flight and may mutate on‑chain.
  */
 const isPending = (tx: CrossChainTx): boolean =>
-  ["PendingOutbound", "PendingMined", "PendingRevert"].includes(
-    tx.cctx_status.status
-  );
+  ["PendingOutbound", "PendingRevert"].includes(tx.cctx_status.status);
 
 /**
  * Poll indefinitely until user terminates.
@@ -93,7 +91,7 @@ const gatherCctxs = async (
 
             // Keep querying while pending
             if (isPending(tx)) {
-              nextFrontier.add(tx.index);
+              nextFrontier.add(tx.inbound_params.observed_hash);
             }
 
             queriedOnce.add(tx.index);
@@ -124,8 +122,11 @@ const main = async (options: CctxOptions) => {
 
   cctxEmitter.on("cctx", (all) => {
     console.clear();
-    console.log(`Total CCTXs: ${all.length}\n`);
-    all.forEach((tx) => console.log(tx.index));
+    all.forEach((tx) =>
+      console.log(
+        `${tx.index} ${tx.inbound_params.sender_chain_id} → ${tx.outbound_params[0].receiver_chainId} ${tx.cctx_status.status} ${tx.cctx_status.status_message}`
+      )
+    );
   });
 
   await gatherCctxs(hash, rpc, delay);
