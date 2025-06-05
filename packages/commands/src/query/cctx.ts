@@ -115,7 +115,7 @@ export const cctxCommand = new Command("cctx")
   .description(
     "Continuously query a CCTX and its linked indexes, streaming snapshots until interrupted."
   )
-  .requiredOption("-h, --hash <hash>", "Root inbound transaction hash")
+  .requiredOption("-h, --hash <hash>", "Inbound transaction hash")
   .option(
     "-r, --rpc <rpc>",
     "RPC endpoint",
