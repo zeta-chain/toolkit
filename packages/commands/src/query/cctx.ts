@@ -6,7 +6,7 @@ import { CrossChainTx } from "../../../../types/cctx";
 
 /**
  * Event map:
- *  - `cctx` → fired **every polling round** with the full array collected so far.
+ *  - `cctx` → emitted on **every** polling round with the full array so far.
  */
 interface CctxEvents {
   cctx: (allSoFar: CrossChainTx[]) => void;
@@ -40,10 +40,9 @@ const fetchCctx = async (
 };
 
 /**
- * Polls indefinitely until the process is terminated (Ctrl-C).
- *
- * 1. 404 hashes stay in the frontier and are retried forever.
- * 2. Once a hash yields CCTXs we consider it "resolved" and stop polling it.
+ * Poll indefinitely until the process is terminated (Ctrl‑C).
+ *  - 404 hashes stay in the frontier and are retried forever.
+ *  - Once a hash yields CCTXs we consider it "resolved" and stop polling it.
  */
 const gatherCctxs = async (
   rootHash: string,
@@ -52,7 +51,6 @@ const gatherCctxs = async (
 ): Promise<void> => {
   const results: CrossChainTx[] = [];
   const unresolved = new Set<string>([rootHash]);
-  const resolved = new Set<string>();
 
   while (true) {
     const nextRound: string[] = [];
@@ -66,7 +64,6 @@ const gatherCctxs = async (
             return;
           }
 
-          resolved.add(hash);
           unresolved.delete(hash);
 
           for (const cctx of cctxs) {
@@ -77,8 +74,7 @@ const gatherCctxs = async (
           }
         } catch (err) {
           console.error(`Error fetching CCTX for hash ${hash}:`, err);
-          // retry same hash next round on error
-          nextRound.push(hash);
+          nextRound.push(hash); // retry on error
         }
       })
     );
@@ -86,7 +82,7 @@ const gatherCctxs = async (
     // Keep polling any hashes that are still unresolved
     for (const h of nextRound) unresolved.add(h);
 
-    // Emit full snapshot to listeners (front-end can just setState(results))
+    // Emit full snapshot so listeners (CLI/UI) can repaint
     cctxEmitter.emit("cctx", [...results]);
 
     await sleep(delayMs);
@@ -94,18 +90,14 @@ const gatherCctxs = async (
 };
 
 /**
- * CLI entry – prints new indexes in real time until user aborts.
+ * CLI entry – clears screen and prints the **current** list each round.
  */
 const main = async (options: CctxOptions) => {
   const { hash, rpc, delay } = cctxOptionsSchema.parse(options);
-  const seen = new Set<string>();
 
   cctxEmitter.on("cctx", (all) => {
-    for (const tx of all) {
-      if (seen.has(tx.index)) continue;
-      seen.add(tx.index);
-      console.log("➜", tx.index);
-    }
+    console.clear();
+    all.forEach((tx) => console.log(tx.index));
   });
 
   await gatherCctxs(hash, rpc, delay);
@@ -113,7 +105,7 @@ const main = async (options: CctxOptions) => {
 
 export const cctxCommand = new Command("cctx")
   .description(
-    "Continuously query a CCTX and its linked indexes, streaming snapshots until interrupted."
+    "Continuously query a CCTX and its linked indexes, updating the list in place."
   )
   .requiredOption("-h, --hash <hash>", "Inbound transaction hash")
   .option(
