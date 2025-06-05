@@ -1,148 +1,128 @@
-import { Command } from "commander";
-import { z } from "zod";
-import axios from "axios";
 import EventEmitter from "eventemitter3";
-import { CrossChainTx } from "../../../types/cctx";
+import { task, types } from "hardhat/config";
+import Spinnies from "spinnies";
+import { z } from "zod";
 
-/**
- * Typed event map for our emitter. Two events are exposed:
- *  - `cctx`  → emitted **every time** we discover new CCTXs (progress updates)
- *  - `done`  → emitted once, when the crawl finishes, with the final array
- */
-interface CctxEvents {
-  cctx: (partial: CrossChainTx[]) => void;
-  done: (all: CrossChainTx[]) => void;
+import { validateAndParseSchema } from "../../../utils";
+import { ZetaChainClient } from "../../client/src/";
+
+interface EmitterArgs {
+  hash: string;
+  text: string;
 }
 
-export const cctxEmitter = new EventEmitter<CctxEvents>();
-
-const cctxOptionsSchema = z.object({
-  hash: z.string(),
-  rpc: z.string(),
-  delay: z.coerce.number().int().positive().default(2000),
-  tries: z.coerce.number().int().positive().default(5),
-});
-
-type CctxOptions = z.infer<typeof cctxOptionsSchema>;
-
-interface CctxResponse {
-  CrossChainTxs: CrossChainTx[];
-}
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const fetchCctx = async (
+const trackCCTXInteractive = async (
+  network: string,
   hash: string,
-  rpc: string
-): Promise<CrossChainTx[]> => {
-  console.log("Fetching CCTX for hash", hash);
-  const url = `${rpc}/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+  json: boolean = false,
+  timeoutSeconds: number = 60
+) => {
+  const client = new ZetaChainClient({ network });
 
-  const res = await axios.get<CctxResponse>(url, {
-    validateStatus: (s) => s === 200 || s === 404,
+  // Configure spinners with better options
+  const s = new Spinnies({
+    failColor: "redBright",
+    spinner: {
+      frames: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
+      interval: 80,
+    },
+    spinnerColor: "blueBright",
+    succeedColor: "greenBright",
   });
 
-  if (res.status === 404) return [];
-  return res.data.CrossChainTxs;
-};
+  const emitter = new EventEmitter();
 
-/**
- * Recursively follows inbound hashes to gather all reachable CCTXs.
- * Emits a **`cctx`** event whenever new CCTXs are found and a **`done`** event
- * when crawling finishes.
- */
-const gatherCctxs = async (
-  rootHash: string,
-  rpc: string,
-  delayMs = 2000,
-  maxTries = 5
-): Promise<CrossChainTx[]> => {
-  const results: CrossChainTx[] = [];
-  const attempts = new Map<string, number>();
-  let frontier: string[] = [rootHash];
+  // Cleaner event handlers with fixed symbols
+  emitter
+    .on("search-add", ({ text }: EmitterArgs) => {
+      // Just update the text without adding additional symbols
+      s.add(`search`, { color: "blueBright", text });
+    })
+    .on("search-end", ({ text }: EmitterArgs) => {
+      // Use a single checkmark
+      s.succeed(`search`, { text });
+    })
+    .on("search-update", ({ text }: EmitterArgs) => {
+      // Just update the text but keep the spinner going
+      s.update(`search`, { text });
+    })
+    .on("search-fail", ({ text }: EmitterArgs) => {
+      // Failed search with error message
+      s.fail(`search`, { text });
 
-  while (frontier.length) {
-    const nextFrontier: string[] = [];
-    let foundSomething = false;
+      // When search fails, also log to console more prominently
+      console.log(`\n❌ ${text}`);
+    })
+    .on("add", ({ hash, text }: EmitterArgs) => {
+      s.add(hash, { text });
+    })
+    .on("succeed", ({ hash, text }: EmitterArgs) => {
+      // Use a single checkmark
+      s.succeed(hash, { text });
+    })
+    .on("fail", ({ hash, text }: EmitterArgs) => {
+      // Use a single X
+      s.fail(hash, { text });
+    })
+    .on("update", ({ hash, text }: EmitterArgs) => {
+      s.update(hash, { text });
+    })
+    .on("mined-success", () => {
+      console.log("\n✅ All transactions completed successfully");
+    })
+    .on("mined-fail", () => {
+      console.log("\n❌ Some transactions failed or were aborted");
+    });
 
-    await Promise.all(
-      frontier.map(async (hash) => {
-        const triesSoFar = attempts.get(hash) ?? 0;
-        if (triesSoFar >= maxTries) return; // exhausted this hash
-        attempts.set(hash, triesSoFar + 1);
-
-        try {
-          const cctxs = await fetchCctx(hash, rpc);
-
-          if (cctxs.length === 0) {
-            // Still 404/empty – queue for another round if we have tries left
-            if (attempts.get(hash)! < maxTries) {
-              nextFrontier.push(hash);
-            }
-            return;
-          }
-
-          // Found at least one CCTX – we consider this hash resolved.
-          for (const cctx of cctxs) {
-            if (!results.some((t) => t.index === cctx.index)) {
-              results.push(cctx);
-              nextFrontier.push(cctx.index);
-              foundSomething = true;
-            }
-          }
-          // Mark resolved by setting attempts to maxTries
-          attempts.set(hash, maxTries);
-        } catch (err) {
-          console.error(`Error fetching CCTX for hash ${hash}:`, err);
-        }
-      })
-    );
-
-    // Emit incremental update if we found new items this round
-    if (foundSomething) {
-      cctxEmitter.emit("cctx", [...results]);
-    }
-
-    frontier = [...new Set(nextFrontier)];
-
-    if (frontier.length) {
-      await sleep(delayMs);
+  try {
+    await client.trackCCTX({
+      emitter,
+      hash,
+      json,
+      timeoutSeconds,
+    });
+  } catch (error) {
+    // Errors are already handled by the emitter events
+    if (json) {
+      console.error(error);
     }
   }
-
-  // Final emission
-  cctxEmitter.emit("done", results);
-  return results;
 };
 
-const main = async (options: CctxOptions) => {
-  const { hash, rpc, delay, tries } = cctxOptionsSchema.parse(options);
-  const allCctxs = await gatherCctxs(hash, rpc, delay, tries);
+const cctxArgsSchema = z.object({
+  json: z.boolean().optional(),
+  mainnet: z.boolean().optional(),
+  timeout: z.number().optional(),
+  tx: z.string(),
+});
 
-  // CLI still prints the final result for convenience
-  console.log(JSON.stringify(allCctxs, null, 2));
+type CctxArgs = z.infer<typeof cctxArgsSchema>;
+
+const main = async (args: CctxArgs) => {
+  const parsedArgs = validateAndParseSchema(args, cctxArgsSchema);
+
+  const network = parsedArgs.mainnet ? "mainnet" : "testnet";
+  console.log(`Tracking transaction on ${network}`);
+
+  await trackCCTXInteractive(
+    network,
+    parsedArgs.tx,
+    parsedArgs.json,
+    parsedArgs.timeout || 60
+  );
 };
 
-export const cctxCommand = new Command("cctx")
-  .description(
-    "Query a CCTX and follow its linked indexes, polling for new ones. Emits 'cctx' updates and 'done' on completion."
-  )
-  .requiredOption("-h, --hash <hash>", "Root inbound transaction hash")
-  .option(
-    "-r, --rpc <rpc>",
-    "RPC endpoint",
-    "https://zetachain-athens.blockpi.network/lcd/v1/public"
-  )
-  .option(
-    "-d, --delay <ms>",
-    "Delay between polling rounds in milliseconds",
-    "2000"
-  )
-  .option(
-    "-n, --tries <num>",
-    "Number of times to retry a 404 hash before treating it as final",
-    "5"
-  )
-  .action(async (opts) => {
-    await main(opts as CctxOptions);
-  });
+export const cctxTask = task(
+  "cctx",
+  "Track cross-chain transaction status",
+  main
+)
+  .addPositionalParam("tx", "Hash of an inbound or a cross-chain transaction")
+  .addFlag("json", "Output as JSON")
+  .addFlag("mainnet", "Run the task on mainnet")
+  .addOptionalParam(
+    "timeout",
+    "Timeout in seconds (default: 60)",
+    60,
+    types.int
+  );

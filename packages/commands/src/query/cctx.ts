@@ -1,7 +1,20 @@
 import { Command } from "commander";
 import { z } from "zod";
 import axios from "axios";
+import EventEmitter from "eventemitter3";
 import { CrossChainTx } from "../../../../types/cctx";
+
+/**
+ * Typed event map for our emitter. Two events are exposed:
+ *  - `cctx`  → emitted whenever NEW CCTXs are discovered (progress updates)
+ *  - `done`  → emitted once, when the crawl finishes, with the full array
+ */
+interface CctxEvents {
+  cctx: (partial: CrossChainTx[]) => void;
+  done: (all: CrossChainTx[]) => void;
+}
+
+export const cctxEmitter = new EventEmitter<CctxEvents>();
 
 const cctxOptionsSchema = z.object({
   hash: z.string(),
@@ -35,8 +48,8 @@ const fetchCctx = async (
 
 /**
  * Recursively follows inbound hashes to gather all reachable CCTXs.
- * For each hash, it will retry up to `maxTries` times if the endpoint
- * returns 404 (meaning the CCTX might not exist *yet*).
+ * Emits a **`cctx`** event whenever new CCTXs are found and a **`done`** event
+ * when crawling finishes.
  */
 const gatherCctxs = async (
   rootHash: string,
@@ -45,12 +58,12 @@ const gatherCctxs = async (
   maxTries = 5
 ): Promise<CrossChainTx[]> => {
   const results: CrossChainTx[] = [];
-  /** Track how many times we've attempted each hash */
   const attempts = new Map<string, number>();
   let frontier: string[] = [rootHash];
 
   while (frontier.length) {
     const nextFrontier: string[] = [];
+    const newlyFound: CrossChainTx[] = [];
 
     await Promise.all(
       frontier.map(async (hash) => {
@@ -62,29 +75,33 @@ const gatherCctxs = async (
           const cctxs = await fetchCctx(hash, rpc);
 
           if (cctxs.length === 0) {
-            // Still 404/empty – queue for another round if we have tries left
+            // Still 404/empty – queue for another round if tries remain
             if (attempts.get(hash)! < maxTries) {
               nextFrontier.push(hash);
             }
             return;
           }
 
-          // Found at least one CCTX – we consider this hash resolved.
+          // Found at least one CCTX – mark hash resolved.
           for (const cctx of cctxs) {
             if (!results.some((t) => t.index === cctx.index)) {
               results.push(cctx);
+              newlyFound.push(cctx);
               nextFrontier.push(cctx.index);
             }
           }
-          // Mark resolved by setting attempts to maxTries
-          attempts.set(hash, maxTries);
+          attempts.set(hash, maxTries); // resolved
         } catch (err) {
           console.error(`Error fetching CCTX for hash ${hash}:`, err);
         }
       })
     );
 
-    // Deduplicate hashes for the next round
+    // Emit incremental update if we found anything new this round.
+    if (newlyFound.length) {
+      cctxEmitter.emit("cctx", newlyFound);
+    }
+
     frontier = [...new Set(nextFrontier)];
 
     if (frontier.length) {
@@ -92,18 +109,41 @@ const gatherCctxs = async (
     }
   }
 
+  // Final emission
+  cctxEmitter.emit("done", results);
   return results;
 };
 
+/**
+ * CLI entry point. Subscribes to the emitter so that users see CCTX indexes
+ * appear in real time.
+ */
 const main = async (options: CctxOptions) => {
   const { hash, rpc, delay, tries } = cctxOptionsSchema.parse(options);
-  const allCctxs = await gatherCctxs(hash, rpc, delay, tries);
-  console.log(JSON.stringify(allCctxs, null, 2));
+
+  // Track what we've already displayed to avoid duplicates
+  const shown = new Set<string>();
+
+  cctxEmitter.on("cctx", (newCctxs) => {
+    for (const tx of newCctxs) {
+      if (shown.has(tx.index)) continue;
+      shown.add(tx.index);
+      console.log("➜", tx.index);
+    }
+  });
+
+  cctxEmitter.once("done", (all) => {
+    console.log(
+      `\nFetched ${all.length} CCTX${all.length === 1 ? "" : "s"} in total.`
+    );
+  });
+
+  await gatherCctxs(hash, rpc, delay, tries);
 };
 
 export const cctxCommand = new Command("cctx")
   .description(
-    "Query a CCTX and follow its linked indexes, polling for new ones"
+    "Query a CCTX and follow its linked indexes, showing them in real time."
   )
   .requiredOption("-h, --hash <hash>", "Root inbound transaction hash")
   .option(
@@ -114,7 +154,7 @@ export const cctxCommand = new Command("cctx")
   .option(
     "-d, --delay <ms>",
     "Delay between polling rounds in milliseconds",
-    "5000"
+    "2000"
   )
   .option(
     "-n, --tries <num>",
