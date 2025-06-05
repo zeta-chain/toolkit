@@ -1,7 +1,8 @@
-import { Command } from "commander";
-import { z } from "zod";
 import axios from "axios";
+import { Command } from "commander";
 import EventEmitter from "eventemitter3";
+import { z } from "zod";
+
 import { CrossChainTx } from "../../../../types/cctx";
 
 /**
@@ -15,9 +16,9 @@ interface CctxEvents {
 export const cctxEmitter = new EventEmitter<CctxEvents>();
 
 const cctxOptionsSchema = z.object({
+  delay: z.coerce.number().int().positive().default(2000),
   hash: z.string(),
   rpc: z.string(),
-  delay: z.coerce.number().int().positive().default(2000),
 });
 
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
@@ -52,6 +53,7 @@ const gatherCctxs = async (
   const results: CrossChainTx[] = [];
   const unresolved = new Set<string>([rootHash]);
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const nextRound: string[] = [];
 
