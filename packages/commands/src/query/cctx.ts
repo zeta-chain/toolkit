@@ -5,14 +5,11 @@ import EventEmitter from "eventemitter3";
 import { CrossChainTx } from "../../../../types/cctx";
 
 /**
- * Typed event map for our emitter. Two events are exposed:
- *  - `cctx` → emitted **after every polling round** with the *entire* array
- *             accumulated so far.
- *  - `done` → emitted once when crawling is finished with the final array.
+ * Event map:
+ *  - `cctx` → fired **every polling round** with the full array collected so far.
  */
 interface CctxEvents {
   cctx: (allSoFar: CrossChainTx[]) => void;
-  done: (all: CrossChainTx[]) => void;
 }
 
 export const cctxEmitter = new EventEmitter<CctxEvents>();
@@ -21,7 +18,6 @@ const cctxOptionsSchema = z.object({
   hash: z.string(),
   rpc: z.string(),
   delay: z.coerce.number().int().positive().default(2000),
-  tries: z.coerce.number().int().positive().default(5),
 });
 
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
@@ -37,100 +33,87 @@ const fetchCctx = async (
   rpc: string
 ): Promise<CrossChainTx[]> => {
   const url = `${rpc}/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
-
   const res = await axios.get<CctxResponse>(url, {
     validateStatus: (s) => s === 200 || s === 404,
   });
-
-  if (res.status === 404) return [];
-  return res.data.CrossChainTxs;
+  return res.status === 404 ? [] : res.data.CrossChainTxs;
 };
 
 /**
- * Recursively follows inbound hashes to gather all reachable CCTXs.
- * After **every** polling round it emits the *current* results array via
- * `cctx`, so front‑ends can re‑render live.
+ * Polls indefinitely until the process is terminated (Ctrl-C).
+ *
+ * 1. 404 hashes stay in the frontier and are retried forever.
+ * 2. Once a hash yields CCTXs we consider it "resolved" and stop polling it.
  */
 const gatherCctxs = async (
   rootHash: string,
   rpc: string,
-  delayMs = 2000,
-  maxTries = 5
-): Promise<CrossChainTx[]> => {
+  delayMs = 2000
+): Promise<void> => {
   const results: CrossChainTx[] = [];
-  const attempts = new Map<string, number>();
-  let frontier: string[] = [rootHash];
+  const unresolved = new Set<string>([rootHash]);
+  const resolved = new Set<string>();
 
-  while (frontier.length) {
-    const nextFrontier: string[] = [];
-    let roundHadNew = false;
+  while (true) {
+    const nextRound: string[] = [];
 
     await Promise.all(
-      frontier.map(async (hash) => {
-        const triesSoFar = attempts.get(hash) ?? 0;
-        if (triesSoFar >= maxTries) return;
-        attempts.set(hash, triesSoFar + 1);
-
+      [...unresolved].map(async (hash) => {
         try {
           const cctxs = await fetchCctx(hash, rpc);
-
           if (cctxs.length === 0) {
-            if (attempts.get(hash)! < maxTries) nextFrontier.push(hash);
+            nextRound.push(hash); // still 404 – retry later
             return;
           }
+
+          resolved.add(hash);
+          unresolved.delete(hash);
 
           for (const cctx of cctxs) {
             if (!results.some((t) => t.index === cctx.index)) {
               results.push(cctx);
-              nextFrontier.push(cctx.index);
-              roundHadNew = true;
+              nextRound.push(cctx.index); // may be 404 for a while
             }
           }
-          attempts.set(hash, maxTries);
         } catch (err) {
           console.error(`Error fetching CCTX for hash ${hash}:`, err);
+          // retry same hash next round on error
+          nextRound.push(hash);
         }
       })
     );
 
-    // Emit after each round (even if nothing new) so listeners always receive
-    // the freshest snapshot. Skip on the very first round when no data at all.
-    if (roundHadNew || results.length) {
-      cctxEmitter.emit("cctx", [...results]);
-    }
+    // Keep polling any hashes that are still unresolved
+    for (const h of nextRound) unresolved.add(h);
 
-    frontier = [...new Set(nextFrontier)];
+    // Emit full snapshot to listeners (front-end can just setState(results))
+    cctxEmitter.emit("cctx", [...results]);
 
-    if (frontier.length) await sleep(delayMs);
+    await sleep(delayMs);
   }
-
-  cctxEmitter.emit("done", results);
-  return results;
 };
 
 /**
- * CLI entry point – prints new indexes as they appear, using the full‑array
- * emissions to dedupe.
+ * CLI entry – prints new indexes in real time until user aborts.
  */
 const main = async (options: CctxOptions) => {
-  const { hash, rpc, delay, tries } = cctxOptionsSchema.parse(options);
+  const { hash, rpc, delay } = cctxOptionsSchema.parse(options);
+  const seen = new Set<string>();
 
-  const shown = new Set<string>();
-
-  cctxEmitter.on("cctx", (allSoFar) => {
-    for (const tx of allSoFar) {
-      if (shown.has(tx.index)) continue;
-      shown.add(tx.index);
-      console.log(tx.index);
+  cctxEmitter.on("cctx", (all) => {
+    for (const tx of all) {
+      if (seen.has(tx.index)) continue;
+      seen.add(tx.index);
+      console.log("➜", tx.index);
     }
   });
 
-  await gatherCctxs(hash, rpc, delay, tries);
+  await gatherCctxs(hash, rpc, delay);
 };
 
 export const cctxCommand = new Command("cctx")
   .description(
-    "Query a CCTX and follow its linked indexes, streaming full snapshots after each round."
+    "Continuously query a CCTX and its linked indexes, streaming snapshots until interrupted."
   )
   .requiredOption("-h, --hash <hash>", "Root inbound transaction hash")
   .option(
@@ -142,11 +125,6 @@ export const cctxCommand = new Command("cctx")
     "-d, --delay <ms>",
     "Delay between polling rounds in milliseconds",
     "2000"
-  )
-  .option(
-    "-n, --tries <num>",
-    "Number of times to retry a 404 hash before treating it as final",
-    "5"
   )
   .action(async (opts) => {
     await main(opts as CctxOptions);
