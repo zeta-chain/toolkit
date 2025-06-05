@@ -9,6 +9,7 @@ import {
   SOLANA_NETWORKS,
   SOLANA_TOKEN_PROGRAM,
 } from "../types/shared.constants";
+import { hexStringSchema } from "../types/shared.schema";
 import { trim0x } from "./trim0x";
 
 export const solanaDepositOptionsSchema = z.object({
@@ -41,13 +42,22 @@ export const keypairFromPrivateKey = (
     const decodedKey = bs58.decode(privateKey);
     return anchor.web3.Keypair.fromSecretKey(decodedKey);
   } catch (error) {
+    // If base58 fails, validate and try hex format
+    const hexValidation = hexStringSchema.safeParse(privateKey);
+    if (!hexValidation.success) {
+      throw new Error(
+        "Invalid private key format. Must be either base58 or valid hex (with optional 0x prefix)."
+      );
+    }
+
     try {
-      // If base58 fails, try hex format
       const cleanKey = trim0x(privateKey);
       return anchor.web3.Keypair.fromSecretKey(Buffer.from(cleanKey, "hex"));
     } catch (hexError) {
       throw new Error(
-        "Invalid private key format. Must be either base58 or hex."
+        `Invalid hex private key: ${
+          hexError instanceof Error ? hexError.message : "Unknown error"
+        }`
       );
     }
   }
@@ -73,7 +83,7 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
     .addOption(
       new Option(
         "--private-key <privateKey>",
-        "Private key in base58 format"
+        "Private key in base58 or hex format (with optional 0x prefix)"
       ).conflicts(["mnemonic", "name"])
     )
     .addOption(
