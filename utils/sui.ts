@@ -127,7 +127,7 @@ export const getKeypair = (options: KeypairOptions): Ed25519Keypair => {
     }
     return getKeypairFromPrivateKey(account.privateKey);
   } else {
-    throw new Error("Either mnemonic or private key must be provided");
+    throw new Error("Either mnemonic, private key or name must be provided");
   }
 };
 
