@@ -178,8 +178,3 @@ const bytesToHex = (bytes: Uint8Array): string => {
     .map((byte) => byte.toString(16).padStart(2, "0")) // Convert each byte to a 2-digit hex
     .join("");
 };
-
-// Helper function to trim the '0x' prefix from a hex string
-export const trimOx = (hexString: string): string => {
-  return hexString.startsWith("0x") ? hexString.slice(2) : hexString;
-};

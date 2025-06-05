@@ -9,6 +9,7 @@ import {
   SOLANA_NETWORKS,
   SOLANA_TOKEN_PROGRAM,
 } from "../types/shared.constants";
+import { trim0x } from "./trim0x";
 
 export const solanaDepositOptionsSchema = z.object({
   amount: z.string(),
@@ -36,12 +37,19 @@ export const keypairFromPrivateKey = (
   privateKey: string
 ): anchor.web3.Keypair => {
   try {
+    // First try base58 decoding (original format)
     const decodedKey = bs58.decode(privateKey);
     return anchor.web3.Keypair.fromSecretKey(decodedKey);
   } catch (error) {
-    throw new Error(
-      "Invalid private key format. Expected base58-encoded private key."
-    );
+    try {
+      // If base58 fails, try hex format
+      const cleanKey = trim0x(privateKey);
+      return anchor.web3.Keypair.fromSecretKey(Buffer.from(cleanKey, "hex"));
+    } catch (hexError) {
+      throw new Error(
+        "Invalid private key format. Must be either base58 or hex."
+      );
+    }
   }
 };
 
