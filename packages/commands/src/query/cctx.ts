@@ -24,6 +24,7 @@ const fetchCctx = async (
 ): Promise<CrossChainTx[]> => {
   console.log("Fetching CCTX for hash", hash);
   const url = `${rpc}/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+
   const res = await axios.get<CctxResponse>(url, {
     validateStatus: (s) => s === 200 || s === 404,
   });
@@ -34,43 +35,59 @@ const fetchCctx = async (
 
 /**
  * Recursively follows inbound hashes to gather all reachable CCTXs.
- * Polls for new CCTXs `maxRounds` times, waiting `delayMs` between rounds.
+ * For each hash, it will retry up to `maxTries` times if the endpoint
+ * returns 404 (meaning the CCTX might not exist *yet*).
  */
 const gatherCctxs = async (
   rootHash: string,
   rpc: string,
   delayMs = 2000,
-  maxRounds = 5
+  maxTries = 5
 ): Promise<CrossChainTx[]> => {
   const results: CrossChainTx[] = [];
-  const seenHashes = new Set<string>();
+  /** Track how many times we've attempted each hash */
+  const attempts = new Map<string, number>();
   let frontier: string[] = [rootHash];
 
-  for (let round = 0; round < maxRounds && frontier.length > 0; round++) {
+  while (frontier.length) {
     const nextFrontier: string[] = [];
 
     await Promise.all(
       frontier.map(async (hash) => {
-        if (seenHashes.has(hash)) return;
-        seenHashes.add(hash);
+        const triesSoFar = attempts.get(hash) ?? 0;
+        if (triesSoFar >= maxTries) return; // exhausted this hash
+        attempts.set(hash, triesSoFar + 1);
 
         try {
           const cctxs = await fetchCctx(hash, rpc);
+
+          if (cctxs.length === 0) {
+            // Still 404/empty – queue for another round if we have tries left
+            if (attempts.get(hash)! < maxTries) {
+              nextFrontier.push(hash);
+            }
+            return;
+          }
+
+          // Found at least one CCTX – we consider this hash resolved.
           for (const cctx of cctxs) {
             if (!results.some((t) => t.index === cctx.index)) {
               results.push(cctx);
               nextFrontier.push(cctx.index);
             }
           }
+          // Mark resolved by setting attempts to maxTries
+          attempts.set(hash, maxTries);
         } catch (err) {
           console.error(`Error fetching CCTX for hash ${hash}:`, err);
         }
       })
     );
 
-    frontier = nextFrontier.filter((h) => !seenHashes.has(h));
+    // Deduplicate hashes for the next round
+    frontier = [...new Set(nextFrontier)];
 
-    if (frontier.length && round < maxRounds - 1) {
+    if (frontier.length) {
       await sleep(delayMs);
     }
   }
@@ -97,11 +114,11 @@ export const cctxCommand = new Command("cctx")
   .option(
     "-d, --delay <ms>",
     "Delay between polling rounds in milliseconds",
-    "2000"
+    "5000"
   )
   .option(
     "-n, --tries <num>",
-    "Maximum number of polling rounds to perform",
+    "Number of times to retry a 404 hash before treating it as final",
     "5"
   )
   .action(async (opts) => {
