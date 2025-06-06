@@ -1,9 +1,10 @@
-import { Command } from "commander";
-import { z } from "zod";
 import axios from "axios";
-import EventEmitter from "eventemitter3";
-import { CrossChainTx } from "../../../../types/cctx";
+import { Command } from "commander";
 import { ethers } from "ethers";
+import EventEmitter from "eventemitter3";
+import { z } from "zod";
+
+import { CrossChainTx } from "../../../../types/cctx";
 
 /**
  * Event map:
@@ -16,9 +17,9 @@ interface CctxEvents {
 export const cctxEmitter = new EventEmitter<CctxEvents>();
 
 const cctxOptionsSchema = z.object({
+  delay: z.coerce.number().int().positive().default(2000),
   hash: z.string(),
   rpc: z.string(),
-  delay: z.coerce.number().int().positive().default(2000),
 });
 
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
@@ -67,6 +68,7 @@ const gatherCctxs = async (
   // Track which indexes we've *ever* queried so we still fetch each once
   const queriedOnce = new Set<string>();
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const nextFrontier = new Set<string>();
 
@@ -167,7 +169,7 @@ const main = async (options: CctxOptions) => {
           ? `Waiting for a transaction on chain ${receiver_chainId}...`
           : `${outbound_params[0].hash} (on chain ${receiver_chainId})`;
 
-      let mainTx = `${sender_chain_id} → ${receiver_chainId} ${mainStatusIcon} ${status}
+      let mainTx = `${sender_chain_id} → ${receiver_chainId} ${mainStatusIcon} ${mainStatus}
 CCTX:     ${index}
 Tx Hash:  ${inbound_params.observed_hash} (on chain ${sender_chain_id})
 Tx Hash:  ${outboundHash}
