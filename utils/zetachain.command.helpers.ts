@@ -195,21 +195,29 @@ export const prepareCallOptions = (options: BaseZetachainOptions) => {
 export const getZRC20WithdrawFee = async (
   provider: ethers.ContractRunner,
   zrc20: string
-) => {
+): Promise<{
+  gasFee: string;
+  gasSymbol: string;
+  gasZRC20: string;
+  zrc20Symbol: string;
+}> => {
   const contract = new ethers.Contract(
     zrc20,
     ZRC20ABI.abi,
     provider
   ) as ZRC20Contract;
-  const zrc20Symbol = await contract.symbol();
-  const [gasZRC20, gasFee] = await contract.withdrawGasFee();
+  const zrc20Symbol = (await contract.symbol()) as string;
+  const [gasZRC20, gasFee] = (await contract.withdrawGasFee()) as [
+    string,
+    bigint
+  ];
   const gasContract = new ethers.Contract(
     gasZRC20,
     ZRC20ABI.abi,
     provider
   ) as ZRC20Contract;
   const decimals = await gasContract.decimals();
-  const gasSymbol = await gasContract.symbol();
+  const gasSymbol = (await gasContract.symbol()) as string;
   const gasFeeFormatted = ethers.formatUnits(gasFee, decimals);
   return { gasFee: gasFeeFormatted, gasSymbol, gasZRC20, zrc20Symbol };
 };
