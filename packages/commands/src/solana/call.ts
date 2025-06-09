@@ -68,7 +68,7 @@ const main = async (options: CallOptions) => {
     console.log("Transaction hash:", tx);
   } catch (error) {
     handleError({
-      context: "Error during deposit and call",
+      context: "Error during call",
       error,
       shouldThrow: false,
     });
