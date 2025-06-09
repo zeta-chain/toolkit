@@ -54,7 +54,8 @@ const main = async (options: WithdrawAndCallOptions) => {
 
     const { gasFee, gasSymbol, zrc20Symbol } = await getZRC20WithdrawFee(
       client.signer as ethers.ContractRunner,
-      options.zrc20
+      options.zrc20,
+      options.callOptionsGasLimit
     );
 
     if (options.data) {

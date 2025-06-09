@@ -194,7 +194,8 @@ export const prepareCallOptions = (options: BaseZetachainOptions) => {
 
 export const getZRC20WithdrawFee = async (
   provider: ethers.ContractRunner,
-  zrc20: string
+  zrc20: string,
+  gasLimit?: string
 ): Promise<{
   gasFee: string;
   gasSymbol: string;
@@ -206,11 +207,16 @@ export const getZRC20WithdrawFee = async (
     ZRC20ABI.abi,
     provider
   ) as ZRC20Contract;
+  let gasZRC20: string;
+  let gasFee: bigint;
   const zrc20Symbol = (await contract.symbol()) as string;
-  const [gasZRC20, gasFee] = (await contract.withdrawGasFee()) as [
-    string,
-    bigint
-  ];
+  if (gasLimit) {
+    [gasZRC20, gasFee] = (await contract.withdrawGasFeeWithGasLimit(
+      gasLimit
+    )) as [string, bigint];
+  } else {
+    [gasZRC20, gasFee] = (await contract.withdrawGasFee()) as [string, bigint];
+  }
   const gasContract = new ethers.Contract(
     gasZRC20,
     ZRC20ABI.abi,
