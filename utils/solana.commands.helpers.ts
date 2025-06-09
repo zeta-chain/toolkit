@@ -39,7 +39,7 @@ export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
     types: z.array(z.string()),
     values: z.array(z.string()),
     revertAddress: z.string().optional(),
-    abortAddress: z.string(),
+    abortAddress: z.string().optional(),
     callOnRevert: z.boolean().optional().default(false),
     revertMessage: z.string().optional(),
     onRevertGasLimit: z.string(),

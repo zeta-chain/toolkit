@@ -73,12 +73,21 @@ const main = async (options: DepositAndCallOptions) => {
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const encodedParameters = abiCoder.encode(options.types, values);
 
-    let revertOptions = {
-      revertAddress: new PublicKey(options.revertAddress!),
-      abortAddress: ethers.getBytes(options.abortAddress),
-      callOnRevert: options.callOnRevert ?? false,
+    const revertAddress = options.revertAddress
+      ? new PublicKey(options.revertAddress)
+      : provider.wallet.publicKey; // fallback to the signer’s address
+
+    // pick user value if provided, otherwise 0x000… as bytes
+    const abortAddress: Uint8Array = options.abortAddress
+      ? ethers.getBytes(options.abortAddress) // 20 bytes
+      : ethers.getBytes(ethers.ZeroAddress); // 0x000… → 20 bytes
+    // ethers verifies length
+    const revertOptions = {
+      revertAddress, // Pubkey (as before)
+      abortAddress, // now correct type
+      callOnRevert: !!options.callOnRevert,
       revertMessage: Buffer.from(options.revertMessage ?? "", "utf8"),
-      onRevertGasLimit: new anchor.BN(options.onRevertGasLimit),
+      onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
     };
 
     if (options.mint) {
@@ -202,7 +211,7 @@ export const depositAndCallCommand = createSolanaCommandWithCommonOptions(
     "Parameter values for the function call"
   )
   .option("--revert-address <revertAddress>", "Revert address")
-  .option("--abort-address <abortAddress>", "Abort address", ethers.ZeroAddress)
+  .option("--abort-address <abortAddress>", "Abort address")
   .option("--call-on-revert <callOnRevert>", "Call on revert")
   .option("--revert-message <revertMessage>", "Revert message")
   .option(

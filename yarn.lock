@@ -3578,15 +3578,15 @@
   dependencies:
     dotenv "^16.1.4"
 
-"@zetachain/protocol-contracts-solana@3.0.2-rc2":
-  version "3.0.2-rc2"
-  resolved "https://registry.npmjs.org/@zetachain/protocol-contracts-solana/-/protocol-contracts-solana-3.0.2-rc2.tgz#4c511194826a377daaa50d05569e5de323e7eff6"
-  integrity sha512-jWIC6cdZe7hJ5Am79Hhn38IU8WKp5ndq7HgceVkWi4tX5j83/DLBUimqRsk8ZDf304WIyMB4KAlC3bVZ9vWiZw==
+"@zetachain/protocol-contracts-solana@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.npmjs.org/@zetachain/protocol-contracts-solana/-/protocol-contracts-solana-5.0.0.tgz#42f7f1746286ec52b1a8f17a194f351e1d4c47c7"
+  integrity sha512-mE1TYeKsBcDCQQBV2Rn/g/p9NbDgoCjvEpBuVAEm5PMRPjN7FPwV1NrLGu4PV7JQM1uMU4SmSvEjX96wwEd+rQ==
   dependencies:
     "@coral-xyz/anchor" "^0.31.1"
     "@solana/spl-memo" "^0.2.5"
     "@solana/spl-token" "^0.4.6"
-    elliptic "^6.5.7"
+    elliptic "^6.6.1"
     ethereumjs-util "^7.1.5"
     secp256k1 "^5.0.0"
 
@@ -5282,7 +5282,7 @@ elliptic@6.5.4:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-elliptic@6.6.1, elliptic@^6.5.7:
+elliptic@6.6.1, elliptic@^6.5.7, elliptic@^6.6.1:
   version "6.6.1"
   resolved "https://registry.npmjs.org/elliptic/-/elliptic-6.6.1.tgz#3b8ffb02670bf69e382c7f65bf524c97c5405c06"
   integrity sha512-RaddvvMatK2LJHqFJ+YA4WysVN5Ita9E35botqIYspQ4TkRAlCicdzKOjlyv/1Za5RyTNn7di//eEV0uTAfe3g==
