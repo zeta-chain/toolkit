@@ -75,20 +75,19 @@ const main = async (options: DepositAndCallOptions) => {
 
     const revertAddress = options.revertAddress
       ? new PublicKey(options.revertAddress)
-      : provider.wallet.publicKey; // fallback to the signer’s address
+      : provider.wallet.publicKey;
 
-    // pick user value if provided, otherwise 0x000… as bytes
-    const abortAddress: Uint8Array = options.abortAddress
-      ? ethers.getBytes(options.abortAddress) // 20 bytes
-      : ethers.getBytes(ethers.ZeroAddress); // 0x000… → 20 bytes
-    // ethers verifies length
+    const abortAddress: Uint8Array = ethers.getBytes(options.abortAddress);
+
     const revertOptions = {
-      revertAddress, // Pubkey (as before)
-      abortAddress, // now correct type
-      callOnRevert: !!options.callOnRevert,
-      revertMessage: Buffer.from(options.revertMessage ?? "", "utf8"),
+      abortAddress,
+      callOnRevert: options.callOnRevert,
       onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
+      revertAddress,
+      revertMessage: Buffer.from(options.revertMessage, "utf8"),
     };
+
+    const message = Buffer.from(encodedParameters.slice(2), "hex");
 
     if (options.mint) {
       const mintInfo = await connection.getTokenSupply(
@@ -144,7 +143,7 @@ const main = async (options: DepositAndCallOptions) => {
         .depositSplTokenAndCall(
           new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
           receiverBytes,
-          ethers.getBytes(encodedParameters),
+          message,
           revertOptions
         )
         .accounts({
@@ -173,7 +172,7 @@ const main = async (options: DepositAndCallOptions) => {
         .depositAndCall(
           new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
           receiverBytes,
-          ethers.getBytes(encodedParameters),
+          message,
           revertOptions
         )
         .accounts({})
@@ -211,9 +210,9 @@ export const depositAndCallCommand = createSolanaCommandWithCommonOptions(
     "Parameter values for the function call"
   )
   .option("--revert-address <revertAddress>", "Revert address")
-  .option("--abort-address <abortAddress>", "Abort address")
-  .option("--call-on-revert <callOnRevert>", "Call on revert")
-  .option("--revert-message <revertMessage>", "Revert message")
+  .option("--abort-address <abortAddress>", "Abort address", ethers.ZeroAddress)
+  .option("--call-on-revert <callOnRevert>", "Call on revert", false)
+  .option("--revert-message <revertMessage>", "Revert message", "")
   .option(
     "--on-revert-gas-limit <onRevertGasLimit>",
     "On revert gas limit",

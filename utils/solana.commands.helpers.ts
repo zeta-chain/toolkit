@@ -33,16 +33,16 @@ export const solanaDepositOptionsSchema = baseSolanaOptionsSchema
 
 export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
   .extend({
+    abortAddress: z.string(),
     amount: z.string(),
+    callOnRevert: z.boolean().optional().default(false),
     mint: z.string().optional(),
+    onRevertGasLimit: z.string(),
+    revertAddress: z.string().optional(),
+    revertMessage: z.string(),
     tokenProgram: z.string().default(SOLANA_TOKEN_PROGRAM),
     types: z.array(z.string()),
     values: z.array(z.string()),
-    revertAddress: z.string().optional(),
-    abortAddress: z.string().optional(),
-    callOnRevert: z.boolean().optional().default(false),
-    revertMessage: z.string().optional(),
-    onRevertGasLimit: z.string(),
   })
   .refine((data) => !(data.mnemonic && data.privateKey), {
     message: "Only one of mnemonic or privateKey can be provided, not both",
