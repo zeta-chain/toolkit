@@ -52,6 +52,15 @@ export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
     message: "Only one of mnemonic or privateKey can be provided, not both",
   });
 
+export const solanaCallOptionsSchema = baseSolanaOptionsSchema
+  .extend({
+    types: z.array(z.string()),
+    values: z.array(z.string()),
+  })
+  .refine((data) => !(data.mnemonic && data.privateKey), {
+    message: "Only one of mnemonic or privateKey can be provided, not both",
+  });
+
 export const keypairFromMnemonic = async (
   mnemonic: string
 ): Promise<anchor.web3.Keypair> => {
