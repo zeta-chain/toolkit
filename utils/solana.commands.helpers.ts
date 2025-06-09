@@ -243,13 +243,21 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
     );
 };
 
+interface SolanaRevertOptions {
+  abortAddress: Uint8Array;
+  callOnRevert: boolean;
+  onRevertGasLimit: anchor.BN;
+  revertAddress: PublicKey;
+  revertMessage: Buffer;
+}
+
 export const confirmSolanaTx = async (options: {
   amount?: string;
   api: string;
   message?: string;
   mint?: string;
   recipient: string;
-  revertOptions: any;
+  revertOptions: SolanaRevertOptions;
   sender: string;
 }) => {
   console.log(`
