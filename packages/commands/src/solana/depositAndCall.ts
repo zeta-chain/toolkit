@@ -144,7 +144,7 @@ const main = async (options: DepositAndCallOptions) => {
         .depositSplTokenAndCall(
           new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
           receiverBytes,
-          Buffer.from(encodedParameters),
+          ethers.getBytes(encodedParameters),
           revertOptions
         )
         .accounts({
@@ -173,7 +173,7 @@ const main = async (options: DepositAndCallOptions) => {
         .depositAndCall(
           new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
           receiverBytes,
-          Buffer.from(encodedParameters),
+          ethers.getBytes(encodedParameters),
           revertOptions
         )
         .accounts({})
