@@ -1,7 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Wallet } from "@coral-xyz/anchor";
 import {
-  AccountLayout,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
@@ -17,9 +16,9 @@ import {
   createSolanaCommandWithCommonOptions,
   getAPI,
   getKeypair,
-  solanaDepositOptionsSchema,
   getSPLToken,
   isSOLBalanceSufficient,
+  solanaDepositOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
@@ -29,16 +28,16 @@ const main = async (options: DepositOptions) => {
   const gatewayIDL =
     options.network === "localnet" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
 
-  let keypair = await getKeypair({
-    name: options.name,
+  const keypair = await getKeypair({
     mnemonic: options.mnemonic,
+    name: options.name,
     privateKey: options.privateKey,
   });
 
   const API = getAPI(options.network);
 
   const connection = new anchor.web3.Connection(API);
-  const provider = new anchor.AnchorProvider(connection, new Wallet(keypair!));
+  const provider = new anchor.AnchorProvider(connection, new Wallet(keypair));
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
 
   const receiverBytes = ethers.getBytes(options.recipient);
@@ -88,7 +87,7 @@ const main = async (options: DepositOptions) => {
         .accounts({
           from,
           mintAccount: options.mint,
-          signer: keypair!.publicKey,
+          signer: keypair.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
           to,
           tokenProgram: TOKEN_PROGRAM_ID,

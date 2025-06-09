@@ -1,31 +1,30 @@
 import * as anchor from "@coral-xyz/anchor";
+import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { clusterApiUrl, PublicKey } from "@solana/web3.js";
 import * as bip39 from "bip39";
 import bs58 from "bs58";
 import { Command, Option } from "commander";
+import { ethers } from "ethers";
 import { z } from "zod";
 
+import { SolanaAccountData } from "../types/accounts.types";
 import {
   DEFAULT_ACCOUNT_NAME,
   SOLANA_NETWORKS,
-  SOLANA_TOKEN_PROGRAM,
 } from "../types/shared.constants";
 import { hexStringSchema } from "../types/shared.schema";
-import { trim0x } from "./trim0x";
-import { SolanaAccountData } from "../types/accounts.types";
 import { getAccountData } from "./accounts";
-import { clusterApiUrl, PublicKey } from "@solana/web3.js";
-import { ethers } from "ethers";
-import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { trim0x } from "./trim0x";
 
 export const baseSolanaOptionsSchema = z.object({
+  abortAddress: z.string(),
+  callOnRevert: z.boolean().optional().default(false),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
   network: z.string(),
+  onRevertGasLimit: z.string(),
   privateKey: z.string().optional(),
   recipient: z.string(),
-  abortAddress: z.string(),
-  callOnRevert: z.boolean().optional().default(false),
-  onRevertGasLimit: z.string(),
   revertAddress: z.string().optional(),
   revertMessage: z.string(),
 });
@@ -33,7 +32,7 @@ export const baseSolanaOptionsSchema = z.object({
 const privateKeyRefineRule = () => {
   return {
     message: "Only one of mnemonic or privateKey or name can be provided",
-    rule: (data: { privateKey?: string; mnemonic?: string; name?: string }) =>
+    rule: (data: { mnemonic?: string; name?: string; privateKey?: string }) =>
       [...Object.values(data)].filter(Boolean).length <= 1,
   };
 };
@@ -107,8 +106,8 @@ export const getKeypair = async ({
   mnemonic,
   privateKey,
 }: {
-  name: string | undefined;
   mnemonic: string | undefined;
+  name: string | undefined;
   privateKey: string | undefined;
 }) => {
   let keypair: anchor.web3.Keypair;
@@ -179,8 +178,8 @@ export const getSPLToken = async (
   const from = matchingTokenAccount.pubkey;
 
   return {
-    from,
     decimals,
+    from,
   };
 };
 

@@ -1,9 +1,9 @@
 import { Command } from "commander";
 
+import { callCommand } from "./call";
 import { depositCommand } from "./deposit";
 import { depositAndCallCommand } from "./depositAndCall";
 import { encodeCommand } from "./encode";
-import { callCommand } from "./call";
 
 export const solanaCommand = new Command("solana")
   .description("Solana commands")

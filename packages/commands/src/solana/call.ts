@@ -22,16 +22,16 @@ const main = async (options: CallOptions) => {
   const gatewayIDL =
     options.network === "localnet" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
 
-  let keypair = await getKeypair({
-    name: options.name,
+  const keypair = await getKeypair({
     mnemonic: options.mnemonic,
+    name: options.name,
     privateKey: options.privateKey,
   });
 
   const API = getAPI(options.network);
 
   const connection = new anchor.web3.Connection(API);
-  const provider = new anchor.AnchorProvider(connection, new Wallet(keypair!));
+  const provider = new anchor.AnchorProvider(connection, new Wallet(keypair));
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
 
   const receiverBytes = ethers.getBytes(options.recipient);
