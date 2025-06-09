@@ -11,6 +11,10 @@ import {
 } from "../types/shared.constants";
 import { hexStringSchema } from "../types/shared.schema";
 import { trim0x } from "./trim0x";
+import { SolanaAccountData } from "../types/accounts.types";
+import { getAccountData } from "./accounts";
+import { clusterApiUrl } from "@solana/web3.js";
+import { ethers } from "ethers";
 
 export const baseSolanaOptionsSchema = z.object({
   mnemonic: z.string().optional(),
@@ -18,6 +22,11 @@ export const baseSolanaOptionsSchema = z.object({
   network: z.string(),
   privateKey: z.string().optional(),
   recipient: z.string(),
+  abortAddress: z.string(),
+  callOnRevert: z.boolean().optional().default(false),
+  onRevertGasLimit: z.string(),
+  revertAddress: z.string().optional(),
+  revertMessage: z.string(),
 });
 
 export const solanaDepositOptionsSchema = baseSolanaOptionsSchema
@@ -33,13 +42,8 @@ export const solanaDepositOptionsSchema = baseSolanaOptionsSchema
 
 export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
   .extend({
-    abortAddress: z.string(),
     amount: z.string(),
-    callOnRevert: z.boolean().optional().default(false),
     mint: z.string().optional(),
-    onRevertGasLimit: z.string(),
-    revertAddress: z.string().optional(),
-    revertMessage: z.string(),
     tokenProgram: z.string().default(SOLANA_TOKEN_PROGRAM),
     types: z.array(z.string()),
     values: z.array(z.string()),
@@ -88,6 +92,42 @@ export const keypairFromPrivateKey = (
   }
 };
 
+export const getKeypair = async ({
+  name,
+  mnemonic,
+  privateKey,
+}: {
+  name: string | undefined;
+  mnemonic: string | undefined;
+  privateKey: string | undefined;
+}) => {
+  let keypair: anchor.web3.Keypair;
+  if (privateKey) {
+    keypair = keypairFromPrivateKey(privateKey);
+  } else if (mnemonic) {
+    keypair = await keypairFromMnemonic(mnemonic);
+  } else if (name) {
+    const privateKey = getAccountData<SolanaAccountData>(
+      "solana",
+      name
+    )?.privateKey;
+    keypair = keypairFromPrivateKey(privateKey!);
+  } else {
+    throw new Error("No account provided");
+  }
+  return keypair;
+};
+
+export const getAPI = (network: string) => {
+  let API = "http://localhost:8899";
+  if (network === "devnet") {
+    API = clusterApiUrl("devnet");
+  } else if (network === "mainnet") {
+    API = clusterApiUrl("mainnet-beta");
+  }
+  return API;
+};
+
 export const createSolanaCommandWithCommonOptions = (name: string): Command => {
   return new Command(name)
     .requiredOption(
@@ -115,5 +155,18 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
       new Option("--network <network>", "Solana network").choices(
         SOLANA_NETWORKS
       )
+    )
+    .option("--revert-address <revertAddress>", "Revert address")
+    .option(
+      "--abort-address <abortAddress>",
+      "Abort address",
+      ethers.ZeroAddress
+    )
+    .option("--call-on-revert <callOnRevert>", "Call on revert", false)
+    .option("--revert-message <revertMessage>", "Revert message", "")
+    .option(
+      "--on-revert-gas-limit <onRevertGasLimit>",
+      "On revert gas limit",
+      "0"
     );
 };

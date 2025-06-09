@@ -17,8 +17,8 @@ import { handleError, validateAndParseSchema } from "../../../../utils";
 import { getAccountData } from "../../../../utils/accounts";
 import {
   createSolanaCommandWithCommonOptions,
-  keypairFromMnemonic,
-  keypairFromPrivateKey,
+  getAPI,
+  getKeypair,
   solanaDepositOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
 
@@ -29,42 +29,33 @@ const main = async (options: DepositOptions) => {
   const gatewayIDL =
     options.network === "localnet" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
 
-  let keypair: anchor.web3.Keypair;
-  if (options.privateKey) {
-    keypair = keypairFromPrivateKey(options.privateKey);
-  } else if (options.mnemonic) {
-    keypair = await keypairFromMnemonic(options.mnemonic);
-  } else if (options.name) {
-    const privateKey = getAccountData<SolanaAccountData>(
-      "solana",
-      options.name
-    )?.privateKey;
-    keypair = keypairFromPrivateKey(privateKey!);
-  } else {
-    throw new Error("No account provided");
-  }
+  let keypair = await getKeypair({
+    name: options.name,
+    mnemonic: options.mnemonic,
+    privateKey: options.privateKey,
+  });
 
-  let API = "http://localhost:8899";
-  if (options.network === "devnet") {
-    API = clusterApiUrl("devnet");
-  } else if (options.network === "mainnet") {
-    API = clusterApiUrl("mainnet-beta");
-  }
+  const API = getAPI(options.network);
 
   const connection = new anchor.web3.Connection(API);
-
   const provider = new anchor.AnchorProvider(connection, new Wallet(keypair!));
-
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
+  const tokenAccounts = await connection.getTokenAccountsByOwner(
+    provider.wallet.publicKey,
+    { programId: TOKEN_PROGRAM_ID }
+  );
 
   const receiverBytes = ethers.getBytes(options.recipient);
 
-  const tokenAccounts = await connection.getTokenAccountsByOwner(
-    provider.wallet.publicKey,
-    {
-      programId: TOKEN_PROGRAM_ID,
-    }
-  );
+  const revertOptions = {
+    abortAddress: ethers.getBytes(options.abortAddress),
+    callOnRevert: options.callOnRevert,
+    onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
+    revertAddress: options.revertAddress
+      ? new PublicKey(options.revertAddress)
+      : provider.wallet.publicKey,
+    revertMessage: Buffer.from(options.revertMessage, "utf8"),
+  };
 
   try {
     if (options.mint) {
@@ -121,7 +112,7 @@ const main = async (options: DepositOptions) => {
         .depositSplToken(
           new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
           receiverBytes,
-          null
+          revertOptions
         )
         .accounts({
           from,
@@ -148,7 +139,7 @@ const main = async (options: DepositOptions) => {
         .deposit(
           new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
           receiverBytes,
-          null
+          revertOptions
         )
         .accounts({})
         .rpc();

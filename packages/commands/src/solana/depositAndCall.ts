@@ -5,21 +5,19 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { clusterApiUrl, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { SolanaAccountData } from "../../../../types/accounts.types";
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
-import { getAccountData } from "../../../../utils/accounts";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 import {
   createSolanaCommandWithCommonOptions,
-  keypairFromMnemonic,
-  keypairFromPrivateKey,
+  getAPI,
+  getKeypair,
   solanaDepositAndCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
 
@@ -30,65 +28,40 @@ const main = async (options: DepositAndCallOptions) => {
   const gatewayIDL =
     options.network === "localnet" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
 
-  let keypair: anchor.web3.Keypair;
-  if (options.privateKey) {
-    keypair = keypairFromPrivateKey(options.privateKey);
-  } else if (options.mnemonic) {
-    keypair = await keypairFromMnemonic(options.mnemonic);
-  } else if (options.name) {
-    const privateKey = getAccountData<SolanaAccountData>(
-      "solana",
-      options.name
-    )?.privateKey;
-    keypair = keypairFromPrivateKey(privateKey!);
-  } else {
-    throw new Error("No account provided");
-  }
+  let keypair = await getKeypair({
+    name: options.name,
+    mnemonic: options.mnemonic,
+    privateKey: options.privateKey,
+  });
 
-  let API = "http://localhost:8899";
-  if (options.network === "devnet") {
-    API = clusterApiUrl("devnet");
-  } else if (options.network === "mainnet") {
-    API = clusterApiUrl("mainnet-beta");
-  }
+  const API = getAPI(options.network);
 
   const connection = new anchor.web3.Connection(API);
-
   const provider = new anchor.AnchorProvider(connection, new Wallet(keypair!));
-
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
-
-  const receiverBytes = ethers.getBytes(options.recipient);
-
   const tokenAccounts = await connection.getTokenAccountsByOwner(
     provider.wallet.publicKey,
-    {
-      programId: TOKEN_PROGRAM_ID,
-    }
+    { programId: TOKEN_PROGRAM_ID }
   );
 
-  try {
-    const stringifiedTypes = JSON.stringify(options.types);
-    const values = parseAbiValues(stringifiedTypes, options.values);
-    const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-    const encodedParameters = abiCoder.encode(options.types, values);
+  const receiverBytes = ethers.getBytes(options.recipient);
+  const stringifiedTypes = JSON.stringify(options.types);
+  const values = parseAbiValues(stringifiedTypes, options.values);
+  const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+  const encodedParameters = abiCoder.encode(options.types, values);
+  const message = Buffer.from(encodedParameters.slice(2), "hex");
 
-    const revertAddress = options.revertAddress
+  const revertOptions = {
+    abortAddress: ethers.getBytes(options.abortAddress),
+    callOnRevert: options.callOnRevert,
+    onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
+    revertAddress: options.revertAddress
       ? new PublicKey(options.revertAddress)
-      : provider.wallet.publicKey;
+      : provider.wallet.publicKey,
+    revertMessage: Buffer.from(options.revertMessage, "utf8"),
+  };
 
-    const abortAddress: Uint8Array = ethers.getBytes(options.abortAddress);
-
-    const revertOptions = {
-      abortAddress,
-      callOnRevert: options.callOnRevert,
-      onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
-      revertAddress,
-      revertMessage: Buffer.from(options.revertMessage, "utf8"),
-    };
-
-    const message = Buffer.from(encodedParameters.slice(2), "hex");
-
+  try {
     if (options.mint) {
       const mintInfo = await connection.getTokenSupply(
         new PublicKey(options.mint)
@@ -208,15 +181,6 @@ export const depositAndCallCommand = createSolanaCommandWithCommonOptions(
   .requiredOption(
     "--values <values...>",
     "Parameter values for the function call"
-  )
-  .option("--revert-address <revertAddress>", "Revert address")
-  .option("--abort-address <abortAddress>", "Abort address", ethers.ZeroAddress)
-  .option("--call-on-revert <callOnRevert>", "Call on revert", false)
-  .option("--revert-message <revertMessage>", "Revert message", "")
-  .option(
-    "--on-revert-gas-limit <onRevertGasLimit>",
-    "On revert gas limit",
-    "0"
   )
   .option("--mint <mint>", "SPL token mint address")
   .action(async (options) => {
