@@ -29,6 +29,14 @@ export const baseSolanaOptionsSchema = z.object({
   revertMessage: z.string(),
 });
 
+const privateKeyRefineRule = () => {
+  return {
+    message: "Only one of mnemonic or privateKey or name can be provided",
+    rule: (data: { privateKey?: string; mnemonic?: string; name?: string }) =>
+      [...Object.values(data)].filter(Boolean).length <= 1,
+  };
+};
+
 export const solanaDepositOptionsSchema = baseSolanaOptionsSchema
   .extend({
     amount: z.string(),
@@ -36,9 +44,7 @@ export const solanaDepositOptionsSchema = baseSolanaOptionsSchema
     network: z.string(),
     tokenProgram: z.string().default(SOLANA_TOKEN_PROGRAM),
   })
-  .refine((data) => !(data.mnemonic && data.privateKey), {
-    message: "Only one of mnemonic or privateKey can be provided, not both",
-  });
+  .refine(privateKeyRefineRule);
 
 export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
   .extend({
@@ -48,18 +54,14 @@ export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
     types: z.array(z.string()),
     values: z.array(z.string()),
   })
-  .refine((data) => !(data.mnemonic && data.privateKey), {
-    message: "Only one of mnemonic or privateKey can be provided, not both",
-  });
+  .refine(privateKeyRefineRule);
 
 export const solanaCallOptionsSchema = baseSolanaOptionsSchema
   .extend({
     types: z.array(z.string()),
     values: z.array(z.string()),
   })
-  .refine((data) => !(data.mnemonic && data.privateKey), {
-    message: "Only one of mnemonic or privateKey can be provided, not both",
-  });
+  .refine(privateKeyRefineRule);
 
 export const keypairFromMnemonic = async (
   mnemonic: string
