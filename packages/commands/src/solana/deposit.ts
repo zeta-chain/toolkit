@@ -5,21 +5,20 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { clusterApiUrl, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { SolanaAccountData } from "../../../../types/accounts.types";
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
-import { getAccountData } from "../../../../utils/accounts";
 import {
   createSolanaCommandWithCommonOptions,
   getAPI,
   getKeypair,
   solanaDepositOptionsSchema,
+  getSPLToken,
 } from "../../../../utils/solana.commands.helpers";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
@@ -40,10 +39,6 @@ const main = async (options: DepositOptions) => {
   const connection = new anchor.web3.Connection(API);
   const provider = new anchor.AnchorProvider(connection, new Wallet(keypair!));
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
-  const tokenAccounts = await connection.getTokenAccountsByOwner(
-    provider.wallet.publicKey,
-    { programId: TOKEN_PROGRAM_ID }
-  );
 
   const receiverBytes = ethers.getBytes(options.recipient);
 
@@ -59,36 +54,11 @@ const main = async (options: DepositOptions) => {
 
   try {
     if (options.mint) {
-      const mintInfo = await connection.getTokenSupply(
-        new PublicKey(options.mint)
+      const { from, decimals } = await getSPLToken(
+        provider,
+        options.mint,
+        options.amount
       );
-      const decimals = mintInfo.value.decimals;
-
-      // Find the token account that matches the mint
-      const matchingTokenAccount = tokenAccounts.value.find(({ account }) => {
-        const data = AccountLayout.decode(account.data);
-        return new PublicKey(data.mint).toBase58() === options.mint;
-      });
-
-      if (!matchingTokenAccount) {
-        throw new Error(`No token account found for mint ${options.mint}`);
-      }
-
-      // Check token balance
-      const accountInfo = await connection.getTokenAccountBalance(
-        matchingTokenAccount.pubkey
-      );
-      const balance = accountInfo.value.uiAmount;
-      const amountToSend = parseFloat(options.amount);
-      if (!balance || balance < amountToSend) {
-        throw new Error(
-          `Insufficient token balance. Available: ${
-            balance ?? 0
-          }, Required: ${amountToSend}`
-        );
-      }
-
-      const from = matchingTokenAccount.pubkey;
 
       // Find the TSS PDA (meta)
       const [tssPda] = PublicKey.findProgramAddressSync(
@@ -120,7 +90,7 @@ const main = async (options: DepositOptions) => {
           signer: keypair!.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
           to,
-          tokenProgram: options.tokenProgram,
+          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc();
       console.log("Transaction hash:", tx);

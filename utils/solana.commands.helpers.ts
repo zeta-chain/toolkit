@@ -13,8 +13,9 @@ import { hexStringSchema } from "../types/shared.schema";
 import { trim0x } from "./trim0x";
 import { SolanaAccountData } from "../types/accounts.types";
 import { getAccountData } from "./accounts";
-import { clusterApiUrl } from "@solana/web3.js";
+import { clusterApiUrl, PublicKey } from "@solana/web3.js";
 import { ethers } from "ethers";
+import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 export const baseSolanaOptionsSchema = z.object({
   mnemonic: z.string().optional(),
@@ -42,7 +43,6 @@ export const solanaDepositOptionsSchema = baseSolanaOptionsSchema
     amount: z.string(),
     mint: z.string().optional(),
     network: z.string(),
-    tokenProgram: z.string().default(SOLANA_TOKEN_PROGRAM),
   })
   .refine(privateKeyRefineRule);
 
@@ -50,7 +50,6 @@ export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
   .extend({
     amount: z.string(),
     mint: z.string().optional(),
-    tokenProgram: z.string().default(SOLANA_TOKEN_PROGRAM),
     types: z.array(z.string()),
     values: z.array(z.string()),
   })
@@ -137,6 +136,52 @@ export const getAPI = (network: string) => {
     API = clusterApiUrl("mainnet-beta");
   }
   return API;
+};
+
+export const getSPLToken = async (
+  provider: anchor.AnchorProvider,
+  mint: string,
+  amount: string
+) => {
+  const connection = provider.connection;
+  const tokenAccounts = await connection.getTokenAccountsByOwner(
+    provider.wallet.publicKey,
+    { programId: TOKEN_PROGRAM_ID }
+  );
+
+  const mintInfo = await connection.getTokenSupply(new PublicKey(mint));
+  const decimals = mintInfo.value.decimals;
+
+  // Find the token account that matches the mint
+  const matchingTokenAccount = tokenAccounts.value.find(({ account }) => {
+    const data = AccountLayout.decode(account.data);
+    return new PublicKey(data.mint).toBase58() === mint;
+  });
+
+  if (!matchingTokenAccount) {
+    throw new Error(`No token account found for mint ${mint}`);
+  }
+
+  // Check token balance
+  const accountInfo = await connection.getTokenAccountBalance(
+    matchingTokenAccount.pubkey
+  );
+  const balance = accountInfo.value.uiAmount;
+  const amountToSend = parseFloat(amount);
+  if (!balance || balance < amountToSend) {
+    throw new Error(
+      `Insufficient token balance. Available: ${
+        balance ?? 0
+      }, Required: ${amount}`
+    );
+  }
+
+  const from = matchingTokenAccount.pubkey;
+
+  return {
+    from,
+    decimals,
+  };
 };
 
 export const createSolanaCommandWithCommonOptions = (name: string): Command => {

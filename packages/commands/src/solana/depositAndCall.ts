@@ -18,6 +18,7 @@ import {
   createSolanaCommandWithCommonOptions,
   getAPI,
   getKeypair,
+  getSPLToken,
   solanaDepositAndCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
 
@@ -63,36 +64,11 @@ const main = async (options: DepositAndCallOptions) => {
 
   try {
     if (options.mint) {
-      const mintInfo = await connection.getTokenSupply(
-        new PublicKey(options.mint)
+      const { from, decimals } = await getSPLToken(
+        provider,
+        options.mint,
+        options.amount
       );
-      const decimals = mintInfo.value.decimals;
-
-      // Find the token account that matches the mint
-      const matchingTokenAccount = tokenAccounts.value.find(({ account }) => {
-        const data = AccountLayout.decode(account.data);
-        return new PublicKey(data.mint).toBase58() === options.mint;
-      });
-
-      if (!matchingTokenAccount) {
-        throw new Error(`No token account found for mint ${options.mint}`);
-      }
-
-      // Check token balance
-      const accountInfo = await connection.getTokenAccountBalance(
-        matchingTokenAccount.pubkey
-      );
-      const balance = accountInfo.value.uiAmount;
-      const amountToSend = parseFloat(options.amount);
-      if (!balance || balance < amountToSend) {
-        throw new Error(
-          `Insufficient token balance. Available: ${
-            balance ?? 0
-          }, Required: ${amountToSend}`
-        );
-      }
-
-      const from = matchingTokenAccount.pubkey;
 
       // Find the TSS PDA (meta)
       const [tssPda] = PublicKey.findProgramAddressSync(
@@ -125,7 +101,7 @@ const main = async (options: DepositAndCallOptions) => {
           signer: keypair!.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
           to,
-          tokenProgram: options.tokenProgram,
+          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc();
       console.log("Transaction hash:", tx);
