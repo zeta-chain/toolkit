@@ -1,4 +1,5 @@
 import { Command, Option } from "commander";
+import { ethers } from "ethers";
 import { z } from "zod";
 
 import {
@@ -15,6 +16,7 @@ import {
   baseZetachainOptionsSchema,
   confirmZetachainTransaction,
   getZevmGatewayAddress,
+  getZRC20WithdrawFee,
   prepareCallOptions,
   prepareRevertOptions,
   prepareTxOptions,
@@ -50,9 +52,15 @@ const main = async (options: WithdrawAndCallOptions) => {
       options.gatewayZetachain
     );
 
+    const { gasFee, gasSymbol, zrc20Symbol } = await getZRC20WithdrawFee(
+      client.signer as ethers.ContractRunner,
+      options.zrc20
+    );
+
     if (options.data) {
       console.log(`Withdraw and call details:
-Amount: ${options.amount}
+Amount: ${options.amount} ${zrc20Symbol}
+Withdraw Gas Fee: ${gasFee} ${gasSymbol}
 Raw data: ${options.data}
 ZetaChain Gateway: ${gatewayZetaChain}
 `);
@@ -76,7 +84,8 @@ ZetaChain Gateway: ${gatewayZetaChain}
     } else if (options.function && options.types && options.values) {
       const stringifiedTypes = JSON.stringify(options.types);
       console.log(`Withdraw and call details:
-Amount: ${options.amount}
+Amount: ${options.amount} ${zrc20Symbol}
+Withdraw Gas Fee: ${gasFee} ${gasSymbol}
 Function: ${options.function}
 Function parameters: ${options.values.join(", ")}
 Parameter types: ${stringifiedTypes}
