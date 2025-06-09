@@ -184,6 +184,22 @@ export const getSPLToken = async (
   };
 };
 
+export const isSOLBalanceSufficient = async (
+  provider: anchor.AnchorProvider,
+  amount: string
+) => {
+  const connection = provider.connection;
+  const balance = await connection.getBalance(provider.wallet.publicKey);
+  const lamportsNeeded = ethers.parseUnits(amount, 9).toString();
+  if (balance < parseInt(lamportsNeeded)) {
+    throw new Error(
+      `Insufficient SOL balance. Available: ${
+        balance / 1e9
+      }, Required: ${amount}`
+    );
+  }
+};
+
 export const createSolanaCommandWithCommonOptions = (name: string): Command => {
   return new Command(name)
     .requiredOption(

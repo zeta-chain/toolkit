@@ -19,6 +19,7 @@ import {
   getAPI,
   getKeypair,
   getSPLToken,
+  isSOLBalanceSufficient,
   solanaDepositAndCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
 
@@ -106,16 +107,7 @@ const main = async (options: DepositAndCallOptions) => {
         .rpc();
       console.log("Transaction hash:", tx);
     } else {
-      // Check SOL balance
-      const balance = await connection.getBalance(keypair!.publicKey);
-      const lamportsNeeded = ethers.parseUnits(options.amount, 9).toString();
-      if (balance < parseInt(lamportsNeeded)) {
-        throw new Error(
-          `Insufficient SOL balance. Available: ${balance / 1e9}, Required: ${
-            options.amount
-          }`
-        );
-      }
+      await isSOLBalanceSufficient(provider, options.amount);
 
       const tx = await gatewayProgram.methods
         .depositAndCall(
