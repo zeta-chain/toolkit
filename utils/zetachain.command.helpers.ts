@@ -1,4 +1,5 @@
 import confirm from "@inquirer/confirm";
+import { getAddress } from "@zetachain/protocol-contracts";
 import { Command, Option } from "commander";
 import { ethers, ZeroAddress } from "ethers";
 import { z } from "zod";
@@ -16,6 +17,7 @@ import { getAccountData } from "./accounts";
 import { getRpcUrl } from "./chains";
 import { handleError } from "./handleError";
 import { toHexString } from "./toHexString";
+import { validateAndParseSchema } from "./validateAndParseSchema";
 
 export const baseZetachainOptionsSchema = z.object({
   abortAddress: evmAddressSchema,
@@ -92,6 +94,37 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
   });
 
   return { client };
+};
+
+/**
+ * @description This function is used to get the ZetaChain Gateway address.
+ * @param network - The network to use
+ * @param gatewayZetachain - The gateway ZetaChain address to use
+ * @returns The ZetaChain Gateway address
+ */
+export const getZevmGatewayAddress = (
+  network: "mainnet" | "testnet",
+  gatewayZetachain?: string
+): string => {
+  if (gatewayZetachain) {
+    const validatedProvidedAddress = validateAndParseSchema(
+      gatewayZetachain,
+      evmAddressSchema
+    );
+    return validatedProvidedAddress;
+  }
+
+  const defaultZetaChainGatewayAddress = getAddress(
+    "gateway",
+    network === "mainnet" ? "zeta_mainnet" : "zeta_testnet"
+  );
+
+  const validatedDefaultAddress = validateAndParseSchema(
+    defaultZetaChainGatewayAddress,
+    evmAddressSchema
+  );
+
+  return validatedDefaultAddress;
 };
 
 export const confirmZetachainTransaction = async (

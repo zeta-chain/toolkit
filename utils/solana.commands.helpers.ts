@@ -9,6 +9,8 @@ import {
   SOLANA_NETWORKS,
   SOLANA_TOKEN_PROGRAM,
 } from "../types/shared.constants";
+import { hexStringSchema } from "../types/shared.schema";
+import { trim0x } from "./trim0x";
 
 export const baseSolanaOptionsSchema = z.object({
   mnemonic: z.string().optional(),
@@ -61,12 +63,28 @@ export const keypairFromPrivateKey = (
   privateKey: string
 ): anchor.web3.Keypair => {
   try {
+    // First try base58 decoding (original format)
     const decodedKey = bs58.decode(privateKey);
     return anchor.web3.Keypair.fromSecretKey(decodedKey);
   } catch (error) {
-    throw new Error(
-      "Invalid private key format. Expected base58-encoded private key."
-    );
+    // If base58 fails, validate and try hex format
+    const hexValidation = hexStringSchema.safeParse(privateKey);
+    if (!hexValidation.success) {
+      throw new Error(
+        "Invalid private key format. Must be either base58 or valid hex (with optional 0x prefix)."
+      );
+    }
+
+    try {
+      const cleanKey = trim0x(privateKey);
+      return anchor.web3.Keypair.fromSecretKey(Buffer.from(cleanKey, "hex"));
+    } catch (hexError) {
+      throw new Error(
+        `Invalid hex private key: ${
+          hexError instanceof Error ? hexError.message : "Unknown error"
+        }`
+      );
+    }
   }
 };
 
@@ -90,7 +108,7 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
     .addOption(
       new Option(
         "--private-key <privateKey>",
-        "Private key in base58 format"
+        "Private key in base58 or hex format (with optional 0x prefix)"
       ).conflicts(["mnemonic", "name"])
     )
     .addOption(
