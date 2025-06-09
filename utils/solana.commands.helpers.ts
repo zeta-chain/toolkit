@@ -1,4 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
+import confirm from "@inquirer/confirm";
 import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { clusterApiUrl, PublicKey } from "@solana/web3.js";
 import * as bip39 from "bip39";
@@ -240,4 +241,26 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
       "On revert gas limit",
       "0"
     );
+};
+
+export const confirmSolanaTx = async (options: {
+  amount?: string;
+  api: string;
+  message?: string;
+  mint?: string;
+  recipient: string;
+  revertOptions: any;
+  sender: string;
+}) => {
+  console.log(`
+Network: ${options.api}
+Sender: ${options.sender}
+Recipient: ${options.recipient}
+Revert options: ${JSON.stringify(options.revertOptions)}${
+    options.message ? `\nMessage: ${options.message}` : ""
+  }${options.amount ? `\nAmount: ${options.amount}` : ""}${
+    options.mint ? `\nMint: ${options.mint}` : ""
+  }
+`);
+  await confirm({ message: "Confirm transaction?" });
 };

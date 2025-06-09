@@ -9,6 +9,7 @@ import { z } from "zod";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 import {
+  confirmSolanaTx,
   createSolanaCommandWithCommonOptions,
   getAPI,
   getKeypair,
@@ -52,6 +53,14 @@ const main = async (options: CallOptions) => {
   };
 
   try {
+    await confirmSolanaTx({
+      api: API,
+      message: message.toString(),
+      recipient: options.recipient,
+      revertOptions,
+      sender: keypair.publicKey.toBase58(),
+    });
+
     const tx = await gatewayProgram.methods
       .call(receiverBytes, message, revertOptions)
       .accounts({})

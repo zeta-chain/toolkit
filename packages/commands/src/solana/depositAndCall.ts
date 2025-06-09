@@ -14,6 +14,7 @@ import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 import {
+  confirmSolanaTx,
   createSolanaCommandWithCommonOptions,
   getAPI,
   getKeypair,
@@ -58,6 +59,13 @@ const main = async (options: DepositAndCallOptions) => {
     revertMessage: Buffer.from(options.revertMessage, "utf8"),
   };
 
+  const commonValues = {
+    api: API,
+    recipient: options.recipient,
+    revertOptions,
+    sender: keypair.publicKey.toBase58(),
+  };
+
   try {
     if (options.mint) {
       const { from, decimals } = await getSPLToken(
@@ -84,6 +92,13 @@ const main = async (options: DepositAndCallOptions) => {
 
       const to = tssAta[0].toBase58();
 
+      await confirmSolanaTx({
+        ...commonValues,
+        amount: options.amount,
+        message: message.toString(),
+        mint: options.mint,
+      });
+
       const tx = await gatewayProgram.methods
         .depositSplTokenAndCall(
           new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
@@ -103,6 +118,12 @@ const main = async (options: DepositAndCallOptions) => {
       console.log("Transaction hash:", tx);
     } else {
       await isSOLBalanceSufficient(provider, options.amount);
+
+      await confirmSolanaTx({
+        ...commonValues,
+        amount: options.amount,
+        message: message.toString(),
+      });
 
       const tx = await gatewayProgram.methods
         .depositAndCall(
