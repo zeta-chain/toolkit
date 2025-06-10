@@ -132,6 +132,7 @@ const main = async (options: BalancesOptions) => {
       evm: evmAddress,
       solana: solanaAddress,
       sui: suiAddress,
+      ton: tonAddress,
     });
 
     if (addressesInfo) {
