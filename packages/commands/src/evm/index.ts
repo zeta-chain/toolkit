@@ -5,7 +5,7 @@ import { depositCommand } from "./deposit";
 import { depositAndCallCommand } from "./depositAndCall";
 
 export const evmCommand = new Command("evm")
-  .description("EVM commands")
+  .summary("EVM commands")
   .addCommand(callCommand)
   .addCommand(depositAndCallCommand)
   .addCommand(depositCommand)

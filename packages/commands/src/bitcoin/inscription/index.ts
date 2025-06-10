@@ -6,7 +6,7 @@ import { depositAndCallCommand } from "./depositAndCall";
 import { encodeCommand } from "./encode";
 
 export const inscriptionCommand = new Command("inscription")
-  .description("Make a transaction using inscriptions")
+  .summary("Make a transaction using inscriptions")
   .alias("i")
   .addCommand(callCommand)
   .addCommand(depositAndCallCommand)

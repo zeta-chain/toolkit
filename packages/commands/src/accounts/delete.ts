@@ -52,7 +52,7 @@ const main = async (options: DeleteAccountOptions) => {
 };
 
 export const deleteAccountsCommand = new Command("delete")
-  .description("Delete an existing account")
+  .summary("Delete an existing account")
   .addOption(
     new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )

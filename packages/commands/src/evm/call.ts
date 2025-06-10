@@ -77,7 +77,7 @@ Parameter types: ${stringifiedTypes}
   }
 };
 
-export const callCommand = new Command("call").description(
+export const callCommand = new Command("call").summary(
   "Call a contract on ZetaChain from an EVM-compatible chain"
 );
 

@@ -73,7 +73,7 @@ const main = async (options: DepositAndCallOptions) => {
 export const depositAndCallCommand = createSuiCommandWithCommonOptions(
   "deposit-and-call"
 )
-  .description("Deposit tokens from Sui and call a contract on ZetaChain")
+  .summary("Deposit tokens from Sui and call a contract on ZetaChain")
   .option("--values <values...>", "Parameter values for the function call")
   .option(
     "--types <types...>",

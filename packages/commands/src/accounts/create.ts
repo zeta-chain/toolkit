@@ -30,7 +30,7 @@ const main = async (options: CreateAccountOptions) => {
 };
 
 export const createAccountsCommand = new Command("create")
-  .description("Create a new account")
+  .summary("Create a new account")
   .addOption(
     new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )

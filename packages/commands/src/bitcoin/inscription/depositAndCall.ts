@@ -158,7 +158,7 @@ const main = async (options: DepositAndCallOptions) => {
  */
 export const depositAndCallCommand = new Command()
   .name("deposit-and-call")
-  .description("Deposit BTC and call a contract on ZetaChain")
+  .summary("Deposit BTC and call a contract on ZetaChain")
   .option("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",
