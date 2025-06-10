@@ -2,7 +2,7 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { AbiCoder, ethers } from "ethers";
 
 import {
@@ -856,7 +856,7 @@ export const getTonBalances = async (
       },
     ];
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (error instanceof AxiosError) {
       console.error(
         `Failed to get TON balance for ${tonToken.chain_name}:`,
         error.response?.data || error.message
