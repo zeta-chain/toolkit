@@ -123,9 +123,7 @@ ZetaChain Gateway: ${gatewayZetaChain}
   }
 };
 
-export const withdrawAndCallCommand = new Command(
-  "withdraw-and-call"
-).description(
+export const withdrawAndCallCommand = new Command("withdraw-and-call").summary(
   "Withdraw tokens from ZetaChain and call a contract on a connected chain"
 );
 

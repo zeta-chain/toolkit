@@ -39,7 +39,7 @@ const main = (options: ShowAccountOptions): void => {
 };
 
 export const showAccountsCommand = new Command("show")
-  .description("Show details of an existing account")
+  .summary("Show details of an existing account")
   .addOption(
     new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )

@@ -154,7 +154,7 @@ const main = async (options: CallOptions) => {
  */
 export const callCommand = new Command()
   .name("call")
-  .description("Call a contract on ZetaChain")
+  .summary("Call a contract on ZetaChain")
   .option("-r, --receiver <address>", "ZetaChain receiver address")
   .requiredOption(
     "-g, --gateway <address>",

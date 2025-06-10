@@ -93,9 +93,7 @@ Parameter types: ${stringifiedTypes}
   }
 };
 
-export const depositAndCallCommand = new Command(
-  "deposit-and-call"
-).description(
+export const depositAndCallCommand = new Command("deposit-and-call").summary(
   "Deposit tokens and call a contract on ZetaChain from an EVM-compatible chain"
 );
 

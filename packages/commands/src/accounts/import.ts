@@ -24,7 +24,7 @@ const main = async (options: ImportAccountOptions) => {
 };
 
 export const importAccountsCommand = new Command("import")
-  .description("Import an existing account using a private key")
+  .summary("Import an existing account using a private key")
   .addOption(
     new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
