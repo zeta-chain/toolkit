@@ -118,7 +118,7 @@
     "@zetachain/faucet-cli": "^4.1.1",
     "@zetachain/networks": "14.0.0-rc1",
     "@zetachain/protocol-contracts": "^12.0.0",
-    "@zetachain/protocol-contracts-solana": "2.0.0-rc1",
+    "@zetachain/protocol-contracts-solana": "3.0.2-rc2",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",

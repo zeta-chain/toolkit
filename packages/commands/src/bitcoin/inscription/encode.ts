@@ -9,8 +9,8 @@ import {
   bitcoinEncode,
   EncodingFormat,
   OpCode,
-  trimOx,
 } from "../../../../../utils/bitcoinEncode";
+import { trim0x } from "../../../../../utils/trim0x";
 
 const encodeOptionsSchema = z
   .object({
@@ -40,7 +40,7 @@ const main = (options: EncodeOptions) => {
     payloadBuffer = Buffer.from([]);
   } else {
     const encodedPayload = new ethers.AbiCoder().encode(types, values);
-    payloadBuffer = Buffer.from(trimOx(encodedPayload), "hex");
+    payloadBuffer = Buffer.from(trim0x(encodedPayload), "hex");
   }
 
   // Encode the data

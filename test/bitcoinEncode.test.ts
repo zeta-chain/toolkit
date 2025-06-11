@@ -1,11 +1,7 @@
 import { ethers } from "ethers";
 
-import {
-  Address,
-  bitcoinEncode,
-  BtcAddress,
-  trimOx,
-} from "../utils/bitcoinEncode";
+import { Address, bitcoinEncode, BtcAddress } from "../utils/bitcoinEncode";
+import { trim0x } from "../utils/trim0x";
 
 describe("bitcoinEncode", () => {
   const receiverAddress: Address = "0xEA9808f0Ac504d1F521B5BbdfC33e6f1953757a7";
@@ -40,7 +36,7 @@ describe("bitcoinEncode", () => {
       ["uint8", "bytes"],
       [mockOperation.test, params]
     );
-    const payload = Buffer.from(trimOx(message), "hex");
+    const payload = Buffer.from(trim0x(message), "hex");
     const result = bitcoinEncode(receiverAddress, payload, btcRevertAddress);
 
     expect(result).toMatch(

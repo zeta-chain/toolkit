@@ -42,18 +42,19 @@ export interface FormatAddressesOptions {
   evm?: string;
   solana?: string;
   sui?: string;
+  ton?: string;
 }
 
 export const formatAddresses = (options: FormatAddressesOptions): string => {
   const parts = [];
 
   if (options.evm) {
-    const evmStr = `EVM: \x1b[36m${options.evm}\x1b[0m`;
+    const evmStr = `EVM: \x1b[96m${options.evm}\x1b[0m`;
     parts.push(evmStr);
   }
 
   if (options.bitcoin) {
-    const btcStr = `Bitcoin: \x1b[33m${options.bitcoin}\x1b[0m`;
+    const btcStr = `Bitcoin: \x1b[91m${options.bitcoin}\x1b[0m`;
     parts.push(btcStr);
   }
 
@@ -63,8 +64,13 @@ export const formatAddresses = (options: FormatAddressesOptions): string => {
   }
 
   if (options.sui) {
-    const suiStr = `Sui: \x1b[32m${options.sui}\x1b[0m`;
+    const suiStr = `Sui: \x1b[36m${options.sui}\x1b[0m`;
     parts.push(suiStr);
+  }
+
+  if (options.ton) {
+    const tonStr = `TON: \x1b[94m${options.ton}\x1b[0m`;
+    parts.push(tonStr);
   }
 
   return parts.join("\n");
