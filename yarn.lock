@@ -3624,6 +3624,13 @@
     ethereumjs-util "^7.1.5"
     secp256k1 "^5.0.0"
 
+"@zetachain/protocol-contracts-ton@1.0.0-rc4":
+  version "1.0.0-rc4"
+  resolved "https://registry.npmjs.org/@zetachain/protocol-contracts-ton/-/protocol-contracts-ton-1.0.0-rc4.tgz#8e755b9fce079f1772bf42ae5c874db6f6c96908"
+  integrity sha512-6HWR2FPp9L/Xsby4IrVfXK73I+85ci0gWrlKLnpF8kNABfLUi2nxbV03t36DAVdqpXYRSz8jG/Qn5cmC1Y8Q/w==
+  dependencies:
+    ethers "^6.13.2"
+
 "@zetachain/protocol-contracts@^12.0.0":
   version "12.0.0"
   resolved "https://registry.npmjs.org/@zetachain/protocol-contracts/-/protocol-contracts-12.0.0.tgz#42897490f4ec798213e5ef06dcc464a21f944771"
