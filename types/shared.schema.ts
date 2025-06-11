@@ -101,7 +101,7 @@ export const typesAndDataExclusivityRefineRule = {
 };
 
 export const privateKeyOrMnemonicRefineRule = {
-  message: "Exactly one of privateKey or mnemonic must be provided",
+  message: "Exactly one of --private-key or --mnemonic must be provided",
   path: ["privateKey", "mnemonic"],
   rule: exactlyOneOf<{
     mnemonic?: string;
