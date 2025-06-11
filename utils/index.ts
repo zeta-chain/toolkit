@@ -2,6 +2,7 @@ export * from "./api";
 export * from "./bitcoinEncode";
 export * from "./bitsize";
 export * from "./compareBigIntAndNumber";
+export * from "./exactlyOneOf";
 export * from "./formatting";
 export * from "./fsUtils";
 export * from "./gatewayEvm";

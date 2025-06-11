@@ -36,10 +36,8 @@ export const importAccountsCommand = new Command("import")
     new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
   .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
-  .addOption(
-    new Option("--private-key <key>", "Private key in hex format").conflicts([])
-  )
-  .addOption(new Option("--mnemonic <phrase>", "Mnemonic phrase").conflicts([]))
+  .option("--private-key <key>", "Private key in hex format")
+  .option("--mnemonic <phrase>", "Mnemonic phrase")
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, importAccountOptionsSchema, {
       exitOnError: true,
