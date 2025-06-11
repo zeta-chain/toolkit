@@ -1,12 +1,26 @@
+import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 import {
+  evmAddressSchema,
   hexStringSchema,
   typesAndDataExclusivityRefineRule,
   typesAndValuesLengthRefineRule,
   validAmountSchema,
 } from "./shared.schema";
+
+export interface BitcoinTxParams {
+  address: string;
+  amount: number;
+  api: string;
+  depositFee: number;
+  gateway: string;
+  key: bitcoin.Signer;
+  memo?: string;
+  networkFee: number;
+  utxos: BtcUtxo[];
+}
 
 export interface BtcUtxo {
   status: {
@@ -52,15 +66,16 @@ export interface BtcTxById {
   weight: number;
 }
 
-export const depositAndCallOptionsSchema = z
+export const inscriptionDepositAndCallOptionsSchema = z
   .object({
     amount: validAmountSchema,
-    api: z.string().url(),
+    bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
+    gasPriceApi: z.string().url(),
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
-    receiver: z.string().optional(),
+    receiver: evmAddressSchema.optional(),
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
@@ -74,27 +89,29 @@ export const depositAndCallOptionsSchema = z
     path: typesAndDataExclusivityRefineRule.path,
   });
 
-export const depositOptionsSchema = z.object({
+export const inscriptionDepositOptionsSchema = z.object({
   amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Amount must be a valid positive number",
   }),
-  api: z.string().url(),
+  bitcoinApi: z.string().url(),
   data: hexStringSchema.optional(),
+  gasPriceApi: z.string().url(),
   gateway: z.string(),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
-  receiver: z.string().optional(),
+  receiver: evmAddressSchema.optional(),
   revertAddress: z.string().optional(),
 });
 
-export const callOptionsSchema = z
+export const inscriptionCallOptionsSchema = z
   .object({
-    api: z.string().url(),
+    bitcoinApi: z.string().url(),
     data: hexStringSchema.optional(),
+    gasPriceApi: z.string().url(),
     gateway: z.string(),
     name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
     privateKey: z.string().optional(),
-    receiver: z.string().optional(),
+    receiver: evmAddressSchema.optional(),
     revertAddress: z.string().optional(),
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
@@ -107,3 +124,40 @@ export const callOptionsSchema = z
     message: typesAndDataExclusivityRefineRule.message,
     path: typesAndDataExclusivityRefineRule.path,
   });
+
+export const memoDepositAndCallOptionsSchema = z.object({
+  amount: validAmountSchema,
+  bitcoinApi: z.string().url(),
+  data: hexStringSchema.optional(),
+  gasPriceApi: z.string().url(),
+  gateway: z.string(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+  networkFee: z.string(),
+  privateKey: z.string().optional(),
+  receiver: evmAddressSchema,
+});
+
+export const memoDepositOptionsSchema = z.object({
+  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Amount must be a valid positive number",
+  }),
+  bitcoinApi: z.string().url(),
+  data: hexStringSchema.optional(),
+  gasPriceApi: z.string().url(),
+  gateway: z.string(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+  networkFee: z.string(),
+  privateKey: z.string().optional(),
+  receiver: evmAddressSchema,
+});
+
+export const memoCallOptionsSchema = z.object({
+  bitcoinApi: z.string().url(),
+  data: hexStringSchema.optional(),
+  gasPriceApi: z.string().url(),
+  gateway: z.string(),
+  name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
+  networkFee: z.string(),
+  privateKey: z.string().optional(),
+  receiver: evmAddressSchema,
+});
