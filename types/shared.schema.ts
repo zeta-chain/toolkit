@@ -99,6 +99,16 @@ export const typesAndDataExclusivityRefineRule = {
   },
 };
 
+export const privateKeyOrMnemonicRefineRule = {
+  message: "Either privateKey or mnemonic must be provided, but not both",
+  rule: (data: { privateKey?: string; mnemonic?: string }) => {
+    return (
+      (!!data.privateKey || !!data.mnemonic) &&
+      !(data.privateKey && data.mnemonic)
+    );
+  },
+};
+
 export const functionTypesValuesConsistencyRule = {
   message:
     "If providing --function, you must also provide --types and --values (and vice versa)",

@@ -150,6 +150,12 @@ const createTONAccount = async (
   privateKey?: string,
   mnemonic?: string
 ): Promise<AccountData> => {
+  if (privateKey && mnemonic) {
+    throw new Error(
+      "Either privateKey or mnemonic must be provided, but not both"
+    );
+  }
+
   let mnemonicArray: string[];
   let keyPair: { publicKey: Buffer; secretKey: Buffer };
   let fullPrivateKey: string;

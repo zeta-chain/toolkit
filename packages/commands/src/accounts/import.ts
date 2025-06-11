@@ -9,13 +9,16 @@ import {
 import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
 import { createAccountForType } from "../../../../utils/accounts";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { privateKeyOrMnemonicRefineRule } from "../../../../types/shared.schema";
 
-const importAccountOptionsSchema = z.object({
-  mnemonic: z.string().optional(),
-  name: accountNameSchema,
-  privateKey: z.string().optional(),
-  type: accountTypeSchema,
-});
+const importAccountOptionsSchema = z
+  .object({
+    mnemonic: z.string().optional(),
+    name: accountNameSchema,
+    privateKey: z.string().optional(),
+    type: accountTypeSchema,
+  })
+  .refine(privateKeyOrMnemonicRefineRule.rule, privateKeyOrMnemonicRefineRule);
 
 type ImportAccountOptions = z.infer<typeof importAccountOptionsSchema>;
 
@@ -30,8 +33,10 @@ export const importAccountsCommand = new Command("import")
     new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
   )
   .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
-  .option("--private-key <key>", "Private key in hex format")
-  .option("--mnemonic <phrase>", "Mnemonic phrase (only for TON wallets)")
+  .addOption(
+    new Option("--private-key <key>", "Private key in hex format").conflicts([])
+  )
+  .addOption(new Option("--mnemonic <phrase>", "Mnemonic phrase").conflicts([]))
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, importAccountOptionsSchema, {
       exitOnError: true,
