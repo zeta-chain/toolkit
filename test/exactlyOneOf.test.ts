@@ -133,6 +133,13 @@ describe("exactlyOneOf", () => {
     );
   });
 
+  // Test with missing keys
+  it("returns true when one key is missing and the other is truthy", () => {
+    const predicate = exactlyOneOf<{ x?: string; y?: string }>("x", "y");
+    expect(predicate({ x: "hello" })).toBe(true); // y missing
+    expect(predicate({ y: "world" })).toBe(true); // x missing
+  });
+
   // Test type safety with different object shapes
   it("should work with complex object types", () => {
     interface UserAuth {
