@@ -152,21 +152,15 @@ const createTONAccount = async (
 ): Promise<AccountData> => {
   if (privateKey && mnemonic) {
     handleError({
-      context: "Both privateKey and mnemonic cannot be provided",
-      error: new Error("Both privateKey and mnemonic cannot be provided"),
+      context: "Either privateKey or mnemonic must be provided, but not both",
+      error: new Error(
+        "Either privateKey or mnemonic must be provided, but not both"
+      ),
       shouldThrow: true,
     });
   }
 
-  if (!privateKey && !mnemonic) {
-    handleError({
-      context: "Either privateKey or mnemonic must be provided",
-      error: new Error("Either privateKey or mnemonic must be provided"),
-      shouldThrow: true,
-    });
-  }
-
-  let mnemonicArray: string[];
+  let mnemonicArray: string[] = [];
   let keyPair: { publicKey: Buffer; secretKey: Buffer };
   let fullPrivateKey: string;
 
@@ -175,10 +169,16 @@ const createTONAccount = async (
       ? privateKey.slice(2)
       : privateKey;
     const buf = Buffer.from(clean, "hex");
-    if (buf.length !== 64)
-      throw new Error("TON key must be 64 bytes (32 + 32)");
+
+    if (buf.length !== 64) {
+      handleError({
+        context: "TON key must be 64 bytes (32 + 32)",
+        error: new Error("TON key must be 64 bytes (32 + 32)"),
+        shouldThrow: true,
+      });
+    }
+
     keyPair = { publicKey: buf.slice(32), secretKey: buf.slice(0, 32) };
-    mnemonicArray = mnemonic ? mnemonic.split(" ") : [];
     fullPrivateKey = `0x${keyPair.secretKey.toString("hex")}`;
   } else {
     mnemonicArray = mnemonic ? mnemonic.split(" ") : await mnemonicNew();
