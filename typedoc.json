@@ -11,5 +11,6 @@
   ],
   "readmeFrontmatter": {
     "title": "Toolkit"
-  }
+  },
+  "disableSources": true
 }
