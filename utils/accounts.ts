@@ -151,9 +151,19 @@ const createTONAccount = async (
   mnemonic?: string
 ): Promise<AccountData> => {
   if (privateKey && mnemonic) {
-    throw new Error(
-      "Either privateKey or mnemonic must be provided, but not both"
-    );
+    handleError({
+      context: "Both privateKey and mnemonic cannot be provided",
+      error: new Error("Both privateKey and mnemonic cannot be provided"),
+      shouldThrow: true,
+    });
+  }
+
+  if (!privateKey && !mnemonic) {
+    handleError({
+      context: "Either privateKey or mnemonic must be provided",
+      error: new Error("Either privateKey or mnemonic must be provided"),
+      shouldThrow: true,
+    });
   }
 
   let mnemonicArray: string[];
