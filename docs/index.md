@@ -9,9 +9,8 @@ utility functions that make it easier to build with ZetaChain.
 
 ## Building a dApp on ZetaChain
 
-If you're looking to build a dapp on ZetaChain, we recommend checking out [the
-tutorials section](https://www.zetachain.com/docs/developers/tutorials/hello/)
-in ZetaChain docs.
+If you're looking to build a dapp on ZetaChain, we recommend checking out
+[the tutorials section](https://www.zetachain.com/docs/developers/tutorials/hello/) in ZetaChain docs.
 
 ## Prerequisites
 
@@ -78,25 +77,22 @@ yarn build
 
 ### ZetaChainClient
 
-Defined in:
-[client.ts:94](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L94)
+Defined in: [client.ts:94](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L94)
 
 #### Constructors
 
 ##### Constructor
 
-> **new ZetaChainClient**(`params`):
-> [`ZetaChainClient`](toolkit/index.md#zetachainclient)
+> **new ZetaChainClient**(`params`): [`ZetaChainClient`](toolkit/index.md#zetachainclient)
 
-Defined in:
-[client.ts:148](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L148)
+Defined in: [client.ts:148](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L148)
 
 Initializes ZetaChainClient instance.
 
 ```ts
 new ZetaChainClient({
-  network: "testnet",
-});
+  network: "testnet"
+})
 ```
 
 With an Ethers.js wallet:
@@ -149,17 +145,99 @@ const client = new ZetaChainClient({
 
 > **chains**: `Chains`
 
-Defined in:
-[client.ts:95](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L95)
+Defined in: [client.ts:95](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L95)
 
 ##### evmCall()
 
 > **evmCall**: (`this`, `args`) => `Promise`\<`ContractTransactionResponse`\>
 
-Defined in:
-[client.ts:285](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L285)
+Defined in: [client.ts:285](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L285)
 
 **`Function`**
+
+evmCall
+
+###### Parameters
+
+###### this
+
+[`ZetaChainClient`](toolkit/index.md#zetachainclient)
+
+The instance of the ZetaChain client that contains the signer information.
+
+###### args
+
+The function arguments.
+
+###### gatewayEvm?
+
+`string`
+
+The address of the EVM gateway contract.
+
+###### receiver
+
+`string`
+
+The address of the target contract or account to call on the EVM chain.
+
+###### revertOptions
+
+`RevertOptions`
+
+Options to handle call reversion, including revert address, message, and gas limit for the revert scenario.
+
+###### txOptions
+
+`TxOptions`
+
+Transaction options such as gasLimit, gasPrice, etc.
+
+###### types
+
+`string`[]
+
+JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
+
+###### values
+
+`ParseAbiValuesReturnType`
+
+The values to be passed to the function (should match the types).
+
+###### Returns
+
+`Promise`\<`ContractTransactionResponse`\>
+
+- Returns the transaction object.
+
+###### Description
+
+Calls a universal app contract on ZetaChain.
+
+##### evmDeposit()
+
+> **evmDeposit**: (`this`, `args`) => `Promise`\<`ContractTransactionResponse`\>
+
+Defined in: [client.ts:286](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L286)
+
+**`Function`**
+
+evmDeposit
+
+###### Parameters
+
+###### this
+
+[`ZetaChainClient`](toolkit/index.md#zetachainclient)
+
+The instance of the ZetaChain client that contains the signer information.
+
+###### args
+
+The function arguments.
+
+###### amount
 
 `string`
 
@@ -169,8 +247,7 @@ The amount of ERC20 tokens or native currency to deposit.
 
 `string`
 
-The address of the ERC20 token contract. If depositing native currency (e.g.,
-ETH), this can be left empty or undefined.
+The address of the ERC20 token contract. If depositing native currency (e.g., ETH), this can be left empty or undefined.
 
 ###### gatewayEvm?
 
@@ -188,8 +265,7 @@ The address of the receiver or target contract for the deposit.
 
 `RevertOptions`
 
-Options to handle call reversion, including revert address, message, and gas
-limit for the revert scenario.
+Options to handle call reversion, including revert address, message, and gas limit for the revert scenario.
 
 ###### txOptions
 
@@ -205,16 +281,13 @@ Transaction options, including gasLimit, gasPrice, etc.
 
 ###### Description
 
-Deposits a specified amount of ERC-20 or native gas tokens to a receiver on
-ZetaChain.
+Deposits a specified amount of ERC-20 or native gas tokens to a receiver on ZetaChain.
 
 ##### evmDepositAndCall()
 
-> **evmDepositAndCall**: (`this`, `args`) =>
-> `Promise`\<`ContractTransactionResponse`\>
+> **evmDepositAndCall**: (`this`, `args`) => `Promise`\<`ContractTransactionResponse`\>
 
-Defined in:
-[client.ts:284](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L284)
+Defined in: [client.ts:284](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L284)
 
 **`Function`**
 
@@ -242,8 +315,7 @@ The amount of ERC20 tokens or native currency to deposit.
 
 `string`
 
-The address of the ERC20 token contract. If depositing native currency (e.g.,
-ETH), this can be left empty or undefined.
+The address of the ERC20 token contract. If depositing native currency (e.g., ETH), this can be left empty or undefined.
 
 ###### gatewayEvm?
 
@@ -255,15 +327,13 @@ The address of the ZetaChain gateway contract on the EVM-compatible blockchain.
 
 `string`
 
-The address of the receiver contract or account where the function call will be
-executed.
+The address of the receiver contract or account where the function call will be executed.
 
 ###### revertOptions
 
 `RevertOptions`
 
-Options to handle call reversion, including revert address, message, and gas
-limit for the revert scenario.
+Options to handle call reversion, including revert address, message, and gas limit for the revert scenario.
 
 ###### txOptions
 
@@ -275,8 +345,7 @@ Transaction options, including gasLimit, gasPrice, etc.
 
 `string`[]
 
-JSON string representing the types of the function parameters (e.g., ["uint256",
-"address"]).
+JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
 
 ###### values
 
@@ -292,16 +361,13 @@ The values to be passed to the function (should match the types).
 
 ###### Description
 
-Deposits a specified amount of ERC-20 or native gas tokens and calls a universal
-app contract on ZetaChain.
+Deposits a specified amount of ERC-20 or native gas tokens and calls a universal app contract on ZetaChain.
 
 ##### getBalances()
 
-> **getBalances**: (`this`, `__namedParameters`) =>
-> `Promise`\<`TokenBalance`[]\>
+> **getBalances**: (`this`, `__namedParameters`) => `Promise`\<`TokenBalance`[]\>
 
-Defined in:
-[client.ts:266](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L266)
+Defined in: [client.ts:266](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L266)
 
 Get token balances of all tokens on all chains connected to ZetaChain.
 
@@ -345,8 +411,7 @@ Array of token balances
 
 > **getChainId**: (`this`, `chainNameOrAlias`) => `null` \| `number`
 
-Defined in:
-[client.ts:273](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L273)
+Defined in: [client.ts:273](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L273)
 
 Get chain ID from a chain label.
 
@@ -372,8 +437,7 @@ Chain label like goerli_testnet
 
 > **getEndpoint**: (`this`, `type`, `network`) => `string`
 
-Defined in:
-[client.ts:265](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L265)
+Defined in: [client.ts:265](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L265)
 
 ###### Parameters
 
@@ -397,8 +461,7 @@ Defined in:
 
 > **getFees**: (`this`, `gas`) => `Promise`\<`Fees`\>
 
-Defined in:
-[client.ts:269](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L269)
+Defined in: [client.ts:269](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L269)
 
 ###### Parameters
 
@@ -418,8 +481,7 @@ Defined in:
 
 > **getForeignCoins**: (`this`) => `Promise`\<`ForeignCoin`[]\>
 
-Defined in:
-[client.ts:267](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L267)
+Defined in: [client.ts:267](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L267)
 
 ###### Parameters
 
@@ -435,8 +497,7 @@ Defined in:
 
 > **getPools**: (`this`) => `Promise`\<`Pool`[]\>
 
-Defined in:
-[client.ts:270](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L270)
+Defined in: [client.ts:270](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L270)
 
 ###### Parameters
 
@@ -450,11 +511,9 @@ Defined in:
 
 ##### getQuote()
 
-> **getQuote**: (`this`, `inputAmount`, `inputToken`, `outputToken`) =>
-> `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
+> **getQuote**: (`this`, `inputAmount`, `inputToken`, `outputToken`) => `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
 
-Defined in:
-[client.ts:274](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L274)
+Defined in: [client.ts:274](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L274)
 
 Retrieves a quote for swapping input ZRC20 token to output ZRC20 token.
 
@@ -486,11 +545,9 @@ The amount of input ZRC20 token.
 
 ##### getRefundFee()
 
-> **getRefundFee**: (`this`, `inputZRC20`) => `Promise`\<\{ `amount`:
-> `BigNumberish`; `decimals`: `number`; \}\>
+> **getRefundFee**: (`this`, `inputZRC20`) => `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
 
-Defined in:
-[client.ts:276](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L276)
+Defined in: [client.ts:276](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L276)
 
 Calculates the refund fee in the input ZRC20 token.
 
@@ -516,8 +573,7 @@ The input ZRC20 token address.
 
 > **getSupportedChains**: (`this`) => `Promise`\<`ObserverSupportedChain`[]\>
 
-Defined in:
-[client.ts:268](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L268)
+Defined in: [client.ts:268](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L268)
 
 ###### Parameters
 
@@ -531,14 +587,11 @@ Defined in:
 
 ##### getWithdrawFeeInInputToken()
 
-> **getWithdrawFeeInInputToken**: (`this`, `inputZRC20`, `outputZRC20`) =>
-> `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
+> **getWithdrawFeeInInputToken**: (`this`, `inputZRC20`, `outputZRC20`) => `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
 
-Defined in:
-[client.ts:275](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L275)
+Defined in: [client.ts:275](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L275)
 
-Calculates the withdraw fee in the input ZRC20 token for a given output ZRC20
-token.
+Calculates the withdraw fee in the input ZRC20 token for a given output ZRC20 token.
 
 ###### Parameters
 
@@ -568,8 +621,7 @@ The output ZRC20 token address.
 
 > **getZRC20FromERC20**: (`this`, `erc20`) => `Promise`\<`string`\>
 
-Defined in:
-[client.ts:277](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L277)
+Defined in: [client.ts:277](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L277)
 
 Retrieves the ZRC20 contract address for a given ERC20 token.
 
@@ -597,10 +649,9 @@ Will throw an error if the ERC-20 token is not supported.
 
 ##### getZRC20GasToken()
 
-> **getZRC20GasToken**: (`this`, `network`) => `Promise`\<`undefined` \| > `string`\>
+> **getZRC20GasToken**: (`this`, `network`) => `Promise`\<`undefined` \| `string`\>
 
-Defined in:
-[client.ts:278](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L278)
+Defined in: [client.ts:278](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L278)
 
 Retrieves the ZRC20 contract address for the gas token of a given network.
 
@@ -626,16 +677,13 @@ The network name.
 
 > **network**: `string`
 
-Defined in:
-[client.ts:96](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L96)
+Defined in: [client.ts:96](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L96)
 
 ##### sendZeta()
 
-> **sendZeta**: (`this`, `options`) =>
-> `Promise`\<`ContractTransactionResponse`\>
+> **sendZeta**: (`this`, `options`) => `Promise`\<`ContractTransactionResponse`\>
 
-Defined in:
-[client.ts:272](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L272)
+Defined in: [client.ts:272](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L272)
 
 Initiates a cross-chain transfer of ZETA tokens from the source chain to the
 destination chain.
@@ -680,8 +728,8 @@ Optional gas limit on the destination chain.
 
 `string`
 
-Optional recipient address for the token transfer. If not provided, the token
-transfer is made to the signer's address.
+Optional recipient address for the token transfer. If not
+provided, the token transfer is made to the signer's address.
 
 ###### Returns
 
@@ -693,22 +741,19 @@ A promise that resolves with the transaction details upon success.
 
 > **signer**: `undefined` \| `Signer` \| `SignerWithAddress`
 
-Defined in:
-[client.ts:98](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L98)
+Defined in: [client.ts:98](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L98)
 
 ##### solanaAdapter
 
 > **solanaAdapter**: `undefined` \| `WalletContextState`
 
-Defined in:
-[client.ts:100](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L100)
+Defined in: [client.ts:100](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L100)
 
 ##### solanaDeposit()
 
 > **solanaDeposit**: (`this`, `args`) => `Promise`\<`undefined` \| `string`\>
 
-Defined in:
-[client.ts:279](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L279)
+Defined in: [client.ts:279](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L279)
 
 ###### Parameters
 
@@ -732,10 +777,9 @@ Defined in:
 
 ##### solanaDepositAndCall()
 
-> **solanaDepositAndCall**: (`this`, `args`) => `Promise`\<`undefined` \| > `string`\>
+> **solanaDepositAndCall**: (`this`, `args`) => `Promise`\<`undefined` \| `string`\>
 
-Defined in:
-[client.ts:280](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L280)
+Defined in: [client.ts:280](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L280)
 
 ###### Parameters
 
@@ -769,15 +813,13 @@ Defined in:
 
 > **solanaWallet**: `undefined` \| `Wallet`
 
-Defined in:
-[client.ts:99](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L99)
+Defined in: [client.ts:99](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L99)
 
 ##### trackCCTX()
 
 > **trackCCTX**: (`this`, `__namedParameters`) => `Promise`\<`CCTXs`\>
 
-Defined in:
-[client.ts:271](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L271)
+Defined in: [client.ts:271](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L271)
 
 Main entry point for tracking cross-chain transactions
 
@@ -813,16 +855,13 @@ Main entry point for tracking cross-chain transactions
 
 > **wallet**: `undefined` \| `Wallet`
 
-Defined in:
-[client.ts:97](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L97)
+Defined in: [client.ts:97](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L97)
 
 ##### zetachainCall()
 
-> **zetachainCall**: (`this`, `args`) => `Promise`\<\{ `gasFee`: `BigNumberish`;
-> `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
+> **zetachainCall**: (`this`, `args`) => `Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
-Defined in:
-[client.ts:283](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L283)
+Defined in: [client.ts:283](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L283)
 
 **`Function`**
 
@@ -868,9 +907,7 @@ The address of the ZetaChain gateway contract.
 
 `string`
 
-The address or identifier of the contract or account that will receive the call.
-Can be any string - if not a hex string, it will be converted to a hex
-representation of its UTF-8 bytes.
+The address or identifier of the contract or account that will receive the call. Can be any string - if not a hex string, it will be converted to a hex representation of its UTF-8 bytes.
 
 ###### revertOptions
 
@@ -888,8 +925,7 @@ Transaction options such as gasPrice, nonce, etc.
 
 `string`[]
 
-JSON string representing the types of the function parameters (e.g., ["uint256",
-"address"]).
+JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
 
 ###### values?
 
@@ -905,8 +941,7 @@ The address of the ZRC20 token contract used for paying gas fees.
 
 ###### Returns
 
-`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`:
-`ContractTransactionResponse`; \}\>
+`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
 - Returns an object containing the transaction, gas token, and gas fee.
 
@@ -916,12 +951,9 @@ Calls a contract on a connected chain.
 
 ##### zetachainWithdraw()
 
-> **zetachainWithdraw**: (`this`, `args`) => `Promise`\<\{ `gasFee`:
-> `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`;
-> \}\>
+> **zetachainWithdraw**: (`this`, `args`) => `Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
-Defined in:
-[client.ts:282](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L282)
+Defined in: [client.ts:282](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L282)
 
 **`Function`**
 
@@ -977,24 +1009,19 @@ The address of the ZRC20 token contract from which the withdrawal will be made.
 
 ###### Returns
 
-`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`:
-`ContractTransactionResponse`; \}\>
+`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
 - Returns an object containing the transaction, gas token, and gas fee.
 
 ###### Description
 
-Withdraws a specified amount of ZRC20 tokens from ZetaChain to a connected
-chain.
+Withdraws a specified amount of ZRC20 tokens from ZetaChain to a connected chain.
 
 ##### zetachainWithdrawAndCall()
 
-> **zetachainWithdrawAndCall**: (`this`, `args`) => `Promise`\<\{ `gasFee`:
-> `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`;
-> \}\>
+> **zetachainWithdrawAndCall**: (`this`, `args`) => `Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
-Defined in:
-[client.ts:281](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L281)
+Defined in: [client.ts:281](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L281)
 
 **`Function`**
 
@@ -1046,8 +1073,7 @@ The address of the ZetaChain gateway contract.
 
 `string`
 
-The address that will receive the withdrawn ZRC20 tokens or the contract to
-interact with.
+The address that will receive the withdrawn ZRC20 tokens or the contract to interact with.
 
 ###### revertOptions
 
@@ -1065,8 +1091,7 @@ Transaction options such as gasPrice, nonce, etc.
 
 `string`[]
 
-JSON string representing the types of the function parameters (e.g., ["uint256",
-"address"]).
+JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
 
 ###### values?
 
@@ -1082,15 +1107,13 @@ The address of the ZRC20 token contract used for the withdrawal and fee payment.
 
 ###### Returns
 
-`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`:
-`ContractTransactionResponse`; \}\>
+`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
 - Returns an object containing the transaction, gas token, and gas fee.
 
 ###### Description
 
-Withdraws a specified amount of ZRC20 tokens and makes a function call on the
-target contract on a connected chain.
+Withdraws a specified amount of ZRC20 tokens and makes a function call on the target contract on a connected chain.
 
 #### Methods
 
@@ -1098,8 +1121,7 @@ target contract on a connected chain.
 
 > **getChains**(): `Chains`
 
-Defined in:
-[client.ts:251](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L251)
+Defined in: [client.ts:251](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L251)
 
 ###### Returns
 
@@ -1109,8 +1131,7 @@ Defined in:
 
 > **getGatewayAddress**(): `Promise`\<`string`\>
 
-Defined in:
-[client.ts:182](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L182)
+Defined in: [client.ts:182](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L182)
 
 ###### Returns
 
@@ -1120,8 +1141,7 @@ Defined in:
 
 > **getSolanaPublicKey**(): `null` \| `PublicKey`
 
-Defined in:
-[client.ts:259](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L259)
+Defined in: [client.ts:259](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L259)
 
 ###### Returns
 
@@ -1131,8 +1151,7 @@ Defined in:
 
 > **isSolanaWalletConnected**(): `boolean`
 
-Defined in:
-[client.ts:255](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/client.ts#L255)
+Defined in: [client.ts:255](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/client.ts#L255)
 
 ###### Returns
 
@@ -1142,10 +1161,9 @@ Defined in:
 
 ### SupportedArgType
 
-> **SupportedArgType** = `string` \| `bigint` \| `boolean` \| `Uint8Array` \| > `BytesLike`
+> **SupportedArgType** = `string` \| `bigint` \| `boolean` \| `Uint8Array` \| `BytesLike`
 
-Defined in:
-[prepareData.ts:3](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/prepareData.ts#L3)
+Defined in: [prepareData.ts:3](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/prepareData.ts#L3)
 
 ## Functions
 
@@ -1153,8 +1171,7 @@ Defined in:
 
 > **evmCall**(`this`, `args`): `Promise`\<`ContractTransactionResponse`\>
 
-Defined in:
-[evmCall.ts:26](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/evmCall.ts#L26)
+Defined in: [evmCall.ts:26](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/evmCall.ts#L26)
 
 evmCall
 
@@ -1186,8 +1203,7 @@ The address of the target contract or account to call on the EVM chain.
 
 `RevertOptions`
 
-Options to handle call reversion, including revert address, message, and gas
-limit for the revert scenario.
+Options to handle call reversion, including revert address, message, and gas limit for the revert scenario.
 
 ###### txOptions
 
@@ -1199,8 +1215,7 @@ Transaction options such as gasLimit, gasPrice, etc.
 
 `string`[]
 
-JSON string representing the types of the function parameters (e.g., ["uint256",
-"address"]).
+JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
 
 ###### values
 
@@ -1218,14 +1233,13 @@ The values to be passed to the function (should match the types).
 
 Calls a universal app contract on ZetaChain.
 
----
+***
 
 ### evmDeposit()
 
 > **evmDeposit**(`this`, `args`): `Promise`\<`ContractTransactionResponse`\>
 
-Defined in:
-[evmDeposit.ts:33](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/evmDeposit.ts#L33)
+Defined in: [evmDeposit.ts:33](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/evmDeposit.ts#L33)
 
 evmDeposit
 
@@ -1251,8 +1265,7 @@ The amount of ERC20 tokens or native currency to deposit.
 
 `string`
 
-The address of the ERC20 token contract. If depositing native currency (e.g.,
-ETH), this can be left empty or undefined.
+The address of the ERC20 token contract. If depositing native currency (e.g., ETH), this can be left empty or undefined.
 
 ###### gatewayEvm?
 
@@ -1270,8 +1283,7 @@ The address of the receiver or target contract for the deposit.
 
 `RevertOptions`
 
-Options to handle call reversion, including revert address, message, and gas
-limit for the revert scenario.
+Options to handle call reversion, including revert address, message, and gas limit for the revert scenario.
 
 ###### txOptions
 
@@ -1287,18 +1299,15 @@ Transaction options, including gasLimit, gasPrice, etc.
 
 #### Description
 
-Deposits a specified amount of ERC-20 or native gas tokens to a receiver on
-ZetaChain.
+Deposits a specified amount of ERC-20 or native gas tokens to a receiver on ZetaChain.
 
----
+***
 
 ### evmDepositAndCall()
 
-> **evmDepositAndCall**(`this`, `args`):
-> `Promise`\<`ContractTransactionResponse`\>
+> **evmDepositAndCall**(`this`, `args`): `Promise`\<`ContractTransactionResponse`\>
 
-Defined in:
-[evmDepositAndCall.ts:36](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/evmDepositAndCall.ts#L36)
+Defined in: [evmDepositAndCall.ts:36](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/evmDepositAndCall.ts#L36)
 
 evmDepositAndCall
 
@@ -1324,8 +1333,7 @@ The amount of ERC20 tokens or native currency to deposit.
 
 `string`
 
-The address of the ERC20 token contract. If depositing native currency (e.g.,
-ETH), this can be left empty or undefined.
+The address of the ERC20 token contract. If depositing native currency (e.g., ETH), this can be left empty or undefined.
 
 ###### gatewayEvm?
 
@@ -1337,15 +1345,13 @@ The address of the ZetaChain gateway contract on the EVM-compatible blockchain.
 
 `string`
 
-The address of the receiver contract or account where the function call will be
-executed.
+The address of the receiver contract or account where the function call will be executed.
 
 ###### revertOptions
 
 `RevertOptions`
 
-Options to handle call reversion, including revert address, message, and gas
-limit for the revert scenario.
+Options to handle call reversion, including revert address, message, and gas limit for the revert scenario.
 
 ###### txOptions
 
@@ -1357,8 +1363,7 @@ Transaction options, including gasLimit, gasPrice, etc.
 
 `string`[]
 
-JSON string representing the types of the function parameters (e.g., ["uint256",
-"address"]).
+JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
 
 ###### values
 
@@ -1374,17 +1379,15 @@ The values to be passed to the function (should match the types).
 
 #### Description
 
-Deposits a specified amount of ERC-20 or native gas tokens and calls a universal
-app contract on ZetaChain.
+Deposits a specified amount of ERC-20 or native gas tokens and calls a universal app contract on ZetaChain.
 
----
+***
 
 ### getBalances()
 
 > **getBalances**(`this`, `__namedParameters`): `Promise`\<`TokenBalance`[]\>
 
-Defined in:
-[getBalances.ts:30](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getBalances.ts#L30)
+Defined in: [getBalances.ts:30](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getBalances.ts#L30)
 
 Get token balances of all tokens on all chains connected to ZetaChain.
 
@@ -1424,14 +1427,13 @@ ZetaChainClient instance.
 
 Array of token balances
 
----
+***
 
 ### getChainId()
 
 > **getChainId**(`this`, `chainNameOrAlias`): `null` \| `number`
 
-Defined in:
-[getChainId.ts:12](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getChainId.ts#L12)
+Defined in: [getChainId.ts:12](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getChainId.ts#L12)
 
 Get chain ID from a chain label.
 
@@ -1453,14 +1455,13 @@ Chain label like goerli_testnet
 
 `null` \| `number`
 
----
+***
 
 ### getEndpoint()
 
 > **getEndpoint**(`this`, `type`, `network`): `string`
 
-Defined in:
-[getEndpoint.ts:3](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getEndpoint.ts#L3)
+Defined in: [getEndpoint.ts:3](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getEndpoint.ts#L3)
 
 #### Parameters
 
@@ -1480,14 +1481,13 @@ Defined in:
 
 `string`
 
----
+***
 
 ### getFees()
 
 > **getFees**(`this`, `gas`): `Promise`\<`Fees`\>
 
-Defined in:
-[getFees.ts:110](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getFees.ts#L110)
+Defined in: [getFees.ts:110](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getFees.ts#L110)
 
 #### Parameters
 
@@ -1503,14 +1503,13 @@ Defined in:
 
 `Promise`\<`Fees`\>
 
----
+***
 
 ### getForeignCoins()
 
 > **getForeignCoins**(`this`): `Promise`\<`ForeignCoin`[]\>
 
-Defined in:
-[getForeignCoins.ts:6](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getForeignCoins.ts#L6)
+Defined in: [getForeignCoins.ts:6](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getForeignCoins.ts#L6)
 
 #### Parameters
 
@@ -1522,14 +1521,13 @@ Defined in:
 
 `Promise`\<`ForeignCoin`[]\>
 
----
+***
 
 ### getPools()
 
 > **getPools**(`this`): `Promise`\<`Pool`[]\>
 
-Defined in:
-[getPools.ts:12](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getPools.ts#L12)
+Defined in: [getPools.ts:12](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getPools.ts#L12)
 
 #### Parameters
 
@@ -1541,15 +1539,13 @@ Defined in:
 
 `Promise`\<`Pool`[]\>
 
----
+***
 
 ### getQuote()
 
-> **getQuote**(`this`, `inputAmount`, `inputToken`, `outputToken`):
-> `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
+> **getQuote**(`this`, `inputAmount`, `inputToken`, `outputToken`): `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
 
-Defined in:
-[getQuote.ts:202](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getQuote.ts#L202)
+Defined in: [getQuote.ts:202](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getQuote.ts#L202)
 
 Retrieves a quote for swapping input ZRC20 token to output ZRC20 token.
 
@@ -1579,15 +1575,13 @@ The amount of input ZRC20 token.
 
 - An object containing the output amount and its decimals.
 
----
+***
 
 ### getRefundFee()
 
-> **getRefundFee**(`this`, `inputZRC20`): `Promise`\<\{ `amount`:
-> `BigNumberish`; `decimals`: `number`; \}\>
+> **getRefundFee**(`this`, `inputZRC20`): `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
 
-Defined in:
-[getQuote.ts:106](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getQuote.ts#L106)
+Defined in: [getQuote.ts:106](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getQuote.ts#L106)
 
 Calculates the refund fee in the input ZRC20 token.
 
@@ -1609,14 +1603,13 @@ The input ZRC20 token address.
 
 - An object containing the refund fee amount and its decimals.
 
----
+***
 
 ### getSupportedChains()
 
 > **getSupportedChains**(`this`): `Promise`\<`ObserverSupportedChain`[]\>
 
-Defined in:
-[getSupportedChains.ts:6](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getSupportedChains.ts#L6)
+Defined in: [getSupportedChains.ts:6](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getSupportedChains.ts#L6)
 
 #### Parameters
 
@@ -1628,18 +1621,15 @@ Defined in:
 
 `Promise`\<`ObserverSupportedChain`[]\>
 
----
+***
 
 ### getWithdrawFeeInInputToken()
 
-> **getWithdrawFeeInInputToken**(`this`, `inputZRC20`, `outputZRC20`):
-> `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
+> **getWithdrawFeeInInputToken**(`this`, `inputZRC20`, `outputZRC20`): `Promise`\<\{ `amount`: `BigNumberish`; `decimals`: `number`; \}\>
 
-Defined in:
-[getQuote.ts:153](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getQuote.ts#L153)
+Defined in: [getQuote.ts:153](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getQuote.ts#L153)
 
-Calculates the withdraw fee in the input ZRC20 token for a given output ZRC20
-token.
+Calculates the withdraw fee in the input ZRC20 token for a given output ZRC20 token.
 
 #### Parameters
 
@@ -1665,14 +1655,13 @@ The output ZRC20 token address.
 
 - An object containing the withdraw fee amount and its decimals.
 
----
+***
 
 ### getZRC20FromERC20()
 
 > **getZRC20FromERC20**(`this`, `erc20`): `Promise`\<`string`\>
 
-Defined in:
-[getQuote.ts:56](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getQuote.ts#L56)
+Defined in: [getQuote.ts:56](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getQuote.ts#L56)
 
 Retrieves the ZRC20 contract address for a given ERC20 token.
 
@@ -1698,14 +1687,13 @@ The ERC20 token address.
 
 Will throw an error if the ERC-20 token is not supported.
 
----
+***
 
 ### getZRC20GasToken()
 
 > **getZRC20GasToken**(`this`, `network`): `Promise`\<`undefined` \| `string`\>
 
-Defined in:
-[getQuote.ts:73](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/getQuote.ts#L73)
+Defined in: [getQuote.ts:73](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/getQuote.ts#L73)
 
 Retrieves the ZRC20 contract address for the gas token of a given network.
 
@@ -1727,14 +1715,13 @@ The network name.
 
 - The ZRC20 contract address for the gas token.
 
----
+***
 
 ### prepareData()
 
 > **prepareData**(`contract`, `types`, `args`): `string`
 
-Defined in:
-[prepareData.ts:10](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/prepareData.ts#L10)
+Defined in: [prepareData.ts:10](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/prepareData.ts#L10)
 
 #### Parameters
 
@@ -1754,14 +1741,13 @@ Defined in:
 
 `string`
 
----
+***
 
 ### prepareParams()
 
 > **prepareParams**(`types`, `args`): `string`
 
-Defined in:
-[prepareData.ts:19](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/prepareData.ts#L19)
+Defined in: [prepareData.ts:19](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/prepareData.ts#L19)
 
 #### Parameters
 
@@ -1777,14 +1763,13 @@ Defined in:
 
 `string`
 
----
+***
 
 ### sendZeta()
 
 > **sendZeta**(`this`, `options`): `Promise`\<`ContractTransactionResponse`\>
 
-Defined in:
-[sendZeta.ts:29](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/sendZeta.ts#L29)
+Defined in: [sendZeta.ts:29](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/sendZeta.ts#L29)
 
 Initiates a cross-chain transfer of ZETA tokens from the source chain to the
 destination chain.
@@ -1829,8 +1814,8 @@ Optional gas limit on the destination chain.
 
 `string`
 
-Optional recipient address for the token transfer. If not provided, the token
-transfer is made to the signer's address.
+Optional recipient address for the token transfer. If not
+provided, the token transfer is made to the signer's address.
 
 #### Returns
 
@@ -1838,14 +1823,13 @@ transfer is made to the signer's address.
 
 A promise that resolves with the transaction details upon success.
 
----
+***
 
 ### solanaDeposit()
 
 > **solanaDeposit**(`this`, `args`): `Promise`\<`undefined` \| `string`\>
 
-Defined in:
-[solanaDeposit.ts:17](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/solanaDeposit.ts#L17)
+Defined in: [solanaDeposit.ts:17](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/solanaDeposit.ts#L17)
 
 #### Parameters
 
@@ -1867,14 +1851,13 @@ Defined in:
 
 `Promise`\<`undefined` \| `string`\>
 
----
+***
 
 ### solanaDepositAndCall()
 
 > **solanaDepositAndCall**(`this`, `args`): `Promise`\<`undefined` \| `string`\>
 
-Defined in:
-[solanaDepositAndCall.ts:18](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/solanaDepositAndCall.ts#L18)
+Defined in: [solanaDepositAndCall.ts:18](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/solanaDepositAndCall.ts#L18)
 
 #### Parameters
 
@@ -1904,14 +1887,13 @@ Defined in:
 
 `Promise`\<`undefined` \| `string`\>
 
----
+***
 
 ### trackCCTX()
 
 > **trackCCTX**(`this`, `__namedParameters`): `Promise`\<`CCTXs`\>
 
-Defined in:
-[trackCCTX.ts:18](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/trackCCTX.ts#L18)
+Defined in: [trackCCTX.ts:18](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/trackCCTX.ts#L18)
 
 Main entry point for tracking cross-chain transactions
 
@@ -1943,15 +1925,13 @@ Main entry point for tracking cross-chain transactions
 
 `Promise`\<`CCTXs`\>
 
----
+***
 
 ### zetachainCall()
 
-> **zetachainCall**(`this`, `args`): `Promise`\<\{ `gasFee`: `BigNumberish`;
-> `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
+> **zetachainCall**(`this`, `args`): `Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
-Defined in:
-[zetachainCall.ts:41](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/zetachainCall.ts#L41)
+Defined in: [zetachainCall.ts:41](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/zetachainCall.ts#L41)
 
 zetachainCall
 
@@ -1995,9 +1975,7 @@ The address of the ZetaChain gateway contract.
 
 `string`
 
-The address or identifier of the contract or account that will receive the call.
-Can be any string - if not a hex string, it will be converted to a hex
-representation of its UTF-8 bytes.
+The address or identifier of the contract or account that will receive the call. Can be any string - if not a hex string, it will be converted to a hex representation of its UTF-8 bytes.
 
 ###### revertOptions
 
@@ -2015,8 +1993,7 @@ Transaction options such as gasPrice, nonce, etc.
 
 `string`[]
 
-JSON string representing the types of the function parameters (e.g., ["uint256",
-"address"]).
+JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
 
 ###### values?
 
@@ -2032,8 +2009,7 @@ The address of the ZRC20 token contract used for paying gas fees.
 
 #### Returns
 
-`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`:
-`ContractTransactionResponse`; \}\>
+`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
 - Returns an object containing the transaction, gas token, and gas fee.
 
@@ -2041,15 +2017,13 @@ The address of the ZRC20 token contract used for paying gas fees.
 
 Calls a contract on a connected chain.
 
----
+***
 
 ### zetachainWithdraw()
 
-> **zetachainWithdraw**(`this`, `args`): `Promise`\<\{ `gasFee`: `BigNumberish`;
-> `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
+> **zetachainWithdraw**(`this`, `args`): `Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
-Defined in:
-[zetachainWithdraw.ts:34](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/zetachainWithdraw.ts#L34)
+Defined in: [zetachainWithdraw.ts:34](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/zetachainWithdraw.ts#L34)
 
 zetachainWithdraw
 
@@ -2103,26 +2077,21 @@ The address of the ZRC20 token contract from which the withdrawal will be made.
 
 #### Returns
 
-`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`:
-`ContractTransactionResponse`; \}\>
+`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
 - Returns an object containing the transaction, gas token, and gas fee.
 
 #### Description
 
-Withdraws a specified amount of ZRC20 tokens from ZetaChain to a connected
-chain.
+Withdraws a specified amount of ZRC20 tokens from ZetaChain to a connected chain.
 
----
+***
 
 ### zetachainWithdrawAndCall()
 
-> **zetachainWithdrawAndCall**(`this`, `args`): `Promise`\<\{ `gasFee`:
-> `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`;
-> \}\>
+> **zetachainWithdrawAndCall**(`this`, `args`): `Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
-Defined in:
-[zetachainWithdrawAndCall.ts:42](https://github.com/zeta-chain/toolkit/blob/0e54f75f043e6d8de5aee8d9953466badd663a00/packages/client/src/zetachainWithdrawAndCall.ts#L42)
+Defined in: [zetachainWithdrawAndCall.ts:42](https://github.com/zeta-chain/toolkit/blob/d63b5b5cc9ea3d0805749dfd698d55ca1da4b87f/packages/client/src/zetachainWithdrawAndCall.ts#L42)
 
 zetachainWithdrawAndCall
 
@@ -2172,8 +2141,7 @@ The address of the ZetaChain gateway contract.
 
 `string`
 
-The address that will receive the withdrawn ZRC20 tokens or the contract to
-interact with.
+The address that will receive the withdrawn ZRC20 tokens or the contract to interact with.
 
 ###### revertOptions
 
@@ -2191,8 +2159,7 @@ Transaction options such as gasPrice, nonce, etc.
 
 `string`[]
 
-JSON string representing the types of the function parameters (e.g., ["uint256",
-"address"]).
+JSON string representing the types of the function parameters (e.g., ["uint256", "address"]).
 
 ###### values?
 
@@ -2208,12 +2175,10 @@ The address of the ZRC20 token contract used for the withdrawal and fee payment.
 
 #### Returns
 
-`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`:
-`ContractTransactionResponse`; \}\>
+`Promise`\<\{ `gasFee`: `BigNumberish`; `gasZRC20`: `string`; `tx`: `ContractTransactionResponse`; \}\>
 
 - Returns an object containing the transaction, gas token, and gas fee.
 
 #### Description
 
-Withdraws a specified amount of ZRC20 tokens and makes a function call on the
-target contract on a connected chain.
+Withdraws a specified amount of ZRC20 tokens and makes a function call on the target contract on a connected chain.
