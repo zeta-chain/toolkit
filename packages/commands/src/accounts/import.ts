@@ -7,9 +7,9 @@ import {
   AvailableAccountTypes,
 } from "../../../../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../../types/shared.constants";
+import { privateKeyOrMnemonicRefineRule } from "../../../../types/shared.schema";
 import { createAccountForType } from "../../../../utils/accounts";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
-import { privateKeyOrMnemonicRefineRule } from "../../../../types/shared.schema";
 
 const importAccountOptionsSchema = z
   .object({
