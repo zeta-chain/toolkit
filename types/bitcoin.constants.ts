@@ -41,6 +41,7 @@ export const BITCOIN_LIMITS = {
   DUST_THRESHOLD: {
     P2TR: 330,
     P2WPKH: 294,
+    ZETACHAIN: 1000,
   },
   // Minimum amount for commit output
   ESTIMATED_REVEAL_FEE: 5000,
@@ -55,3 +56,7 @@ export const BITCOIN_FEES = {
   DEFAULT_REVEAL_FEE_RATE: 10,
   MIN_TOTAL_FEE: 20000, // Minimum total fee for both transactions
 };
+
+export const ESTIMATED_VIRTUAL_SIZE = 68;
+export const EVM_ADDRESS_LENGTH = 20;
+export const MAX_MEMO_LENGTH = 80;

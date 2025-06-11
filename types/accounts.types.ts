@@ -28,8 +28,8 @@ const evmAccountDataSchema = z.object({
 
 const solanaAccountDataSchema = z.object({
   name: z.string().optional(),
+  privateKey: z.string(),
   publicKey: z.string(),
-  secretKey: z.string(),
 });
 
 const bitcoinAccountDataSchema = z.object({

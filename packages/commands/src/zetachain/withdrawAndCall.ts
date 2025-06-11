@@ -21,8 +21,9 @@ import {
   setupZetachainTransaction,
 } from "../../../../utils/zetachain.command.helpers";
 
-const callOptionsSchema = baseZetachainOptionsSchema
+const withdrawAndCallOptionsSchema = baseZetachainOptionsSchema
   .extend({
+    amount: z.string(),
     data: hexStringSchema.optional(),
     function: z.string().optional(),
     types: stringArraySchema.optional(),
@@ -38,9 +39,9 @@ const callOptionsSchema = baseZetachainOptionsSchema
   })
   .refine(namePkRefineRule);
 
-type CallOptions = z.infer<typeof callOptionsSchema>;
+type WithdrawAndCallOptions = z.infer<typeof withdrawAndCallOptionsSchema>;
 
-const main = async (options: CallOptions) => {
+const main = async (options: WithdrawAndCallOptions) => {
   try {
     const { client } = setupZetachainTransaction(options);
 
@@ -50,12 +51,17 @@ const main = async (options: CallOptions) => {
     );
 
     if (options.data) {
-      console.log(`Contract call details:
+      console.log(`Withdraw and call details:
+Amount: ${options.amount}
 Raw data: ${options.data}
 ZetaChain Gateway: ${gatewayZetaChain}
 `);
 
-      const response = await client.zetachainCall({
+      const isConfirmed = await confirmZetachainTransaction(options);
+      if (!isConfirmed) return;
+
+      const response = await client.zetachainWithdrawAndCall({
+        amount: options.amount,
         callOptions: prepareCallOptions(options),
         data: options.data,
         gatewayZetaChain,
@@ -67,11 +73,12 @@ ZetaChain Gateway: ${gatewayZetaChain}
 
       const receipt = await response.tx.wait();
       console.log("Transaction hash:", receipt?.hash);
-    } else {
+    } else if (options.function && options.types && options.values) {
       const stringifiedTypes = JSON.stringify(options.types);
-      console.log(`Contract call details:
+      console.log(`Withdraw and call details:
+Amount: ${options.amount}
 Function: ${options.function}
-Function parameters: ${options.values?.join(", ")}
+Function parameters: ${options.values.join(", ")}
 Parameter types: ${stringifiedTypes}
 ZetaChain Gateway: ${gatewayZetaChain}
 `);
@@ -79,9 +86,10 @@ ZetaChain Gateway: ${gatewayZetaChain}
       const isConfirmed = await confirmZetachainTransaction(options);
       if (!isConfirmed) return;
 
-      const values = parseAbiValues(stringifiedTypes, options.values || []);
+      const values = parseAbiValues(stringifiedTypes, options.values);
 
-      const response = await client.zetachainCall({
+      const response = await client.zetachainWithdrawAndCall({
+        amount: options.amount,
         callOptions: prepareCallOptions(options),
         function: options.function,
         gatewayZetaChain: options.gatewayZetachain,
@@ -95,10 +103,19 @@ ZetaChain Gateway: ${gatewayZetaChain}
 
       const receipt = await response.tx.wait();
       console.log("Transaction hash:", receipt?.hash);
+    } else {
+      handleError({
+        context: "Missing required parameters",
+        error: new Error(
+          "Either provide 'data' OR provide all three of 'function', 'types', and 'values'"
+        ),
+        shouldThrow: false,
+      });
+      process.exit(1);
     }
   } catch (error) {
     handleError({
-      context: "Error during zetachain call",
+      context: "Error during zetachain withdraw and call",
       error,
       shouldThrow: false,
     });
@@ -106,11 +123,14 @@ ZetaChain Gateway: ${gatewayZetaChain}
   }
 };
 
-export const callCommand = new Command("call").description(
-  "Call a contract on a connected chain from ZetaChain"
+export const withdrawAndCallCommand = new Command(
+  "withdraw-and-call"
+).description(
+  "Withdraw tokens from ZetaChain and call a contract on a connected chain"
 );
 
-addCommonZetachainCommandOptions(callCommand)
+addCommonZetachainCommandOptions(withdrawAndCallCommand)
+  .requiredOption("--amount <amount>", "The amount of tokens to withdraw")
   .option(
     "--function <function>",
     `Function to call (example: "hello(string)")`
@@ -129,7 +149,7 @@ addCommonZetachainCommandOptions(callCommand)
   .action(async (options) => {
     const validatedOptions = validateAndParseSchema(
       options,
-      callOptionsSchema,
+      withdrawAndCallOptionsSchema,
       {
         exitOnError: true,
       }

@@ -36,6 +36,7 @@ const balancesOptionsSchema = z.object({
   network: z.enum(["mainnet", "testnet"]).default("testnet"),
   solana: z.string().optional(),
   sui: z.string().optional(),
+  ton: z.string().optional(),
 });
 
 type BalancesOptions = z.infer<typeof balancesOptionsSchema>;
@@ -91,7 +92,15 @@ const main = async (options: BalancesOptions) => {
       suiAddress: options.sui,
     });
 
-    if (!evmAddress && !btcAddress && !solanaAddress && !suiAddress) {
+    const tonAddress = options.ton;
+
+    if (
+      !evmAddress &&
+      !btcAddress &&
+      !solanaAddress &&
+      !suiAddress &&
+      !tonAddress
+    ) {
       spinner.fail("No addresses provided or derivable from account name");
       console.error(chalk.red(WALLET_ERROR));
       return;
@@ -108,6 +117,7 @@ const main = async (options: BalancesOptions) => {
       evmAddress,
       solanaAddress,
       suiAddress,
+      tonAddress,
     });
 
     spinner.succeed("Successfully fetched balances");
@@ -122,6 +132,7 @@ const main = async (options: BalancesOptions) => {
       evm: evmAddress,
       solana: solanaAddress,
       sui: suiAddress,
+      ton: tonAddress,
     });
 
     if (addressesInfo) {
@@ -149,6 +160,7 @@ export const balancesCommand = new Command("balances")
     "Fetch balances for a specific Bitcoin address"
   )
   .option("--sui <address>", "Fetch balances for a specific Sui address")
+  .option("--ton <address>", "Fetch balances for a specific TON address")
   .option("--name <name>", "Account name")
   .addOption(
     new Option("--network <network>", "Network to use")
