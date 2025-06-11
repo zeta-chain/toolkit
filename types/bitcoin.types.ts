@@ -127,9 +127,7 @@ export const inscriptionDepositAndCallOptionsSchema =
 
 export const inscriptionDepositOptionsSchema =
   baseBitcoinInscriptionOptionsSchema.extend({
-    amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Amount must be a valid positive number",
-    }),
+    amount: validAmountSchema,
   });
 
 export const inscriptionCallOptionsSchema = withCommonBitcoinInscriptionRefines(
