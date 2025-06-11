@@ -209,13 +209,11 @@ export const getZRC20WithdrawFee = async (
   ) as ZRC20Contract;
   let gasZRC20: string;
   let gasFee: bigint;
-  const zrc20Symbol = (await contract.symbol()) as string;
+  const zrc20Symbol = await contract.symbol();
   if (gasLimit) {
-    [gasZRC20, gasFee] = (await contract.withdrawGasFeeWithGasLimit(
-      gasLimit
-    )) as [string, bigint];
+    [gasZRC20, gasFee] = await contract.withdrawGasFeeWithGasLimit(gasLimit);
   } else {
-    [gasZRC20, gasFee] = (await contract.withdrawGasFee()) as [string, bigint];
+    [gasZRC20, gasFee] = await contract.withdrawGasFee();
   }
   const gasContract = new ethers.Contract(
     gasZRC20,
@@ -223,7 +221,7 @@ export const getZRC20WithdrawFee = async (
     provider
   ) as ZRC20Contract;
   const decimals = await gasContract.decimals();
-  const gasSymbol = (await gasContract.symbol()) as string;
+  const gasSymbol = await gasContract.symbol();
   const gasFeeFormatted = ethers.formatUnits(gasFee, decimals);
   return { gasFee: gasFeeFormatted, gasSymbol, gasZRC20, zrc20Symbol };
 };
