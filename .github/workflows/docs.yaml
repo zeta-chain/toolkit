@@ -1,0 +1,42 @@
+name: Generate docs
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Generate docs
+        run: yarn docs
+
+      - name: Check if docs/ changed
+        id: changes
+        run: |
+          git add docs/
+          git diff --staged --quiet docs/ || echo "docs_changed=true" >> $GITHUB_OUTPUT
+
+      - name: Fail if docs changed
+        if: steps.changes.outputs.docs_changed == 'true'
+        run: |
+          echo "❌ Changes detected in docs/"
+          git status
+          git diff --staged docs/
+          exit 1
