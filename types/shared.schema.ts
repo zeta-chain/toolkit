@@ -101,6 +101,7 @@ export const typesAndDataExclusivityRefineRule = {
 
 export const privateKeyOrMnemonicRefineRule = {
   message: "Either privateKey or mnemonic must be provided, but not both",
+  path: ["privateKey", "mnemonic"],
   rule: (data: { mnemonic?: string; privateKey?: string }) => {
     return (
       (!!data.privateKey || !!data.mnemonic) &&

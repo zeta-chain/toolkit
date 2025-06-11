@@ -18,7 +18,10 @@ const importAccountOptionsSchema = z
     privateKey: z.string().optional(),
     type: accountTypeSchema,
   })
-  .refine(privateKeyOrMnemonicRefineRule.rule, privateKeyOrMnemonicRefineRule);
+  .refine(privateKeyOrMnemonicRefineRule.rule, {
+    message: privateKeyOrMnemonicRefineRule.message,
+    path: privateKeyOrMnemonicRefineRule.path,
+  });
 
 type ImportAccountOptions = z.infer<typeof importAccountOptionsSchema>;
 
