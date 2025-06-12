@@ -39,8 +39,6 @@ const main = async (options: DepositOptions) => {
     const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
 
     await gateway.sendDeposit(sender, toNano(options.amount), options.receiver);
-
-    console.log("✅ TON deposit transaction submitted successfully!");
   } catch (error: unknown) {
     if (hasErrorStatus(error, 429)) {
       handleError({
