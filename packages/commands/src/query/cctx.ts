@@ -196,7 +196,7 @@ Receiver: ${receiver}
     }
 
     const revertAddress =
-      revert_address === ethers.ZeroAddress.toString()
+      revert_address === ethers.ZeroAddress
         ? "Reverted to sender address, because revert address is not set"
         : revert_address;
 
