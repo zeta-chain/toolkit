@@ -1,16 +1,13 @@
 import { z } from "zod";
 
+import { evmAddressSchema } from "./shared.schema";
+
 export const depositOptionsSchema = z.object({
   amount: z.string(),
   apiKey: z.string().optional(),
   gateway: z.string(),
   mnemonic: z.string(),
-  receiver: z
-    .string()
-    .regex(
-      /^0x[0-9a-fA-F]{40}$/,
-      "EVM address must be 0x-prefixed 20-byte hex"
-    ),
+  receiver: evmAddressSchema,
   rpc: z.string(),
 });
 
@@ -20,12 +17,7 @@ export const depositAndCallOptionsSchema = z.object({
   data: z.string().optional(),
   gateway: z.string(),
   mnemonic: z.string(),
-  receiver: z
-    .string()
-    .regex(
-      /^0x[0-9a-fA-F]{40}$/,
-      "EVM address must be 0x-prefixed 20-byte hex"
-    ),
+  receiver: evmAddressSchema,
   rpc: z.string(),
   types: z.array(z.string()).optional(),
   values: z.array(z.string()).optional(),
