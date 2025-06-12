@@ -207,7 +207,7 @@ ${receiver_chainId} → ${
 Revert Address:   ${revertAddress}
 Call on Revert:   ${call_on_revert}
 Abort Address:    ${abort_address}
-Revert Message:   ${atob(revert_message)}
+Revert Message:   ${Buffer.from(revert_message, "base64").toString()}
 Revert Gas Limit: ${revert_gas_limit}
 `;
 
