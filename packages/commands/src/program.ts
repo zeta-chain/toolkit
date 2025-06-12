@@ -20,7 +20,7 @@ toolkitCommand.addCommand(evmCommand);
 toolkitCommand.addCommand(queryCommand);
 toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(suiCommand);
-toolkitCommand.addCommand(zetachainCommand);
 toolkitCommand.addCommand(tonCommand);
+toolkitCommand.addCommand(zetachainCommand);
 
 toolkitCommand.parse(process.argv);
