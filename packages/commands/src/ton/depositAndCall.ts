@@ -12,49 +12,70 @@ import {
   DEFAULT_GATEWAY_ADDR,
 } from "../../../../types/ton.constants";
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
+import { handleError, hasErrorStatus } from "../../../../utils";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
 const main = async (options: DepositAndCallOptions) => {
-  const client = new TonClient({
-    endpoint: options.rpc,
-    ...(options.apiKey && { apiKey: options.apiKey }),
-  });
+  try {
+    const client = new TonClient({
+      endpoint: options.rpc,
+      ...(options.apiKey && { apiKey: options.apiKey }),
+    });
 
-  const keyPair = await mnemonicToWalletKey(options.mnemonic.split(" "));
+    const keyPair = await mnemonicToWalletKey(options.mnemonic.split(" "));
 
-  const wallet = WalletContractV4.create({
-    publicKey: keyPair.publicKey,
-    workchain: 0,
-  });
+    const wallet = WalletContractV4.create({
+      publicKey: keyPair.publicKey,
+      workchain: 0,
+    });
 
-  const openedWallet = client.open(wallet);
-  const sender = openedWallet.sender(keyPair.secretKey);
+    const openedWallet = client.open(wallet);
+    const sender = openedWallet.sender(keyPair.secretKey);
 
-  const gatewayAddr = Address.parse(options.gateway);
-  const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
+    const gatewayAddr = Address.parse(options.gateway);
+    const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
 
-  let payload;
+    let payload;
 
-  if (options.types && options.values) {
-    const abiCoder = AbiCoder.defaultAbiCoder();
-    const encodedHex = abiCoder.encode(options.types, options.values);
-    const encodedBin = ethers.getBytes(encodedHex);
+    if (options.types && options.values) {
+      const abiCoder = AbiCoder.defaultAbiCoder();
+      const encodedHex = abiCoder.encode(options.types, options.values);
+      const encodedBin = ethers.getBytes(encodedHex);
 
-    payload = beginCell().storeBuffer(Buffer.from(encodedBin)).endCell();
-  } else if (options.data) {
-    payload = stringToCell(options.data);
-  } else {
-    throw new Error("Either types and values or data must be provided");
+      payload = beginCell().storeBuffer(Buffer.from(encodedBin)).endCell();
+    } else if (options.data) {
+      payload = stringToCell(options.data);
+    } else {
+      throw new Error("Either types and values or data must be provided");
+    }
+
+    await gateway.sendDepositAndCall(
+      sender,
+      toNano(options.amount),
+      options.receiver,
+      payload
+    );
+  } catch (error) {
+    if (hasErrorStatus(error, 429)) {
+      handleError({
+        context: "TON RPC rate limit exceeded",
+        error: new Error(
+          "Too many requests to TON RPC endpoint. Please try again later or use an API key with --api-key option."
+        ),
+        shouldThrow: false,
+      });
+    } else {
+      handleError({
+        context: "Error sending TON deposit and call",
+        error,
+        shouldThrow: false,
+      });
+    }
+
+    process.exit(1);
   }
-
-  await gateway.sendDepositAndCall(
-    sender,
-    toNano(options.amount),
-    options.receiver,
-    payload
-  );
 };
 
 export const depositAndCallCommand = new Command("deposit-and-call")
