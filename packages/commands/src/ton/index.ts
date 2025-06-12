@@ -5,6 +5,6 @@ import { depositAndCallCommand } from "./depositAndCall";
 
 export const tonCommand = new Command("ton")
   .description("TON commands")
-  .addCommand(depositCommand)
   .addCommand(depositAndCallCommand)
+  .addCommand(depositCommand)
   .helpCommand(false);
