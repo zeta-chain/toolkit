@@ -7,8 +7,8 @@ import { encodeCommand } from "./encode";
 
 export const solanaCommand = new Command("solana")
   .description("Solana commands")
-  .addCommand(depositCommand)
-  .addCommand(depositAndCallCommand)
-  .addCommand(encodeCommand)
   .addCommand(callCommand)
+  .addCommand(depositAndCallCommand)
+  .addCommand(depositCommand)
+  .addCommand(encodeCommand)
   .helpCommand(false);
