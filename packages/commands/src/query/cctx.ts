@@ -232,9 +232,7 @@ const main = async (options: CctxOptions) => {
 };
 
 export const cctxCommand = new Command("cctx")
-  .description(
-    "Continuously query a CCTX graph, always following indexes and refreshing pending ones."
-  )
+  .description("Query cross-chain transaction data in real-time")
   .requiredOption("-h, --hash <hash>", "Inbound transaction hash")
   .option(
     "-r, --rpc <rpc>",
