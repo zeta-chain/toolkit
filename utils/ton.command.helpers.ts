@@ -12,11 +12,11 @@ export const getAccount = async (options: {
   mnemonic?: string;
   name: string;
 }) => {
-  const mnemonic =
+  const mnemonicRaw =
     options.mnemonic ||
     getAccountData<TONAccountData>("ton", options.name)?.mnemonic;
 
-  if (!mnemonic) {
+  if (!mnemonicRaw) {
     const errorMessage = handleError({
       context: "No mnemonic found",
       error: new Error("No mnemonic found"),
@@ -25,6 +25,9 @@ export const getAccount = async (options: {
 
     throw new Error(errorMessage);
   }
+
+  // Remove extra spaces and newlines
+  const mnemonic = mnemonicRaw.trim().replace(/\s+/g, " ");
 
   const mnemonicWords = mnemonic.split(" ");
 
