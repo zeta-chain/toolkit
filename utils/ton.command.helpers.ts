@@ -1,4 +1,4 @@
-import { mnemonicToWalletKey } from "@ton/crypto";
+import { mnemonicToWalletKey, mnemonicValidate } from "@ton/crypto";
 import { WalletContractV4 } from "@ton/ton";
 import { Command, Option } from "commander";
 
@@ -26,7 +26,13 @@ export const getAccount = async (options: {
     throw new Error(errorMessage);
   }
 
-  const keyPair = await mnemonicToWalletKey(mnemonic.split(" "));
+  const mnemonicWords = mnemonic.split(" ");
+
+  if (!(await mnemonicValidate(mnemonicWords))) {
+    throw new Error("Invalid mnemonic phrase");
+  }
+
+  const keyPair = await mnemonicToWalletKey(mnemonicWords);
 
   const wallet = WalletContractV4.create({
     publicKey: keyPair.publicKey,
