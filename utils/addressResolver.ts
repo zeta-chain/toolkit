@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import { Address } from "@ton/core";
 import * as bitcoin from "bitcoinjs-lib";
 import { ethers } from "ethers";
 
@@ -73,8 +74,12 @@ const isValidSuiAddress = (address?: string): boolean => {
  */
 const isValidTonAddress = (address?: string): boolean => {
   if (!address) return false;
-  // TON addresses are typically base64 encoded and start with 'EQ' or 'UQ'
-  return /^(EQ|UQ)[a-zA-Z0-9_-]{48}$/.test(address);
+  try {
+    Address.parse(address);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 /**
