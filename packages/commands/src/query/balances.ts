@@ -9,6 +9,7 @@ import {
   resolveEvmAddress,
   resolveSolanaAddress,
   resolveSuiAddress,
+  resolveTONAddress,
 } from "../../../../utils/addressResolver";
 import { formatAddresses, formatBalances } from "../../../../utils/formatting";
 import { ZetaChainClient } from "../../../client/src/client";
@@ -92,7 +93,16 @@ const main = async (options: BalancesOptions) => {
       suiAddress: options.sui,
     });
 
-    const tonAddress = options.ton;
+    const tonAddress = resolveTONAddress({
+      accountName: options.name,
+      handleError: () =>
+        spinner.warn(
+          `Error resolving TON address ${
+            !options.ton && options.name ? `for user '${options.name}'` : ""
+          }`
+        ),
+      tonAddress: options.ton,
+    });
 
     if (
       !evmAddress &&
