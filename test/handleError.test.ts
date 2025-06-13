@@ -1,4 +1,8 @@
-import { getErrorMessage, handleError } from "../utils/handleError";
+import {
+  getErrorMessage,
+  handleError,
+  hasErrorStatus,
+} from "../utils/handleError";
 
 describe("getErrorMessage", () => {
   it("should extract message from Error objects", () => {
@@ -67,5 +71,69 @@ describe("handleError", () => {
     ).not.toThrow();
 
     expect(consoleErrorSpy).toHaveBeenCalledWith("Function failed: Test error");
+  });
+});
+
+describe("hasErrorStatus", () => {
+  it("should return true when error has matching response status", () => {
+    const error = {
+      response: {
+        status: 429,
+      },
+    };
+
+    expect(hasErrorStatus(error, 429)).toBe(true);
+  });
+
+  it("should return false when error has different response status", () => {
+    const error = {
+      response: {
+        status: 500,
+      },
+    };
+
+    expect(hasErrorStatus(error, 429)).toBe(false);
+  });
+
+  it("should return false when error has no response property", () => {
+    const error = {
+      message: "Some error",
+    };
+
+    expect(hasErrorStatus(error, 429)).toBe(false);
+  });
+
+  it("should return false when error response has no status property", () => {
+    const error = {
+      response: {
+        data: "Some data",
+      },
+    };
+
+    expect(hasErrorStatus(error, 429)).toBe(false);
+  });
+
+  it("should handle null and undefined errors gracefully", () => {
+    expect(hasErrorStatus(null, 429)).toBe(false);
+    expect(hasErrorStatus(undefined, 429)).toBe(false);
+  });
+
+  it("should handle primitive types gracefully", () => {
+    expect(hasErrorStatus("string error", 429)).toBe(false);
+    expect(hasErrorStatus(42, 429)).toBe(false);
+    expect(hasErrorStatus(true, 429)).toBe(false);
+  });
+
+  it("should work with axios-like error structure", () => {
+    const axiosError = {
+      message: "Request failed with status code 404",
+      response: {
+        data: { error: "Not found" },
+        status: 404,
+      },
+    };
+
+    expect(hasErrorStatus(axiosError, 404)).toBe(true);
+    expect(hasErrorStatus(axiosError, 500)).toBe(false);
   });
 });
