@@ -53,10 +53,10 @@ export const createTonCommandWithCommonOptions = (name: string): Command => {
     )
     .option(
       "--gateway <gateway>",
-      "Gateway contract address",
+      "Gateway contract address (default: testnet)",
       DEFAULT_GATEWAY_ADDR
     )
     .requiredOption("--receiver <receiver>", "Receiver address")
-    .option("--rpc <rpc>", "RPC endpoint", DEFAULT_ENDPOINT)
+    .option("--rpc <rpc>", "RPC endpoint (default: testnet)", DEFAULT_ENDPOINT)
     .option("--api-key <apiKey>", "API key");
 };
