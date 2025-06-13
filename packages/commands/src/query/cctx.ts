@@ -1,10 +1,10 @@
-import axios from "axios";
 import { Command } from "commander";
 import { ethers } from "ethers";
 import EventEmitter from "eventemitter3";
 import { z } from "zod";
 
 import { CrossChainTx } from "../../../../types/cctx";
+import { fetchFromApi } from "../../../../utils/api";
 import { sleep } from "../../../../utils/cctx";
 
 /**
@@ -28,17 +28,6 @@ type CctxOptions = z.infer<typeof cctxOptionsSchema>;
 interface CctxResponse {
   CrossChainTxs: CrossChainTx[];
 }
-
-const fetchCctx = async (
-  hash: string,
-  rpc: string
-): Promise<CrossChainTx[]> => {
-  const url = `${rpc}/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
-  const res = await axios.get<CctxResponse>(url, {
-    validateStatus: (s) => s === 200 || s === 404,
-  });
-  return res.status === 404 ? [] : res.data.CrossChainTxs;
-};
 
 /**
  * True if the CCTX is still in-flight and may mutate on‑chain.
@@ -74,7 +63,9 @@ const gatherCctxs = async (
     await Promise.all(
       [...frontier].map(async (hash) => {
         try {
-          const cctxs = await fetchCctx(hash, rpc);
+          const endpoint = `/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+          const response = await fetchFromApi<CctxResponse>(rpc, endpoint);
+          const cctxs = response.CrossChainTxs;
 
           if (cctxs.length === 0) {
             // Still 404 – keep trying
@@ -99,7 +90,6 @@ const gatherCctxs = async (
             queriedOnce.add(tx.index);
           }
         } catch (err) {
-          console.error(`Error fetching CCTX for hash ${hash}:`, err);
           nextFrontier.add(hash); // retry on error
         }
       })
