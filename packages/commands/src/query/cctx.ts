@@ -21,6 +21,7 @@ const cctxOptionsSchema = z.object({
   delay: z.coerce.number().int().positive().default(2000),
   hash: z.string(),
   rpc: z.string(),
+  timeout: z.coerce.number().int().min(0).default(0),
 });
 
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
@@ -45,8 +46,10 @@ const isPending = (tx: CrossChainTx): boolean =>
 const gatherCctxs = async (
   rootHash: string,
   rpc: string,
-  delayMs = 2000
+  delayMs = 2000,
+  timeoutMs = 300000
 ): Promise<void> => {
+  const startTime = Date.now();
   // Latest copy of each CCTX keyed by index
   const results = new Map<string, CrossChainTx>();
 
@@ -58,6 +61,12 @@ const gatherCctxs = async (
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
+    // Check if we've exceeded the timeout (skip if timeout is 0)
+    if (timeoutMs > 0 && Date.now() - startTime > timeoutMs) {
+      console.log("\nTimeout reached. Exiting...");
+      return;
+    }
+
     const nextFrontier = new Set<string>();
 
     await Promise.all(
@@ -210,7 +219,7 @@ Revert Gas Limit: ${revert_gas_limit}
  * CLI entry – clears screen and prints the list of indexes each round.
  */
 const main = async (options: CctxOptions) => {
-  const { hash, rpc, delay } = cctxOptionsSchema.parse(options);
+  const { hash, rpc, delay, timeout } = cctxOptionsSchema.parse(options);
 
   cctxEmitter.on("cctx", (all) => {
     console.clear();
@@ -219,7 +228,7 @@ const main = async (options: CctxOptions) => {
     });
   });
 
-  await gatherCctxs(hash, rpc, delay);
+  await gatherCctxs(hash, rpc, delay, timeout);
 };
 
 export const cctxCommand = new Command("cctx")
@@ -236,6 +245,11 @@ export const cctxCommand = new Command("cctx")
     "-d, --delay <ms>",
     "Delay between polling rounds in milliseconds",
     "2000"
+  )
+  .option(
+    "-t, --timeout <ms>",
+    "Timeout duration in milliseconds (default: indefinite)",
+    "0"
   )
   .action(async (opts) => {
     await main(opts as CctxOptions);
