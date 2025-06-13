@@ -1,4 +1,4 @@
-import axios, { isAxiosError } from "axios";
+import axios, { AxiosRequestConfig, isAxiosError } from "axios";
 
 import {
   CrossChainTxResponse,
@@ -15,12 +15,15 @@ import { handleError } from "./handleError";
 export const fetchFromApi = async <T>(
   api: string,
   endpoint: string,
-  timeoutMs: number = 10000
+  options: AxiosRequestConfig = {}
 ): Promise<T> => {
   const url = `${api}${endpoint}`;
-  const response = await axios.get<T>(url, {
-    timeout: timeoutMs,
-  });
+  const defaultOptions: AxiosRequestConfig = {
+    timeout: 10000,
+    ...options,
+  };
+
+  const response = await axios.get<T>(url, defaultOptions);
 
   if (response.status < 200 || response.status >= 300) {
     throw new Error(`Fetch failed with status: ${response.status}`);
