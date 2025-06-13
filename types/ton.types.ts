@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
-import { evmAddressSchema } from "./shared.schema";
+import { evmAddressSchema, validAmountSchema } from "./shared.schema";
 
 export const baseTonOptionsSchema = z.object({
   apiKey: z.string().optional(),
@@ -13,11 +13,11 @@ export const baseTonOptionsSchema = z.object({
 });
 
 export const depositOptionsSchema = baseTonOptionsSchema.extend({
-  amount: z.string(),
+  amount: validAmountSchema,
 });
 
 export const depositAndCallOptionsSchema = baseTonOptionsSchema.extend({
-  amount: z.string(),
+  amount: validAmountSchema,
   data: z.string().optional(),
   types: z.array(z.string()).optional(),
   values: z.array(z.string()).optional(),
