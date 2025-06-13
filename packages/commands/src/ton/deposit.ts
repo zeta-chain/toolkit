@@ -1,20 +1,18 @@
 import { Address, toNano } from "@ton/core";
-import { mnemonicToWalletKey } from "@ton/crypto";
-import { TonClient, WalletContractV4 } from "@ton/ton";
+import { TonClient } from "@ton/ton";
 import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
-import { Command } from "commander";
 import { z } from "zod";
 
-import {
-  DEFAULT_ENDPOINT,
-  DEFAULT_GATEWAY_ADDR,
-} from "../../../../types/ton.constants";
 import { depositOptionsSchema } from "../../../../types/ton.types";
 import {
   handleError,
   hasErrorStatus,
   validateAndParseSchema,
 } from "../../../../utils";
+import {
+  createTonCommandWithCommonOptions,
+  getAccount,
+} from "../../../../utils/ton.command.helpers";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
@@ -25,11 +23,9 @@ const main = async (options: DepositOptions) => {
       ...(options.apiKey && { apiKey: options.apiKey }),
     });
 
-    const keyPair = await mnemonicToWalletKey(options.mnemonic.split(" "));
-
-    const wallet = WalletContractV4.create({
-      publicKey: keyPair.publicKey,
-      workchain: 0,
+    const { wallet, keyPair } = await getAccount({
+      mnemonic: options.mnemonic,
+      name: options.name,
     });
 
     const openedWallet = client.open(wallet);
@@ -59,18 +55,9 @@ const main = async (options: DepositOptions) => {
   }
 };
 
-export const depositCommand = new Command("deposit")
+export const depositCommand = createTonCommandWithCommonOptions("deposit")
   .description("Deposit TON to an EOA or a contract on ZetaChain")
   .requiredOption("--amount <amount>", "Amount in TON")
-  .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
-  .requiredOption("--mnemonic <mnemonic>", "24-word seed of the paying wallet")
-  .option(
-    "--gateway <gateway>",
-    "Gateway contract address",
-    DEFAULT_GATEWAY_ADDR
-  )
-  .option("--rpc <rpc>", "TON RPC endpoint", DEFAULT_ENDPOINT)
-  .option("--api-key <apiKey>", "TON RPC API key")
   .action(async (raw) => {
     const options = validateAndParseSchema(raw, depositOptionsSchema, {
       exitOnError: true,
