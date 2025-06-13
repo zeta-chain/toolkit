@@ -1,27 +1,66 @@
 import * as anchor from "@coral-xyz/anchor";
+import confirm from "@inquirer/confirm";
+import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { clusterApiUrl, PublicKey } from "@solana/web3.js";
 import * as bip39 from "bip39";
 import bs58 from "bs58";
 import { Command, Option } from "commander";
+import { ethers } from "ethers";
 import { z } from "zod";
 
+import { SolanaAccountData } from "../types/accounts.types";
 import {
   DEFAULT_ACCOUNT_NAME,
   SOLANA_NETWORKS,
-  SOLANA_TOKEN_PROGRAM,
 } from "../types/shared.constants";
 import { hexStringSchema } from "../types/shared.schema";
+import { getAccountData } from "./accounts";
 import { trim0x } from "./trim0x";
 
-export const solanaDepositOptionsSchema = z.object({
-  amount: z.string(),
-  mint: z.string().optional(),
+export const baseSolanaOptionsSchema = z.object({
+  abortAddress: z.string(),
+  callOnRevert: z.boolean().optional().default(false),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
   network: z.string(),
+  onRevertGasLimit: z.string(),
   privateKey: z.string().optional(),
   recipient: z.string(),
-  tokenProgram: z.string().default(SOLANA_TOKEN_PROGRAM),
+  revertAddress: z.string().optional(),
+  revertMessage: z.string(),
 });
+
+const privateKeyRefineRule = () => {
+  return {
+    message: "Only one of mnemonic or privateKey or name can be provided",
+    rule: (data: { mnemonic?: string; name?: string; privateKey?: string }) =>
+      [...Object.values(data)].filter(Boolean).length <= 1,
+  };
+};
+
+export const solanaDepositOptionsSchema = baseSolanaOptionsSchema
+  .extend({
+    amount: z.string(),
+    mint: z.string().optional(),
+    network: z.string(),
+  })
+  .refine(privateKeyRefineRule);
+
+export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
+  .extend({
+    amount: z.string(),
+    mint: z.string().optional(),
+    types: z.array(z.string()),
+    values: z.array(z.string()),
+  })
+  .refine(privateKeyRefineRule);
+
+export const solanaCallOptionsSchema = baseSolanaOptionsSchema
+  .extend({
+    types: z.array(z.string()),
+    values: z.array(z.string()),
+  })
+  .refine(privateKeyRefineRule);
 
 export const keypairFromMnemonic = async (
   mnemonic: string
@@ -63,6 +102,104 @@ export const keypairFromPrivateKey = (
   }
 };
 
+export const getKeypair = async ({
+  name,
+  mnemonic,
+  privateKey,
+}: {
+  mnemonic: string | undefined;
+  name: string | undefined;
+  privateKey: string | undefined;
+}) => {
+  let keypair: anchor.web3.Keypair;
+  if (privateKey) {
+    keypair = keypairFromPrivateKey(privateKey);
+  } else if (mnemonic) {
+    keypair = await keypairFromMnemonic(mnemonic);
+  } else if (name) {
+    const privateKey = getAccountData<SolanaAccountData>(
+      "solana",
+      name
+    )?.privateKey;
+    keypair = keypairFromPrivateKey(privateKey!);
+  } else {
+    throw new Error("No account provided");
+  }
+  return keypair;
+};
+
+export const getAPI = (network: string) => {
+  let API = "http://localhost:8899";
+  if (network === "devnet") {
+    API = clusterApiUrl("devnet");
+  } else if (network === "mainnet") {
+    API = clusterApiUrl("mainnet-beta");
+  }
+  return API;
+};
+
+export const getSPLToken = async (
+  provider: anchor.AnchorProvider,
+  mint: string,
+  amount: string
+) => {
+  const connection = provider.connection;
+  const tokenAccounts = await connection.getTokenAccountsByOwner(
+    provider.wallet.publicKey,
+    { programId: TOKEN_PROGRAM_ID }
+  );
+
+  const mintInfo = await connection.getTokenSupply(new PublicKey(mint));
+  const decimals = mintInfo.value.decimals;
+
+  // Find the token account that matches the mint
+  const matchingTokenAccount = tokenAccounts.value.find(({ account }) => {
+    const data = AccountLayout.decode(account.data);
+    return new PublicKey(data.mint).toBase58() === mint;
+  });
+
+  if (!matchingTokenAccount) {
+    throw new Error(`No token account found for mint ${mint}`);
+  }
+
+  // Check token balance
+  const accountInfo = await connection.getTokenAccountBalance(
+    matchingTokenAccount.pubkey
+  );
+  const balance = accountInfo.value.uiAmount;
+  const amountToSend = parseFloat(amount);
+  if (!balance || balance < amountToSend) {
+    throw new Error(
+      `Insufficient token balance. Available: ${
+        balance ?? 0
+      }, Required: ${amount}`
+    );
+  }
+
+  const from = matchingTokenAccount.pubkey;
+
+  return {
+    decimals,
+    from,
+  };
+};
+
+export const isSOLBalanceSufficient = async (
+  provider: anchor.AnchorProvider,
+  amount: string
+) => {
+  const connection = provider.connection;
+  const balance = await connection.getBalance(provider.wallet.publicKey);
+  const lamportsNeeded = ethers.parseUnits(amount, 9).toString();
+  if (balance < parseInt(lamportsNeeded)) {
+    throw new Error(
+      `Insufficient SOL balance. Available: ${
+        balance / 1e9
+      }, Required: ${amount}`
+    );
+  }
+};
+
 export const createSolanaCommandWithCommonOptions = (name: string): Command => {
   return new Command(name)
     .requiredOption(
@@ -90,5 +227,48 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
       new Option("--network <network>", "Solana network").choices(
         SOLANA_NETWORKS
       )
+    )
+    .option("--revert-address <revertAddress>", "Revert address")
+    .option(
+      "--abort-address <abortAddress>",
+      "Abort address",
+      ethers.ZeroAddress
+    )
+    .option("--call-on-revert <callOnRevert>", "Call on revert", false)
+    .option("--revert-message <revertMessage>", "Revert message", "")
+    .option(
+      "--on-revert-gas-limit <onRevertGasLimit>",
+      "On revert gas limit",
+      "0"
     );
+};
+
+interface SolanaRevertOptions {
+  abortAddress: Uint8Array;
+  callOnRevert: boolean;
+  onRevertGasLimit: anchor.BN;
+  revertAddress: PublicKey;
+  revertMessage: Buffer;
+}
+
+export const confirmSolanaTx = async (options: {
+  amount?: string;
+  api: string;
+  message?: string;
+  mint?: string;
+  recipient: string;
+  revertOptions: SolanaRevertOptions;
+  sender: string;
+}) => {
+  console.log(`
+Network: ${options.api}
+Sender: ${options.sender}
+Recipient: ${options.recipient}
+Revert options: ${JSON.stringify(options.revertOptions)}${
+    options.message ? `\nMessage: ${options.message}` : ""
+  }${options.amount ? `\nAmount: ${options.amount}` : ""}${
+    options.mint ? `\nMint: ${options.mint}` : ""
+  }
+`);
+  await confirm({ message: "Confirm transaction?" });
 };
