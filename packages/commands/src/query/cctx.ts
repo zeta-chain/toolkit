@@ -5,6 +5,7 @@ import EventEmitter from "eventemitter3";
 import { z } from "zod";
 
 import { CrossChainTx } from "../../../../types/cctx";
+import { sleep } from "../../../../utils/cctx";
 
 /**
  * Event map:
@@ -27,8 +28,6 @@ type CctxOptions = z.infer<typeof cctxOptionsSchema>;
 interface CctxResponse {
   CrossChainTxs: CrossChainTx[];
 }
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const fetchCctx = async (
   hash: string,
