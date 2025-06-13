@@ -1,4 +1,3 @@
-import { Command, Option } from "commander";
 import { z } from "zod";
 
 import {
@@ -8,8 +7,8 @@ import {
 import { inscriptionDepositOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
+  createBitcoinInscriptionCommandWithCommonOptions,
   displayAndConfirmTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -20,11 +19,7 @@ import {
   makeRevealTransaction,
   safeParseBitcoinAmount,
 } from "../../../../../utils/bitcoin.helpers";
-import {
-  bitcoinEncode,
-  EncodingFormat,
-  OpCode,
-} from "../../../../../utils/bitcoinEncode";
+import { bitcoinEncode, OpCode } from "../../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
 type DepositOptions = z.infer<typeof inscriptionDepositOptionsSchema>;
@@ -39,23 +34,21 @@ const main = async (options: DepositOptions) => {
 
     const revertAddress = options.revertAddress || address;
     let data;
-    if (options.receiver && revertAddress) {
+    if (options.receiver) {
       data = Buffer.from(
         bitcoinEncode(
           options.receiver,
           Buffer.from(""), // Empty payload for deposit
           revertAddress,
           OpCode.Deposit,
-          EncodingFormat.EncodingFmtABI
+          options.format
         ),
         "hex"
       );
     } else if (options.data) {
       data = Buffer.from(options.data, "hex");
     } else {
-      throw new Error(
-        "Provide either --receiver or receiver encoded in --data"
-      );
+      throw new Error("Provide either --data or --receiver");
     }
 
     const amount = safeParseBitcoinAmount(options.amount);
@@ -86,7 +79,7 @@ const main = async (options: DepositOptions) => {
     await displayAndConfirmTransaction({
       amount: options.amount,
       depositFee,
-      encodingFormat: "ABI",
+      encodingFormat: options.format,
       gateway: options.gateway,
       inscriptionCommitFee: inscriptionFee,
       inscriptionRevealFee: revealFee,
@@ -139,23 +132,11 @@ const main = async (options: DepositOptions) => {
  * Command definition for deposit
  * This allows users to deposit BTC to EOAs and contracts on ZetaChain
  */
-export const depositCommand = new Command()
-  .name("deposit")
+export const depositCommand = createBitcoinInscriptionCommandWithCommonOptions(
+  "deposit"
+)
   .description("Deposit BTC to ZetaChain")
-  .option("-r, --receiver <address>", "ZetaChain receiver address")
-  .requiredOption(
-    "-g, --gateway <address>",
-    "Bitcoin gateway (TSS) address",
-    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
-  )
-  .option("-a, --revert-address <address>", "Revert address")
-  .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
-  .addOption(
-    new Option("--data <data>", "Pass raw data").conflicts([
-      "revert-address",
-      "receiver",
-    ])
-  )
+  .requiredOption("-a, --amount <btcAmount>", "BTC amount to send (in BTC)")
   .action(async (opts) => {
     const validated = validateAndParseSchema(
       opts,
@@ -166,5 +147,3 @@ export const depositCommand = new Command()
     );
     await main(validated);
   });
-
-addCommonBitcoinCommandOptions(depositCommand);

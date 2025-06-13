@@ -2,7 +2,7 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { AbiCoder, ethers } from "ethers";
 
 import {
@@ -17,6 +17,9 @@ import {
 import { ForeignCoin } from "../types/foreignCoins.types";
 import { ObserverSupportedChain } from "../types/supportedChains.types";
 import { handleError } from "./handleError";
+
+export const TON_MAINNET_API = "https://tonapi.io/v2/accounts";
+export const TON_TESTNET_API = "https://testnet.tonapi.io/v2/accounts";
 
 export interface UTXO {
   txid: string;
@@ -790,4 +793,80 @@ export const hasSufficientBalanceEvm = async (
   const hasEnoughBalance = balance >= parsedAmount;
 
   return { balance, decimals, hasEnoughBalance };
+};
+
+interface TonApiResponse {
+  address: string;
+  balance: string | number;
+  get_methods: string[];
+  interfaces: string[];
+  is_wallet: boolean;
+  last_activity: number;
+  status: string;
+}
+
+/**
+ * Gets TON native token balances
+ */
+export const getTonBalances = async (
+  tokens: Token[],
+  tonAddress: string
+): Promise<TokenBalance[]> => {
+  const tonToken = tokens.find(
+    (token) =>
+      token.coin_type === "Gas" &&
+      token.chain_name &&
+      ["ton_mainnet", "ton_testnet"].includes(token.chain_name)
+  );
+
+  if (!tonToken) {
+    return [];
+  }
+
+  try {
+    const network = tonToken.chain_name?.replace("ton_", "") || "testnet";
+    const API = network === "mainnet" ? TON_MAINNET_API : TON_TESTNET_API;
+
+    const response = await axios.get<TonApiResponse>(`${API}/${tonAddress}`, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    // Validate response structure
+    if (!response.data) {
+      throw new Error("Empty response from TON API");
+    }
+
+    const { balance } = response.data;
+    if (balance === undefined || balance === null) {
+      throw new Error(
+        `Missing balance in TON API response: ${JSON.stringify(response.data)}`
+      );
+    }
+
+    // TON API returns balance in nanoTON (1 TON = 10^9 nanoTON)
+    const formattedBalance = ethers.formatUnits(BigInt(balance.toString()), 9);
+
+    return [
+      {
+        ...tonToken,
+        balance: formattedBalance,
+        id: parseTokenId(tonToken.chain_id?.toString() || "", tonToken.symbol),
+      },
+    ];
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      console.error(
+        `Failed to get TON balance for ${tonToken.chain_name}:`,
+        error.response?.data || error.message
+      );
+    } else {
+      console.error(
+        `Failed to get TON balance for ${tonToken.chain_name}:`,
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+    return [];
+  }
 };

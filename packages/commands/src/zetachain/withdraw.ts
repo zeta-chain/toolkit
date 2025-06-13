@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { ethers } from "ethers";
 import { z } from "zod";
 
 import { namePkRefineRule } from "../../../../types/shared.schema";
@@ -8,6 +9,7 @@ import {
   baseZetachainOptionsSchema,
   confirmZetachainTransaction,
   getZevmGatewayAddress,
+  getZRC20WithdrawFee,
   prepareRevertOptions,
   prepareTxOptions,
   setupZetachainTransaction,
@@ -30,8 +32,14 @@ const main = async (options: WithdrawOptions) => {
       options.gatewayZetachain
     );
 
+    const { gasFee, gasSymbol, zrc20Symbol } = await getZRC20WithdrawFee(
+      client.signer as ethers.ContractRunner,
+      options.zrc20
+    );
+
     console.log(`Withdraw details:
-Amount: ${options.amount}
+Amount: ${options.amount} ${zrc20Symbol}
+Withdraw Gas Fee: ${gasFee} ${gasSymbol}
 Receiver: ${options.receiver}
 ZRC20: ${options.zrc20}
 ZetaChain Gateway: ${gatewayZetaChain}

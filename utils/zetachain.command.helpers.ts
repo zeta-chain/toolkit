@@ -1,7 +1,9 @@
 import confirm from "@inquirer/confirm";
 import { getAddress } from "@zetachain/protocol-contracts";
+import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { Command, Option } from "commander";
 import { ethers, ZeroAddress } from "ethers";
+import { ZRC20Contract } from "types/contracts.types";
 import { z } from "zod";
 
 import { ZetaChainClient } from "../packages/client/src/client";
@@ -188,6 +190,40 @@ export const prepareCallOptions = (options: BaseZetachainOptions) => {
     gasLimit: options.callOptionsGasLimit,
     isArbitraryCall: options.callOptionsIsArbitraryCall,
   };
+};
+
+export const getZRC20WithdrawFee = async (
+  provider: ethers.ContractRunner,
+  zrc20: string,
+  gasLimit?: string
+): Promise<{
+  gasFee: string;
+  gasSymbol: string;
+  gasZRC20: string;
+  zrc20Symbol: string;
+}> => {
+  const contract = new ethers.Contract(
+    zrc20,
+    ZRC20ABI.abi,
+    provider
+  ) as ZRC20Contract;
+  let gasZRC20: string;
+  let gasFee: bigint;
+  const zrc20Symbol = await contract.symbol();
+  if (gasLimit) {
+    [gasZRC20, gasFee] = await contract.withdrawGasFeeWithGasLimit(gasLimit);
+  } else {
+    [gasZRC20, gasFee] = await contract.withdrawGasFee();
+  }
+  const gasContract = new ethers.Contract(
+    gasZRC20,
+    ZRC20ABI.abi,
+    provider
+  ) as ZRC20Contract;
+  const decimals = await gasContract.decimals();
+  const gasSymbol = await gasContract.symbol();
+  const gasFeeFormatted = ethers.formatUnits(gasFee, decimals);
+  return { gasFee: gasFeeFormatted, gasSymbol, gasZRC20, zrc20Symbol };
 };
 
 export const addCommonZetachainCommandOptions = (command: Command) => {

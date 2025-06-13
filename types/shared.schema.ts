@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { exactlyOneOf } from "../utils/exactlyOneOf";
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 
 export const evmAddressSchema = z
@@ -97,6 +98,15 @@ export const typesAndDataExclusivityRefineRule = {
 
     return true;
   },
+};
+
+export const privateKeyOrMnemonicRefineRule = {
+  message: "Exactly one of --private-key or --mnemonic must be provided",
+  path: ["privateKey", "mnemonic"],
+  rule: exactlyOneOf<{
+    mnemonic?: string;
+    privateKey?: string;
+  }>("mnemonic", "privateKey"),
 };
 
 export const functionTypesValuesConsistencyRule = {
