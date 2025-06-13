@@ -1,5 +1,12 @@
-import { RevertOptions, TxOptions } from "../../../types/contracts.types";
-import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { z } from "zod";
+
+import { RevertOptions } from "../../../types/contracts.types";
+import {
+  bigNumberStringSchema,
+  evmAddressSchema,
+  stringArraySchema,
+} from "../../../types/shared.schema";
+import { validateAndParseSchema } from "../../../utils";
 import {
   broadcastGatewayTx,
   generateEvmCallData,
@@ -23,25 +30,41 @@ import { ZetaChainClient } from "./client";
  * @returns {object} - Returns the transaction object.
  * @property {object} tx - The transaction object that represents the function call.
  */
-export const evmCall = async function (
-  this: ZetaChainClient,
-  args: {
-    gatewayEvm?: string;
-    receiver: string;
-    revertOptions: RevertOptions;
-    txOptions: TxOptions;
-    types: string[];
-    values: ParseAbiValuesReturnType;
-  }
-) {
+const evmCallClientArgsSchema = z.object({
+  gatewayEvm: evmAddressSchema.optional(),
+  receiver: evmAddressSchema,
+  revertOptions: z.object({
+    abortAddress: evmAddressSchema,
+    callOnRevert: z.boolean().optional(),
+    onRevertGasLimit: bigNumberStringSchema,
+    revertAddress: evmAddressSchema,
+    revertMessage: z.string(),
+  }),
+  txOptions: z.object({
+    gasLimit: bigNumberStringSchema,
+    gasPrice: bigNumberStringSchema,
+  }),
+  types: stringArraySchema, // e.g. ["string", "uint256"]
+  values: z.array(z.string()).min(1, "At least one value is required"),
+});
+
+type EvmCallClientArgs = z.infer<typeof evmCallClientArgsSchema>;
+
+export const evmCall = async function (this: ZetaChainClient, args: unknown) {
+  const parsedArgs: EvmCallClientArgs = validateAndParseSchema(
+    args,
+    evmCallClientArgsSchema
+  );
+
   const signer = validateSigner(this.signer);
-  const gatewayEvmAddress = args.gatewayEvm || (await this.getGatewayAddress());
+  const gatewayEvmAddress =
+    parsedArgs.gatewayEvm || (await this.getGatewayAddress());
 
   const callData = generateEvmCallData({
-    receiver: args.receiver,
-    revertOptions: args.revertOptions,
-    types: args.types,
-    values: args.values,
+    receiver: parsedArgs.receiver,
+    revertOptions: parsedArgs.revertOptions as RevertOptions,
+    types: parsedArgs.types,
+    values: parsedArgs.values,
   });
 
   const tx = await broadcastGatewayTx({
@@ -50,7 +73,7 @@ export const evmCall = async function (
       data: callData.data,
       to: gatewayEvmAddress,
     },
-    txOptions: args.txOptions,
+    txOptions: parsedArgs.txOptions,
   });
 
   return tx;
