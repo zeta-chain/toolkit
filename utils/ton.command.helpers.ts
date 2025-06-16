@@ -1,3 +1,4 @@
+import { confirm } from "@inquirer/prompts";
 import { mnemonicToWalletKey, mnemonicValidate } from "@ton/crypto";
 import { WalletContractV4 } from "@ton/ton";
 import { Command, Option } from "commander";
@@ -7,7 +8,6 @@ import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { DEFAULT_ENDPOINT, DEFAULT_GATEWAY_ADDR } from "../types/ton.constants";
 import { getAccountData } from "./accounts";
 import { handleError } from "./handleError";
-import { confirm } from "@inquirer/prompts";
 
 export const getAccount = async (options: {
   mnemonic?: string;
@@ -51,10 +51,10 @@ export const getAccount = async (options: {
 
 export const confirmTransaction = async (options: {
   amount: string;
-  sender: string;
+  message?: string;
   receiver: string;
   rpc: string;
-  message?: string;
+  sender: string;
 }) => {
   console.log(`
 Sender:   ${options.sender}

@@ -9,9 +9,9 @@ import { z } from "zod";
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
 import { handleError, hasErrorStatus } from "../../../../utils";
 import {
+  confirmTransaction,
   createTonCommandWithCommonOptions,
   getAccount,
-  confirmTransaction,
 } from "../../../../utils/ton.command.helpers";
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
@@ -57,10 +57,10 @@ const main = async (options: DepositAndCallOptions) => {
 
     const isConfirmed = await confirmTransaction({
       amount: options.amount,
-      sender: senderAddress,
+      message: encodedHex,
       receiver: options.receiver,
       rpc: options.rpc,
-      message: encodedHex,
+      sender: senderAddress,
     });
     if (!isConfirmed) return;
 

@@ -10,9 +10,9 @@ import {
   validateAndParseSchema,
 } from "../../../../utils";
 import {
+  confirmTransaction,
   createTonCommandWithCommonOptions,
   getAccount,
-  confirmTransaction,
 } from "../../../../utils/ton.command.helpers";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
@@ -41,9 +41,9 @@ const main = async (options: DepositOptions) => {
 
     const isConfirmed = await confirmTransaction({
       amount: options.amount,
-      sender: senderAddress,
       receiver: options.receiver,
       rpc: options.rpc,
+      sender: senderAddress,
     });
     if (!isConfirmed) return;
 
