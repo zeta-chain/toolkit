@@ -127,3 +127,9 @@ export const functionTypesValuesConsistencyRule = {
     return true;
   },
 };
+
+export const privateKeyRefineRule = {
+  message: "Only one of mnemonic or privateKey or name can be provided",
+  rule: (data: { mnemonic?: string; name?: string; privateKey?: string }) =>
+    [...Object.values(data)].filter(Boolean).length <= 1,
+};

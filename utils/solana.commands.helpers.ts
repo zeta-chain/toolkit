@@ -16,6 +16,7 @@ import {
 import { hexStringSchema } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
 import { trim0x } from "./trim0x";
+import { privateKeyRefineRule } from "../types/shared.schema";
 
 export const baseSolanaOptionsSchema = z.object({
   abortAddress: z.string(),
@@ -30,21 +31,15 @@ export const baseSolanaOptionsSchema = z.object({
   revertMessage: z.string(),
 });
 
-const privateKeyRefineRule = () => {
-  return {
-    message: "Only one of mnemonic or privateKey or name can be provided",
-    rule: (data: { mnemonic?: string; name?: string; privateKey?: string }) =>
-      [...Object.values(data)].filter(Boolean).length <= 1,
-  };
-};
-
 export const solanaDepositOptionsSchema = baseSolanaOptionsSchema
   .extend({
     amount: z.string(),
     mint: z.string().optional(),
     network: z.string(),
   })
-  .refine(privateKeyRefineRule);
+  .refine(privateKeyRefineRule.rule, {
+    message: privateKeyRefineRule.message,
+  });
 
 export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
   .extend({
@@ -53,14 +48,18 @@ export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
     types: z.array(z.string()),
     values: z.array(z.string()),
   })
-  .refine(privateKeyRefineRule);
+  .refine(privateKeyRefineRule.rule, {
+    message: privateKeyRefineRule.message,
+  });
 
 export const solanaCallOptionsSchema = baseSolanaOptionsSchema
   .extend({
     types: z.array(z.string()),
     values: z.array(z.string()),
   })
-  .refine(privateKeyRefineRule);
+  .refine(privateKeyRefineRule.rule, {
+    message: privateKeyRefineRule.message,
+  });
 
 export const keypairFromMnemonic = async (
   mnemonic: string
