@@ -14,6 +14,7 @@ import {
   SOLANA_NETWORKS,
 } from "../types/shared.constants";
 import { hexStringSchema, privateKeyRefineRule } from "../types/shared.schema";
+import { handleError } from "./";
 import { getAccountData } from "./accounts";
 import { trim0x } from "./trim0x";
 
@@ -115,11 +116,16 @@ export const getKeypair = async ({
   } else if (mnemonic) {
     keypair = await keypairFromMnemonic(mnemonic);
   } else if (name) {
-    const privateKey = getAccountData<SolanaAccountData>(
-      "solana",
-      name
-    )?.privateKey;
-    keypair = keypairFromPrivateKey(privateKey!);
+    const privateKey = getAccountData<SolanaAccountData>("solana", name);
+    if (!privateKey) {
+      const errorMessage = handleError({
+        context: "Failed to retrieve private key",
+        error: new Error("Private key not found"),
+        shouldThrow: false,
+      });
+      throw new Error(errorMessage);
+    }
+    keypair = keypairFromPrivateKey(privateKey.privateKey);
   } else {
     throw new Error("No account provided");
   }
