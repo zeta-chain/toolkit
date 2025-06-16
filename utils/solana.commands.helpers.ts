@@ -251,7 +251,7 @@ export const createRevertOptions = (
 ): SolanaRevertOptions => {
   return {
     abortAddress: ethers.getBytes(options.abortAddress),
-    callOnRevert: options.callOnRevert ?? false,
+    callOnRevert: options.callOnRevert,
     onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
     revertAddress: options.revertAddress
       ? new PublicKey(options.revertAddress)

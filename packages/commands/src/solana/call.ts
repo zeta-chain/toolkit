@@ -15,6 +15,7 @@ import {
   getKeypair,
   solanaCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
+import { PublicKey } from "@solana/web3.js";
 
 type CallOptions = z.infer<typeof solanaCallOptionsSchema>;
 
@@ -42,7 +43,15 @@ const main = async (options: CallOptions) => {
   const encodedParameters = abiCoder.encode(options.types, values);
   const message = Buffer.from(encodedParameters.slice(2), "hex");
 
-  const revertOptions = createRevertOptions(options, provider.wallet.publicKey);
+  const revertOptions = {
+    abortAddress: ethers.getBytes(options.abortAddress),
+    callOnRevert: options.callOnRevert,
+    onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
+    revertAddress: options.revertAddress
+      ? new PublicKey(options.revertAddress)
+      : provider.wallet.publicKey,
+    revertMessage: Buffer.from(options.revertMessage, "utf8"),
+  };
 
   try {
     await confirmSolanaTx({
