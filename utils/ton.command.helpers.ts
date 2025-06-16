@@ -7,6 +7,7 @@ import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { DEFAULT_ENDPOINT, DEFAULT_GATEWAY_ADDR } from "../types/ton.constants";
 import { getAccountData } from "./accounts";
 import { handleError } from "./handleError";
+import { confirm } from "@inquirer/prompts";
 
 export const getAccount = async (options: {
   mnemonic?: string;
@@ -46,6 +47,20 @@ export const getAccount = async (options: {
     keyPair,
     wallet,
   };
+};
+
+export const confirmTransaction = async (options: {
+  amount: string;
+  sender: string;
+  receiver: string;
+}) => {
+  console.log(`
+Sender:   ${options.sender}
+Receiver: ${options.receiver}
+Amount:   ${options.amount}
+  `);
+
+  return await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 };
 
 export const createTonCommandWithCommonOptions = (name: string): Command => {

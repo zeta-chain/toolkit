@@ -12,6 +12,7 @@ import {
 import {
   createTonCommandWithCommonOptions,
   getAccount,
+  confirmTransaction,
 } from "../../../../utils/ton.command.helpers";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
@@ -33,6 +34,17 @@ const main = async (options: DepositOptions) => {
 
     const gatewayAddr = Address.parse(options.gateway);
     const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
+    const senderAddress = wallet.address.toString({
+      bounceable: false,
+      testOnly: true,
+    });
+
+    const isConfirmed = await confirmTransaction({
+      amount: options.amount,
+      sender: senderAddress,
+      receiver: options.receiver,
+    });
+    if (!isConfirmed) return;
 
     await gateway.sendDeposit(sender, toNano(options.amount), options.receiver);
   } catch (error: unknown) {
