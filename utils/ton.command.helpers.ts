@@ -53,11 +53,15 @@ export const confirmTransaction = async (options: {
   amount: string;
   sender: string;
   receiver: string;
+  rpc: string;
+  message?: string;
 }) => {
   console.log(`
 Sender:   ${options.sender}
 Receiver: ${options.receiver}
 Amount:   ${options.amount}
+Network:  ${options.rpc}
+${options.message ? `Message:  ${options.message}` : ""}
   `);
 
   return await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });

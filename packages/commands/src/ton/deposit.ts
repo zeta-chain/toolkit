@@ -43,6 +43,7 @@ const main = async (options: DepositOptions) => {
       amount: options.amount,
       sender: senderAddress,
       receiver: options.receiver,
+      rpc: options.rpc,
     });
     if (!isConfirmed) return;
 
