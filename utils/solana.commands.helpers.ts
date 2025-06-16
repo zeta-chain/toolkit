@@ -13,10 +13,9 @@ import {
   DEFAULT_ACCOUNT_NAME,
   SOLANA_NETWORKS,
 } from "../types/shared.constants";
-import { hexStringSchema } from "../types/shared.schema";
+import { hexStringSchema, privateKeyRefineRule } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
 import { trim0x } from "./trim0x";
-import { privateKeyRefineRule } from "../types/shared.schema";
 
 export const baseSolanaOptionsSchema = z.object({
   abortAddress: z.string(),
