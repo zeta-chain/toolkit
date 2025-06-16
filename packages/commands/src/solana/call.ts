@@ -1,5 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Wallet } from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 import { ethers } from "ethers";
@@ -15,7 +16,6 @@ import {
   getKeypair,
   solanaCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
-import { PublicKey } from "@solana/web3.js";
 
 type CallOptions = z.infer<typeof solanaCallOptionsSchema>;
 
@@ -43,15 +43,7 @@ const main = async (options: CallOptions) => {
   const encodedParameters = abiCoder.encode(options.types, values);
   const message = Buffer.from(encodedParameters.slice(2), "hex");
 
-  const revertOptions = {
-    abortAddress: ethers.getBytes(options.abortAddress),
-    callOnRevert: options.callOnRevert,
-    onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
-    revertAddress: options.revertAddress
-      ? new PublicKey(options.revertAddress)
-      : provider.wallet.publicKey,
-    revertMessage: Buffer.from(options.revertMessage, "utf8"),
-  };
+  const revertOptions = createRevertOptions(options, provider.wallet.publicKey);
 
   try {
     await confirmSolanaTx({
