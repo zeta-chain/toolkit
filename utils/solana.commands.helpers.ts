@@ -255,6 +255,21 @@ interface SolanaRevertOptions {
   revertMessage: Buffer;
 }
 
+export const createRevertOptions = (
+  options: z.infer<typeof baseSolanaOptionsSchema>,
+  publicKey: PublicKey
+): SolanaRevertOptions => {
+  return {
+    abortAddress: ethers.getBytes(options.abortAddress),
+    callOnRevert: options.callOnRevert ?? false,
+    onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
+    revertAddress: options.revertAddress
+      ? new PublicKey(options.revertAddress)
+      : publicKey,
+    revertMessage: Buffer.from(options.revertMessage, "utf8"),
+  };
+};
+
 export const confirmSolanaTx = async (options: {
   amount?: string;
   api: string;
