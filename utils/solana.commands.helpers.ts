@@ -13,7 +13,7 @@ import {
   DEFAULT_ACCOUNT_NAME,
   SOLANA_NETWORKS,
 } from "../types/shared.constants";
-import { hexStringSchema, privateKeyRefineRule } from "../types/shared.schema";
+import { hexStringSchema } from "../types/shared.schema";
 import { handleError } from "./";
 import { getAccountData } from "./accounts";
 import { trim0x } from "./trim0x";
@@ -31,35 +31,25 @@ export const baseSolanaOptionsSchema = z.object({
   revertMessage: z.string(),
 });
 
-export const solanaDepositOptionsSchema = baseSolanaOptionsSchema
-  .extend({
-    amount: z.string(),
-    mint: z.string().optional(),
-    network: z.string(),
-  })
-  .refine(privateKeyRefineRule.rule, {
-    message: privateKeyRefineRule.message,
-  });
+export const solanaDepositOptionsSchema = baseSolanaOptionsSchema.extend({
+  amount: z.string(),
+  mint: z.string().optional(),
+  network: z.string(),
+});
 
-export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
-  .extend({
+export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema.extend(
+  {
     amount: z.string(),
     mint: z.string().optional(),
     types: z.array(z.string()),
     values: z.array(z.string()),
-  })
-  .refine(privateKeyRefineRule.rule, {
-    message: privateKeyRefineRule.message,
-  });
+  }
+);
 
-export const solanaCallOptionsSchema = baseSolanaOptionsSchema
-  .extend({
-    types: z.array(z.string()),
-    values: z.array(z.string()),
-  })
-  .refine(privateKeyRefineRule.rule, {
-    message: privateKeyRefineRule.message,
-  });
+export const solanaCallOptionsSchema = baseSolanaOptionsSchema.extend({
+  types: z.array(z.string()),
+  values: z.array(z.string()),
+});
 
 export const keypairFromMnemonic = async (
   mnemonic: string
