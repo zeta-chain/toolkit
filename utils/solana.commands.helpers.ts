@@ -20,7 +20,7 @@ import { trim0x } from "./trim0x";
 
 export const baseSolanaOptionsSchema = z.object({
   abortAddress: z.string(),
-  callOnRevert: z.boolean().optional().default(false),
+  callOnRevert: z.boolean().default(false),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
   network: z.string(),
@@ -34,7 +34,6 @@ export const baseSolanaOptionsSchema = z.object({
 export const solanaDepositOptionsSchema = baseSolanaOptionsSchema.extend({
   amount: z.string(),
   mint: z.string().optional(),
-  network: z.string(),
 });
 
 export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema.extend(
@@ -228,7 +227,7 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
       "Abort address",
       ethers.ZeroAddress
     )
-    .option("--call-on-revert <callOnRevert>", "Call on revert", false)
+    .option("--call-on-revert", "Call on revert", false)
     .option("--revert-message <revertMessage>", "Revert message", "")
     .option(
       "--on-revert-gas-limit <onRevertGasLimit>",
