@@ -7,9 +7,15 @@ import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
 
 import { BitcoinAccountData } from "../types/accounts.types";
-import { BITCOIN_FEES } from "../types/bitcoin.constants";
-import type { BtcUtxo } from "../types/bitcoin.types";
+import {
+  BITCOIN_FEES,
+  DEFAULT_BITCOIN_API,
+  DEFAULT_GAS_PRICE_API,
+  DEFAULT_GATEWAY,
+} from "../types/bitcoin.constants";
+import { type BtcUtxo, formatEncodingChoices } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
+import { EncodingFormat } from "../utils/bitcoinEncode";
 import { getAccountData } from "./accounts";
 import {
   makeCommitTransaction,
@@ -27,7 +33,7 @@ export interface TransactionInfo {
   amount: string;
   depositFee: number;
   encodedMessage?: string;
-  encodingFormat: string;
+  encodingFormat: EncodingFormat;
   gateway: string;
   inscriptionCommitFee: number;
   inscriptionRevealFee: number;
@@ -213,21 +219,31 @@ export const createAndBroadcastTransactions = async (
   return { commitTxid, revealTxid };
 };
 
-/**
- * Adds common Bitcoin-related command options to a Commander command
- */
-export const addCommonBitcoinCommandOptions = (command: Command) => {
-  return command
-    .option(
-      "--bitcoin-api <url>",
-      "Bitcoin API",
-      "https://mempool.space/signet/api"
-    )
-    .option(
-      "--gas-price-api <url>",
-      "ZetaChain API",
-      "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/gasPrice/18333"
-    )
+export const createBitcoinCommandWithCommonOptions = (
+  name: string
+): Command => {
+  return new Command(name)
+    .option("--yes", "Skip confirmation prompt", false)
+    .option("-r, --receiver <address>", "ZetaChain receiver address")
+    .requiredOption(
+      "-g, --gateway <address>",
+      "Bitcoin gateway (TSS) address",
+      DEFAULT_GATEWAY
+    );
+};
+
+export const createBitcoinMemoCommandWithCommonOptions = (
+  name: string
+): Command => {
+  return createBitcoinCommandWithCommonOptions(name)
+    .option("-d, --data <data>", "Pass raw data")
+    .option("--network-fee <fee>", "Network fee (in sats)", "1750");
+};
+
+export const createBitcoinInscriptionCommandWithCommonOptions = (
+  name: string
+): Command => {
+  return createBitcoinCommandWithCommonOptions(name)
     .addOption(
       new Option("--private-key <key>", "Bitcoin private key").conflicts([
         "name",
@@ -237,7 +253,23 @@ export const addCommonBitcoinCommandOptions = (command: Command) => {
       new Option("--name <name>", "Account name")
         .default(DEFAULT_ACCOUNT_NAME)
         .conflicts(["private-key"])
-    );
+    )
+    .option("--revert-address <address>", "Revert address")
+    .addOption(
+      new Option("--format <format>", "Encoding format")
+        .choices(formatEncodingChoices)
+        .default("ABI")
+    )
+    .addOption(
+      new Option("--data <data>", "Pass raw data").conflicts([
+        "types",
+        "values",
+        "revert-address",
+        "receiver",
+      ])
+    )
+    .option("--bitcoin-api <url>", "Bitcoin API", DEFAULT_BITCOIN_API)
+    .option("--gas-price-api <url>", "ZetaChain API", DEFAULT_GAS_PRICE_API);
 };
 
 /**

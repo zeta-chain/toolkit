@@ -53,8 +53,8 @@ export const updateTransactionStatus = async (
 
     const tx: CCTX = {
       confirmed_on_destination: false,
-      outbound_tx_hash: cctx.outbound_params[0].outbound_tx_hash,
-      outbound_tx_tss_nonce: cctx.outbound_params[0].outbound_tx_tss_nonce,
+      outbound_tx_hash: cctx.outbound_params[0].hash,
+      outbound_tx_tss_nonce: Number(cctx.outbound_params[0].tss_nonce),
       receiver_chainId: cctx.outbound_params[0].receiver_chainId,
       sender_chain_id: cctx.inbound_params.sender_chain_id,
       status: cctx.cctx_status.status,

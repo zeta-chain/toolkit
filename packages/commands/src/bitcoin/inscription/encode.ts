@@ -3,6 +3,7 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { formatEncodingChoices } from "../../../../../types/bitcoin.types";
 import { typesAndValuesLengthRefineRule } from "../../../../../types/shared.schema";
 import {
   bitcoinEncode,
@@ -68,7 +69,7 @@ export const encodeCommand = new Command()
   )
   .addOption(
     new Option("-f, --format <format>", "Encoding format")
-      .choices(Object.keys(EncodingFormat).filter((key) => isNaN(Number(key))))
-      .default("EncodingFmtABI")
+      .choices(formatEncodingChoices)
+      .default("ABI")
   )
   .action(main);
