@@ -72,7 +72,7 @@ const main = async (options: DepositOptions) => {
   }
 };
 
-export const depositCommand = new Command("deposit").description(
+export const depositCommand = new Command("deposit").summary(
   "Deposit tokens to ZetaChain from an EVM-compatible chain"
 );
 

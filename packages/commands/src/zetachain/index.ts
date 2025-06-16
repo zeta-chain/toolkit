@@ -5,7 +5,7 @@ import { withdrawCommand } from "./withdraw";
 import { withdrawAndCallCommand } from "./withdrawAndCall";
 
 export const zetachainCommand = new Command("zetachain")
-  .description("ZetaChain commands")
+  .summary("ZetaChain commands")
   .alias("z")
   .addCommand(callCommand)
   .addCommand(withdrawCommand)

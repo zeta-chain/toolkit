@@ -78,7 +78,7 @@ const main = async (options: DepositAndCallOptions) => {
 export const depositAndCallCommand = createBitcoinMemoCommandWithCommonOptions(
   "deposit-and-call"
 )
-  .description("Deposit BTC and call a contract on ZetaChain")
+  .summary("Deposit BTC and call a contract on ZetaChain")
   .requiredOption("-a, --amount <btcAmount>", "BTC amount to send (in BTC)")
   .action(async (opts) => {
     const validated = validateAndParseSchema(

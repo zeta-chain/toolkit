@@ -72,7 +72,7 @@ const main = async (options: DepositOptions) => {
 export const depositCommand = createBitcoinMemoCommandWithCommonOptions(
   "deposit"
 )
-  .description("Deposit BTC to ZetaChain")
+  .summary("Deposit BTC to ZetaChain")
   .requiredOption("-a, --amount <btcAmount>", "BTC amount to send (in BTC)")
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, memoDepositOptionsSchema, {

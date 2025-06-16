@@ -75,7 +75,7 @@ const main = async (options: CallOptions) => {
  * This allows users to call contracts on ZetaChain
  */
 export const callCommand = createBitcoinMemoCommandWithCommonOptions("call")
-  .description("Call a contract on ZetaChain")
+  .summary("Call a contract on ZetaChain")
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, memoCallOptionsSchema, {
       exitOnError: true,

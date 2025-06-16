@@ -57,7 +57,7 @@ const main = async (options: DepositOptions) => {
 };
 
 export const depositCommand = createSuiCommandWithCommonOptions("deposit")
-  .description("Deposit tokens from Sui")
+  .summary("Deposit tokens from Sui")
   .action(async (options: DepositOptions) => {
     const validatedOptions = commonDepositOptionsSchema.parse(options);
     await main(validatedOptions);

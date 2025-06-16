@@ -135,7 +135,7 @@ const main = async (options: DepositOptions) => {
 export const depositCommand = createBitcoinInscriptionCommandWithCommonOptions(
   "deposit"
 )
-  .description("Deposit BTC to ZetaChain")
+  .summary("Deposit BTC to ZetaChain")
   .requiredOption("-a, --amount <btcAmount>", "BTC amount to send (in BTC)")
   .action(async (opts) => {
     const validated = validateAndParseSchema(

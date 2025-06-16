@@ -4,7 +4,7 @@ import { balancesCommand } from "./balances";
 import { cctxCommand } from "./cctx";
 
 export const queryCommand = new Command("query")
-  .description("Query commands")
+  .summary("Query commands")
   .addCommand(balancesCommand)
   .addCommand(cctxCommand)
   .helpCommand(false);

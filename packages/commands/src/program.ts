@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 
+import { showRequiredOptions } from "../../../utils/common.command.helpers";
 import { accountsCommand } from "./accounts";
 import { bitcoinCommand } from "./bitcoin";
 import { evmCommand } from "./evm";
@@ -11,7 +12,7 @@ import { tonCommand } from "./ton";
 import { zetachainCommand } from "./zetachain";
 
 export const toolkitCommand = new Command("toolkit")
-  .description("Local development environment")
+  .summary("Local development environment")
   .helpCommand(false);
 
 toolkitCommand.addCommand(accountsCommand);
@@ -22,5 +23,7 @@ toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(suiCommand);
 toolkitCommand.addCommand(tonCommand);
 toolkitCommand.addCommand(zetachainCommand);
+
+showRequiredOptions(toolkitCommand);
 
 toolkitCommand.parse(process.argv);

@@ -13,7 +13,7 @@ const main = async (options: EncodeOptions) => {
 };
 
 export const encodeCommand = new Command("encode")
-  .description("Encode payload data for Solana")
+  .summary("Encode payload data for Solana")
   .requiredOption("--connected <address>", "Connected PDA account address")
   .requiredOption("--data <data>", "Data to encode")
   .requiredOption("--gateway <address>", "Gateway program address")
