@@ -2,6 +2,7 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { z } from "zod";
 
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 import {
   commonDepositOptionsSchema,
   getCoin,
@@ -11,7 +12,6 @@ import {
   toSmallestUnit,
 } from "../../../../utils/sui";
 import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
-import { confirmTransaction } from "../../../../utils/common.command.helpers";
 
 type DepositOptions = z.infer<typeof commonDepositOptionsSchema>;
 

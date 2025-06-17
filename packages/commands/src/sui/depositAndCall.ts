@@ -3,6 +3,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 import {
   commonDepositObjectSchema,
   getCoin,
@@ -12,7 +13,6 @@ import {
   toSmallestUnit,
 } from "../../../../utils/sui";
 import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
-import { confirmTransaction } from "../../../../utils/common.command.helpers";
 
 const depositAndCallOptionsSchema = commonDepositObjectSchema
   .extend({
@@ -71,10 +71,10 @@ const main = async (options: DepositAndCallOptions) => {
 
   const isConfirmed = await confirmTransaction({
     amount: options.amount,
+    message: payloadABI,
     receiver: options.receiver,
     rpc: getFullnodeUrl(network),
     sender: keypair.toSuiAddress(),
-    message: payloadABI,
   });
   if (!isConfirmed) return;
 

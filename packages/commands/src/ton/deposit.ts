@@ -9,11 +9,11 @@ import {
   hasErrorStatus,
   validateAndParseSchema,
 } from "../../../../utils";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 import {
   createTonCommandWithCommonOptions,
   getAccount,
 } from "../../../../utils/ton.command.helpers";
-import { confirmTransaction } from "../../../../utils/common.command.helpers";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
