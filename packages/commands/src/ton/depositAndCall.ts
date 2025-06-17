@@ -9,11 +9,12 @@ import { z } from "zod";
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
 import { handleError, hasErrorStatus } from "../../../../utils";
 import {
-  confirmTransaction,
   createTonCommandWithCommonOptions,
   getAccount,
 } from "../../../../utils/ton.command.helpers";
+
 import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 

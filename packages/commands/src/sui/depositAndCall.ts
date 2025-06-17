@@ -12,6 +12,7 @@ import {
   toSmallestUnit,
 } from "../../../../utils/sui";
 import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 
 const depositAndCallOptionsSchema = commonDepositObjectSchema
   .extend({
@@ -67,6 +68,15 @@ const main = async (options: DepositAndCallOptions) => {
   }
 
   tx.setGasBudget(gasBudget);
+
+  const isConfirmed = await confirmTransaction({
+    amount: options.amount,
+    receiver: options.receiver,
+    rpc: getFullnodeUrl(network),
+    sender: keypair.toSuiAddress(),
+    message: payloadABI,
+  });
+  if (!isConfirmed) return;
 
   await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };

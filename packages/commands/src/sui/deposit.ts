@@ -11,6 +11,7 @@ import {
   toSmallestUnit,
 } from "../../../../utils/sui";
 import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 
 type DepositOptions = z.infer<typeof commonDepositOptionsSchema>;
 
@@ -52,6 +53,14 @@ const main = async (options: DepositOptions) => {
   }
 
   tx.setGasBudget(gasBudget);
+
+  const isConfirmed = await confirmTransaction({
+    amount: options.amount,
+    receiver: options.receiver,
+    rpc: getFullnodeUrl(network),
+    sender: keypair.toSuiAddress(),
+  });
+  if (!isConfirmed) return;
 
   await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };

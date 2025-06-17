@@ -10,10 +10,10 @@ import {
   validateAndParseSchema,
 } from "../../../../utils";
 import {
-  confirmTransaction,
   createTonCommandWithCommonOptions,
   getAccount,
 } from "../../../../utils/ton.command.helpers";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 

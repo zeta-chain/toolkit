@@ -1,4 +1,3 @@
-import { confirm } from "@inquirer/prompts";
 import { mnemonicToWalletKey, mnemonicValidate } from "@ton/crypto";
 import { WalletContractV4 } from "@ton/ton";
 import { Command, Option } from "commander";
@@ -47,24 +46,6 @@ export const getAccount = async (options: {
     keyPair,
     wallet,
   };
-};
-
-export const confirmTransaction = async (options: {
-  amount: string;
-  message?: string;
-  receiver: string;
-  rpc: string;
-  sender: string;
-}) => {
-  console.log(`
-Sender:   ${options.sender}
-Receiver: ${options.receiver}
-Amount:   ${options.amount}
-Network:  ${options.rpc}
-${options.message ? `Message:  ${options.message}` : ""}
-  `);
-
-  return await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
 };
 
 export const createTonCommandWithCommonOptions = (name: string): Command => {
