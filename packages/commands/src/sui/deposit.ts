@@ -2,6 +2,7 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { z } from "zod";
 
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 import {
   commonDepositOptionsSchema,
   getCoin,
@@ -52,6 +53,14 @@ const main = async (options: DepositOptions) => {
   }
 
   tx.setGasBudget(gasBudget);
+
+  const isConfirmed = await confirmTransaction({
+    amount: options.amount,
+    receiver: options.receiver,
+    rpc: getFullnodeUrl(network),
+    sender: keypair.toSuiAddress(),
+  });
+  if (!isConfirmed) return;
 
   await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };
