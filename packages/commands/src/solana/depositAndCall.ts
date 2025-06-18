@@ -12,6 +12,7 @@ import { z } from "zod";
 
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
+import { parseAbiValues } from "../../../../utils/parseAbiValues";
 import {
   confirmSolanaTx,
   createRevertOptions,
@@ -20,12 +21,12 @@ import {
   getKeypair,
   getSPLToken,
   isSOLBalanceSufficient,
-  solanaDepositOptionsSchema,
+  solanaDepositAndCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
 
-type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
+type DepositAndCallOptions = z.infer<typeof solanaDepositAndCallOptionsSchema>;
 
-const main = async (options: DepositOptions) => {
+const main = async (options: DepositAndCallOptions) => {
   // Mainnet and devnet use the same IDL
   const gatewayIDL =
     options.network === "localnet" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
@@ -43,6 +44,11 @@ const main = async (options: DepositOptions) => {
   const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
 
   const receiverBytes = ethers.getBytes(options.recipient);
+  const stringifiedTypes = JSON.stringify(options.types);
+  const values = parseAbiValues(stringifiedTypes, options.values);
+  const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+  const encodedParameters = abiCoder.encode(options.types, values);
+  const message = Buffer.from(encodedParameters.slice(2), "hex");
 
   const revertOptions = createRevertOptions(options, provider.wallet.publicKey);
 
@@ -82,13 +88,15 @@ const main = async (options: DepositOptions) => {
       await confirmSolanaTx({
         ...commonValues,
         amount: options.amount,
+        message: message.toString(),
         mint: options.mint,
       });
 
       const tx = await gatewayProgram.methods
-        .depositSplToken(
+        .depositSplTokenAndCall(
           new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
           receiverBytes,
+          message,
           revertOptions
         )
         .accounts({
@@ -102,13 +110,19 @@ const main = async (options: DepositOptions) => {
         .rpc();
       console.log("Transaction hash:", tx);
     } else {
-      // Check SOL balance
       await isSOLBalanceSufficient(provider, options.amount);
 
+      await confirmSolanaTx({
+        ...commonValues,
+        amount: options.amount,
+        message: message.toString(),
+      });
+
       const tx = await gatewayProgram.methods
-        .deposit(
+        .depositAndCall(
           new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
           receiverBytes,
+          message,
           revertOptions
         )
         .accounts({})
@@ -117,7 +131,7 @@ const main = async (options: DepositOptions) => {
     }
   } catch (error) {
     handleError({
-      context: "Error during deposit",
+      context: "Error during deposit and call",
       error,
       shouldThrow: false,
     });
@@ -125,19 +139,31 @@ const main = async (options: DepositOptions) => {
   }
 };
 
-export const depositCommand = createSolanaCommandWithCommonOptions("deposit")
-  .description("Deposit tokens from Solana")
+export const depositAndCallCommand = createSolanaCommandWithCommonOptions(
+  "deposit-and-call"
+)
+  .description(
+    "Deposit tokens from Solana and call a universal contract on ZetaChain"
+  )
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
   .option(
     "--token-program <tokenProgram>",
     "Token program",
     SOLANA_TOKEN_PROGRAM
   )
+  .requiredOption(
+    "--types <types...>",
+    "List of parameter types (e.g. uint256 address)"
+  )
+  .requiredOption(
+    "--values <values...>",
+    "Parameter values for the function call"
+  )
   .option("--mint <mint>", "SPL token mint address")
   .action(async (options) => {
     const validatedOptions = validateAndParseSchema(
       options,
-      solanaDepositOptionsSchema,
+      solanaDepositAndCallOptionsSchema,
       {
         exitOnError: true,
       }
