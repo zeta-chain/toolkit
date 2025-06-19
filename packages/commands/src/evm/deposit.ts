@@ -61,19 +61,19 @@ const main = async (options: DepositOptions) => {
       throw new Error("Gateway address not found");
     }
 
-const tx = await evmDeposit(
-  {
-    amount: options.amount,
-    receiver: options.receiver,
-    revertOptions: prepareRevertOptions(options, signer),
-    token: options.erc20,
-  },
-  {
-    gateway,
-    signer,
-    txOptions: prepareTxOptions(options),
-  }
-);
+    const tx = await evmDeposit(
+      {
+        amount: options.amount,
+        receiver: options.receiver,
+        revertOptions: prepareRevertOptions(options, signer),
+        token: options.erc20,
+      },
+      {
+        gateway,
+        signer,
+        txOptions: prepareTxOptions(options),
+      }
+    );
     console.log("Transaction hash:", tx.hash);
   } catch (error) {
     handleError({
