@@ -1,0 +1,74 @@
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+
+import {
+  chainIds,
+  getCoin,
+  networks,
+  signAndExecuteTransaction,
+  toSmallestUnit,
+} from "../../../utils/sui";
+
+type suiDepositParams = {
+  amount: string;
+  receiver: string;
+  token?: string;
+};
+
+type suiOptions = {
+  chainId: (typeof chainIds)[number];
+  gasLimit: string;
+  gatewayObject: string;
+  gatewayPackage: string;
+  signer: Ed25519Keypair;
+};
+
+export const suiDeposit = async (
+  params: suiDepositParams,
+  options: suiOptions
+) => {
+  const network = networks[chainIds.indexOf(options.chainId)];
+  const client = new SuiClient({ url: getFullnodeUrl(network) });
+  const gasBudget = BigInt(options.gasLimit);
+  const tx = new Transaction();
+
+  const target = `${options.gatewayPackage}::gateway::deposit`;
+  const receiver = tx.pure.string(params.receiver);
+  const gateway = tx.object(options.gatewayObject);
+
+  if (params.token) {
+    const coinObjectId = await getCoin(
+      client,
+      options.signer.toSuiAddress(),
+      params.token
+    );
+
+    const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
+      toSmallestUnit(params.amount),
+    ]);
+
+    tx.moveCall({
+      arguments: [gateway, splitCoin, receiver],
+      target,
+      typeArguments: [params.token],
+    });
+  } else {
+    const [splitCoin] = tx.splitCoins(tx.gas, [toSmallestUnit(params.amount)]);
+
+    tx.moveCall({
+      arguments: [gateway, splitCoin, receiver],
+      target,
+      typeArguments: ["0x2::sui::SUI"],
+    });
+  }
+
+  tx.setGasBudget(gasBudget);
+
+  await signAndExecuteTransaction({
+    client,
+    gasBudget,
+    keypair: options.signer,
+    tx,
+  });
+};
