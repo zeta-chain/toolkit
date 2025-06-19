@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { tonDeposit } from "../../../../src/lib/ton/deposit";
 import { depositOptionsSchema } from "../../../../types/ton.types";
 import {
   handleError,
@@ -10,7 +11,6 @@ import {
   createTonCommandWithCommonOptions,
   getAccount,
 } from "../../../../utils/ton.command.helpers";
-import { tonDeposit } from "../../../../src/lib/ton/deposit";
 
 type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
@@ -27,11 +27,11 @@ const main = async (options: DepositOptions) => {
         receiver: options.receiver,
       },
       {
+        apiKey: options.apiKey,
         gateway: options.gateway,
+        keyPair,
         rpc: options.rpc,
         wallet,
-        keyPair,
-        apiKey: options.apiKey,
       }
     );
   } catch (error: unknown) {

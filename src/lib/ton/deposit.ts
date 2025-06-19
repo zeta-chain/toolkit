@@ -1,8 +1,6 @@
-import { Address, TonClient, WalletContractV4 } from "@ton/ton";
-import { KeyPair, mnemonicToWalletKey } from "@ton/crypto";
-import { mnemonicValidate } from "@ton/crypto";
+import { KeyPair, mnemonicToWalletKey, mnemonicValidate } from "@ton/crypto";
+import { Address, toNano, TonClient, WalletContractV4 } from "@ton/ton";
 import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
-import { toNano } from "@ton/ton";
 
 type tonDepositParams = {
   amount: string;
@@ -11,12 +9,12 @@ type tonDepositParams = {
 };
 
 type tonOptions = {
-  gateway: string;
-  signer?: string;
-  rpc: string;
   apiKey?: string;
-  wallet?: WalletContractV4;
+  gateway: string;
   keyPair?: KeyPair;
+  rpc: string;
+  signer?: string;
+  wallet?: WalletContractV4;
 };
 
 const getAccountFromMnemonic = async (mnemonicRaw: string) => {
@@ -36,7 +34,7 @@ const getAccountFromMnemonic = async (mnemonicRaw: string) => {
     workchain: 0,
   });
 
-  return { wallet, keyPair };
+  return { keyPair, wallet };
 };
 
 export const tonDeposit = async (

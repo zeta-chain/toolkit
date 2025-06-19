@@ -4,6 +4,7 @@ import {
   ParamSymbol,
   ParamType,
 } from "@zetachain/protocol-contracts/dist/lib/types";
+import { ethers } from "ethers";
 
 export const getAddress = (
   type: ParamType,
@@ -29,4 +30,20 @@ export const getAddress = (
     });
   }
   return address?.address;
+};
+
+export const getGatewayAddress = async (signer: ethers.Wallet) => {
+  const provider = signer.provider;
+  if (!provider) {
+    throw new Error("Signer does not have a valid provider");
+  }
+  const network = await provider.getNetwork();
+  const chainId = network.chainId;
+
+  const gwAddress = getAddress("gateway", Number(chainId));
+
+  if (!gwAddress) {
+    throw new Error("Gateway address not found");
+  }
+  return gwAddress;
 };

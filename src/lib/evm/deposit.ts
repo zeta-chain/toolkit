@@ -10,6 +10,7 @@ import {
   broadcastGatewayTx,
   generateEvmDepositData,
 } from "../../../utils/gatewayEvm";
+import { getGatewayAddress } from "../../../utils/getAddress";
 
 type evmDepositParams = {
   amount: string;
@@ -19,7 +20,7 @@ type evmDepositParams = {
 };
 
 type evmOptions = {
-  gateway: string;
+  gateway?: string;
   signer: ethers.Wallet;
   txOptions?: TxOptions;
 };
@@ -28,6 +29,9 @@ export const evmDeposit = async (
   params: evmDepositParams,
   options: evmOptions
 ) => {
+  const gatewayAddress =
+    options.gateway || (await getGatewayAddress(options.signer));
+
   if (params.token) {
     const erc20Contract = new ethers.Contract(
       params.token,
@@ -39,7 +43,7 @@ export const evmDeposit = async (
     const value = ethers.parseUnits(params.amount, decimals);
 
     // Approve the gateway to spend the tokens
-    const approval = await erc20Contract.approve(options.gateway, value);
+    const approval = await erc20Contract.approve(gatewayAddress, value);
     await approval.wait();
 
     // Generate calldata for deposit
@@ -55,7 +59,7 @@ export const evmDeposit = async (
       signer: options.signer,
       txData: {
         data: callData.data,
-        to: options.gateway,
+        to: gatewayAddress,
         value: callData.value,
       },
       txOptions: options.txOptions || {},
@@ -73,7 +77,7 @@ export const evmDeposit = async (
       signer: options.signer,
       txData: {
         data: callData.data,
-        to: options.gateway,
+        to: gatewayAddress,
         value: callData.value,
       },
       txOptions: options.txOptions || {},
