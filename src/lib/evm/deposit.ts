@@ -21,7 +21,7 @@ type evmDepositParams = {
 type evmOptions = {
   gateway: string;
   signer: ethers.Wallet;
-  txOptions: TxOptions;
+  txOptions?: TxOptions;
 };
 
 export const evmDeposit = async (
@@ -58,7 +58,7 @@ export const evmDeposit = async (
         to: options.gateway,
         value: callData.value,
       },
-      txOptions: options.txOptions,
+      txOptions: options.txOptions || {},
     });
     return tx;
   } else {
@@ -76,7 +76,7 @@ export const evmDeposit = async (
         to: options.gateway,
         value: callData.value,
       },
-      txOptions: options.txOptions,
+      txOptions: options.txOptions || {},
     });
     return tx;
   }
