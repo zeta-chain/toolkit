@@ -79,16 +79,16 @@ type ZetaChainClientParams = ZetaChainClientParamsBase &
 
 interface MainnetTestnetAddress {
   address: string;
+  asset?: string;
   category: string;
   chain_id: string;
   chain_name: string;
-  type: string;
-  foreign_chain_id?: string;
-  asset?: string;
   coin_type?: string;
   decimals?: number;
   description?: string;
+  foreign_chain_id?: string;
   symbol?: string;
+  type: string;
 }
 
 interface LocalnetAddress {
