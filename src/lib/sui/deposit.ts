@@ -2,6 +2,7 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 
+import { getAddress } from "../../../utils/getAddress";
 import {
   chainIds,
   GAS_BUDGET,
@@ -11,7 +12,6 @@ import {
   SUI_GAS_COIN_TYPE,
   toSmallestUnit,
 } from "../../../utils/sui";
-import { getAddress } from "../../../utils/getAddress";
 
 type suiDepositParams = {
   amount: string;

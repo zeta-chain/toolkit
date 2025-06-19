@@ -3,6 +3,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
+import { getAddress } from "../../../../utils/getAddress";
 import {
   commonDepositObjectSchema,
   getCoin,
@@ -12,7 +13,6 @@ import {
   toSmallestUnit,
 } from "../../../../utils/sui";
 import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
-import { getAddress } from "../../../../utils/getAddress";
 
 const depositAndCallOptionsSchema = commonDepositObjectSchema
   .extend({
