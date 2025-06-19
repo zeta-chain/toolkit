@@ -1,13 +1,3 @@
-import * as anchor from "@coral-xyz/anchor";
-import { Wallet } from "@coral-xyz/anchor";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
-import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
-import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
-import { ethers } from "ethers";
 import { z } from "zod";
 
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
@@ -18,18 +8,14 @@ import {
   createSolanaCommandWithCommonOptions,
   getAPI,
   getKeypair,
-  getSPLToken,
-  isSOLBalanceSufficient,
   solanaDepositOptionsSchema,
+  getChainIdFromNetwork,
 } from "../../../../utils/solana.commands.helpers";
+import { solanaDeposit } from "../../../../src/lib/solana/deposit";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
-  // Mainnet and devnet use the same IDL
-  const gatewayIDL =
-    options.network === "localnet" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
-
   const keypair = await getKeypair({
     mnemonic: options.mnemonic,
     name: options.name,
@@ -38,83 +24,36 @@ const main = async (options: DepositOptions) => {
 
   const API = getAPI(options.network);
 
-  const connection = new anchor.web3.Connection(API);
-  const provider = new anchor.AnchorProvider(connection, new Wallet(keypair));
-  const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
-
-  const receiverBytes = ethers.getBytes(options.recipient);
-
-  const revertOptions = createRevertOptions(options, provider.wallet.publicKey);
-
-  const commonValues = {
+  await confirmSolanaTx({
     api: API,
     recipient: options.recipient,
-    revertOptions,
+    amount: options.amount,
+    mint: options.mint,
+    revertOptions: createRevertOptions(options, keypair.publicKey),
     sender: keypair.publicKey.toBase58(),
-  };
+  });
 
   try {
-    if (options.mint) {
-      const { from, decimals } = await getSPLToken(
-        provider,
-        options.mint,
-        options.amount
-      );
+    const revertOptions = {
+      abortAddress: options.abortAddress,
+      callOnRevert: options.callOnRevert,
+      onRevertGasLimit: options.onRevertGasLimit,
+      revertAddress: options.revertAddress,
+      revertMessage: options.revertMessage,
+    };
 
-      // Find the TSS PDA (meta)
-      const [tssPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("meta", "utf-8")],
-        gatewayProgram.programId
-      );
-
-      // Find the TSS's ATA for the mint
-      const tssAta = await PublicKey.findProgramAddress(
-        [
-          tssPda.toBuffer(),
-          TOKEN_PROGRAM_ID.toBuffer(),
-          new PublicKey(options.mint).toBuffer(),
-        ],
-        ASSOCIATED_TOKEN_PROGRAM_ID
-      );
-
-      const to = tssAta[0].toBase58();
-
-      await confirmSolanaTx({
-        ...commonValues,
+    solanaDeposit(
+      {
         amount: options.amount,
-        mint: options.mint,
-      });
-
-      const tx = await gatewayProgram.methods
-        .depositSplToken(
-          new anchor.BN(ethers.parseUnits(options.amount, decimals).toString()),
-          receiverBytes,
-          revertOptions
-        )
-        .accounts({
-          from,
-          mintAccount: options.mint,
-          signer: keypair.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-          to,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .rpc();
-      console.log("Transaction hash:", tx);
-    } else {
-      // Check SOL balance
-      await isSOLBalanceSufficient(provider, options.amount);
-
-      const tx = await gatewayProgram.methods
-        .deposit(
-          new anchor.BN(ethers.parseUnits(options.amount, 9).toString()),
-          receiverBytes,
-          revertOptions
-        )
-        .accounts({})
-        .rpc();
-      console.log("Transaction hash:", tx);
-    }
+        receiver: options.recipient,
+        revertOptions,
+        token: options.mint,
+      },
+      {
+        chainId: getChainIdFromNetwork(options.network),
+        signer: keypair,
+      }
+    );
   } catch (error) {
     handleError({
       context: "Error during deposit",

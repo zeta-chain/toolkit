@@ -131,6 +131,16 @@ export const getAPI = (network: string) => {
   return API;
 };
 
+export const getAPIbyChainId = (chainId: string) => {
+  let API = "http://localhost:8899";
+  if (chainId === "901") {
+    API = clusterApiUrl("devnet");
+  } else if (chainId === "900") {
+    API = clusterApiUrl("mainnet-beta");
+  }
+  return API;
+};
+
 export const getSPLToken = async (
   provider: anchor.AnchorProvider,
   mint: string,
@@ -279,4 +289,13 @@ Revert options: ${JSON.stringify(options.revertOptions)}${
   }
 `);
   await confirm({ message: "Confirm transaction?" });
+};
+
+export const getChainIdFromNetwork = (network: string) => {
+  if (network === "localnet") {
+    return "0901";
+  } else if (network === "mainnet") {
+    return "900";
+  }
+  return "901";
 };
