@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { solanaDeposit } from "../../../../src/lib/solana/deposit";
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import {
@@ -7,11 +8,10 @@ import {
   createRevertOptions,
   createSolanaCommandWithCommonOptions,
   getAPI,
+  getChainIdFromNetwork,
   getKeypair,
   solanaDepositOptionsSchema,
-  getChainIdFromNetwork,
 } from "../../../../utils/solana.commands.helpers";
-import { solanaDeposit } from "../../../../src/lib/solana/deposit";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
 
@@ -25,10 +25,10 @@ const main = async (options: DepositOptions) => {
   const API = getAPI(options.network);
 
   await confirmSolanaTx({
-    api: API,
-    recipient: options.recipient,
     amount: options.amount,
+    api: API,
     mint: options.mint,
+    recipient: options.recipient,
     revertOptions: createRevertOptions(options, keypair.publicKey),
     sender: keypair.publicKey.toBase58(),
   });
@@ -42,7 +42,7 @@ const main = async (options: DepositOptions) => {
       revertMessage: options.revertMessage,
     };
 
-    solanaDeposit(
+    await solanaDeposit(
       {
         amount: options.amount,
         receiver: options.recipient,
