@@ -11,6 +11,7 @@ import {
   SUI_GAS_COIN_TYPE,
   toSmallestUnit,
 } from "../../../utils/sui";
+import { getAddress } from "../../../utils/getAddress";
 
 type suiDepositParams = {
   amount: string;
@@ -21,8 +22,8 @@ type suiDepositParams = {
 type suiOptions = {
   chainId: (typeof chainIds)[number];
   gasLimit?: string;
-  gatewayObject: string;
-  gatewayPackage: string;
+  gatewayObject?: string;
+  gatewayPackage?: string;
   signer: Ed25519Keypair;
 };
 
@@ -30,14 +31,20 @@ export const suiDeposit = async (
   params: suiDepositParams,
   options: suiOptions
 ) => {
+  const gatewayAddress = getAddress("gateway", Number(options.chainId));
+  if (!gatewayAddress) {
+    throw new Error("Gateway address not found");
+  }
+  const gatewayPackage = options.gatewayPackage || gatewayAddress.split(",")[0];
+  const gatewayObject = options.gatewayObject || gatewayAddress.split(",")[1];
   const network = networks[chainIds.indexOf(options.chainId)];
   const client = new SuiClient({ url: getFullnodeUrl(network) });
   const gasBudget = BigInt(options.gasLimit || GAS_BUDGET);
   const tx = new Transaction();
 
-  const target = `${options.gatewayPackage}::gateway::deposit`;
+  const target = `${gatewayPackage}::gateway::deposit`;
   const receiver = tx.pure.string(params.receiver);
-  const gateway = tx.object(options.gatewayObject);
+  const gateway = tx.object(gatewayObject);
 
   if (params.token && params.token !== SUI_GAS_COIN_TYPE) {
     const coinObjectId = await getCoin(
