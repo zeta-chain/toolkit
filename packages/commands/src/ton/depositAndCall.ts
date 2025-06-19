@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
 import { handleError, hasErrorStatus } from "../../../../utils";
+import { getAddress } from "../../../../utils/getAddress";
 import {
   createTonCommandWithCommonOptions,
   getAccount,
@@ -30,8 +31,11 @@ const main = async (options: DepositAndCallOptions) => {
 
     const openedWallet = client.open(wallet);
     const sender = openedWallet.sender(keyPair.secretKey);
-
-    const gatewayAddr = Address.parse(options.gateway);
+    const gatewayAddress = getAddress("gateway", Number(options.chainId));
+    if (!gatewayAddress) {
+      throw new Error("Gateway address not found");
+    }
+    const gatewayAddr = Address.parse(options.gateway || gatewayAddress);
     const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
 
     let payload;

@@ -28,6 +28,7 @@ const main = async (options: DepositOptions) => {
       },
       {
         apiKey: options.apiKey,
+        chainId: options.chainId,
         gateway: options.gateway,
         keyPair,
         rpc: options.rpc,

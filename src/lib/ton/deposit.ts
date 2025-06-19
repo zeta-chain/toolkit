@@ -2,6 +2,8 @@ import { KeyPair, mnemonicToWalletKey, mnemonicValidate } from "@ton/crypto";
 import { Address, toNano, TonClient, WalletContractV4 } from "@ton/ton";
 import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
 
+import { getAddress } from "../../../utils/getAddress";
+
 type tonDepositParams = {
   amount: string;
   receiver: string;
@@ -10,7 +12,8 @@ type tonDepositParams = {
 
 type tonOptions = {
   apiKey?: string;
-  gateway: string;
+  chainId: string;
+  gateway?: string;
   keyPair?: KeyPair;
   rpc: string;
   signer?: string;
@@ -41,6 +44,10 @@ export const tonDeposit = async (
   params: tonDepositParams,
   options: tonOptions
 ) => {
+  const gatewayAddress = getAddress("gateway", Number(options.chainId));
+  if (!gatewayAddress) {
+    throw new Error("Gateway address not found");
+  }
   let wallet, keyPair;
   if (options.wallet && options.keyPair) {
     wallet = options.wallet;
@@ -61,7 +68,7 @@ export const tonDeposit = async (
   const openedWallet = client.open(wallet);
   const sender = openedWallet.sender(keyPair.secretKey);
 
-  const gatewayAddr = Address.parse(options.gateway);
+  const gatewayAddr = Address.parse(options.gateway || gatewayAddress);
   const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
 
   await gateway.sendDeposit(sender, toNano(params.amount), params.receiver);
