@@ -4,6 +4,7 @@ import { Transaction } from "@mysten/sui/transactions";
 
 import {
   chainIds,
+  GAS_BUDGET,
   getCoin,
   networks,
   signAndExecuteTransaction,
@@ -19,7 +20,7 @@ type suiDepositParams = {
 
 type suiOptions = {
   chainId: (typeof chainIds)[number];
-  gasLimit: string;
+  gasLimit?: string;
   gatewayObject: string;
   gatewayPackage: string;
   signer: Ed25519Keypair;
@@ -31,7 +32,7 @@ export const suiDeposit = async (
 ) => {
   const network = networks[chainIds.indexOf(options.chainId)];
   const client = new SuiClient({ url: getFullnodeUrl(network) });
-  const gasBudget = BigInt(options.gasLimit);
+  const gasBudget = BigInt(options.gasLimit || GAS_BUDGET);
   const tx = new Transaction();
 
   const target = `${options.gatewayPackage}::gateway::deposit`;
