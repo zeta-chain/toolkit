@@ -7,6 +7,7 @@ import {
   getCoin,
   networks,
   signAndExecuteTransaction,
+  SUI_GAS_COIN_TYPE,
   toSmallestUnit,
 } from "../../../utils/sui";
 
@@ -37,7 +38,7 @@ export const suiDeposit = async (
   const receiver = tx.pure.string(params.receiver);
   const gateway = tx.object(options.gatewayObject);
 
-  if (params.token) {
+  if (params.token && params.token !== SUI_GAS_COIN_TYPE) {
     const coinObjectId = await getCoin(
       client,
       options.signer.toSuiAddress(),
