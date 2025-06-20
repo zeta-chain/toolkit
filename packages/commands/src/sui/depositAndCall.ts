@@ -3,6 +3,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
+import { getAddress } from "../../../../utils/getAddress";
 import {
   commonDepositObjectSchema,
   getCoin,
@@ -35,8 +36,15 @@ const main = async (options: DepositAndCallOptions) => {
   const payloadABI = abiCoder.encode(options.types, options.values);
   const payloadBytes = ethers.getBytes(payloadABI);
 
-  const target = `${options.gatewayPackage}::gateway::deposit_and_call`;
-  const gateway = tx.object(options.gatewayObject);
+  const gatewayAddress = getAddress("gateway", Number(options.chainId));
+  if (!gatewayAddress) {
+    throw new Error("Gateway address not found");
+  }
+  const gatewayPackage = options.gatewayPackage || gatewayAddress.split(",")[0];
+  const gatewayObject = options.gatewayObject || gatewayAddress.split(",")[1];
+
+  const target = `${gatewayPackage}::gateway::deposit_and_call`;
+  const gateway = tx.object(gatewayObject);
   const receiver = tx.pure.string(options.receiver);
   const payload = tx.pure.vector("u8", payloadBytes);
 

@@ -215,12 +215,12 @@ export const toSmallestUnit = (amount: string, decimals = 9): bigint => {
 
 export const commonDepositObjectSchema = z.object({
   amount: z.string(),
-  chainId: z.enum(chainIds).optional(),
+  chainId: z.enum(chainIds),
   coinType: z.string().default(SUI_GAS_COIN_TYPE),
   decimals: z.string(),
   gasBudget: z.string(),
-  gatewayObject: z.string(),
-  gatewayPackage: z.string(),
+  gatewayObject: z.string().optional(),
+  gatewayPackage: z.string().optional(),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
   network: z.enum(networks).optional(),

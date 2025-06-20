@@ -1,8 +1,6 @@
-import { Address, toNano } from "@ton/core";
-import { TonClient } from "@ton/ton";
-import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
 import { z } from "zod";
 
+import { tonDeposit } from "../../../../src/lib/ton/deposit";
 import { depositOptionsSchema } from "../../../../types/ton.types";
 import {
   handleError,
@@ -18,23 +16,25 @@ type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
-    const client = new TonClient({
-      endpoint: options.rpc,
-      ...(options.apiKey && { apiKey: options.apiKey }),
-    });
-
     const { wallet, keyPair } = await getAccount({
       mnemonic: options.mnemonic,
       name: options.name,
     });
 
-    const openedWallet = client.open(wallet);
-    const sender = openedWallet.sender(keyPair.secretKey);
-
-    const gatewayAddr = Address.parse(options.gateway);
-    const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
-
-    await gateway.sendDeposit(sender, toNano(options.amount), options.receiver);
+    await tonDeposit(
+      {
+        amount: options.amount,
+        receiver: options.receiver,
+      },
+      {
+        apiKey: options.apiKey,
+        chainId: options.chainId,
+        gateway: options.gateway,
+        keyPair,
+        rpc: options.rpc,
+        wallet,
+      }
+    );
   } catch (error: unknown) {
     if (hasErrorStatus(error, 429)) {
       handleError({

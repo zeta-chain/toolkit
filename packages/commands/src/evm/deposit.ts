@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { z } from "zod";
 
+import { evmDeposit } from "../../../../src/lib/evm/deposit";
 import {
   evmAddressSchema,
   namePkRefineRule,
@@ -20,6 +21,7 @@ import {
   prepareTxOptions,
   setupEvmTransaction,
 } from "../../../../utils/evm.command.helpers";
+import { getAddress } from "../../../../utils/getAddress";
 
 const depositOptionsSchema = baseEvmOptionsSchema
   .extend({
@@ -32,7 +34,7 @@ type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
-    const { client, provider, signer, chainId } = setupEvmTransaction(options);
+    const { provider, signer, chainId } = setupEvmTransaction(options);
 
     await checkSufficientEvmBalance(
       provider,
@@ -54,13 +56,24 @@ const main = async (options: DepositOptions) => {
 
     if (!isConfirmed) return;
 
-    const tx = await client.evmDeposit({
-      amount: options.amount,
-      erc20: options.erc20,
-      receiver: options.receiver,
-      revertOptions: prepareRevertOptions(options, signer),
-      txOptions: prepareTxOptions(options),
-    });
+    const gateway = options.gateway || getAddress("gateway", chainId);
+    if (!gateway) {
+      throw new Error("Gateway address not found");
+    }
+
+    const tx = await evmDeposit(
+      {
+        amount: options.amount,
+        receiver: options.receiver,
+        revertOptions: prepareRevertOptions(options, signer),
+        token: options.erc20,
+      },
+      {
+        gateway,
+        signer,
+        txOptions: prepareTxOptions(options),
+      }
+    );
     console.log("Transaction hash:", tx.hash);
   } catch (error) {
     handleError({

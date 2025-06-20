@@ -79,9 +79,15 @@ type ZetaChainClientParams = ZetaChainClientParamsBase &
 
 interface MainnetTestnetAddress {
   address: string;
+  asset?: string;
   category: string;
-  chain_id: number;
+  chain_id: string;
   chain_name: string;
+  coin_type?: string;
+  decimals?: number;
+  description?: string;
+  foreign_chain_id?: string;
+  symbol?: string;
   type: string;
 }
 
@@ -163,9 +169,9 @@ export class ZetaChainClient {
     if (params.contracts) {
       this.contracts = params.contracts;
     } else {
-      this.contracts = this.network.includes("test")
-        ? testnetAddresses
-        : mainnetAddresses;
+      this.contracts = (
+        this.network.includes("test") ? testnetAddresses : mainnetAddresses
+      ) as LocalnetAddress[] | MainnetTestnetAddress[];
     }
 
     this.mergeChains(params.chains);
@@ -199,7 +205,7 @@ export class ZetaChainClient {
           gateway = (this.contracts as MainnetTestnetAddress[]).find((item) => {
             const isSameChainId = compareBigIntAndNumber(
               chainId,
-              item.chain_id
+              parseInt(item.chain_id)
             );
 
             return isSameChainId && item.type === "gateway";
@@ -227,7 +233,7 @@ export class ZetaChainClient {
           gateway = (this.contracts as MainnetTestnetAddress[]).find((item) => {
             const isSameChainId = compareBigIntAndNumber(
               chainId,
-              item.chain_id
+              parseInt(item.chain_id)
             );
             return isSameChainId && item.type === "gateway";
           });

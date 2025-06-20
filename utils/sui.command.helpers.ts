@@ -22,8 +22,8 @@ export const createSuiCommandWithCommonOptions = (name: string): Command => {
         "Private key for the account"
       ).conflicts(["mnemonic", "name"])
     )
-    .requiredOption("--gateway-object <gatewayObject>", "Gateway object ID")
-    .requiredOption("--gateway-package <gatewayPackage>", "Gateway package ID")
+    .option("--gateway-object <gatewayObject>", "Gateway object ID")
+    .option("--gateway-package <gatewayPackage>", "Gateway package ID")
     .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
     .requiredOption("--amount <amount>", "Amount to deposit in decimal format")
     .addOption(
