@@ -197,14 +197,16 @@ Receiver: ${receiver}
         ? "Reverted to sender address, because revert address is not set"
         : revert_address;
 
+    const revertMessage = revert_message
+      ? Buffer.from(revert_message, "base64").toString()
+      : "null";
+
     const revertTx = `
-${receiver_chainId} → ${
-      outbound_params[1].receiver_chainId
-    } ${revertStatusIcon} ${revertStatusMessage}
+${receiver_chainId} → ${outbound_params[1].receiver_chainId} ${revertStatusIcon} ${revertStatusMessage}
 Revert Address:   ${revertAddress}
 Call on Revert:   ${call_on_revert}
 Abort Address:    ${abort_address}
-Revert Message:   ${Buffer.from(revert_message, "base64").toString()}
+Revert Message:   ${revertMessage}
 Revert Gas Limit: ${revert_gas_limit}
 `;
 
