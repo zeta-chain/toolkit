@@ -1,0 +1,48 @@
+<<<<<<< HEAD
+node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+dependencies
+
+# Hardhat files
+cache
+artifacts
+
+# Foundry files
+out
+cache_forge
+
+access_token
+
+localnet.json
+
+test-ledger
+
+=======
+node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+dependencies
+
+# Hardhat files
+cache
+artifacts
+
+# Foundry files
+out
+cache_forge
+
+access_token
+
+localnet.json
+
+test-ledger
+
+>>>>>>> 5f253fe3f9f992f7f918f140b466e2635ecd8c54
+.openzeppelin
