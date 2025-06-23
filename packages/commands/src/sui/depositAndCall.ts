@@ -3,6 +3,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 import {
   commonDepositObjectSchema,
   getCoin,
@@ -67,6 +68,15 @@ const main = async (options: DepositAndCallOptions) => {
   }
 
   tx.setGasBudget(gasBudget);
+
+  const isConfirmed = await confirmTransaction({
+    amount: options.amount,
+    message: payloadABI,
+    receiver: options.receiver,
+    rpc: getFullnodeUrl(network),
+    sender: keypair.toSuiAddress(),
+  });
+  if (!isConfirmed) return;
 
   await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
 };

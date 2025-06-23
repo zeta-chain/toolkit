@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
 import { handleError, hasErrorStatus } from "../../../../utils";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 import {
   createTonCommandWithCommonOptions,
   getAccount,
@@ -35,10 +36,11 @@ const main = async (options: DepositAndCallOptions) => {
     const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
 
     let payload;
+    let encodedHex;
 
     if (options.types && options.values) {
       const abiCoder = AbiCoder.defaultAbiCoder();
-      const encodedHex = abiCoder.encode(options.types, options.values);
+      encodedHex = abiCoder.encode(options.types, options.values);
       const encodedBin = ethers.getBytes(encodedHex);
 
       payload = beginCell().storeBuffer(Buffer.from(encodedBin)).endCell();
@@ -47,6 +49,20 @@ const main = async (options: DepositAndCallOptions) => {
     } else {
       throw new Error("Either types and values or data must be provided");
     }
+
+    const senderAddress = wallet.address.toString({
+      bounceable: false,
+      testOnly: true,
+    });
+
+    const isConfirmed = await confirmTransaction({
+      amount: options.amount,
+      message: encodedHex,
+      receiver: options.receiver,
+      rpc: options.rpc,
+      sender: senderAddress,
+    });
+    if (!isConfirmed) return;
 
     await gateway.sendDepositAndCall(
       sender,

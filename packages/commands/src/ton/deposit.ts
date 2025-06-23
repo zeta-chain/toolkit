@@ -9,6 +9,7 @@ import {
   hasErrorStatus,
   validateAndParseSchema,
 } from "../../../../utils";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 import {
   createTonCommandWithCommonOptions,
   getAccount,
@@ -33,6 +34,18 @@ const main = async (options: DepositOptions) => {
 
     const gatewayAddr = Address.parse(options.gateway);
     const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
+    const senderAddress = wallet.address.toString({
+      bounceable: false,
+      testOnly: true,
+    });
+
+    const isConfirmed = await confirmTransaction({
+      amount: options.amount,
+      receiver: options.receiver,
+      rpc: options.rpc,
+      sender: senderAddress,
+    });
+    if (!isConfirmed) return;
 
     await gateway.sendDeposit(sender, toNano(options.amount), options.receiver);
   } catch (error: unknown) {
