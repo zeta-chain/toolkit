@@ -7,6 +7,7 @@ import {
   hasErrorStatus,
   validateAndParseSchema,
 } from "../../../../utils";
+import { getAddress } from "../../../../utils/getAddress";
 import {
   createTonCommandWithCommonOptions,
   getAccount,
@@ -21,6 +22,9 @@ const main = async (options: DepositOptions) => {
       name: options.name,
     });
 
+    const gateway =
+      options.gateway || getAddress("gateway", Number(options.chainId));
+
     await tonDeposit(
       {
         amount: options.amount,
@@ -29,7 +33,7 @@ const main = async (options: DepositOptions) => {
       {
         apiKey: options.apiKey,
         chainId: options.chainId,
-        gateway: options.gateway,
+        gateway,
         keyPair,
         rpc: options.rpc,
         wallet,
