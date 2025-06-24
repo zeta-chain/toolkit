@@ -22,6 +22,24 @@ const main = async (options: DepositAndCallOptions) => {
       name: options.name,
     });
 
+    console.log(
+      {
+        amount: options.amount,
+        data: options.data,
+        receiver: options.receiver,
+        types: options.types,
+        values: options.values,
+      },
+      {
+        apiKey: options.apiKey,
+        chainId: options.chainId,
+        gateway: options.gateway,
+        keyPair,
+        rpc: options.rpc,
+        wallet,
+      }
+    );
+
     await tonDepositAndCall(
       {
         amount: options.amount,
