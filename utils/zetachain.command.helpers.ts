@@ -95,7 +95,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
     signer,
   });
 
-  return { client };
+  return { client, signer };
 };
 
 /**
@@ -249,10 +249,7 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
         "Private key for signing transactions"
       ).conflicts(["name"])
     )
-    .option(
-      "--gateway-zetachain <address>",
-      "Gateway contract address on ZetaChain"
-    )
+    .option("--gateway <address>", "Gateway contract address on ZetaChain")
     .option("--revert-address <address>", "Revert address", ZeroAddress)
     .option("--abort-address <address>", "Abort address", ZeroAddress)
     .option("--call-on-revert", "Whether to call on revert", false)
