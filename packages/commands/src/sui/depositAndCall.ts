@@ -1,17 +1,7 @@
-import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
-import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
-import { getAddress } from "../../../../utils/getAddress";
-import {
-  commonDepositObjectSchema,
-  getCoin,
-  getKeypair,
-  getNetwork,
-  signAndExecuteTransaction,
-  toSmallestUnit,
-} from "../../../../utils/sui";
+import { suiDepositAndCall } from "../../../../src/lib/sui/depositAndCall";
+import { commonDepositObjectSchema, getKeypair } from "../../../../utils/sui";
 import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
 
 const depositAndCallOptionsSchema = commonDepositObjectSchema
@@ -26,58 +16,24 @@ const depositAndCallOptionsSchema = commonDepositObjectSchema
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
 const main = async (options: DepositAndCallOptions) => {
-  const network = getNetwork(options.network, options.chainId);
-  const client = new SuiClient({ url: getFullnodeUrl(network) });
-  const gasBudget = BigInt(options.gasBudget);
-  const keypair = getKeypair(options);
-  const tx = new Transaction();
-
-  const abiCoder = AbiCoder.defaultAbiCoder();
-  const payloadABI = abiCoder.encode(options.types, options.values);
-  const payloadBytes = ethers.getBytes(payloadABI);
-
-  const gatewayAddress = getAddress("gateway", Number(options.chainId));
-  if (!gatewayAddress) {
-    throw new Error("Gateway address not found");
-  }
-  const gatewayPackage = options.gatewayPackage || gatewayAddress.split(",")[0];
-  const gatewayObject = options.gatewayObject || gatewayAddress.split(",")[1];
-
-  const target = `${gatewayPackage}::gateway::deposit_and_call`;
-  const gateway = tx.object(gatewayObject);
-  const receiver = tx.pure.string(options.receiver);
-  const payload = tx.pure.vector("u8", payloadBytes);
-
-  if (options.coinType === "0x2::sui::SUI") {
-    const [splitCoin] = tx.splitCoins(tx.gas, [toSmallestUnit(options.amount)]);
-
-    tx.moveCall({
-      arguments: [gateway, splitCoin, receiver, payload],
-      target,
-      typeArguments: [options.coinType],
-    });
-  } else {
-    const coinObjectId = await getCoin(
-      client,
-      keypair.toSuiAddress(),
-      options.coinType
-    );
-
-    const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
-      toSmallestUnit(options.amount),
-    ]);
-
-    tx.moveCall({
-      arguments: [gateway, splitCoin, receiver, payload],
-      target,
-      typeArguments: [options.coinType],
-    });
-  }
-
-  tx.setGasBudget(gasBudget);
-
-  await signAndExecuteTransaction({ client, gasBudget, keypair, tx });
+  await suiDepositAndCall(
+    {
+      amount: options.amount,
+      receiver: options.receiver,
+      token: options.coinType,
+      types: options.types,
+      values: options.values,
+    },
+    {
+      chainId: options.chainId,
+      gasLimit: options.gasBudget,
+      gatewayObject: options.gatewayObject,
+      gatewayPackage: options.gatewayPackage,
+      signer: getKeypair(options),
+    }
+  );
 };
+
 export const depositAndCallCommand = createSuiCommandWithCommonOptions(
   "deposit-and-call"
 )
