@@ -3,11 +3,10 @@ pragma solidity ^0.8.7;
 
 import {NodeLogicMock} from "./NodeLogicMock.sol";
 import {RevertOptions} from "@zetachain/protocol-contracts/contracts/Revert.sol";
-import {Test} from "forge-std/Test.sol";
-import "forge-std/console.sol";
 
 
-contract WrapGatewayEVM is Test{
+
+contract WrapGatewayEVM {
     // Immutable variables stored in bytecode
     address immutable public GATEWAY_IMPL;
     address immutable public NODE_LOGIC;

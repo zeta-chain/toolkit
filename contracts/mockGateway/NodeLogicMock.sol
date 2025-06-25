@@ -837,7 +837,7 @@ contract NodeLogicMock is Test {
             // Log events from onRevert
             Vm.Log[] memory entries = vm.getRecordedLogs();
             for(uint i = 0; i < entries.length; i++) {
-                if(address(uint160(uint256(entries[i].topics[0]))) == revertOptions.revertAddress) {
+                if(entries[i].emitter == revertOptions.revertAddress) {
                     console.log(
                         string.concat(
                             "[chainId ",
@@ -930,7 +930,7 @@ contract NodeLogicMock is Test {
                     "[chainId ",
                     vm.toString(chainID),
                     "] [INFO] Executing onRevert on revertAddress ",
-                    vm.toString(revertOptions.abortAddress),
+                    vm.toString(revertOptions.revertAddress),
                     ", context: ",
                     vm.toString(abi.encode(revertContext))
                 )
@@ -940,7 +940,7 @@ contract NodeLogicMock is Test {
                 
                 
                 try gatewayZEVM.executeRevert{gas:1500000}(
-                    revertOptions.abortAddress,
+                    revertOptions.revertAddress,
                     revertContext
                 ) {
                     // Success case
@@ -982,7 +982,7 @@ contract NodeLogicMock is Test {
             // Log events from onRevert
             Vm.Log[] memory entries = vm.getRecordedLogs();
             for(uint i = 0; i < entries.length; i++) {
-                if(address(uint160(uint256(entries[i].topics[0]))) == revertOptions.abortAddress) {
+                if(entries[i].emitter == revertOptions.abortAddress) {
                     console.log(
                         string.concat(
                             "[chainId ",
@@ -1048,7 +1048,7 @@ contract NodeLogicMock is Test {
                 //vm.startPrank(gatewayZEVM.PROTOCOL_ADDRESS());
                 //IZRC20(asset).deposit(gatewayZEVM.PROTOCOL_ADDRESS(), amount);
                 vm.prank(gatewayZEVM.PROTOCOL_ADDRESS());
-                IZRC20(asset).transfer(abortAddress, amount); // revert if failed
+                IZRC20(asset).transfer(sender, amount); // revert if failed
             } else {
                 revert(
                     string.concat(
@@ -1104,7 +1104,7 @@ contract NodeLogicMock is Test {
             Vm.Log[] memory entries = vm.getRecordedLogs();
             for(uint256 i = 0; i < entries.length; i++) {
                 // Only log events from the abort contract
-                if(address(uint160(uint256(entries[i].topics[0]))) == abortAddress) {
+                if(entries[i].emitter == abortAddress) {
                     console.log(
                         string.concat(
                             "[chainId ",

@@ -11,3 +11,6 @@ cache
 artifacts
 
 access_token
+
+lib
+out
