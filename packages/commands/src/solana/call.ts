@@ -44,7 +44,7 @@ const main = async (options: CallOptions) => {
   });
 
   try {
-    await solanaCall(
+    const tx = await solanaCall(
       {
         receiver: options.recipient,
         revertOptions,
@@ -56,6 +56,7 @@ const main = async (options: CallOptions) => {
         signer: keypair,
       }
     );
+    console.log("Transaction hash:", tx);
   } catch (error) {
     handleError({
       context: "Error during call",

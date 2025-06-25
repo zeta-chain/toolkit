@@ -54,5 +54,5 @@ export const solanaCall = async (
     .call(receiverBytes, message, revertOptions)
     .accounts({})
     .rpc();
-  console.log("Transaction hash:", tx);
+  return tx;
 };

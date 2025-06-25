@@ -93,7 +93,7 @@ export const solanaDeposit = async (
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc();
-    console.log("Transaction hash:", tx);
+    return tx;
   } else {
     // Check SOL balance
     await isSOLBalanceSufficient(provider, params.amount);
@@ -106,6 +106,6 @@ export const solanaDeposit = async (
       )
       .accounts({})
       .rpc();
-    console.log("Transaction hash:", tx);
+    return tx;
   }
 };

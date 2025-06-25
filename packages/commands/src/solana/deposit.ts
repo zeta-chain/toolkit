@@ -42,7 +42,7 @@ const main = async (options: DepositOptions) => {
   });
 
   try {
-    await solanaDeposit(
+    const tx = await solanaDeposit(
       {
         amount: options.amount,
         receiver: options.recipient,
@@ -54,6 +54,7 @@ const main = async (options: DepositOptions) => {
         signer: keypair,
       }
     );
+    console.log("Transaction hash:", tx);
   } catch (error) {
     handleError({
       context: "Error during deposit",
