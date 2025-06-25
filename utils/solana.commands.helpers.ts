@@ -9,6 +9,7 @@ import { ethers } from "ethers";
 import { z } from "zod";
 
 import { SolanaAccountData } from "../types/accounts.types";
+import { RevertOptions } from "../types/contracts.types";
 import {
   DEFAULT_ACCOUNT_NAME,
   SOLANA_NETWORKS,
@@ -254,16 +255,31 @@ interface SolanaRevertOptions {
   revertMessage: Buffer;
 }
 
+// export const createRevertOptions = (
+//   options: z.infer<typeof baseSolanaOptionsSchema>,
+//   publicKey: PublicKey
+// ): SolanaRevertOptions => {
+//   return {
+//     abortAddress: ethers.getBytes(options.abortAddress),
+//     callOnRevert: options.callOnRevert,
+//     onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
+//     revertAddress: options.revertAddress
+//       ? new PublicKey(options.revertAddress)
+//       : publicKey,
+//     revertMessage: Buffer.from(options.revertMessage, "utf8"),
+//   };
+// };
+
 export const createRevertOptions = (
-  options: z.infer<typeof baseSolanaOptionsSchema>,
-  publicKey: PublicKey
-): SolanaRevertOptions => {
+  options: RevertOptions,
+  publicKey: anchor.web3.PublicKey
+) => {
   return {
-    abortAddress: ethers.getBytes(options.abortAddress),
+    abortAddress: ethers.getBytes(options.abortAddress!),
     callOnRevert: options.callOnRevert,
     onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
     revertAddress: options.revertAddress
-      ? new PublicKey(options.revertAddress)
+      ? new anchor.web3.PublicKey(options.revertAddress)
       : publicKey,
     revertMessage: Buffer.from(options.revertMessage, "utf8"),
   };

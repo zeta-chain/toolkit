@@ -24,24 +24,24 @@ const main = async (options: DepositOptions) => {
 
   const API = getAPI(options.network);
 
+  const revertOptions = {
+    abortAddress: options.abortAddress,
+    callOnRevert: options.callOnRevert,
+    onRevertGasLimit: options.onRevertGasLimit,
+    revertAddress: options.revertAddress,
+    revertMessage: options.revertMessage,
+  };
+
   await confirmSolanaTx({
     amount: options.amount,
     api: API,
     mint: options.mint,
     recipient: options.recipient,
-    revertOptions: createRevertOptions(options, keypair.publicKey),
+    revertOptions: createRevertOptions(revertOptions, keypair.publicKey),
     sender: keypair.publicKey.toBase58(),
   });
 
   try {
-    const revertOptions = {
-      abortAddress: options.abortAddress,
-      callOnRevert: options.callOnRevert,
-      onRevertGasLimit: options.onRevertGasLimit,
-      revertAddress: options.revertAddress,
-      revertMessage: options.revertMessage,
-    };
-
     await solanaDeposit(
       {
         amount: options.amount,

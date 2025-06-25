@@ -11,6 +11,7 @@ import { ethers } from "ethers";
 
 import { RevertOptions } from "../../../types/contracts.types";
 import {
+  createRevertOptions,
   getAPIbyChainId,
   getSPLToken,
   isSOLBalanceSufficient,
@@ -47,15 +48,10 @@ export const solanaDeposit = async (
 
   const receiverBytes = ethers.getBytes(params.receiver);
 
-  const revertOptions = {
-    abortAddress: ethers.getBytes(params.revertOptions.abortAddress!),
-    callOnRevert: params.revertOptions.callOnRevert,
-    onRevertGasLimit: new anchor.BN(params.revertOptions.onRevertGasLimit ?? 0),
-    revertAddress: params.revertOptions.revertAddress
-      ? new PublicKey(params.revertOptions.revertAddress)
-      : provider.wallet.publicKey,
-    revertMessage: Buffer.from(params.revertOptions.revertMessage, "utf8"),
-  };
+  const revertOptions = createRevertOptions(
+    params.revertOptions,
+    options.signer.publicKey
+  );
 
   if (params.token) {
     const { from, decimals } = await getSPLToken(

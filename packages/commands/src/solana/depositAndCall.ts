@@ -28,25 +28,25 @@ const main = async (options: DepositAndCallOptions) => {
   const stringifiedTypes = JSON.stringify(options.types);
   const values = parseAbiValues(stringifiedTypes, options.values);
 
+  const revertOptions = {
+    abortAddress: options.abortAddress,
+    callOnRevert: options.callOnRevert,
+    onRevertGasLimit: options.onRevertGasLimit,
+    revertAddress: options.revertAddress,
+    revertMessage: options.revertMessage,
+  };
+
   await confirmSolanaTx({
     amount: options.amount,
     api: API,
     message: values.join(", "),
     mint: options.mint,
     recipient: options.recipient,
-    revertOptions: createRevertOptions(options, keypair.publicKey),
+    revertOptions: createRevertOptions(revertOptions, keypair.publicKey),
     sender: keypair.publicKey.toBase58(),
   });
 
   try {
-    const revertOptions = {
-      abortAddress: options.abortAddress,
-      callOnRevert: options.callOnRevert,
-      onRevertGasLimit: options.onRevertGasLimit,
-      revertAddress: options.revertAddress,
-      revertMessage: options.revertMessage,
-    };
-
     await solanaDepositAndCall(
       {
         amount: options.amount,
