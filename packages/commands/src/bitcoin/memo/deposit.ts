@@ -21,7 +21,6 @@ type DepositOptions = z.infer<typeof memoDepositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
-    console.log("options", options);
     const { key, address } = setupBitcoinKeyPair(
       options.privateKey,
       options.name
