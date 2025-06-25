@@ -38,8 +38,14 @@ export const suiDepositAndCall = async (
   if (!gatewayAddress) {
     throw new Error("Gateway address not found");
   }
-  const gatewayPackage = options.gatewayPackage || gatewayAddress.split(",")[0];
-  const gatewayObject = options.gatewayObject || gatewayAddress.split(",")[1];
+  const addressParts = gatewayAddress.split(",");
+  if (addressParts.length !== 2) {
+    throw new Error(
+      "Invalid gateway address format. Expected: 'package,object'"
+    );
+  }
+  const gatewayPackage = options.gatewayPackage || addressParts[0];
+  const gatewayObject = options.gatewayObject || addressParts[1];
 
   const chainIdIndex = chainIds.indexOf(options.chainId);
   if (chainIdIndex === -1) {
