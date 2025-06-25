@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { solanaCall } from "../../../../src/lib/solana/call";
+import { solanaCall } from "../../../../src/chains/solana/call";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 import {

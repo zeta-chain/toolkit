@@ -1,7 +1,7 @@
 import { Option } from "commander";
 import { z } from "zod";
 
-import { tonDepositAndCall } from "../../../../src/lib/ton/depositAndCall";
+import { tonDepositAndCall } from "../../../../src/chains/ton/depositAndCall";
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
 import {
   handleError,

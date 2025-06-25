@@ -504,6 +504,30 @@ const _abi = [
         name: "chainId",
         type: "uint256",
       },
+    ],
+    name: "getChainInfo",
+    outputs: [
+      {
+        internalType: "address",
+        name: "gasZRC20",
+        type: "address",
+      },
+      {
+        internalType: "bytes",
+        name: "registry",
+        type: "bytes",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "chainId",
+        type: "uint256",
+      },
       {
         internalType: "string",
         name: "key",

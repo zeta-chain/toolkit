@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { z } from "zod";
 
-import { evmCall } from "../../../../src/lib/evm/call";
+import { evmCall } from "../../../../src/chains/evm/call";
 import {
   namePkRefineRule,
   stringArraySchema,

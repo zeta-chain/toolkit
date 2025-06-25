@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { solanaDepositAndCall } from "../../../../src/lib/solana/depositAndCall";
+import { solanaDepositAndCall } from "../../../../src/chains/solana/depositAndCall";
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";

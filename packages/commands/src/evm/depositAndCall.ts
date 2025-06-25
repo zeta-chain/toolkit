@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { z } from "zod";
 
-import { evmDepositAndCall } from "../../../../src/lib/evm/depositAndCall";
+import { evmDepositAndCall } from "../../../../src/chains/evm/depositAndCall";
 import {
   evmAddressSchema,
   namePkRefineRule,

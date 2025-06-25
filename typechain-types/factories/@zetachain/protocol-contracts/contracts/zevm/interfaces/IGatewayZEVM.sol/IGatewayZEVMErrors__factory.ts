@@ -171,6 +171,11 @@ const _abi = [
     name: "ZRC20TransferFailed",
     type: "error",
   },
+  {
+    inputs: [],
+    name: "ZeroGasPrice",
+    type: "error",
+  },
 ] as const;
 
 export class IGatewayZEVMErrors__factory {

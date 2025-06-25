@@ -92,6 +92,7 @@ export interface IBaseRegistryInterface extends Interface {
       | "getAllChains"
       | "getAllContracts"
       | "getAllZRC20Tokens"
+      | "getChainInfo"
       | "getChainMetadata"
       | "getContractConfiguration"
       | "getContractInfo"
@@ -137,6 +138,10 @@ export interface IBaseRegistryInterface extends Interface {
   encodeFunctionData(
     functionFragment: "getAllZRC20Tokens",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getChainInfo",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "getChainMetadata",
@@ -201,6 +206,10 @@ export interface IBaseRegistryInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getAllZRC20Tokens",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getChainInfo",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -478,6 +487,12 @@ export interface IBaseRegistry extends BaseContract {
 
   getAllZRC20Tokens: TypedContractMethod<[], [ZRC20InfoStructOutput[]], "view">;
 
+  getChainInfo: TypedContractMethod<
+    [chainId: BigNumberish],
+    [[string, string] & { gasZRC20: string; registry: string }],
+    "view"
+  >;
+
   getChainMetadata: TypedContractMethod<
     [chainId: BigNumberish, key: string],
     [string],
@@ -593,6 +608,13 @@ export interface IBaseRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "getAllZRC20Tokens"
   ): TypedContractMethod<[], [ZRC20InfoStructOutput[]], "view">;
+  getFunction(
+    nameOrSignature: "getChainInfo"
+  ): TypedContractMethod<
+    [chainId: BigNumberish],
+    [[string, string] & { gasZRC20: string; registry: string }],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "getChainMetadata"
   ): TypedContractMethod<

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { tonDeposit } from "../../../../src/lib/ton/deposit";
+import { tonDeposit } from "../../../../src/chains/ton/deposit";
 import { depositOptionsSchema } from "../../../../types/ton.types";
 import {
   handleError,

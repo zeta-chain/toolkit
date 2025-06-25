@@ -2,7 +2,7 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { zetachainWithdrawAndCall } from "../../../../src/lib/zetachain/withdrawAndCall";
+import { zetachainWithdrawAndCall } from "../../../../src/chains/zetachain/withdrawAndCall";
 import {
   functionTypesValuesConsistencyRule,
   hexStringSchema,

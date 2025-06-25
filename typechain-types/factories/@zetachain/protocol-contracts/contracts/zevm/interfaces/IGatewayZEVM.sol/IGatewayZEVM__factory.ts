@@ -172,6 +172,11 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [],
+    name: "ZeroGasPrice",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -541,6 +546,19 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
+        name: "target",
+        type: "address",
+      },
+    ],
+    name: "deposit",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
         name: "zrc20",
         type: "address",
       },
@@ -585,11 +603,6 @@ const _abi = [
         type: "tuple",
       },
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
         internalType: "address",
         name: "target",
         type: "address",
@@ -602,7 +615,7 @@ const _abi = [
     ],
     name: "depositAndCall",
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
     type: "function",
   },
   {

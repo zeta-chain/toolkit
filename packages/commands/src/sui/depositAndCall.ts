@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { suiDepositAndCall } from "../../../../src/lib/sui/depositAndCall";
+import { suiDepositAndCall } from "../../../../src/chains/sui/depositAndCall";
 import { commonDepositObjectSchema, getKeypair } from "../../../../utils/sui";
 import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
 

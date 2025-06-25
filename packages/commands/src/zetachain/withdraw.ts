@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { zetachainWithdraw } from "../../../../src/lib/zetachain/withdraw";
+import { zetachainWithdraw } from "../../../../src/chains/zetachain/withdraw";
 import { namePkRefineRule } from "../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import {

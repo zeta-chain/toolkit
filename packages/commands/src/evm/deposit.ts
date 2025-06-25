@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { z } from "zod";
 
-import { evmDeposit } from "../../../../src/lib/evm/deposit";
+import { evmDeposit } from "../../../../src/chains/evm/deposit";
 import {
   evmAddressSchema,
   namePkRefineRule,
