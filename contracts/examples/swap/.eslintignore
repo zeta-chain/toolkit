@@ -1,14 +1,6 @@
-<<<<<<< HEAD
 .yarn
 artifacts
 cache
 coverage
 node_modules
-=======
-.yarn
-artifacts
-cache
-coverage
-node_modules
->>>>>>> 5f253fe3f9f992f7f918f140b466e2635ecd8c54
 typechain-types
