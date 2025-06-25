@@ -19,7 +19,7 @@ export const getAddress = (
   if (type === "zrc20" && !symbol) {
     address = networks.find((n) => {
       return (
-        n.foreign_chain_id === chainId?.toString() &&
+        n.foreign_chain_id === chainId.toString() &&
         n.type === type &&
         n.coin_type === "gas"
       );
@@ -29,7 +29,10 @@ export const getAddress = (
       return n.chain_id === chainId && n.type === type;
     });
   }
-  return address?.address;
+  if (!address) {
+    throw new Error("Address not found");
+  }
+  return address.address;
 };
 
 export const getGatewayAddress = async (signer: ethers.Wallet) => {
