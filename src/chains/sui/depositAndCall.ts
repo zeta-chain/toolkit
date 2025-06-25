@@ -40,7 +40,17 @@ export const suiDepositAndCall = async (
   }
   const gatewayPackage = options.gatewayPackage || gatewayAddress.split(",")[0];
   const gatewayObject = options.gatewayObject || gatewayAddress.split(",")[1];
-  const network = networks[chainIds.indexOf(options.chainId)];
+
+  const chainIdIndex = chainIds.indexOf(options.chainId);
+  if (chainIdIndex === -1) {
+    throw new Error(
+      `Invalid chainId: ${options.chainId}. Supported chainIds: ${chainIds.join(
+        ", "
+      )}`
+    );
+  }
+
+  const network = networks[chainIdIndex];
   const client = new SuiClient({ url: getFullnodeUrl(network) });
   const gasBudget = BigInt(options.gasLimit || GAS_BUDGET);
   const tx = new Transaction();
