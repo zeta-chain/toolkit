@@ -3,7 +3,6 @@ import { Command, Option } from "commander";
 import { ethers, ZeroAddress } from "ethers";
 import { z } from "zod";
 
-import { ZetaChainClient } from "../packages/client/src/client";
 import { EVMAccountData } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import {
@@ -13,7 +12,7 @@ import {
 } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
 import { hasSufficientBalanceEvm } from "./balances";
-import { getNetworkTypeByChainId, getRpcUrl } from "./chains";
+import { getRpcUrl } from "./chains";
 import { handleError } from "./handleError";
 
 export const baseEvmOptionsSchema = z.object({
@@ -38,7 +37,6 @@ type BaseEvmOptions = z.infer<typeof baseEvmOptionsSchema>;
 // Common setup function for both deposit commands
 export const setupEvmTransaction = (options: BaseEvmOptions) => {
   const chainId = parseInt(options.chainId);
-  const networkType = getNetworkTypeByChainId(chainId);
   const rpcUrl = options.rpc || getRpcUrl(chainId);
 
   if (!rpcUrl) {
@@ -79,9 +77,7 @@ export const setupEvmTransaction = (options: BaseEvmOptions) => {
     throw new Error(errorMessage);
   }
 
-  const client = new ZetaChainClient({ network: networkType, signer });
-
-  return { chainId, client, provider, signer };
+  return { chainId, provider, signer };
 };
 
 export const checkSufficientEvmBalance = async (
