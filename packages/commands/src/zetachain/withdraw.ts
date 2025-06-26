@@ -71,8 +71,8 @@ ZetaChain Gateway: ${gateway}
       }
     );
 
-    // const receipt = await response.tx.wait();
-    // console.log("Transaction hash:", receipt?.hash);
+    const receipt = await response.tx.wait();
+    console.log("Transaction hash:", receipt?.hash);
   } catch (error) {
     handleError({
       context: "Error during zetachain withdraw",
