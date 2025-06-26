@@ -25,11 +25,7 @@ export const createSuiCommandWithCommonOptions = (name: string): Command => {
     .option("--gateway-package <gatewayPackage>", "Gateway package ID")
     .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
     .requiredOption("--amount <amount>", "Amount to deposit in decimal format")
-    .addOption(
-      new Option("--chain-id <chainId>", "Chain ID")
-        .choices(chainIds)
-        .default("103")
-    )
+    .requiredOption("--chain-id <chainId>", "Chain ID")
     .option("--coin-type <coinType>", "Coin type to deposit", SUI_GAS_COIN_TYPE)
     .option(
       "--gas-budget <gasBudget>",
