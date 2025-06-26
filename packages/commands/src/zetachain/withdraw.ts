@@ -28,10 +28,18 @@ const main = async (options: WithdrawOptions) => {
   try {
     const { signer } = setupZetachainTransaction(options);
 
-    const gateway = getZevmGatewayAddress(
-      options.chainId,
-      options.gatewayZetachain
-    );
+    let gateway;
+    if (options.gateway) {
+      gateway = options.gateway;
+    } else if (options.chainId) {
+      gateway = getZevmGatewayAddress(options.chainId, options.gateway);
+    } else {
+      handleError({
+        context: "Failed to retrieve gateway",
+        error: new Error("Gateway not found"),
+        shouldThrow: true,
+      });
+    }
 
     const { gasFee, gasSymbol, zrc20Symbol } = await getZRC20WithdrawFee(
       signer as ethers.ContractRunner,
@@ -63,8 +71,8 @@ ZetaChain Gateway: ${gateway}
       }
     );
 
-    const receipt = await response.tx.wait();
-    console.log("Transaction hash:", receipt?.hash);
+    // const receipt = await response.tx.wait();
+    // console.log("Transaction hash:", receipt?.hash);
   } catch (error) {
     handleError({
       context: "Error during zetachain withdraw",

@@ -1,6 +1,6 @@
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayZEVM.sol/GatewayZEVM.json";
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
-import { ethers } from "ethers";
+import { ethers, NonceManager } from "ethers";
 
 import {
   GatewayContract,
@@ -32,10 +32,12 @@ export const zetachainWithdraw = async (
     throw new Error("Gateway ZetaChain address is required");
   }
 
+  const nonceManager = new NonceManager(options.signer);
+
   const gateway = new ethers.Contract(
     gatewayAddress,
     GatewayABI.abi,
-    options.signer
+    nonceManager
   ) as GatewayContract;
 
   const revertOptions = {
@@ -46,7 +48,7 @@ export const zetachainWithdraw = async (
   const zrc20 = new ethers.Contract(
     params.zrc20,
     ZRC20ABI.abi,
-    options.signer
+    nonceManager
   ) as ZRC20Contract;
 
   const decimals = await zrc20.decimals();
@@ -57,29 +59,24 @@ export const zetachainWithdraw = async (
     const approveGasAndWithdraw = await zrc20.approve(
       gatewayAddress,
       value + ethers.toBigInt(gasFee),
-      options.txOptions || {}
+      { ...options.txOptions }
     );
     await approveGasAndWithdraw.wait();
   } else {
     const gasZRC20Contract = new ethers.Contract(
       gasZRC20,
       ZRC20ABI.abi,
-      options.signer
+      nonceManager
     ) as ZRC20Contract;
-    const approveGas = await gasZRC20Contract.approve(
-      gatewayAddress,
-      gasFee,
-      options.txOptions || {}
-    );
+    const approveGas = await gasZRC20Contract.approve(gatewayAddress, gasFee, {
+      ...options.txOptions,
+    });
     await approveGas.wait();
-    const approveWithdraw = await zrc20.approve(
-      gatewayAddress,
-      value,
-      options.txOptions || {}
-    );
+    const approveWithdraw = await zrc20.approve(gatewayAddress, value, {
+      ...options.txOptions,
+    });
     await approveWithdraw.wait();
   }
-
   const receiver = toHexString(params.receiver);
 
   const withdrawAbiSignature =
@@ -93,8 +90,7 @@ export const zetachainWithdraw = async (
     value,
     params.zrc20,
     revertOptions,
-    options.txOptions || {}
+    options.txOptions
   );
-
   return { gasFee, gasZRC20, tx };
 };

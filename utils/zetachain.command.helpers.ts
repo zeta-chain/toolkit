@@ -25,8 +25,9 @@ export const baseZetachainOptionsSchema = z.object({
   callOnRevert: z.boolean().default(false),
   callOptionsGasLimit: numericStringSchema.default("7000000"),
   callOptionsIsArbitraryCall: z.boolean().default(false),
-  chainId: z.string(),
-  gatewayZetachain: evmAddressSchema.optional(),
+  chainId: z.string().optional(),
+  rpc: z.string().optional(),
+  gateway: evmAddressSchema.optional(),
   name: z.string().default(DEFAULT_ACCOUNT_NAME),
   onRevertGasLimit: numericStringSchema.default("7000000"),
   privateKey: evmPrivateKeySchema.optional(),
@@ -65,9 +66,12 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
 
   let signer: ethers.Wallet;
 
-  const rpc = getRpcUrl(parseInt(options.chainId));
-
-  if (!rpc) {
+  let rpc;
+  if (options.rpc) {
+    rpc = options.rpc;
+  } else if (options.chainId) {
+    rpc = getRpcUrl(parseInt(options.chainId));
+  } else {
     handleError({
       context: "Failed to retrieve RPC URL",
       error: new Error("RPC URL not found"),
@@ -79,6 +83,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
 
   try {
     signer = new ethers.Wallet(privateKey, provider);
+    console.log("Signer created successfully", signer);
   } catch (error) {
     const errorMessage = handleError({
       context: "Failed to create signer from private key",
@@ -232,13 +237,14 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
         .default(DEFAULT_ACCOUNT_NAME)
         .conflicts(["private-key"])
     )
-    .requiredOption("--chain-id <chainId>", "Chain ID of the network")
+    .addOption(new Option("--chain-id <chainId>", "Chain ID of the network"))
     .addOption(
       new Option(
         "--private-key <key>",
         "Private key for signing transactions"
       ).conflicts(["name"])
     )
+    .addOption(new Option("--rpc <url>", "RPC URL of the network"))
     .option("--gateway <address>", "Gateway contract address on ZetaChain")
     .option("--revert-address <address>", "Revert address", ZeroAddress)
     .option("--abort-address <address>", "Abort address", ZeroAddress)
@@ -246,13 +252,13 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
     .option(
       "--on-revert-gas-limit <limit>",
       "Gas limit for the revert transaction",
-      "7000000"
+      "1000000"
     )
     .option("--revert-message <message>", "Revert message", "0x")
     .option(
       "--tx-options-gas-limit <limit>",
       "Gas limit for the transaction",
-      "7000000"
+      "1000000"
     )
     .option(
       "--tx-options-gas-price <price>",
@@ -262,7 +268,7 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
     .option(
       "--call-options-gas-limit <limit>",
       "Gas limit for the call",
-      "7000000"
+      "1000000"
     )
     .option("--call-options-is-arbitrary-call", "Call any function", false)
     .option("--yes", "Skip confirmation prompt", false);

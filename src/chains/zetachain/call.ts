@@ -1,6 +1,6 @@
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayZEVM.sol/GatewayZEVM.json";
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
-import { AbiCoder, ethers } from "ethers";
+import { AbiCoder, ethers, NonceManager } from "ethers";
 
 import {
   CallOptions,
@@ -38,11 +38,12 @@ export const zetachainCall = async (
   if (!gatewayAddress) {
     throw new Error("Gateway ZetaChain address is required");
   }
+  const nonceManager = new NonceManager(options.signer);
 
   const gateway = new ethers.Contract(
     gatewayAddress,
     GatewayABI.abi,
-    options.signer
+    nonceManager
   ) as GatewayContract;
 
   const revertOptions = {
@@ -78,7 +79,7 @@ export const zetachainCall = async (
   const zrc20 = new ethers.Contract(
     params.zrc20,
     ZRC20ABI.abi,
-    options.signer
+    nonceManager
   ) as ZRC20Contract;
 
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
@@ -87,14 +88,12 @@ export const zetachainCall = async (
   const gasZRC20Contract = new ethers.Contract(
     gasZRC20,
     ZRC20ABI.abi,
-    options.signer
+    nonceManager
   ) as ZRC20Contract;
 
-  const approve = await gasZRC20Contract.approve(
-    gatewayAddress,
-    gasFee,
-    options.txOptions || {}
-  );
+  const approve = await gasZRC20Contract.approve(gatewayAddress, gasFee, {
+    ...options.txOptions,
+  });
 
   await approve.wait();
 
@@ -112,7 +111,7 @@ export const zetachainCall = async (
     message,
     params.callOptions,
     revertOptions,
-    options.txOptions || {}
+    { ...options.txOptions }
   );
 
   return { gasFee, gasZRC20, tx };
