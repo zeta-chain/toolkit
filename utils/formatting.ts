@@ -3,7 +3,6 @@ import { ethers } from "ethers";
 
 import { TokenBalance } from "../types/balances.types";
 import { CCTX } from "../types/trackCCTX.types";
-import { getChainName } from "./chains";
 import { handleError } from "./handleError";
 
 /**
@@ -126,7 +125,6 @@ export const formatBalances = (
  */
 export const printEvmTransactionDetails = async (
   signer: ethers.Wallet,
-  chainId: number,
   options: {
     amount?: string;
     callOnRevert: boolean;
@@ -156,7 +154,7 @@ export const printEvmTransactionDetails = async (
   }
 
   console.log(`
-From:   ${signer.address} on ${getChainName(chainId)}
+From:   ${signer.address}
 To:     ${options.receiver} on ZetaChain${
     options.amount
       ? `\nAmount: ${options.amount} ${tokenSymbol}${

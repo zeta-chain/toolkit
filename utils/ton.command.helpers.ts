@@ -4,7 +4,7 @@ import { Command, Option } from "commander";
 
 import { TONAccountData } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
-import { DEFAULT_ENDPOINT, DEFAULT_GATEWAY_ADDR } from "../types/ton.constants";
+import { DEFAULT_ENDPOINT } from "../types/ton.constants";
 import { getAccountData } from "./accounts";
 import { handleError } from "./handleError";
 
@@ -62,10 +62,10 @@ export const createTonCommandWithCommonOptions = (name: string): Command => {
     )
     .option(
       "--gateway <gateway>",
-      "Gateway contract address (default: testnet)",
-      DEFAULT_GATEWAY_ADDR
+      "Gateway contract address (default: testnet)"
     )
     .requiredOption("--receiver <receiver>", "Receiver address")
     .option("--rpc <rpc>", "RPC endpoint (default: testnet)", DEFAULT_ENDPOINT)
-    .option("--api-key <apiKey>", "API key");
+    .option("--api-key <apiKey>", "API key")
+    .requiredOption("--chain-id <chainId>", "Chain ID");
 };

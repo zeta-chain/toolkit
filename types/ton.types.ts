@@ -9,7 +9,8 @@ import {
 
 export const baseTonOptionsSchema = z.object({
   apiKey: z.string().optional(),
-  gateway: z.string(),
+  chainId: z.string(),
+  gateway: z.string().optional(),
   mnemonic: z.string().optional(),
   name: z.string().default(DEFAULT_ACCOUNT_NAME),
   receiver: evmAddressSchema,

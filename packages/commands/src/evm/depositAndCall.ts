@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { z } from "zod";
 
+import { evmDepositAndCall } from "../../../../src/chains/evm/depositAndCall";
 import {
   evmAddressSchema,
   namePkRefineRule,
@@ -22,6 +23,7 @@ import {
   prepareTxOptions,
   setupEvmTransaction,
 } from "../../../../utils/evm.command.helpers";
+import { getAddress } from "../../../../utils/getAddress";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 
 const depositAndCallOptionsSchema = baseEvmOptionsSchema
@@ -41,7 +43,7 @@ type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
 const main = async (options: DepositAndCallOptions) => {
   try {
-    const { client, provider, signer, chainId } = setupEvmTransaction(options);
+    const { provider, signer } = setupEvmTransaction(options);
 
     await checkSufficientEvmBalance(
       provider,
@@ -50,7 +52,7 @@ const main = async (options: DepositAndCallOptions) => {
       options.erc20
     );
 
-    await printEvmTransactionDetails(signer, chainId, {
+    await printEvmTransactionDetails(signer, {
       amount: options.amount,
       callOnRevert: options.callOnRevert,
       erc20: options.erc20,
@@ -72,16 +74,35 @@ Parameter types: ${stringifiedTypes}
 
     const values = parseAbiValues(stringifiedTypes, options.values);
 
-    const tx = await client.evmDepositAndCall({
-      amount: options.amount,
-      erc20: options.erc20,
-      gatewayEvm: options.gateway,
-      receiver: options.receiver,
-      revertOptions: prepareRevertOptions(options, signer),
-      txOptions: prepareTxOptions(options),
-      types: options.types,
-      values,
-    });
+    let gateway: string;
+    if (options.gateway) {
+      gateway = options.gateway;
+    } else if (options.chainId) {
+      gateway = getAddress("gateway", parseInt(options.chainId));
+    } else {
+      handleError({
+        context: "Failed to retrieve gateway address",
+        error: new Error("Gateway address not found"),
+        shouldThrow: true,
+      });
+      process.exit(1);
+    }
+
+    const tx = await evmDepositAndCall(
+      {
+        amount: options.amount,
+        receiver: options.receiver,
+        revertOptions: prepareRevertOptions(options, signer),
+        token: options.erc20,
+        types: options.types,
+        values,
+      },
+      {
+        gateway,
+        signer,
+        txOptions: prepareTxOptions(options),
+      }
+    );
     console.log("Transaction hash:", tx.hash);
   } catch (error) {
     handleError({

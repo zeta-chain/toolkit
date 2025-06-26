@@ -6,7 +6,6 @@ import { ethers, ZeroAddress } from "ethers";
 import { ZRC20Contract } from "types/contracts.types";
 import { z } from "zod";
 
-import { ZetaChainClient } from "../packages/client/src/client";
 import { EVMAccountData } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import {
@@ -26,9 +25,9 @@ export const baseZetachainOptionsSchema = z.object({
   callOnRevert: z.boolean().default(false),
   callOptionsGasLimit: numericStringSchema.default("7000000"),
   callOptionsIsArbitraryCall: z.boolean().default(false),
-  gatewayZetachain: evmAddressSchema.optional(),
+  chainId: z.string().optional(),
+  gateway: evmAddressSchema.optional(),
   name: z.string().default(DEFAULT_ACCOUNT_NAME),
-  network: z.enum(["mainnet", "testnet"]).default("testnet"),
   onRevertGasLimit: numericStringSchema.default("7000000"),
   privateKey: evmPrivateKeySchema.optional(),
   receiver: z.string().transform((val) => {
@@ -41,6 +40,7 @@ export const baseZetachainOptionsSchema = z.object({
   }),
   revertAddress: evmAddressSchema,
   revertMessage: z.string().default("0x"),
+  rpc: z.string().optional(),
   txOptionsGasLimit: numericStringSchema.default("7000000"),
   txOptionsGasPrice: numericStringSchema.default("10000000000"),
   yes: z.boolean().default(false),
@@ -66,9 +66,12 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
 
   let signer: ethers.Wallet;
 
-  const rpc = getRpcUrl(options.network === "mainnet" ? 7000 : 7001);
-
-  if (!rpc) {
+  let rpc;
+  if (options.rpc) {
+    rpc = options.rpc;
+  } else if (options.chainId) {
+    rpc = getRpcUrl(parseInt(options.chainId));
+  } else {
     handleError({
       context: "Failed to retrieve RPC URL",
       error: new Error("RPC URL not found"),
@@ -80,6 +83,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
 
   try {
     signer = new ethers.Wallet(privateKey, provider);
+    console.log("Signer created successfully", signer);
   } catch (error) {
     const errorMessage = handleError({
       context: "Failed to create signer from private key",
@@ -90,12 +94,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
     throw new Error(errorMessage);
   }
 
-  const client = new ZetaChainClient({
-    network: options.network,
-    signer,
-  });
-
-  return { client };
+  return { signer };
 };
 
 /**
@@ -105,7 +104,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
  * @returns The ZetaChain Gateway address
  */
 export const getZevmGatewayAddress = (
-  network: "mainnet" | "testnet",
+  chainId: string,
   gatewayZetachain?: string
 ): string => {
   if (gatewayZetachain) {
@@ -118,7 +117,7 @@ export const getZevmGatewayAddress = (
 
   const defaultZetaChainGatewayAddress = getAddress(
     "gateway",
-    network === "mainnet" ? "zeta_mainnet" : "zeta_testnet"
+    chainId === "7000" ? "zeta_mainnet" : "zeta_testnet"
   );
 
   const validatedDefaultAddress = validateAndParseSchema(
@@ -238,34 +237,28 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
         .default(DEFAULT_ACCOUNT_NAME)
         .conflicts(["private-key"])
     )
-    .addOption(
-      new Option("--network <network>", "Network to use")
-        .choices(["mainnet", "testnet"])
-        .default("testnet")
-    )
+    .addOption(new Option("--chain-id <chainId>", "Chain ID of the network"))
     .addOption(
       new Option(
         "--private-key <key>",
         "Private key for signing transactions"
       ).conflicts(["name"])
     )
-    .option(
-      "--gateway-zetachain <address>",
-      "Gateway contract address on ZetaChain"
-    )
+    .addOption(new Option("--rpc <url>", "RPC URL of the network"))
+    .option("--gateway <address>", "Gateway contract address on ZetaChain")
     .option("--revert-address <address>", "Revert address", ZeroAddress)
     .option("--abort-address <address>", "Abort address", ZeroAddress)
     .option("--call-on-revert", "Whether to call on revert", false)
     .option(
       "--on-revert-gas-limit <limit>",
       "Gas limit for the revert transaction",
-      "7000000"
+      "1000000"
     )
     .option("--revert-message <message>", "Revert message", "0x")
     .option(
       "--tx-options-gas-limit <limit>",
       "Gas limit for the transaction",
-      "7000000"
+      "1000000"
     )
     .option(
       "--tx-options-gas-price <price>",
@@ -275,7 +268,7 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
     .option(
       "--call-options-gas-limit <limit>",
       "Gas limit for the call",
-      "7000000"
+      "1000000"
     )
     .option("--call-options-is-arbitrary-call", "Call any function", false)
     .option("--yes", "Skip confirmation prompt", false);

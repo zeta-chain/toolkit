@@ -9,10 +9,8 @@ import { ethers } from "ethers";
 import { z } from "zod";
 
 import { SolanaAccountData } from "../types/accounts.types";
-import {
-  DEFAULT_ACCOUNT_NAME,
-  SOLANA_NETWORKS,
-} from "../types/shared.constants";
+import { RevertOptions } from "../types/contracts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { hexStringSchema } from "../types/shared.schema";
 import { handleError } from "./";
 import { getAccountData } from "./accounts";
@@ -21,9 +19,9 @@ import { trim0x } from "./trim0x";
 export const baseSolanaOptionsSchema = z.object({
   abortAddress: z.string(),
   callOnRevert: z.boolean().default(false),
+  chainId: z.string(),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
-  network: z.string(),
   onRevertGasLimit: z.string(),
   privateKey: z.string().optional(),
   recipient: z.string(),
@@ -131,6 +129,16 @@ export const getAPI = (network: string) => {
   return API;
 };
 
+export const getAPIbyChainId = (chainId: string) => {
+  let API = "http://localhost:8899";
+  if (chainId === "901") {
+    API = clusterApiUrl("devnet");
+  } else if (chainId === "900") {
+    API = clusterApiUrl("mainnet-beta");
+  }
+  return API;
+};
+
 export const getSPLToken = async (
   provider: anchor.AnchorProvider,
   mint: string,
@@ -216,11 +224,7 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
         "Private key in base58 or hex format (with optional 0x prefix)"
       ).conflicts(["mnemonic", "name"])
     )
-    .addOption(
-      new Option("--network <network>", "Solana network").choices(
-        SOLANA_NETWORKS
-      )
-    )
+    .requiredOption("--chain-id <chainId>", "Chain ID of the network")
     .option("--revert-address <revertAddress>", "Revert address")
     .option(
       "--abort-address <abortAddress>",
@@ -245,15 +249,15 @@ interface SolanaRevertOptions {
 }
 
 export const createRevertOptions = (
-  options: z.infer<typeof baseSolanaOptionsSchema>,
-  publicKey: PublicKey
-): SolanaRevertOptions => {
+  options: RevertOptions,
+  publicKey: anchor.web3.PublicKey
+) => {
   return {
-    abortAddress: ethers.getBytes(options.abortAddress),
+    abortAddress: ethers.getBytes(options.abortAddress ?? ethers.ZeroAddress),
     callOnRevert: options.callOnRevert,
     onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
     revertAddress: options.revertAddress
-      ? new PublicKey(options.revertAddress)
+      ? new anchor.web3.PublicKey(options.revertAddress)
       : publicKey,
     revertMessage: Buffer.from(options.revertMessage, "utf8"),
   };
@@ -279,4 +283,13 @@ Revert options: ${JSON.stringify(options.revertOptions)}${
   }
 `);
   await confirm({ message: "Confirm transaction?" });
+};
+
+export const getChainIdFromNetwork = (network: string) => {
+  if (network === "localnet") {
+    return "0901";
+  } else if (network === "mainnet") {
+    return "900";
+  }
+  return "901";
 };

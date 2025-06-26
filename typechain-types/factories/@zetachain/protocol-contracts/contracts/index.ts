@@ -2,5 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as revertSol from "./Revert.sol";
-export * as helpers from "./helpers";
 export * as zevm from "./zevm";

@@ -2,6 +2,7 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { zetachainCall } from "../../../../src/chains/zetachain/call";
 import {
   functionTypesValuesConsistencyRule,
   hexStringSchema,
@@ -44,15 +45,23 @@ type CallOptions = z.infer<typeof callOptionsSchema>;
 
 const main = async (options: CallOptions) => {
   try {
-    const { client } = setupZetachainTransaction(options);
+    const { signer } = setupZetachainTransaction(options);
 
-    const gatewayZetaChain = getZevmGatewayAddress(
-      options.network,
-      options.gatewayZetachain
-    );
+    let gateway;
+    if (options.gateway) {
+      gateway = options.gateway;
+    } else if (options.chainId) {
+      gateway = getZevmGatewayAddress(options.chainId, options.gateway);
+    } else {
+      handleError({
+        context: "Failed to retrieve gateway",
+        error: new Error("Gateway not found"),
+        shouldThrow: true,
+      });
+    }
 
     const { gasFee, gasSymbol } = await getZRC20WithdrawFee(
-      client.signer as ethers.ContractRunner,
+      signer as ethers.ContractRunner,
       options.zrc20,
       options.callOptionsGasLimit
     );
@@ -61,18 +70,23 @@ const main = async (options: CallOptions) => {
       console.log(`Contract call details:
 Raw data: ${options.data}
 Withdraw Gas Fee: ${gasFee} ${gasSymbol}
-ZetaChain Gateway: ${gatewayZetaChain}
+ZetaChain Gateway: ${gateway}
 `);
 
-      const response = await client.zetachainCall({
-        callOptions: prepareCallOptions(options),
-        data: options.data,
-        gatewayZetaChain,
-        receiver: options.receiver,
-        revertOptions: prepareRevertOptions(options),
-        txOptions: prepareTxOptions(options),
-        zrc20: options.zrc20,
-      });
+      const response = await zetachainCall(
+        {
+          callOptions: prepareCallOptions(options),
+          data: options.data,
+          receiver: options.receiver,
+          revertOptions: prepareRevertOptions(options),
+          zrc20: options.zrc20,
+        },
+        {
+          gateway,
+          signer,
+          txOptions: prepareTxOptions(options),
+        }
+      );
 
       const receipt = await response.tx.wait();
       console.log("Transaction hash:", receipt?.hash);
@@ -83,7 +97,7 @@ Function: ${options.function}
 Function parameters: ${options.values?.join(", ")}
 Parameter types: ${stringifiedTypes}
 Withdraw Gas Fee: ${gasFee} ${gasSymbol}
-ZetaChain Gateway: ${gatewayZetaChain}
+ZetaChain Gateway: ${gateway}
 `);
 
       const isConfirmed = await confirmZetachainTransaction(options);
@@ -91,17 +105,22 @@ ZetaChain Gateway: ${gatewayZetaChain}
 
       const values = parseAbiValues(stringifiedTypes, options.values || []);
 
-      const response = await client.zetachainCall({
-        callOptions: prepareCallOptions(options),
-        function: options.function,
-        gatewayZetaChain: options.gatewayZetachain,
-        receiver: options.receiver,
-        revertOptions: prepareRevertOptions(options),
-        txOptions: prepareTxOptions(options),
-        types: options.types,
-        values,
-        zrc20: options.zrc20,
-      });
+      const response = await zetachainCall(
+        {
+          callOptions: prepareCallOptions(options),
+          function: options.function,
+          receiver: options.receiver,
+          revertOptions: prepareRevertOptions(options),
+          types: options.types,
+          values,
+          zrc20: options.zrc20,
+        },
+        {
+          gateway,
+          signer,
+          txOptions: prepareTxOptions(options),
+        }
+      );
 
       const receipt = await response.tx.wait();
       console.log("Transaction hash:", receipt?.hash);
