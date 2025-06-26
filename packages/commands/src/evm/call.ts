@@ -38,9 +38,9 @@ type CallOptions = z.infer<typeof callOptionsSchema>;
 
 const main = async (options: CallOptions) => {
   try {
-    const { signer, chainId } = setupEvmTransaction(options);
+    const { signer } = setupEvmTransaction(options);
 
-    await printEvmTransactionDetails(signer, chainId, {
+    await printEvmTransactionDetails(signer, parseInt(options.chainId), {
       callOnRevert: options.callOnRevert,
       onRevertGasLimit: options.onRevertGasLimit,
       receiver: options.receiver,
@@ -60,7 +60,8 @@ Parameter types: ${stringifiedTypes}
 
     const values = parseAbiValues(stringifiedTypes, options.values);
 
-    const gateway = options.gateway || getAddress("gateway", chainId);
+    const gateway =
+      options.gateway || getAddress("gateway", parseInt(options.chainId));
     if (!gateway) {
       throw new Error("Gateway address not found");
     }

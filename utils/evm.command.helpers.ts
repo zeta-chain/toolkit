@@ -77,7 +77,7 @@ export const setupEvmTransaction = (options: BaseEvmOptions) => {
     throw new Error(errorMessage);
   }
 
-  return { chainId, provider, signer };
+  return { provider, signer };
 };
 
 export const checkSufficientEvmBalance = async (

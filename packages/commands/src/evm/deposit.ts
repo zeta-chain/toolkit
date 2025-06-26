@@ -34,7 +34,7 @@ type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
-    const { provider, signer, chainId } = setupEvmTransaction(options);
+    const { provider, signer } = setupEvmTransaction(options);
 
     await checkSufficientEvmBalance(
       provider,
@@ -43,7 +43,7 @@ const main = async (options: DepositOptions) => {
       options.erc20
     );
 
-    await printEvmTransactionDetails(signer, chainId, {
+    await printEvmTransactionDetails(signer, parseInt(options.chainId), {
       amount: options.amount,
       callOnRevert: options.callOnRevert,
       erc20: options.erc20,
@@ -56,7 +56,8 @@ const main = async (options: DepositOptions) => {
 
     if (!isConfirmed) return;
 
-    const gateway = options.gateway || getAddress("gateway", chainId);
+    const gateway =
+      options.gateway || getAddress("gateway", parseInt(options.chainId));
     if (!gateway) {
       throw new Error("Gateway address not found");
     }
