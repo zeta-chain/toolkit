@@ -3,7 +3,5 @@
 /* eslint-disable */
 import type * as revertSol from "./Revert.sol";
 export type { revertSol };
-import type * as helpers from "./helpers";
-export type { helpers };
 import type * as zevm from "./zevm";
 export type { zevm };
