@@ -6,7 +6,6 @@ import { ethers, ZeroAddress } from "ethers";
 import { ZRC20Contract } from "types/contracts.types";
 import { z } from "zod";
 
-import { ZetaChainClient } from "../packages/client/src/client";
 import { EVMAccountData } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import {
@@ -26,9 +25,9 @@ export const baseZetachainOptionsSchema = z.object({
   callOnRevert: z.boolean().default(false),
   callOptionsGasLimit: numericStringSchema.default("7000000"),
   callOptionsIsArbitraryCall: z.boolean().default(false),
+  chainId: z.string(),
   gatewayZetachain: evmAddressSchema.optional(),
   name: z.string().default(DEFAULT_ACCOUNT_NAME),
-  network: z.enum(["mainnet", "testnet"]).default("testnet"),
   onRevertGasLimit: numericStringSchema.default("7000000"),
   privateKey: evmPrivateKeySchema.optional(),
   receiver: z.string().transform((val) => {
@@ -66,7 +65,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
 
   let signer: ethers.Wallet;
 
-  const rpc = getRpcUrl(options.network === "mainnet" ? 7000 : 7001);
+  const rpc = getRpcUrl(parseInt(options.chainId));
 
   if (!rpc) {
     handleError({
@@ -90,12 +89,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
     throw new Error(errorMessage);
   }
 
-  const client = new ZetaChainClient({
-    network: options.network,
-    signer,
-  });
-
-  return { client, signer };
+  return { signer };
 };
 
 /**
@@ -105,7 +99,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
  * @returns The ZetaChain Gateway address
  */
 export const getZevmGatewayAddress = (
-  network: "mainnet" | "testnet",
+  chainId: string,
   gatewayZetachain?: string
 ): string => {
   if (gatewayZetachain) {
@@ -118,7 +112,7 @@ export const getZevmGatewayAddress = (
 
   const defaultZetaChainGatewayAddress = getAddress(
     "gateway",
-    network === "mainnet" ? "zeta_mainnet" : "zeta_testnet"
+    chainId === "7000" ? "zeta_mainnet" : "zeta_testnet"
   );
 
   const validatedDefaultAddress = validateAndParseSchema(
@@ -238,11 +232,7 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
         .default(DEFAULT_ACCOUNT_NAME)
         .conflicts(["private-key"])
     )
-    .addOption(
-      new Option("--network <network>", "Network to use")
-        .choices(["mainnet", "testnet"])
-        .default("testnet")
-    )
+    .requiredOption("--chain-id <chainId>", "Chain ID of the network")
     .addOption(
       new Option(
         "--private-key <key>",

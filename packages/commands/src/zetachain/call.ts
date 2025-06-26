@@ -48,7 +48,7 @@ const main = async (options: CallOptions) => {
     const { signer } = setupZetachainTransaction(options);
 
     const gateway = getZevmGatewayAddress(
-      options.network,
+      options.chainId,
       options.gatewayZetachain
     );
 
