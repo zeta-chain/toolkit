@@ -3,14 +3,20 @@ node_modules
 coverage
 coverage.json
 typechain
-dist 
-.DS_Store
+typechain-types
+dependencies
 
 # Hardhat files
 cache
 artifacts
 
+# Foundry files
+out
+cache_forge
+
 access_token
 
-lib
-out
+localnet.json
+
+sui/build
+test-ledger
