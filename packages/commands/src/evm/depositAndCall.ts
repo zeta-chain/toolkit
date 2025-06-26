@@ -52,7 +52,7 @@ const main = async (options: DepositAndCallOptions) => {
       options.erc20
     );
 
-    await printEvmTransactionDetails(signer, parseInt(options.chainId), {
+    await printEvmTransactionDetails(signer, {
       amount: options.amount,
       callOnRevert: options.callOnRevert,
       erc20: options.erc20,
@@ -74,10 +74,18 @@ Parameter types: ${stringifiedTypes}
 
     const values = parseAbiValues(stringifiedTypes, options.values);
 
-    const gateway =
-      options.gateway || getAddress("gateway", parseInt(options.chainId));
-    if (!gateway) {
-      throw new Error("Gateway address not found");
+    let gateway: string;
+    if (options.gateway) {
+      gateway = options.gateway;
+    } else if (options.chainId) {
+      gateway = getAddress("gateway", parseInt(options.chainId));
+    } else {
+      handleError({
+        context: "Failed to retrieve gateway address",
+        error: new Error("Gateway address not found"),
+        shouldThrow: true,
+      });
+      process.exit(1);
     }
 
     const tx = await evmDepositAndCall(

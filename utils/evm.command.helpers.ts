@@ -18,7 +18,7 @@ import { handleError } from "./handleError";
 export const baseEvmOptionsSchema = z.object({
   abortAddress: evmAddressSchema,
   callOnRevert: z.boolean().default(false),
-  chainId: numericStringSchema,
+  chainId: numericStringSchema.optional(),
   gasLimit: numericStringSchema.optional(),
   gasPrice: numericStringSchema.optional(),
   gateway: evmAddressSchema.optional(),
@@ -36,8 +36,19 @@ type BaseEvmOptions = z.infer<typeof baseEvmOptionsSchema>;
 
 // Common setup function for both deposit commands
 export const setupEvmTransaction = (options: BaseEvmOptions) => {
-  const chainId = parseInt(options.chainId);
-  const rpcUrl = options.rpc || getRpcUrl(chainId);
+  let rpcUrl: string;
+  if (options.rpc) {
+    rpcUrl = options.rpc;
+  } else if (options.chainId) {
+    rpcUrl = getRpcUrl(parseInt(options.chainId));
+  } else {
+    handleError({
+      context: "Failed to retrieve RPC URL",
+      error: new Error("RPC URL or chain ID is required"),
+      shouldThrow: true,
+    });
+    process.exit(1);
+  }
 
   if (!rpcUrl) {
     handleError({
@@ -165,7 +176,7 @@ export const prepareTxOptions = (options: BaseEvmOptions) => {
 
 export const addCommonEvmCommandOptions = (command: Command) => {
   return command
-    .requiredOption("--chain-id <chainId>", "Chain ID of the network")
+    .option("--chain-id <chainId>", "Chain ID of the network")
     .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
     .addOption(
       new Option("--name <name>", "Account name")
