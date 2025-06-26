@@ -219,3 +219,4 @@ contract SwapTest is FoundrySetup {
     }
 }
 
+// forge test --match-path "contracts\examples\swap\test\SwapTest.t.sol" -vvvv

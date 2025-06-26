@@ -132,8 +132,8 @@ contract NodeLogicMock is Test {
         vm.prank(gatewayZEVM.PROTOCOL_ADDRESS());
         try gatewayZEVM.depositAndCall{gas:1500000}(
             ZetaMessageContext({
-                origin: abi.encode(sender),
-                sender: sender,
+                sender: abi.encodePacked(sender),
+                senderEVM: sender,
                 chainID: chainId
             }),
             zrc20,
@@ -173,8 +173,8 @@ contract NodeLogicMock is Test {
         vm.prank(gatewayZEVM.PROTOCOL_ADDRESS());
         try gatewayZEVM.execute{gas:1500000}(
             ZetaMessageContext({
-                origin: abi.encode(sender),
-                sender: sender,
+                sender: abi.encodePacked(sender),
+                senderEVM: sender,
                 chainID: chainId
             }),
             gasZRC20s[chainId],
@@ -723,8 +723,10 @@ contract NodeLogicMock is Test {
         (vars.gasZRC20Addr, vars.gasFee) = IZRC20(zrc20).withdrawGasFeeWithGasLimit(
             revertOptions.onRevertGasLimit
         );
-        vm.startPrank(gatewayZEVM.PROTOCOL_ADDRESS());
-        vars.mintSuccess = IZRC20(zrc20).deposit(gatewayZEVM.PROTOCOL_ADDRESS(), amount);
+        address protocol = gatewayZEVM.PROTOCOL_ADDRESS();
+        vm.prank(protocol);
+        vars.mintSuccess = IZRC20(zrc20).deposit(protocol, amount);
+        vm.startPrank(protocol);
         if (!vars.mintSuccess) {
             console.log(
                 string.concat(
@@ -812,7 +814,6 @@ contract NodeLogicMock is Test {
             );
             vm.startPrank(gatewayEVMs[chainId].tssAddress());
             if (isGas) {
-               
                 gatewayEVMs[chainId].executeRevert{
                     value: amount,
                     gas: revertOptions.onRevertGasLimit
@@ -822,7 +823,6 @@ contract NodeLogicMock is Test {
                     revertContext
                 );
             } else {
-               
                 IERC20Custody(gatewayEVMs[chainId].custody()).withdrawAndRevert{
                     gas: revertOptions.onRevertGasLimit
                 }(
@@ -1045,9 +1045,10 @@ contract NodeLogicMock is Test {
                         vm.toString(sender)
                     )
                 );
-                //vm.startPrank(gatewayZEVM.PROTOCOL_ADDRESS());
-                //IZRC20(asset).deposit(gatewayZEVM.PROTOCOL_ADDRESS(), amount);
-                vm.prank(gatewayZEVM.PROTOCOL_ADDRESS());
+                address protocol = gatewayZEVM.PROTOCOL_ADDRESS();
+                vm.prank(protocol);
+                IZRC20(asset).deposit(protocol, amount);
+                vm.prank(protocol);
                 IZRC20(asset).transfer(sender, amount); // revert if failed
             } else {
                 revert(
@@ -1072,9 +1073,10 @@ contract NodeLogicMock is Test {
             )
         );
         if (asset != address(0) && amount > 0) {
-            //vm.startPrank(gatewayZEVM.PROTOCOL_ADDRESS());
-            //IZRC20(asset).deposit(gatewayZEVM.PROTOCOL_ADDRESS(), amount);
-            vm.prank(gatewayZEVM.PROTOCOL_ADDRESS());
+            address protocol = gatewayZEVM.PROTOCOL_ADDRESS();
+            vm.prank(protocol);
+            IZRC20(asset).deposit(protocol, amount);
+            vm.prank(protocol);
             IZRC20(asset).transfer(abortAddress, amount); // revert if failed;
         }
         

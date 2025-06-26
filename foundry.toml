@@ -5,3 +5,4 @@ via_ir = false
 optimizer = true
 optimizer_runs = 200
 auto_detect_solc = true
+libs = ["node_modules", "lib"]
