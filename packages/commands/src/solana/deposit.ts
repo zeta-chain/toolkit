@@ -7,8 +7,7 @@ import {
   confirmSolanaTx,
   createRevertOptions,
   createSolanaCommandWithCommonOptions,
-  getAPI,
-  getChainIdFromNetwork,
+  getAPIbyChainId,
   getKeypair,
   solanaDepositOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
@@ -22,7 +21,7 @@ const main = async (options: DepositOptions) => {
     privateKey: options.privateKey,
   });
 
-  const API = getAPI(options.network);
+  const API = getAPIbyChainId(options.chainId);
 
   const revertOptions = {
     abortAddress: options.abortAddress,
@@ -50,7 +49,7 @@ const main = async (options: DepositOptions) => {
         token: options.mint,
       },
       {
-        chainId: getChainIdFromNetwork(options.network),
+        chainId: options.chainId,
         signer: keypair,
       }
     );

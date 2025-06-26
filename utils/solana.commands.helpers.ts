@@ -10,10 +10,7 @@ import { z } from "zod";
 
 import { SolanaAccountData } from "../types/accounts.types";
 import { RevertOptions } from "../types/contracts.types";
-import {
-  DEFAULT_ACCOUNT_NAME,
-  SOLANA_NETWORKS,
-} from "../types/shared.constants";
+import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { hexStringSchema } from "../types/shared.schema";
 import { handleError } from "./";
 import { getAccountData } from "./accounts";
@@ -22,9 +19,9 @@ import { trim0x } from "./trim0x";
 export const baseSolanaOptionsSchema = z.object({
   abortAddress: z.string(),
   callOnRevert: z.boolean().default(false),
+  chainId: z.string(),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
-  network: z.string(),
   onRevertGasLimit: z.string(),
   privateKey: z.string().optional(),
   recipient: z.string(),
@@ -227,11 +224,7 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
         "Private key in base58 or hex format (with optional 0x prefix)"
       ).conflicts(["mnemonic", "name"])
     )
-    .addOption(
-      new Option("--network <network>", "Solana network").choices(
-        SOLANA_NETWORKS
-      )
-    )
+    .requiredOption("--chain-id <chainId>", "Chain ID of the network")
     .option("--revert-address <revertAddress>", "Revert address")
     .option(
       "--abort-address <abortAddress>",

@@ -7,8 +7,7 @@ import {
   confirmSolanaTx,
   createRevertOptions,
   createSolanaCommandWithCommonOptions,
-  getAPI,
-  getChainIdFromNetwork,
+  getAPIbyChainId,
   getKeypair,
   solanaCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
@@ -22,7 +21,7 @@ const main = async (options: CallOptions) => {
     privateKey: options.privateKey,
   });
 
-  const API = getAPI(options.network);
+  const API = getAPIbyChainId(options.chainId);
 
   const stringifiedTypes = JSON.stringify(options.types);
   const values = parseAbiValues(stringifiedTypes, options.values);
@@ -52,7 +51,7 @@ const main = async (options: CallOptions) => {
         values,
       },
       {
-        chainId: getChainIdFromNetwork(options.network),
+        chainId: options.chainId,
         signer: keypair,
       }
     );
