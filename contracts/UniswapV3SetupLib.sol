@@ -121,11 +121,12 @@ contract UniswapV3SetupLib is Test {
         uint256 returnedTokenId;
     }
 
-    /// @notice Deploys Uniswap V2 Factory and Router
+    /// @notice Deploys Uniswap V3 Factory, Router, and Nonfungible Position Manager
     /// @param deployer Address that will deploy the contracts (typically test wallet)
     /// @param wzeta Address of the WZETA token
-    /// @return factory Address of deployed UniswapV2Factory
-    /// @return router Address of deployed UniswapV2Router02
+    /// @return factory Address of deployed UniswapV3Factory
+    /// @return router Address of deployed SwapRouter
+    /// @return nonfungiblePositionManager Address of deployed NonfungiblePositionManager
     function prepareUniswapV3(
         address deployer,
         address wzeta
@@ -168,6 +169,8 @@ contract UniswapV3SetupLib is Test {
         vm.stopPrank();
     }
 
+    /// @notice Creates a Uniswap V3 pool and adds liquidity
+    /// @param params Struct containing all parameters for adding liquidity
     function uniswapV3AddLiquidity(LiquidityParams memory params) internal {
         vm.startPrank(params.recipient);
         IERC20(params.token0).approve(params.positionManager, params.amount0);

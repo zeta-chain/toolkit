@@ -35,7 +35,7 @@ contract EVMSetup is Test {
     mapping(uint256 => GatewayEVM) public wrapGatewayEVM;
     mapping(uint256 => address) public zetaToken;
 
-    uint256 public immutable chainIdETH = 5;
+    uint256 public constant chainIdETH = 5;
 
     constructor(
         address _deployer,
@@ -108,7 +108,7 @@ contract EVMSetup is Test {
             deployer
         );
         
-        // Deploy ZetaConnector với Proxy
+        // Deploy ZetaConnector with Proxy
         if (chainId == chainIdETH) {
             // Deploy Native Connector
             ZetaConnectorNative connectorImpl = new ZetaConnectorNative();

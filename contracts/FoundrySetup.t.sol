@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.26;
-// find lib/uniswap-v2 -type f -name "*.sol" -exec sed -i 's/pragma solidity =0.8.26;/pragma solidity ^0.8.0;/g' {} +
 // External interfaces & contracts
 import {SystemContract} from "@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol";
 import {ERC20Custody} from "@zetachain/protocol-contracts/contracts/evm/ERC20Custody.sol";

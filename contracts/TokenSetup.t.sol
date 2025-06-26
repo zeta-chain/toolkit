@@ -46,6 +46,15 @@ contract TokenSetup is UniswapV2SetupLib, UniswapV3SetupLib {
         uint256 wzetaAmount;
     }
 
+    /// @notice Creates a token a specified EVM chain and returns token info
+    /// @param contracts Struct containing all necessary contract addresses
+    /// @param symbol Symbol of the token to be created
+    /// @param isGasToken Boolean indicating if the token is a gas token
+    /// @param chainId Chain ID where the token will be created
+    /// @param decimals Number of decimals for the token
+    /// @return TokenInfo Struct containing details of the created token
+    /// @dev This function also deploys a ZRC20Mock contract, mints tokens,
+    /// and adds liquidity to both Uniswap V2 and V3 pools.
     function createToken(
         Contracts memory contracts,
         string memory symbol,

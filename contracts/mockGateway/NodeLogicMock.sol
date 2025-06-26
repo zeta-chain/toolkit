@@ -501,7 +501,6 @@ contract NodeLogicMock is Test {
             return;
         }
         vars.receiverAddress = address(bytes20(receiver));
-        console.log("vars.receiverAddress", vars.receiverAddress);
         if (callOptions.isArbitraryCall) {
             bytes4 selector = bytes4(message[0:4]);
             bytes memory code = getRuntimeCode(vars.receiverAddress);
@@ -630,7 +629,6 @@ contract NodeLogicMock is Test {
 
         // Set deadline 20 minutes from now
         uint256 deadline = block.timestamp + 20 minutes;
-        console.log("gasFee", gasFee);
         try IUniswapV2Router02(uniswapRouter).swapTokensForExactTokens(
             gasFee,
             amount,
