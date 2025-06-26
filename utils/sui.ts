@@ -223,7 +223,6 @@ export const commonDepositObjectSchema = z.object({
   gatewayPackage: z.string().optional(),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
-  network: z.enum(networks).optional(),
   privateKey: z.string().optional(),
   receiver: z.string(),
 });

@@ -4,7 +4,6 @@ import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import {
   chainIds,
   GAS_BUDGET,
-  networks,
   SUI_DEFAULT_DECIMALS,
   SUI_GAS_COIN_TYPE,
 } from "./sui";
@@ -30,14 +29,8 @@ export const createSuiCommandWithCommonOptions = (name: string): Command => {
       new Option("--chain-id <chainId>", "Chain ID")
         .choices(chainIds)
         .default("103")
-        .conflicts(["network"])
     )
     .option("--coin-type <coinType>", "Coin type to deposit", SUI_GAS_COIN_TYPE)
-    .addOption(
-      new Option("--network <network>", "Network to use")
-        .choices(networks)
-        .conflicts(["chain-id"])
-    )
     .option(
       "--gas-budget <gasBudget>",
       "Gas budget in MIST",
