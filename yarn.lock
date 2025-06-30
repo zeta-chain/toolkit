@@ -1822,6 +1822,13 @@
     debug "^4.1.1"
     lodash.isequal "^4.5.0"
 
+"@nomicfoundation/hardhat-foundry@^1.1.4":
+  version "1.1.4"
+  resolved "https://registry.npmjs.org/@nomicfoundation/hardhat-foundry/-/hardhat-foundry-1.1.4.tgz#56b681ecb43410481ba37e9af37ca88689eaf187"
+  integrity sha512-jpKyOr8bYKJPCuxJIJGOJzzyQPLcLJYq+kLPx135dkgCXyHiFdbSaGA9AEwqsPf97wlwXkskXGn4a21XOkSOPg==
+  dependencies:
+    picocolors "^1.1.0"
+
 "@nomicfoundation/hardhat-ignition-ethers@^0.15.0":
   version "0.15.12"
   resolved "https://registry.npmjs.org/@nomicfoundation/hardhat-ignition-ethers/-/hardhat-ignition-ethers-0.15.12.tgz#f4ffb791a253a4fe05234ad4d0fde7cb5e125e6f"
