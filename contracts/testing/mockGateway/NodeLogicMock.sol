@@ -13,14 +13,14 @@ import {IZRC20, IZRC20Metadata} from "@zetachain/protocol-contracts/contracts/ze
 import {ZRC20} from "@zetachain/protocol-contracts/contracts/zevm/ZRC20.sol";
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 contract NodeLogicMock is Test {
-    GatewayZEVM public  gatewayZEVM; // using wrapGateway instead
-    uint256 public  chainIdZeta;
+    GatewayZEVM public gatewayZEVM; // using wrapGateway instead
+    uint256 public chainIdZeta;
 
     // Mapping from chainId to gateway
-    mapping(uint256 => GatewayEVM) public gatewayEVMs;  // using wrapGateway instead
+    mapping(uint256 => GatewayEVM) public gatewayEVMs; // using wrapGateway instead
     // Mapping from chainId to gasZRC20
     mapping(uint256 => address) public gasZRC20s;
     // Mapping from chainId to assetToZRC20 mapping
@@ -47,11 +47,19 @@ contract NodeLogicMock is Test {
         gasZRC20s[chainId] = gasZRC20;
     }
 
-    function setAssetToZRC20(uint256 chainId, address asset, address zrc20) external {
+    function setAssetToZRC20(
+        uint256 chainId,
+        address asset,
+        address zrc20
+    ) external {
         erc20ToZRC20s[chainId][asset] = zrc20;
     }
 
-    function setZRC20ToAsset(uint256 chainId, address zrc20, address asset) external {
+    function setZRC20ToAsset(
+        uint256 chainId,
+        address zrc20,
+        address asset
+    ) external {
         zrc20ToErc20s[chainId][zrc20] = asset;
     }
 
@@ -88,11 +96,7 @@ contract NodeLogicMock is Test {
 
         // Prank as protocol to call zetachain gateway
         vm.prank(gatewayZEVM.PROTOCOL_ADDRESS());
-        try gatewayZEVM.deposit(
-            zrc20,
-            amount,
-            receiver
-        ) {
+        try gatewayZEVM.deposit(zrc20, amount, receiver) {
             console.log(
                 string.concat(
                     "[chainId ",
@@ -101,7 +105,16 @@ contract NodeLogicMock is Test {
                 )
             );
         } catch (bytes memory err) {
-            _handleEVMDepositError(chainId, sender, zrc20, amount, asset, revertOptions, err, false);
+            _handleEVMDepositError(
+                chainId,
+                sender,
+                zrc20,
+                amount,
+                asset,
+                revertOptions,
+                err,
+                false
+            );
         }
     }
 
@@ -130,17 +143,19 @@ contract NodeLogicMock is Test {
 
         // Prank as protocol to call zetachain gateway
         vm.prank(gatewayZEVM.PROTOCOL_ADDRESS());
-        try gatewayZEVM.depositAndCall{gas:1500000}(
-            ZetaMessageContext({
-                sender: abi.encodePacked(sender),
-                senderEVM: sender,
-                chainID: chainId
-            }),
-            zrc20,
-            amount,
-            receiver,
-            payload
-        ) {
+        try
+            gatewayZEVM.depositAndCall{gas: 1500000}(
+                ZetaMessageContext({
+                    sender: abi.encodePacked(sender),
+                    senderEVM: sender,
+                    chainID: chainId
+                }),
+                zrc20,
+                amount,
+                receiver,
+                payload
+            )
+        {
             console.log(
                 string.concat(
                     "[chainId ",
@@ -171,17 +186,19 @@ contract NodeLogicMock is Test {
     ) external {
         // Prank as protocol to call zetachain gateway
         vm.prank(gatewayZEVM.PROTOCOL_ADDRESS());
-        try gatewayZEVM.execute{gas:1500000}(
-            ZetaMessageContext({
-                sender: abi.encodePacked(sender),
-                senderEVM: sender,
-                chainID: chainId
-            }),
-            gasZRC20s[chainId],
-            0,
-            receiver,
-            payload
-        ) {
+        try
+            gatewayZEVM.execute{gas: 1500000}(
+                ZetaMessageContext({
+                    sender: abi.encodePacked(sender),
+                    senderEVM: sender,
+                    chainID: chainId
+                }),
+                gasZRC20s[chainId],
+                0,
+                receiver,
+                payload
+            )
+        {
             console.log(
                 string.concat(
                     "[chainId ",
@@ -285,11 +302,13 @@ contract NodeLogicMock is Test {
                 return;
             }
             vm.prank(vars.gatewayEVM.tssAddress());
-            try IERC20Custody(vars.custody).withdraw(
-                vars.receiverAddress,
-                zrc20ToErc20s[vars.targetChainId][zrc20],
-                amount
-            ) {
+            try
+                IERC20Custody(vars.custody).withdraw(
+                    vars.receiverAddress,
+                    zrc20ToErc20s[vars.targetChainId][zrc20],
+                    amount
+                )
+            {
                 vars.success = true;
                 console.log(
                     string.concat(
@@ -386,11 +405,16 @@ contract NodeLogicMock is Test {
                 }
             }
             vm.prank(vars.gatewayEVM.tssAddress());
-            try vars.gatewayEVM.execute{gas: callOptions.gasLimit, value: amount}(
-                EvmMessageContext({ sender: sender }),
-                vars.receiverAddress,
-                message
-            ) {
+            try
+                vars.gatewayEVM.execute{
+                    gas: callOptions.gasLimit,
+                    value: amount
+                }(
+                    EvmMessageContext({sender: sender}),
+                    vars.receiverAddress,
+                    message
+                )
+            {
                 vars.success = true;
                 console.log(
                     string.concat(
@@ -418,7 +442,6 @@ contract NodeLogicMock is Test {
                     sender
                 );
             }
-            
         } else {
             vars.custody = vars.gatewayEVM.custody();
             vars.custodyNotFound = vars.custody == address(0);
@@ -433,13 +456,21 @@ contract NodeLogicMock is Test {
                 return;
             }
             vm.prank(vars.gatewayEVM.tssAddress());
-            try IERC20Custody(vars.custody).withdrawAndCall{gas:callOptions.gasLimit}(
-                EvmMessageContext({ sender: callOptions.isArbitraryCall ? address(0) : sender }),
-                vars.receiverAddress,
-                zrc20ToErc20s[vars.targetChainId][zrc20],
-                amount,
-                message
-            ) {
+            try
+                IERC20Custody(vars.custody).withdrawAndCall{
+                    gas: callOptions.gasLimit
+                }(
+                    EvmMessageContext({
+                        sender: callOptions.isArbitraryCall
+                            ? address(0)
+                            : sender
+                    }),
+                    vars.receiverAddress,
+                    zrc20ToErc20s[vars.targetChainId][zrc20],
+                    amount,
+                    message
+                )
+            {
                 vars.success = true;
                 console.log(
                     string.concat(
@@ -529,11 +560,15 @@ contract NodeLogicMock is Test {
             }
         }
         vm.prank(vars.gatewayEVM.tssAddress());
-        try vars.gatewayEVM.execute{gas:callOptions.gasLimit, value:0}(
-            EvmMessageContext({ sender: callOptions.isArbitraryCall ? address(0) : sender }),
-            vars.receiverAddress,
-            message
-        ) {
+        try
+            vars.gatewayEVM.execute{gas: callOptions.gasLimit, value: 0}(
+                EvmMessageContext({
+                    sender: callOptions.isArbitraryCall ? address(0) : sender
+                }),
+                vars.receiverAddress,
+                message
+            )
+        {
             vars.success = true;
             console.log(
                 string.concat(
@@ -562,34 +597,37 @@ contract NodeLogicMock is Test {
             );
         }
     }
-    
-
 
     // Helper functions
 
-    function getRuntimeCode(address addr) public view returns (bytes memory code) {
-    uint256 size;
-    assembly {
-        size := extcodesize(addr)
-    }
-    code = new bytes(size);
-    assembly {
-        extcodecopy(addr, add(code, 0x20), 0, size)
-    }
-}
-
-    function contains(bytes memory code, bytes4 selector) internal pure returns (bool) {
-    for (uint i = 0; i + 4 <= code.length; i++) {
-        bytes4 current;
+    function getRuntimeCode(
+        address addr
+    ) public view returns (bytes memory code) {
+        uint256 size;
         assembly {
-            current := mload(add(add(code, 0x20), i))
+            size := extcodesize(addr)
         }
-        if (current == selector) {
-            return true;
+        code = new bytes(size);
+        assembly {
+            extcodecopy(addr, add(code, 0x20), 0, size)
         }
     }
-    return false;
-}
+
+    function contains(
+        bytes memory code,
+        bytes4 selector
+    ) internal pure returns (bool) {
+        for (uint i = 0; i + 4 <= code.length; i++) {
+            bytes4 current;
+            assembly {
+                current := mload(add(add(code, 0x20), i))
+            }
+            if (current == selector) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     function getAmounts(
         string memory direction,
@@ -600,11 +638,12 @@ contract NodeLogicMock is Test {
         address[] memory path = new address[](2);
         path[0] = tokenA;
         path[1] = tokenB;
-        
+
         if (keccak256(bytes(direction)) == keccak256(bytes("in"))) {
             return IUniswapV2Router02(uniswapRouter).getAmountsIn(amount, path);
         } else {
-            return IUniswapV2Router02(uniswapRouter).getAmountsOut(amount, path);
+            return
+                IUniswapV2Router02(uniswapRouter).getAmountsOut(amount, path);
         }
     }
 
@@ -629,13 +668,16 @@ contract NodeLogicMock is Test {
 
         // Set deadline 20 minutes from now
         uint256 deadline = block.timestamp + 20 minutes;
-        try IUniswapV2Router02(uniswapRouter).swapTokensForExactTokens(
-            gasFee,
-            amount,
-            path,
-            fungibleModule,
-            deadline
-        ) {//returns (uint[] memory swapAmounts) {
+        try
+            IUniswapV2Router02(uniswapRouter).swapTokensForExactTokens(
+                gasFee,
+                amount,
+                path,
+                fungibleModule,
+                deadline
+            )
+        {
+            //returns (uint[] memory swapAmounts) {
             // After successful swap, calculate actual amounts used
             uint256[] memory amountsInZeta = getAmounts(
                 "in",
@@ -643,7 +685,7 @@ contract NodeLogicMock is Test {
                 wzeta,
                 gasZRC20Addr
             );
-            
+
             if (amountsInZeta.length == 0) {
                 return amount;
             }
@@ -718,9 +760,8 @@ contract NodeLogicMock is Test {
                 string(err)
             )
         );
-        (vars.gasZRC20Addr, vars.gasFee) = IZRC20(zrc20).withdrawGasFeeWithGasLimit(
-            revertOptions.onRevertGasLimit
-        );
+        (vars.gasZRC20Addr, vars.gasFee) = IZRC20(zrc20)
+            .withdrawGasFeeWithGasLimit(revertOptions.onRevertGasLimit);
         address protocol = gatewayZEVM.PROTOCOL_ADDRESS();
         vm.prank(protocol);
         vars.mintSuccess = IZRC20(zrc20).deposit(protocol, amount);
@@ -772,7 +813,7 @@ contract NodeLogicMock is Test {
             );
         } else {
             _handleZEVMAbort(
-                revertOptions.abortAddress, 
+                revertOptions.abortAddress,
                 amount,
                 zrc20,
                 chainId,
@@ -797,7 +838,7 @@ contract NodeLogicMock is Test {
             revertMessage: revertOptions.revertMessage,
             sender: sender
         });
-      
+
         if (revertOptions.callOnRevert) {
             vm.recordLogs();
             console.log(
@@ -817,7 +858,7 @@ contract NodeLogicMock is Test {
                     gas: revertOptions.onRevertGasLimit
                 }(
                     revertOptions.revertAddress,
-                    "",  // empty bytes for data
+                    "", // empty bytes for data
                     revertContext
                 );
             } else {
@@ -827,15 +868,15 @@ contract NodeLogicMock is Test {
                     revertOptions.revertAddress,
                     asset,
                     amount,
-                    "",  // empty bytes for data
+                    "", // empty bytes for data
                     revertContext
                 );
             }
             vm.stopPrank();
             // Log events from onRevert
             Vm.Log[] memory entries = vm.getRecordedLogs();
-            for(uint i = 0; i < entries.length; i++) {
-                if(entries[i].emitter == revertOptions.revertAddress) {
+            for (uint i = 0; i < entries.length; i++) {
+                if (entries[i].emitter == revertOptions.revertAddress) {
                     console.log(
                         string.concat(
                             "[chainId ",
@@ -846,7 +887,12 @@ contract NodeLogicMock is Test {
                     console.log("  emitter:", vm.toString(entries[i].emitter));
                     console.log("  data:", vm.toString(entries[i].data));
                     for (uint j = 0; j < entries[i].topics.length; j++) {
-                        console.log("  topic", j, ":", vm.toString(entries[i].topics[j]));
+                        console.log(
+                            "  topic",
+                            j,
+                            ":",
+                            vm.toString(entries[i].topics[j])
+                        );
                     }
                 }
             }
@@ -878,7 +924,7 @@ contract NodeLogicMock is Test {
             // Prank as TSS for transfers
             vm.prank(gatewayEVMs[chainId].tssAddress());
             if (isGas) {
-                (bool success,) = revertReceiver.call{value: amount}("");
+                (bool success, ) = revertReceiver.call{value: amount}("");
                 require(success, "Transfer failed");
             } else {
                 IERC20(asset).transfer(revertReceiver, amount);
@@ -911,17 +957,17 @@ contract NodeLogicMock is Test {
                         "] [ERROR] revertAddress is zero"
                     )
                 );
-                 _handleZEVMAbort(
-                        revertOptions.abortAddress,
-                        amount,
-                        asset,
-                        chainID,
-                        revertOptions.revertMessage,
-                        true,
-                        sender
-                    );
-                    return;
-                }
+                _handleZEVMAbort(
+                    revertOptions.abortAddress,
+                    amount,
+                    asset,
+                    chainID,
+                    revertOptions.revertMessage,
+                    true,
+                    sender
+                );
+                return;
+            }
 
             console.log(
                 string.concat(
@@ -935,12 +981,12 @@ contract NodeLogicMock is Test {
             );
             vm.prank(gatewayZEVM.PROTOCOL_ADDRESS());
             if (asset == address(0)) {
-                
-                
-                try gatewayZEVM.executeRevert{gas:1500000}(
-                    revertOptions.revertAddress,
-                    revertContext
-                ) {
+                try
+                    gatewayZEVM.executeRevert{gas: 1500000}(
+                        revertOptions.revertAddress,
+                        revertContext
+                    )
+                {
                     // Success case
                 } catch {
                     _handleZEVMAbort(
@@ -956,12 +1002,14 @@ contract NodeLogicMock is Test {
                 }
             } else {
                 // For other tokens, use depositAndRevert
-                try gatewayZEVM.depositAndRevert{gas:1500000}(
-                    asset,
-                    amount,
-                    revertOptions.revertAddress,
-                    revertContext
-                ) {
+                try
+                    gatewayZEVM.depositAndRevert{gas: 1500000}(
+                        asset,
+                        amount,
+                        revertOptions.revertAddress,
+                        revertContext
+                    )
+                {
                     // Success case
                 } catch {
                     _handleZEVMAbort(
@@ -979,8 +1027,8 @@ contract NodeLogicMock is Test {
 
             // Log events from onRevert
             Vm.Log[] memory entries = vm.getRecordedLogs();
-            for(uint i = 0; i < entries.length; i++) {
-                if(entries[i].emitter == revertOptions.abortAddress) {
+            for (uint i = 0; i < entries.length; i++) {
+                if (entries[i].emitter == revertOptions.abortAddress) {
                     console.log(
                         string.concat(
                             "[chainId ",
@@ -991,7 +1039,12 @@ contract NodeLogicMock is Test {
                     console.log("  emitter:", vm.toString(entries[i].emitter));
                     console.log("  data:", vm.toString(entries[i].data));
                     for (uint j = 0; j < entries[i].topics.length; j++) {
-                        console.log("  topic", j, ":", vm.toString(entries[i].topics[j]));
+                        console.log(
+                            "  topic",
+                            j,
+                            ":",
+                            vm.toString(entries[i].topics[j])
+                        );
                     }
                 }
             }
@@ -1029,7 +1082,13 @@ contract NodeLogicMock is Test {
         address sender
     ) private {
         if (abortAddress == address(0)) {
-            console.log(string.concat("[chainId ", vm.toString(chainIdZeta), "] [ERROR] abortAddress is zero"));
+            console.log(
+                string.concat(
+                    "[chainId ",
+                    vm.toString(chainIdZeta),
+                    "] [ERROR] abortAddress is zero"
+                )
+            );
             if (asset != address(0) && amount > 0) {
                 console.log(
                     string.concat(
@@ -1077,7 +1136,7 @@ contract NodeLogicMock is Test {
             vm.prank(protocol);
             IZRC20(asset).transfer(abortAddress, amount); // revert if failed;
         }
-        
+
         AbortContext memory abortContext = AbortContext({
             sender: abi.encode(sender),
             asset: asset,
@@ -1086,7 +1145,7 @@ contract NodeLogicMock is Test {
             chainID: chainID,
             revertMessage: revertMessage
         });
-        
+
         console.log(
             string.concat(
                 "[chainId ",
@@ -1102,9 +1161,9 @@ contract NodeLogicMock is Test {
         try gatewayZEVM.executeAbort(abortAddress, abortContext) {
             // Log all events emitted from onAbort, filtered by abortAddress
             Vm.Log[] memory entries = vm.getRecordedLogs();
-            for(uint256 i = 0; i < entries.length; i++) {
+            for (uint256 i = 0; i < entries.length; i++) {
                 // Only log events from the abort contract
-                if(entries[i].emitter == abortAddress) {
+                if (entries[i].emitter == abortAddress) {
                     console.log(
                         string.concat(
                             "[chainId ",
@@ -1115,7 +1174,12 @@ contract NodeLogicMock is Test {
                     console.log("  emitter:", vm.toString(entries[i].emitter));
                     console.log("  data:", vm.toString(entries[i].data));
                     for (uint j = 0; j < entries[i].topics.length; j++) {
-                        console.log("  topic", j, ":", vm.toString(entries[i].topics[j]));
+                        console.log(
+                            "  topic",
+                            j,
+                            ":",
+                            vm.toString(entries[i].topics[j])
+                        );
                     }
                 }
             }
@@ -1130,4 +1194,4 @@ contract NodeLogicMock is Test {
             );
         }
     }
-} 
+}

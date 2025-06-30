@@ -107,7 +107,7 @@ contract EVMSetup is Test {
             tss,
             deployer
         );
-        
+
         // Deploy ZetaConnector with Proxy
         if (chainId == chainIdETH) {
             // Deploy Native Connector
@@ -120,10 +120,7 @@ contract EVMSetup is Test {
                 deployer
             );
             zetaConnector[chainId] = address(
-                new ERC1967Proxy(
-                    address(connectorImpl),
-                    initData
-                )
+                new ERC1967Proxy(address(connectorImpl), initData)
             );
         } else {
             // Deploy NonNative Connector
@@ -136,10 +133,7 @@ contract EVMSetup is Test {
                 deployer
             );
             zetaConnector[chainId] = address(
-                new ERC1967Proxy(
-                    address(connectorImpl),
-                    initData
-                )
+                new ERC1967Proxy(address(connectorImpl), initData)
             );
         }
 

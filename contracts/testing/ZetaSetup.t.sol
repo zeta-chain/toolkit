@@ -24,15 +24,10 @@ contract ZetaSetup is UniswapV2SetupLib, UniswapV3SetupLib {
     address public uniswapV3PositionManager;
     NodeLogicMock public nodeLogicMock;
     GatewayZEVM public wrapGatewayZEVM;
-   
 
-    constructor(
-        address _deployer,
-        address _fungibleModuleAddress
-    ) {
+    constructor(address _deployer, address _fungibleModuleAddress) {
         deployer = _deployer;
         FUNGIBLE_MODULE_ADDRESS = _fungibleModuleAddress;
-     
     }
 
     function setupZetaChain() public {
@@ -54,23 +49,35 @@ contract ZetaSetup is UniswapV2SetupLib, UniswapV3SetupLib {
 
         // Setup Uniswap V2
         (uniswapV2Factory, uniswapV2Router) = prepareUniswapV2(deployer, wzeta);
-        (uniswapV3Factory, uniswapV3Router, uniswapV3PositionManager) = prepareUniswapV3(
-            deployer,
-            wzeta
-        );
+        (
+            uniswapV3Factory,
+            uniswapV3Router,
+            uniswapV3PositionManager
+        ) = prepareUniswapV3(deployer, wzeta);
 
         // Deploy SystemContract
         vm.startPrank(FUNGIBLE_MODULE_ADDRESS);
-        systemContract = address(new SystemContract(wzeta, uniswapV2Factory, uniswapV2Router));
+        systemContract = address(
+            new SystemContract(wzeta, uniswapV2Factory, uniswapV2Router)
+        );
 
-        // Deploy GatewayZEVM 
+        // Deploy GatewayZEVM
         GatewayZEVM implementationZEVM = new GatewayZEVM();
         vm.stopPrank();
 
         // Setup NodeLogicMock and WrapGatewayZEVM
         vm.startPrank(deployer);
         nodeLogicMock = new NodeLogicMock();
-        wrapGatewayZEVM = GatewayZEVM(payable(address(new WrapGatewayZEVM(address(implementationZEVM), address(nodeLogicMock)))));
+        wrapGatewayZEVM = GatewayZEVM(
+            payable(
+                address(
+                    new WrapGatewayZEVM(
+                        address(implementationZEVM),
+                        address(nodeLogicMock)
+                    )
+                )
+            )
+        );
         wrapGatewayZEVM.initialize(wzeta, deployer);
         vm.stopPrank();
 
@@ -83,4 +90,4 @@ contract ZetaSetup is UniswapV2SetupLib, UniswapV3SetupLib {
         WETH9(wzeta).approve(address(wrapGatewayZEVM), 10 ether);
         vm.stopPrank();
     }
-} 
+}

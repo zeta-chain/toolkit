@@ -19,7 +19,16 @@ contract ZRC20Mock is ZRC20 {
         address systemContractAddress_,
         address gatewayAddress_
     )
-        ZRC20(name_, symbol_, decimals_, chainid_, coinType_, gasLimit_, systemContractAddress_, gatewayAddress_)
+        ZRC20(
+            name_,
+            symbol_,
+            decimals_,
+            chainid_,
+            coinType_,
+            gasLimit_,
+            systemContractAddress_,
+            gatewayAddress_
+        )
     {}
 
     function mint(address account, uint256 amount) external {

@@ -7,16 +7,28 @@ import {RevertOptions} from "@zetachain/protocol-contracts/contracts/Revert.sol"
 
 contract WrapGatewayZEVM {
     // Immutable variables stored in bytecode
-    address immutable public GATEWAY_ZEVM_IMPL;
-    address immutable public NODE_LOGIC;
+    address public immutable GATEWAY_ZEVM_IMPL;
+    address public immutable NODE_LOGIC;
 
     // Function selectors from GatewayZEVM
     bytes4 private constant CALL_SELECTOR =
-        bytes4(keccak256("call(bytes,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))"));
-    bytes4 private constant WITHDRAW_SELECTOR = 
-        bytes4(keccak256("withdraw(bytes,uint256,address,(address,bool,address,bytes,uint256))"));
+        bytes4(
+            keccak256(
+                "call(bytes,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))"
+            )
+        );
+    bytes4 private constant WITHDRAW_SELECTOR =
+        bytes4(
+            keccak256(
+                "withdraw(bytes,uint256,address,(address,bool,address,bytes,uint256))"
+            )
+        );
     bytes4 private constant WITHDRAW_AND_CALL_SELECTOR =
-        bytes4(keccak256("withdrawAndCall(bytes,uint256,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))"));
+        bytes4(
+            keccak256(
+                "withdrawAndCall(bytes,uint256,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))"
+            )
+        );
 
     constructor(address _gateway, address _nodeLogic) {
         GATEWAY_ZEVM_IMPL = _gateway;
@@ -25,7 +37,9 @@ contract WrapGatewayZEVM {
 
     fallback() external payable {
         // First delegate call to implementation for all functions
-        (bool success, bytes memory result) = GATEWAY_ZEVM_IMPL.delegatecall(msg.data);
+        (bool success, bytes memory result) = GATEWAY_ZEVM_IMPL.delegatecall(
+            msg.data
+        );
         require(success, "GatewayZEVM delegatecall failed");
 
         _handleNodeLogic(msg.data);
@@ -48,7 +62,10 @@ contract WrapGatewayZEVM {
                 bytes memory message,
                 CallOptions memory callOptions,
                 RevertOptions memory revertOptions
-            ) = abi.decode(data[4:], (bytes, address, bytes, CallOptions, RevertOptions));
+            ) = abi.decode(
+                    data[4:],
+                    (bytes, address, bytes, CallOptions, RevertOptions)
+                );
 
             NodeLogicMock(NODE_LOGIC).handleZEVMCall(
                 msg.sender,
@@ -59,10 +76,20 @@ contract WrapGatewayZEVM {
                 revertOptions
             );
         } else if (selector == WITHDRAW_SELECTOR) {
-            (bytes memory receiver, uint256 amount, address zrc20, RevertOptions memory revertOptions) =
-                abi.decode(data[4:], (bytes, uint256, address, RevertOptions));
+            (
+                bytes memory receiver,
+                uint256 amount,
+                address zrc20,
+                RevertOptions memory revertOptions
+            ) = abi.decode(data[4:], (bytes, uint256, address, RevertOptions));
 
-            NodeLogicMock(NODE_LOGIC).handleZEVMWithdraw(msg.sender, receiver, amount, zrc20, revertOptions);
+            NodeLogicMock(NODE_LOGIC).handleZEVMWithdraw(
+                msg.sender,
+                receiver,
+                amount,
+                zrc20,
+                revertOptions
+            );
         } else if (selector == WITHDRAW_AND_CALL_SELECTOR) {
             (
                 bytes memory receiver,
@@ -71,7 +98,10 @@ contract WrapGatewayZEVM {
                 bytes memory message,
                 CallOptions memory callOptions,
                 RevertOptions memory revertOptions
-            ) = abi.decode(data[4:], (bytes, uint256, address, bytes, CallOptions, RevertOptions));
+            ) = abi.decode(
+                    data[4:],
+                    (bytes, uint256, address, bytes, CallOptions, RevertOptions)
+                );
 
             NodeLogicMock(NODE_LOGIC).handleZEVMWithdrawAndCall(
                 msg.sender,
@@ -84,4 +114,4 @@ contract WrapGatewayZEVM {
             );
         }
     }
-} 
+}
