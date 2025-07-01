@@ -284,12 +284,3 @@ Revert options: ${JSON.stringify(options.revertOptions)}${
 `);
   await confirm({ message: "Confirm transaction?" });
 };
-
-export const getChainIdFromNetwork = (network: string) => {
-  if (network === "localnet") {
-    return "0901";
-  } else if (network === "mainnet") {
-    return "900";
-  }
-  return "901";
-};
