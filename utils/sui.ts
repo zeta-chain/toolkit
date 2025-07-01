@@ -1,4 +1,4 @@
-import { SuiClient } from "@mysten/sui/client";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { bech32 } from "bech32";
@@ -257,20 +257,31 @@ export const parseSuiGatewayAddress = (gatewayAddress: string) => {
  * @returns Parsed gateway address with package and object properties
  * @throws Error if the gateway address is not found or format is invalid
  */
-export const getSuiGateway = (
+export const getSuiGatewayAndClient = (
   chainId: (typeof chainIds)[number],
   gatewayPackage?: string,
   gatewayObject?: string
 ) => {
+  let result;
+
+  const network = networks[chainIds.indexOf(chainId)];
+  const client = new SuiClient({ url: getFullnodeUrl(network) });
+
   // If both package and object are provided, use them directly
   if (gatewayPackage && gatewayObject) {
-    return { gatewayObject, gatewayPackage };
+    result = { client, gatewayObject, gatewayPackage };
+  } else {
+    // Otherwise, get the gateway address from chain ID and parse it
+    const gatewayAddress = getAddress("gateway", Number(chainId));
+    if (!gatewayAddress) {
+      throw new Error("Gateway address not found");
+    }
+
+    result = {
+      ...parseSuiGatewayAddress(gatewayAddress),
+      client,
+    };
   }
 
-  // Otherwise, get the gateway address from chain ID and parse it
-  const gatewayAddress = getAddress("gateway", Number(chainId));
-  if (!gatewayAddress) {
-    throw new Error("Gateway address not found");
-  }
-  return parseSuiGatewayAddress(gatewayAddress);
+  return result;
 };

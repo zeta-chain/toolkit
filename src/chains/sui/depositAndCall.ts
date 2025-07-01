@@ -1,4 +1,3 @@
-import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { AbiCoder, ethers } from "ethers";
@@ -8,8 +7,7 @@ import {
   chainIds,
   GAS_BUDGET,
   getCoin,
-  getSuiGateway,
-  networks,
+  getSuiGatewayAndClient,
   signAndExecuteTransaction,
   toSmallestUnit,
 } from "../../../utils/sui";
@@ -34,14 +32,12 @@ export const suiDepositAndCall = async (
   params: suiDepositAndCallParams,
   options: suiOptions
 ) => {
-  const { gatewayPackage, gatewayObject } = getSuiGateway(
+  const { gatewayPackage, gatewayObject, client } = getSuiGatewayAndClient(
     options.chainId,
     options.gatewayPackage,
     options.gatewayObject
   );
 
-  const network = networks[chainIds.indexOf(options.chainId)];
-  const client = new SuiClient({ url: getFullnodeUrl(network) });
   const gasBudget = BigInt(options.gasLimit || GAS_BUDGET);
   const tx = new Transaction();
 
