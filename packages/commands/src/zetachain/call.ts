@@ -12,12 +12,12 @@ import {
   typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../utils";
+import { getGatewayAddressFromChainId } from "../../../../utils/getAddress";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 import {
   addCommonZetachainCommandOptions,
   baseZetachainOptionsSchema,
   confirmZetachainTransaction,
-  getZevmGatewayAddress,
   getZRC20WithdrawFee,
   prepareCallOptions,
   prepareRevertOptions,
@@ -51,18 +51,10 @@ const main = async (options: CallOptions) => {
   try {
     const { signer } = setupZetachainTransaction(options);
 
-    let gateway;
-    if (options.gateway) {
-      gateway = options.gateway;
-    } else if (options.chainId) {
-      gateway = getZevmGatewayAddress(options.chainId, options.gateway);
-    } else {
-      handleError({
-        context: "Failed to retrieve gateway",
-        error: new Error("Gateway not found"),
-        shouldThrow: true,
-      });
-    }
+    const gateway = getGatewayAddressFromChainId(
+      options.gateway,
+      options.chainId
+    );
 
     const { gasFee, gasSymbol } = await getZRC20WithdrawFee(
       signer as ethers.ContractRunner,

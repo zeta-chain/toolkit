@@ -8,11 +8,11 @@ import {
   rpcOrChainIdRefineRule,
 } from "../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../utils";
+import { getGatewayAddressFromChainId } from "../../../../utils/getAddress";
 import {
   addCommonZetachainCommandOptions,
   baseZetachainOptionsSchema,
   confirmZetachainTransaction,
-  getZevmGatewayAddress,
   getZRC20WithdrawFee,
   prepareRevertOptions,
   prepareTxOptions,
@@ -34,18 +34,10 @@ const main = async (options: WithdrawOptions) => {
   try {
     const { signer } = setupZetachainTransaction(options);
 
-    let gateway;
-    if (options.gateway) {
-      gateway = options.gateway;
-    } else if (options.chainId) {
-      gateway = getZevmGatewayAddress(options.chainId, options.gateway);
-    } else {
-      handleError({
-        context: "Failed to retrieve gateway",
-        error: new Error("Gateway not found"),
-        shouldThrow: true,
-      });
-    }
+    const gateway = getGatewayAddressFromChainId(
+      options.gateway,
+      options.chainId
+    );
 
     const { gasFee, gasSymbol, zrc20Symbol } = await getZRC20WithdrawFee(
       signer as ethers.ContractRunner,

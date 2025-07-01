@@ -1,5 +1,4 @@
 import confirm from "@inquirer/confirm";
-import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { Command, Option } from "commander";
 import { ethers, ZeroAddress } from "ethers";
@@ -19,7 +18,6 @@ import { getAccountData } from "./accounts";
 import { getRpcUrl } from "./chains";
 import { handleError } from "./handleError";
 import { toHexString } from "./toHexString";
-import { validateAndParseSchema } from "./validateAndParseSchema";
 
 export const baseZetachainOptionsSchema = z.object({
   abortAddress: evmAddressSchema,
@@ -80,7 +78,6 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
 
   try {
     signer = new ethers.Wallet(privateKey, provider);
-    console.log("Signer created successfully", signer);
   } catch (error) {
     const errorMessage = handleError({
       context: "Failed to create signer from private key",
@@ -92,37 +89,6 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
   }
 
   return { signer };
-};
-
-/**
- * @description This function is used to get the ZetaChain Gateway address.
- * @param network - The network to use
- * @param gatewayZetachain - The gateway ZetaChain address to use
- * @returns The ZetaChain Gateway address
- */
-export const getZevmGatewayAddress = (
-  chainId: string,
-  gatewayZetachain?: string
-): string => {
-  if (gatewayZetachain) {
-    const validatedProvidedAddress = validateAndParseSchema(
-      gatewayZetachain,
-      evmAddressSchema
-    );
-    return validatedProvidedAddress;
-  }
-
-  const defaultZetaChainGatewayAddress = getAddress(
-    "gateway",
-    chainId === "7000" ? "zeta_mainnet" : "zeta_testnet"
-  );
-
-  const validatedDefaultAddress = validateAndParseSchema(
-    defaultZetaChainGatewayAddress,
-    evmAddressSchema
-  );
-
-  return validatedDefaultAddress;
 };
 
 export const confirmZetachainTransaction = async (
