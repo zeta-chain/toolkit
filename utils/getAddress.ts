@@ -1,5 +1,4 @@
-import MAINNET from "@zetachain/protocol-contracts/dist/data/addresses.mainnet.json";
-import TESTNET from "@zetachain/protocol-contracts/dist/data/addresses.testnet.json";
+import { mainnet, testnet } from "@zetachain/protocol-contracts";
 import {
   ParamSymbol,
   ParamType,
@@ -11,7 +10,7 @@ export const getAddress = (
   chainId: number,
   symbol?: ParamSymbol
 ) => {
-  const networks = [...TESTNET, ...MAINNET];
+  const networks = [...testnet, ...mainnet];
   let address;
   if (type !== "zrc20" && symbol) {
     throw new Error("Symbol is only supported when ParamType is zrc20");
