@@ -30,6 +30,17 @@ type ZetachainCallOptions = {
   txOptions?: TxOptions;
 };
 
+/**
+ * Makes a cross-chain call from ZetaChain to another chain
+ *
+ * This function allows you to call a contract on a destination chain
+ * from a universal contract on ZetaChain without transferring any tokens.
+ * It automatically handles gas fee calculation and approval using the specified ZRC20 token.
+ *
+ * @param params - The call parameters including receiver address, call data, gas options, and ZRC20 token
+ * @param options - Configuration options including signer and optional gateway address
+ * @returns Promise that resolves to an object containing gas fee, gas ZRC20 address, and transaction receipt
+ */
 export const zetachainCall = async (
   params: ZetachainCallParams,
   options: ZetachainCallOptions

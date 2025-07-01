@@ -28,6 +28,18 @@ type evmOptions = {
   txOptions?: TxOptions;
 };
 
+/**
+ * Deposits tokens and makes a cross-chain call from an EVM chain to a universal contract on ZetaChain.
+ *
+ * This function combines token deposit with a contract call in a single transaction.
+ * It allows you to transfer tokens from an EVM chain to ZetaChain and immediately
+ * execute a function call on the universal contract. Supports both native tokens
+ * and ERC20 tokens.
+ *
+ * @param params - The deposit and call parameters including amount, receiver, token address, function types/values, and revert options
+ * @param options - Configuration options including signer and optional gateway address
+ * @returns Promise that resolves to the transaction receipt
+ */
 export const evmDepositAndCall = async (
   params: evmDepositAndCallParams,
   options: evmOptions

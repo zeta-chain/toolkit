@@ -23,6 +23,17 @@ type ZetachainWithdrawOptions = {
   txOptions?: TxOptions;
 };
 
+/**
+ * Withdraws tokens from ZetaChain to a destination chain
+ *
+ * This function allows you to transfer ZRC20 tokens from ZetaChain to a destination chain.
+ * It automatically handles gas fee calculation and approval. If the withdrawal token
+ * is the same as the gas token, it combines the approvals into a single transaction.
+ *
+ * @param params - The withdrawal parameters including amount, receiver address, ZRC20 token, and revert options
+ * @param options - Configuration options including signer and optional gateway address
+ * @returns Promise that resolves to an object containing gas fee, gas ZRC20 address, and transaction receipt
+ */
 export const zetachainWithdraw = async (
   params: ZetachainWithdrawParams,
   options: ZetachainWithdrawOptions

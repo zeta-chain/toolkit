@@ -20,6 +20,17 @@ type solanaOptions = {
   signer: anchor.web3.Keypair;
 };
 
+/**
+ * Makes a cross-chain call from Solana to a universal contract on ZetaChain.
+ *
+ * This function allows you to call a contract function on a universal contract
+ * from Solana without transferring any tokens. It's useful for executing
+ * contract logic across different chains.
+ *
+ * @param params - The call parameters including receiver address, function types/values, and revert options
+ * @param options - Configuration options including chain ID and signer keypair
+ * @returns Promise that resolves to the transaction signature
+ */
 export const solanaCall = async (
   params: solanaCallParams,
   options: solanaOptions

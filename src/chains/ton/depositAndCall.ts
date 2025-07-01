@@ -19,6 +19,21 @@ type tonDepositAndCallParams = {
   values?: ParseAbiValuesReturnType;
 };
 
+/**
+ * Deposits tokens and makes a cross-chain call from TON to a universal contract on ZetaChain.
+ *
+ * This function combines token deposit with a contract call in a single transaction.
+ * It allows you to transfer TON tokens from TON blockchain to ZetaChain and immediately
+ * execute a function call on the universal contract.
+ *
+ * You can provide either:
+ * - `data`: Raw data string for non-EVM chains
+ * - `types` and `values`: For EVM chains, to encode function parameters
+ *
+ * @param params - The deposit and call parameters including amount, receiver, and call data
+ * @param options - Configuration options including chain ID, RPC endpoint, wallet, and API key
+ * @returns Promise that resolves when the transaction is sent
+ */
 export const tonDepositAndCall = async (
   params: tonDepositAndCallParams,
   options: tonOptions

@@ -29,6 +29,18 @@ type solanaOptions = {
   signer: anchor.web3.Keypair;
 };
 
+/**
+ * Deposits tokens and makes a cross-chain call from Solana to a universal contract on ZetaChain.
+ *
+ * This function combines token deposit with a contract call in a single transaction.
+ * It allows you to transfer tokens from Solana to ZetaChain and immediately
+ * execute a function call on the universal contract. Supports both native SOL
+ * and SPL tokens.
+ *
+ * @param params - The deposit and call parameters including amount, receiver, token mint address, function types/values, and revert options
+ * @param options - Configuration options including chain ID and signer keypair
+ * @returns Promise that resolves to the transaction signature
+ */
 export const solanaDepositAndCall = async (
   params: solanaDepositAndCallParams,
   options: solanaOptions

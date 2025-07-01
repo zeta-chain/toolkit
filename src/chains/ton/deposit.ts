@@ -12,6 +12,16 @@ type tonDepositParams = {
   receiver: string;
 };
 
+/**
+ * Deposits tokens from TON to ZetaChain.
+ *
+ * This function allows you to transfer TON tokens from TON blockchain to ZetaChain.
+ * It automatically handles wallet connection and transaction signing.
+ *
+ * @param params - The deposit parameters including amount and receiver address
+ * @param options - Configuration options including chain ID, RPC endpoint, wallet, and API key
+ * @returns Promise that resolves when the transaction is sent
+ */
 export const tonDeposit = async (
   params: tonDepositParams,
   options: tonOptions

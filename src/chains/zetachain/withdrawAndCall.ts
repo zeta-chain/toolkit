@@ -31,6 +31,18 @@ type ZetachainWithdrawAndCallOptions = {
   txOptions?: TxOptions;
 };
 
+/**
+ * Withdraws tokens and makes a cross-chain call from ZetaChain to a destination chain
+ *
+ * This function combines token withdrawal with a contract call in a single transaction.
+ * It allows you to transfer ZRC20 tokens from ZetaChain to a destination chain and
+ * immediately execute a function call on that chain. It automatically handles gas
+ * fee calculation and approval.
+ *
+ * @param params - The withdrawal and call parameters including amount, receiver address, call data, gas options, and ZRC20 token
+ * @param options - Configuration options including signer and optional gateway address
+ * @returns Promise that resolves to an object containing gas fee, gas ZRC20 address, and transaction receipt
+ */
 export const zetachainWithdrawAndCall = async (
   params: ZetachainWithdrawAndCallParams,
   options: ZetachainWithdrawAndCallOptions

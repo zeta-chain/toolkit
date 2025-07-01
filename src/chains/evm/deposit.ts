@@ -25,6 +25,17 @@ type evmOptions = {
   txOptions?: TxOptions;
 };
 
+/**
+ * Deposits tokens from an EVM chain to ZetaChain.
+ *
+ * This function allows you to transfer tokens from an EVM chain to ZetaChain.
+ * It supports both native tokens (ETH, BNB, AVAX, etc.) and ERC20 tokens.
+ * For ERC20 tokens, it automatically handles token approval before deposit.
+ *
+ * @param params - The deposit parameters including amount, receiver, token address, and revert options
+ * @param options - Configuration options including signer and optional gateway address
+ * @returns Promise that resolves to the transaction receipt
+ */
 export const evmDeposit = async (
   params: evmDepositParams,
   options: evmOptions

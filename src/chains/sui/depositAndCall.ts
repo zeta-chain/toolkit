@@ -28,6 +28,18 @@ type suiOptions = {
   signer: Ed25519Keypair;
 };
 
+/**
+ * Deposits tokens and makes a cross-chain call from Sui to a universal contract on ZetaChain.
+ *
+ * This function combines token deposit with a contract call in a single transaction.
+ * It allows you to transfer tokens from Sui to ZetaChain and immediately
+ * execute a function call on the universal contract. Supports both native SUI
+ * and other coin types.
+ *
+ * @param params - The deposit and call parameters including amount, receiver, coin type, function types/values
+ * @param options - Configuration options including chain ID, gas limit, gateway settings, and signer
+ * @returns Promise that resolves when the transaction is executed
+ */
 export const suiDepositAndCall = async (
   params: suiDepositAndCallParams,
   options: suiOptions

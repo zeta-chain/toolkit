@@ -26,6 +26,17 @@ type solanaOptions = {
   signer: anchor.web3.Keypair;
 };
 
+/**
+ * Deposits tokens from Solana to ZetaChain.
+ *
+ * This function allows you to transfer tokens from Solana to ZetaChain.
+ * It supports both native SOL and SPL tokens. For SPL tokens, it automatically
+ * handles token account creation and token transfer.
+ *
+ * @param params - The deposit parameters including amount, receiver, token mint address, and revert options
+ * @param options - Configuration options including chain ID and signer keypair
+ * @returns Promise that resolves to the transaction signature
+ */
 export const solanaDeposit = async (
   params: solanaDepositParams,
   options: solanaOptions

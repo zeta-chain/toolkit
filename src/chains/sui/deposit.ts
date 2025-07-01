@@ -25,6 +25,17 @@ type suiOptions = {
   signer: Ed25519Keypair;
 };
 
+/**
+ * Deposits tokens from Sui to ZetaChain.
+ *
+ * This function allows you to transfer tokens from Sui to ZetaChain.
+ * It supports both native SUI and other coin types. The function automatically
+ * handles coin splitting and transaction construction.
+ *
+ * @param params - The deposit parameters including amount, receiver, and optional coin type
+ * @param options - Configuration options including chain ID, gas limit, gateway settings, and signer
+ * @returns Promise that resolves when the transaction is executed
+ */
 export const suiDeposit = async (
   params: suiDepositParams,
   options: suiOptions
