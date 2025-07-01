@@ -7,7 +7,10 @@ import { HDKey } from "ethereum-cryptography/hdkey";
 import { z } from "zod";
 
 import { SuiAccountData } from "../types/accounts.types";
+import { suiGatewayAddressSchema } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
+import { getAddress } from "./getAddress";
+import { validateAndParseSchema } from "./validateAndParseSchema";
 
 export const GAS_BUDGET = 10_000_000;
 export const SUI_GAS_COIN_TYPE = "0x2::sui::SUI";
@@ -168,7 +171,7 @@ export const signAndExecuteTransaction = async ({
   return result;
 };
 
-export const chainIds = ["0103", "101", "103"] as const;
+export const chainIds = ["101", "103", "104"] as const;
 export const networks = ["localnet", "mainnet", "testnet"] as const;
 
 export type SuiNetwork = (typeof networks)[number];
@@ -233,3 +236,41 @@ export const commonDepositOptionsSchema = commonDepositObjectSchema.refine(
     message: "Either mnemonic, private key or name must be provided",
   }
 );
+
+/**
+ * Parses and validates a Sui gateway address string
+ * @param gatewayAddress - The gateway address string in format "package,object"
+ * @returns Parsed gateway address with package and object properties
+ * @throws Error if the gateway address format is invalid
+ */
+export const parseSuiGatewayAddress = (gatewayAddress: string) => {
+  return validateAndParseSchema(gatewayAddress, suiGatewayAddressSchema, {
+    shouldLogError: false,
+  });
+};
+
+/**
+ * Gets the gateway address from chain ID and parses it, or uses provided package and object
+ * @param chainId - The chain ID to get the gateway address for
+ * @param gatewayPackage - Optional gateway package to use instead of getting from chain ID
+ * @param gatewayObject - Optional gateway object to use instead of getting from chain ID
+ * @returns Parsed gateway address with package and object properties
+ * @throws Error if the gateway address is not found or format is invalid
+ */
+export const getSuiGateway = (
+  chainId: (typeof chainIds)[number],
+  gatewayPackage?: string,
+  gatewayObject?: string
+) => {
+  // If both package and object are provided, use them directly
+  if (gatewayPackage && gatewayObject) {
+    return { gatewayObject, gatewayPackage };
+  }
+
+  // Otherwise, get the gateway address from chain ID and parse it
+  const gatewayAddress = getAddress("gateway", Number(chainId));
+  if (!gatewayAddress) {
+    throw new Error("Gateway address not found");
+  }
+  return parseSuiGatewayAddress(gatewayAddress);
+};

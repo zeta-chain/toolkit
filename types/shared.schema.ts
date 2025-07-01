@@ -134,3 +134,26 @@ export const rpcOrChainIdRefineRule = {
     return !!(data.rpc || data.chainId);
   },
 };
+
+export const suiGatewayAddressSchema = z
+  .string()
+  .min(1, "Gateway address cannot be empty")
+  .refine(
+    (val) => {
+      const parts = val.split(",");
+      return (
+        parts.length === 2 && parts[0].trim() !== "" && parts[1].trim() !== ""
+      );
+    },
+    {
+      message:
+        "Gateway address must be in format 'package,object' with both parts non-empty",
+    }
+  )
+  .transform((val) => {
+    const parts = val.split(",");
+    return {
+      gatewayObject: parts[1].trim(),
+      gatewayPackage: parts[0].trim(),
+    };
+  });

@@ -4,11 +4,11 @@ import { Transaction } from "@mysten/sui/transactions";
 import { AbiCoder, ethers } from "ethers";
 
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
-import { getAddress } from "../../../utils/getAddress";
 import {
   chainIds,
   GAS_BUDGET,
   getCoin,
+  getSuiGateway,
   networks,
   signAndExecuteTransaction,
   toSmallestUnit,
@@ -34,29 +34,13 @@ export const suiDepositAndCall = async (
   params: suiDepositAndCallParams,
   options: suiOptions
 ) => {
-  const gatewayAddress = getAddress("gateway", Number(options.chainId));
-  if (!gatewayAddress) {
-    throw new Error("Gateway address not found");
-  }
-  const addressParts = gatewayAddress.split(",");
-  if (addressParts.length !== 2) {
-    throw new Error(
-      "Invalid gateway address format. Expected: 'package,object'"
-    );
-  }
-  const gatewayPackage = options.gatewayPackage || addressParts[0];
-  const gatewayObject = options.gatewayObject || addressParts[1];
+  const { gatewayPackage, gatewayObject } = getSuiGateway(
+    options.chainId,
+    options.gatewayPackage,
+    options.gatewayObject
+  );
 
-  const chainIdIndex = chainIds.indexOf(options.chainId);
-  if (chainIdIndex === -1) {
-    throw new Error(
-      `Invalid chainId: ${options.chainId}. Supported chainIds: ${chainIds.join(
-        ", "
-      )}`
-    );
-  }
-
-  const network = networks[chainIdIndex];
+  const network = networks[chainIds.indexOf(options.chainId)];
   const client = new SuiClient({ url: getFullnodeUrl(network) });
   const gasBudget = BigInt(options.gasLimit || GAS_BUDGET);
   const tx = new Transaction();

@@ -2,11 +2,11 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 
-import { getAddress } from "../../../utils/getAddress";
 import {
   chainIds,
   GAS_BUDGET,
   getCoin,
+  getSuiGateway,
   networks,
   signAndExecuteTransaction,
   SUI_GAS_COIN_TYPE,
@@ -31,12 +31,12 @@ export const suiDeposit = async (
   params: suiDepositParams,
   options: suiOptions
 ) => {
-  const gatewayAddress = getAddress("gateway", Number(options.chainId));
-  if (!gatewayAddress) {
-    throw new Error("Gateway address not found");
-  }
-  const gatewayPackage = options.gatewayPackage || gatewayAddress.split(",")[0];
-  const gatewayObject = options.gatewayObject || gatewayAddress.split(",")[1];
+  const { gatewayPackage, gatewayObject } = getSuiGateway(
+    options.chainId,
+    options.gatewayPackage,
+    options.gatewayObject
+  );
+
   const network = networks[chainIds.indexOf(options.chainId)];
   const client = new SuiClient({ url: getFullnodeUrl(network) });
   const gasBudget = BigInt(options.gasLimit || GAS_BUDGET);
