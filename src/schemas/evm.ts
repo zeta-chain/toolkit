@@ -1,8 +1,7 @@
 import { ethers } from "ethers";
 import { z } from "zod";
 
-// Base schemas for common types
-const revertOptionsSchema = z.object({
+export const revertOptionsSchema = z.object({
   abortAddress: z.string().optional(),
   callOnRevert: z.boolean(),
   onRevertGasLimit: z.union([z.string(), z.number(), z.bigint()]).optional(),
@@ -10,20 +9,19 @@ const revertOptionsSchema = z.object({
   revertMessage: z.string(),
 });
 
-const txOptionsSchema = z.object({
+export const txOptionsSchema = z.object({
   gasLimit: z.union([z.string(), z.number(), z.bigint()]).optional(),
   gasPrice: z.union([z.string(), z.number(), z.bigint()]).optional(),
   value: z.union([z.string(), z.number(), z.bigint()]).optional(),
 });
 
-const evmOptionsSchema = z.object({
+export const evmOptionsSchema = z.object({
   gateway: z.string().optional(),
   signer: z.instanceof(ethers.Wallet),
   txOptions: txOptionsSchema.optional(),
 });
 
-// EVM Call schemas
-const evmCallParamsSchema = z.object({
+export const evmCallParamsSchema = z.object({
   receiver: z.string(),
   revertOptions: revertOptionsSchema,
   types: z.array(z.string()),
@@ -35,8 +33,7 @@ export const evmCallSchema = z.object({
   params: evmCallParamsSchema,
 });
 
-// EVM Deposit schemas
-const evmDepositParamsSchema = z.object({
+export const evmDepositParamsSchema = z.object({
   amount: z.string(),
   receiver: z.string(),
   revertOptions: revertOptionsSchema,
@@ -48,8 +45,7 @@ export const evmDepositSchema = z.object({
   params: evmDepositParamsSchema,
 });
 
-// EVM Deposit and Call schemas
-const evmDepositAndCallParamsSchema = z.object({
+export const evmDepositAndCallParamsSchema = z.object({
   amount: z.string(),
   receiver: z.string(),
   revertOptions: revertOptionsSchema,
@@ -62,13 +58,3 @@ export const evmDepositAndCallSchema = z.object({
   options: evmOptionsSchema,
   params: evmDepositAndCallParamsSchema,
 });
-
-// Export individual parameter schemas for convenience
-export {
-  evmCallParamsSchema,
-  evmDepositAndCallParamsSchema,
-  evmDepositParamsSchema,
-  evmOptionsSchema,
-  revertOptionsSchema,
-  txOptionsSchema,
-};

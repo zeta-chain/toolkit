@@ -5,29 +5,23 @@ import {
 } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import { ethers } from "ethers";
+import { z } from "zod";
 
-import { RevertOptions } from "../../../types/contracts.types";
-import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import {
   createRevertOptions,
   createSolanaGatewayProgram,
   getSPLToken,
   isSOLBalanceSufficient,
 } from "../../../utils/solana.commands.helpers";
+import {
+  solanaDepositAndCallParamsSchema,
+  solanaOptionsSchema,
+} from "../../schemas/solana";
 
-type solanaDepositAndCallParams = {
-  amount: string;
-  receiver: string;
-  revertOptions: RevertOptions;
-  token?: string;
-  types: string[];
-  values: ParseAbiValuesReturnType;
-};
-
-type solanaOptions = {
-  chainId: string;
-  signer: anchor.web3.Keypair;
-};
+type solanaDepositAndCallParams = z.infer<
+  typeof solanaDepositAndCallParamsSchema
+>;
+type solanaOptions = z.infer<typeof solanaOptionsSchema>;
 
 /**
  * Deposits tokens and makes a cross-chain call from Solana to a universal contract on ZetaChain.

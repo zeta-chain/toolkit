@@ -1,24 +1,17 @@
-import * as anchor from "@coral-xyz/anchor";
 import { ethers } from "ethers";
+import { z } from "zod";
 
-import { RevertOptions } from "../../../types/contracts.types";
-import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import {
   createRevertOptions,
   createSolanaGatewayProgram,
 } from "../../../utils/solana.commands.helpers";
+import {
+  solanaCallParamsSchema,
+  solanaOptionsSchema,
+} from "../../schemas/solana";
 
-type solanaCallParams = {
-  receiver: string;
-  revertOptions: RevertOptions;
-  types: string[];
-  values: ParseAbiValuesReturnType;
-};
-
-type solanaOptions = {
-  chainId: string;
-  signer: anchor.web3.Keypair;
-};
+type solanaCallParams = z.infer<typeof solanaCallParamsSchema>;
+type solanaOptions = z.infer<typeof solanaOptionsSchema>;
 
 /**
  * Makes a cross-chain call from Solana to a universal contract on ZetaChain.

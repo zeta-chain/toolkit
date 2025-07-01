@@ -5,26 +5,21 @@ import {
 } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import { ethers } from "ethers";
+import { z } from "zod";
 
-import { RevertOptions } from "../../../types/contracts.types";
 import {
   createRevertOptions,
   createSolanaGatewayProgram,
   getSPLToken,
   isSOLBalanceSufficient,
 } from "../../../utils/solana.commands.helpers";
+import {
+  solanaDepositParamsSchema,
+  solanaOptionsSchema,
+} from "../../schemas/solana";
 
-type solanaDepositParams = {
-  amount: string;
-  receiver: string;
-  revertOptions: RevertOptions;
-  token?: string;
-};
-
-type solanaOptions = {
-  chainId: string;
-  signer: anchor.web3.Keypair;
-};
+type solanaDepositParams = z.infer<typeof solanaDepositParamsSchema>;
+type solanaOptions = z.infer<typeof solanaOptionsSchema>;
 
 /**
  * Deposits tokens from Solana to ZetaChain.
