@@ -11,7 +11,10 @@ import { z } from "zod";
 import { SolanaAccountData } from "../types/accounts.types";
 import { RevertOptions } from "../types/contracts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
-import { hexStringSchema } from "../types/shared.schema";
+import {
+  hexStringSchema,
+  typesAndValuesLengthRefineRule,
+} from "../types/shared.schema";
 import { handleError } from "./";
 import { getAccountData } from "./accounts";
 import { trim0x } from "./trim0x";
@@ -34,19 +37,21 @@ export const solanaDepositOptionsSchema = baseSolanaOptionsSchema.extend({
   mint: z.string().optional(),
 });
 
-export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema.extend(
-  {
+export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
+  .extend({
     amount: z.string(),
     mint: z.string().optional(),
     types: z.array(z.string()),
     values: z.array(z.string()),
-  }
-);
+  })
+  .refine(typesAndValuesLengthRefineRule.rule, typesAndValuesLengthRefineRule);
 
-export const solanaCallOptionsSchema = baseSolanaOptionsSchema.extend({
-  types: z.array(z.string()),
-  values: z.array(z.string()),
-});
+export const solanaCallOptionsSchema = baseSolanaOptionsSchema
+  .extend({
+    types: z.array(z.string()),
+    values: z.array(z.string()),
+  })
+  .refine(typesAndValuesLengthRefineRule.rule, typesAndValuesLengthRefineRule);
 
 export const keypairFromMnemonic = async (
   mnemonic: string
