@@ -76,6 +76,17 @@ export const formatAddresses = (options: FormatAddressesOptions): string => {
 };
 
 /**
+ * Normalize a float string by removing unnecessary zeros
+ */
+export const normalizeFloat = (str: string): string => {
+  const num = Number(str);
+  if (!Number.isFinite(num)) {
+    throw new Error(`'${str}' is not a valid number`);
+  }
+  return num.toString(); // drops unnecessary zeros
+};
+
+/**
  * Format token balances for display
  */
 export interface FormattedBalance {
@@ -102,7 +113,7 @@ export const formatBalances = (
   });
 
   return sortedBalances.map((balance) => ({
-    Amount: parseFloat(balance.balance).toFixed(6),
+    Amount: normalizeFloat(parseFloat(balance.balance).toFixed(6)),
     Chain: balance.chain_name || "Unknown",
     Token: balance.symbol,
     Type: balance.coin_type,

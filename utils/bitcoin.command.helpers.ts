@@ -229,6 +229,16 @@ export const createBitcoinCommandWithCommonOptions = (
       "-g, --gateway <address>",
       "Bitcoin gateway (TSS) address",
       DEFAULT_GATEWAY
+    )
+    .addOption(
+      new Option("--private-key <key>", "Bitcoin private key").conflicts([
+        "name",
+      ])
+    )
+    .addOption(
+      new Option("--name <name>", "Account name")
+        .default(DEFAULT_ACCOUNT_NAME)
+        .conflicts(["private-key"])
     );
 };
 
@@ -244,16 +254,6 @@ export const createBitcoinInscriptionCommandWithCommonOptions = (
   name: string
 ): Command => {
   return createBitcoinCommandWithCommonOptions(name)
-    .addOption(
-      new Option("--private-key <key>", "Bitcoin private key").conflicts([
-        "name",
-      ])
-    )
-    .addOption(
-      new Option("--name <name>", "Account name")
-        .default(DEFAULT_ACCOUNT_NAME)
-        .conflicts(["private-key"])
-    )
     .option("--revert-address <address>", "Revert address")
     .addOption(
       new Option("--format <format>", "Encoding format")
