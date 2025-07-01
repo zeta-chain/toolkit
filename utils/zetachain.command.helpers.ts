@@ -13,6 +13,7 @@ import {
   evmPrivateKeySchema,
   hexStringSchema,
   numericStringSchema,
+  rpcOrChainIdRefineRule,
 } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
 import { getRpcUrl } from "./chains";
@@ -47,7 +48,14 @@ export const baseZetachainOptionsSchema = z.object({
   zrc20: evmAddressSchema,
 });
 
-type BaseZetachainOptions = z.infer<typeof baseZetachainOptionsSchema>;
+export const baseZetachainOptionsRefined = baseZetachainOptionsSchema.refine(
+  rpcOrChainIdRefineRule.rule,
+  {
+    message: rpcOrChainIdRefineRule.message,
+  }
+);
+
+type BaseZetachainOptions = z.infer<typeof baseZetachainOptionsRefined>;
 
 export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
   const privateKey =
@@ -66,18 +74,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
 
   let signer: ethers.Wallet;
 
-  let rpc;
-  if (options.rpc) {
-    rpc = options.rpc;
-  } else if (options.chainId) {
-    rpc = getRpcUrl(parseInt(options.chainId));
-  } else {
-    handleError({
-      context: "Failed to retrieve RPC URL",
-      error: new Error("RPC URL not found"),
-      shouldThrow: true,
-    });
-  }
+  const rpc = options.rpc || getRpcUrl(parseInt(options.chainId!));
 
   const provider = new ethers.JsonRpcProvider(rpc);
 

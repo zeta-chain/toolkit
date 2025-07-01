@@ -7,6 +7,7 @@ import {
   functionTypesValuesConsistencyRule,
   hexStringSchema,
   namePkRefineRule,
+  rpcOrChainIdRefineRule,
   stringArraySchema,
   typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
@@ -40,7 +41,10 @@ const withdrawAndCallOptionsSchema = baseZetachainOptionsSchema
     message: functionTypesValuesConsistencyRule.message,
     path: functionTypesValuesConsistencyRule.path,
   })
-  .refine(namePkRefineRule);
+  .refine(namePkRefineRule)
+  .refine(rpcOrChainIdRefineRule.rule, {
+    message: rpcOrChainIdRefineRule.message,
+  });
 
 type WithdrawAndCallOptions = z.infer<typeof withdrawAndCallOptionsSchema>;
 

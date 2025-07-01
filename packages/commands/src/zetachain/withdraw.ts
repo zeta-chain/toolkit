@@ -3,7 +3,10 @@ import { ethers } from "ethers";
 import { z } from "zod";
 
 import { zetachainWithdraw } from "../../../../src/chains/zetachain/withdraw";
-import { namePkRefineRule } from "../../../../types/shared.schema";
+import {
+  namePkRefineRule,
+  rpcOrChainIdRefineRule,
+} from "../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import {
   addCommonZetachainCommandOptions,
@@ -20,7 +23,10 @@ const withdrawOptionsSchema = baseZetachainOptionsSchema
   .extend({
     amount: z.string(),
   })
-  .refine(namePkRefineRule);
+  .refine(namePkRefineRule)
+  .refine(rpcOrChainIdRefineRule.rule, {
+    message: rpcOrChainIdRefineRule.message,
+  });
 
 type WithdrawOptions = z.infer<typeof withdrawOptionsSchema>;
 

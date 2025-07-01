@@ -127,3 +127,10 @@ export const functionTypesValuesConsistencyRule = {
     return true;
   },
 };
+
+export const rpcOrChainIdRefineRule = {
+  message: "Either 'rpc' or 'chainId' must be provided",
+  rule: (data: { chainId?: string; rpc?: string }) => {
+    return !!(data.rpc || data.chainId);
+  },
+};

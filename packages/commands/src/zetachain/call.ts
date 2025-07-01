@@ -7,6 +7,7 @@ import {
   functionTypesValuesConsistencyRule,
   hexStringSchema,
   namePkRefineRule,
+  rpcOrChainIdRefineRule,
   stringArraySchema,
   typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
@@ -39,7 +40,10 @@ const callOptionsSchema = baseZetachainOptionsSchema
     message: functionTypesValuesConsistencyRule.message,
     path: functionTypesValuesConsistencyRule.path,
   })
-  .refine(namePkRefineRule);
+  .refine(namePkRefineRule)
+  .refine(rpcOrChainIdRefineRule.rule, {
+    message: rpcOrChainIdRefineRule.message,
+  });
 
 type CallOptions = z.infer<typeof callOptionsSchema>;
 
