@@ -1,4 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
+import { Wallet } from "@coral-xyz/anchor";
 import confirm from "@inquirer/confirm";
 import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { clusterApiUrl, PublicKey } from "@solana/web3.js";
@@ -7,6 +8,8 @@ import bs58 from "bs58";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
+import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
+import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 
 import { SolanaAccountData } from "../types/accounts.types";
 import { RevertOptions } from "../types/contracts.types";
@@ -301,4 +304,20 @@ Revert options: ${JSON.stringify(options.revertOptions)}${
   }
 `);
   await confirm({ message: "Confirm transaction?" });
+};
+
+export const createSolanaGatewayProgram = (
+  chainId: string,
+  signer: anchor.web3.Keypair
+) => {
+  // Mainnet and devnet use the same IDL
+  const gatewayIDL = chainId === "902" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
+
+  const API = getAPIbyChainId(chainId);
+
+  const connection = new anchor.web3.Connection(API);
+  const provider = new anchor.AnchorProvider(connection, new Wallet(signer));
+  const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
+
+  return { gatewayProgram, provider };
 };
