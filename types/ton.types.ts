@@ -1,3 +1,5 @@
+import { KeyPair } from "@ton/crypto";
+import { WalletContractV4 } from "@ton/ton";
 import { z } from "zod";
 
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
@@ -32,3 +34,13 @@ export const depositAndCallOptionsSchema = baseTonOptionsSchema
     message: typesAndValuesLengthRefineRule.message,
     path: typesAndValuesLengthRefineRule.path,
   });
+
+export type tonOptions = {
+  apiKey?: string;
+  chainId: string;
+  gateway?: string;
+  keyPair?: KeyPair;
+  rpc: string;
+  signer?: string;
+  wallet?: WalletContractV4;
+};
