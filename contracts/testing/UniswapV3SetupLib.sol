@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.26;
+pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./DeployHelperLib.sol";
 
-import "lib/forge-std/src/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 interface IUniswapV3Pool {
     function initialize(uint160 sqrtPriceX96) external;
+
     function liquidity() external view returns (uint128);
+
     function slot0()
         external
         view
@@ -21,7 +23,9 @@ interface IUniswapV3Pool {
             uint8 feeProtocol,
             bool unlocked
         );
+
     function token0() external view returns (address);
+
     function token1() external view returns (address);
 }
 
@@ -51,7 +55,9 @@ interface INonfungiblePositionManager {
             uint256 amount1
         );
 
-    function positions(uint256 tokenId)
+    function positions(
+        uint256 tokenId
+    )
         external
         view
         returns (
@@ -68,7 +74,7 @@ interface INonfungiblePositionManager {
             uint128 tokensOwed0,
             uint128 tokensOwed1
         );
-    
+
     function ownerOf(uint256 tokenId) external view returns (address owner);
 }
 
@@ -78,6 +84,7 @@ interface IUniswapV3Factory {
         address tokenB,
         uint24 fee
     ) external returns (address pool);
+
     function getPool(
         address tokenA,
         address tokenB,
@@ -181,7 +188,11 @@ contract UniswapV3SetupLib is Test {
             (params.amount0, params.amount1) = (params.amount1, params.amount0);
         }
 
-        address pool = createUniswapV3Pool(params.factory, params.token0, params.token1);
+        address pool = createUniswapV3Pool(
+            params.factory,
+            params.token0,
+            params.token1
+        );
         assert(pool != address(0));
         uint256 tokenId = addLiquidityV3(
             params.positionManager,
@@ -192,15 +203,17 @@ contract UniswapV3SetupLib is Test {
             params.recipient
         );
 
-        verifyV3Liquidity(PoolVerificationParams({
-            poolAddress: pool,
-            expectedToken0: params.token0,
-            expectedToken1: params.token1,
-            positionManager: params.positionManager,
-            expectedOwner: params.recipient,
-            tokenId: tokenId,
-            verbose: false
-        }));
+        verifyV3Liquidity(
+            PoolVerificationParams({
+                poolAddress: pool,
+                expectedToken0: params.token0,
+                expectedToken1: params.token1,
+                positionManager: params.positionManager,
+                expectedOwner: params.recipient,
+                tokenId: tokenId,
+                verbose: false
+            })
+        );
         vm.stopPrank();
     }
 

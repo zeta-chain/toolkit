@@ -13,7 +13,7 @@ import "./UniswapV3SetupLib.sol";
 import {ZRC20Mock} from "./mock/ZRC20Mock.sol";
 import {ERC20Mock} from "./mock/ERC20Mock.sol";
 import {Test} from "forge-std/Test.sol";
-import {NodeLogicMock} from "./mockGateway/NodeLogicMock.sol"; 
+import {NodeLogicMock} from "./mockGateway/NodeLogicMock.sol";
 import {WrapGatewayZEVM} from "./mockGateway/WrapGatewayZEVM.sol";
 import {WrapGatewayEVM} from "./mockGateway/WrapGatewayEVM.sol";
 import {GatewayZEVM} from "@zetachain/protocol-contracts/contracts/zevm/GatewayZEVM.sol";
@@ -27,13 +27,13 @@ import {TokenSetup} from "./TokenSetup.t.sol";
 
 contract FoundrySetup is Test {
     address public deployer = address(1);
-    address public FUNGIBLE_MODULE_ADDRESS = address(0x735b14BB79463307AAcBED86DAf3322B1e6226aB);
+    address public FUNGIBLE_MODULE_ADDRESS =
+        address(0x735b14BB79463307AAcBED86DAf3322B1e6226aB);
     address public tss = address(2);
     uint256 public chainIdZeta = 7000;
     uint256 public chainIdETH = 5;
     uint256 public chainIdBNB = 97;
 
-   
     ZetaSetup public zetaSetup;
     EVMSetup public evmSetup;
     TokenSetup public tokenSetup;
@@ -45,14 +45,11 @@ contract FoundrySetup is Test {
     TokenSetup.TokenInfo public usdc_bnb;
 
     function setUp() public virtual {
-        vm.deal(tss, 1000000 ether);   
+        vm.deal(tss, 1000000 ether);
         // Setup ZetaChain
-        zetaSetup = new ZetaSetup(
-            deployer,
-            FUNGIBLE_MODULE_ADDRESS
-        );
+        zetaSetup = new ZetaSetup(deployer, FUNGIBLE_MODULE_ADDRESS);
         zetaSetup.setupZetaChain();
-        
+
         // Setup EVM chains
         evmSetup = new EVMSetup(
             deployer,
@@ -62,7 +59,7 @@ contract FoundrySetup is Test {
             address(zetaSetup.nodeLogicMock()),
             zetaSetup.uniswapV2Router()
         );
-        
+
         // Initialize TokenSetup
         tokenSetup = new TokenSetup();
         // Setup ETH chain
@@ -80,7 +77,7 @@ contract FoundrySetup is Test {
             chainIdETH,
             18
         );
-      
+
         usdc_eth = tokenSetup.createToken(
             TokenSetup.Contracts({
                 zetaSetup: zetaSetup,
@@ -94,7 +91,7 @@ contract FoundrySetup is Test {
             chainIdETH,
             6
         );
-        
+
         // Setup BNB chain
         evmSetup.setupEVMChain(chainIdBNB);
         bnb_bnb = tokenSetup.createToken(
@@ -128,8 +125,14 @@ contract FoundrySetup is Test {
         nodeLogicMock = zetaSetup.nodeLogicMock();
         nodeLogicMock.setGatewayZEVM(address(zetaSetup.wrapGatewayZEVM()));
         nodeLogicMock.setChainIdZeta(chainIdZeta);
-        nodeLogicMock.setGatewayEVM(chainIdETH, address(evmSetup.wrapGatewayEVM(chainIdETH)));
-        nodeLogicMock.setGatewayEVM(chainIdBNB, address(evmSetup.wrapGatewayEVM(chainIdBNB)));
+        nodeLogicMock.setGatewayEVM(
+            chainIdETH,
+            address(evmSetup.wrapGatewayEVM(chainIdETH))
+        );
+        nodeLogicMock.setGatewayEVM(
+            chainIdBNB,
+            address(evmSetup.wrapGatewayEVM(chainIdBNB))
+        );
         nodeLogicMock.setUniswapRouter(zetaSetup.uniswapV2Router());
         nodeLogicMock.setWZETA(zetaSetup.wzeta());
 
@@ -138,8 +141,16 @@ contract FoundrySetup is Test {
         nodeLogicMock.setAssetToZRC20(chainIdETH, address(0), eth_eth.zrc20);
         nodeLogicMock.setZRC20ToAsset(chainIdETH, eth_eth.zrc20, address(0));
         if (usdc_eth.asset != address(0)) {
-            nodeLogicMock.setAssetToZRC20(chainIdETH, usdc_eth.asset, usdc_eth.zrc20);
-            nodeLogicMock.setZRC20ToAsset(chainIdETH, usdc_eth.zrc20, usdc_eth.asset);
+            nodeLogicMock.setAssetToZRC20(
+                chainIdETH,
+                usdc_eth.asset,
+                usdc_eth.zrc20
+            );
+            nodeLogicMock.setZRC20ToAsset(
+                chainIdETH,
+                usdc_eth.zrc20,
+                usdc_eth.asset
+            );
         }
         nodeLogicMock.setAssetToZRC20(
             chainIdETH,
@@ -157,8 +168,16 @@ contract FoundrySetup is Test {
         nodeLogicMock.setAssetToZRC20(chainIdBNB, address(0), bnb_bnb.zrc20);
         nodeLogicMock.setZRC20ToAsset(chainIdBNB, bnb_bnb.zrc20, address(0));
         if (usdc_bnb.asset != address(0)) {
-            nodeLogicMock.setAssetToZRC20(chainIdBNB, usdc_bnb.asset, usdc_bnb.zrc20);
-            nodeLogicMock.setZRC20ToAsset(chainIdBNB, usdc_bnb.zrc20, usdc_bnb.asset);
+            nodeLogicMock.setAssetToZRC20(
+                chainIdBNB,
+                usdc_bnb.asset,
+                usdc_bnb.zrc20
+            );
+            nodeLogicMock.setZRC20ToAsset(
+                chainIdBNB,
+                usdc_bnb.zrc20,
+                usdc_bnb.asset
+            );
         }
         nodeLogicMock.setAssetToZRC20(
             chainIdBNB,
@@ -170,7 +189,5 @@ contract FoundrySetup is Test {
             zetaSetup.wzeta(),
             evmSetup.zetaToken(chainIdBNB)
         );
-
-    
     }
 }

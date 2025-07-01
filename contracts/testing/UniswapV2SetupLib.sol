@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.26;
+pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./DeployHelperLib.sol";
 
-import "lib/forge-std/src/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 interface IUniswapV2Router02 {
     function addLiquidity(
@@ -20,8 +20,15 @@ interface IUniswapV2Router02 {
 }
 
 interface IUniswapV2Factory {
-    function createPair(address tokenA, address tokenB) external returns (address pair);
-    function getPair(address tokenA, address tokenB) external view returns (address pair);
+    function createPair(
+        address tokenA,
+        address tokenB
+    ) external returns (address pair);
+
+    function getPair(
+        address tokenA,
+        address tokenB
+    ) external view returns (address pair);
 }
 
 contract UniswapV2SetupLib is Test {

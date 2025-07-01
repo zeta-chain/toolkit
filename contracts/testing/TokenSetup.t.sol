@@ -62,12 +62,13 @@ contract TokenSetup is UniswapV2SetupLib, UniswapV3SetupLib {
         uint256 chainId,
         uint8 decimals
     ) public returns (TokenInfo memory) {
-
         CreateTokenVars memory vars;
-        vars.name = string(abi.encodePacked("ZRC-20 ", symbol, " on ", vm.toString(chainId)));
+        vars.name = string(
+            abi.encodePacked("ZRC-20 ", symbol, " on ", vm.toString(chainId))
+        );
         vars.fullSymbol = string(abi.encodePacked("ZRC20", symbol));
         vars.coinType = isGasToken ? CoinType.Gas : CoinType.ERC20;
-        
+
         // Deploy ZRC20Mock
         vars.zrc20 = new ZRC20Mock(
             vars.name,
@@ -77,24 +78,38 @@ contract TokenSetup is UniswapV2SetupLib, UniswapV3SetupLib {
             vars.coinType,
             1, // gasLimit
             address(contracts.zetaSetup.systemContract()),
-            address(contracts.zetaSetup.wrapGatewayZEVM()) 
+            address(contracts.zetaSetup.wrapGatewayZEVM())
         );
-        
+
         // Handle asset creation
         vars.asset = address(0);
         if (isGasToken) {
             vm.startPrank(contracts.zetaSetup.FUNGIBLE_MODULE_ADDRESS());
-            SystemContract(contracts.zetaSetup.systemContract()).setGasCoinZRC20(chainId, address(vars.zrc20));
-            SystemContract(contracts.zetaSetup.systemContract()).setGasPrice(chainId, 1 gwei);
+            SystemContract(contracts.zetaSetup.systemContract())
+                .setGasCoinZRC20(chainId, address(vars.zrc20));
+            SystemContract(contracts.zetaSetup.systemContract()).setGasPrice(
+                chainId,
+                1 gwei
+            );
             vm.stopPrank();
         } else {
-            require(address(contracts.evmSetup.wrapGatewayEVM(chainId)) != address(0), "Gateway EVM not set for this chain");
+            require(
+                address(contracts.evmSetup.wrapGatewayEVM(chainId)) !=
+                    address(0),
+                "Gateway EVM not set for this chain"
+            );
             vars.asset = createEVMToken(contracts, chainId, symbol);
         }
 
         // Mint tokens
-        vars.zrc20.mint(contracts.deployer, 10000000000 * 10 ** vars.zrc20.decimals());
-        vars.zrc20.mint(contracts.zetaSetup.FUNGIBLE_MODULE_ADDRESS(), 10000000000 * 10 ** vars.zrc20.decimals());
+        vars.zrc20.mint(
+            contracts.deployer,
+            10000000000 * 10 ** vars.zrc20.decimals()
+        );
+        vars.zrc20.mint(
+            contracts.zetaSetup.FUNGIBLE_MODULE_ADDRESS(),
+            10000000000 * 10 ** vars.zrc20.decimals()
+        );
 
         // Add liquidity
         vm.startPrank(contracts.deployer);
@@ -148,13 +163,18 @@ contract TokenSetup is UniswapV2SetupLib, UniswapV3SetupLib {
 
         vm.startPrank(contracts.deployer);
         erc20.approve(contracts.evmSetup.custody(chainId), type(uint256).max);
-        erc20.mint(contracts.evmSetup.custody(chainId), 1000000 * 10 ** decimals);
+        erc20.mint(
+            contracts.evmSetup.custody(chainId),
+            1000000 * 10 ** decimals
+        );
         erc20.mint(contracts.tss, 1000000 * 10 ** decimals);
         erc20.mint(contracts.deployer, 1000000 * 10 ** decimals);
         vm.stopPrank();
 
         vm.startPrank(contracts.tss);
-        ERC20Custody(contracts.evmSetup.custody(chainId)).whitelist(address(erc20));
+        ERC20Custody(contracts.evmSetup.custody(chainId)).whitelist(
+            address(erc20)
+        );
         vm.stopPrank();
 
         return address(erc20);
@@ -163,4 +183,4 @@ contract TokenSetup is UniswapV2SetupLib, UniswapV3SetupLib {
     function getForeignCoins() public view returns (TokenInfo[] memory) {
         return foreignCoins;
     }
-} 
+}

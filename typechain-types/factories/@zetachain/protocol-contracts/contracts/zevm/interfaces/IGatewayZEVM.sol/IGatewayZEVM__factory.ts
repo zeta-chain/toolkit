@@ -53,12 +53,17 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "InsufficientAmount",
+    name: "InsufficientGasLimit",
     type: "error",
   },
   {
     inputs: [],
-    name: "InsufficientGasLimit",
+    name: "InsufficientZRC20Amount",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InsufficientZetaAmount",
     type: "error",
   },
   {
