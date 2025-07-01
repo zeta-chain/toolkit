@@ -1,29 +1,17 @@
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { ethers } from "ethers";
+import { z } from "zod";
 
-import {
-  ERC20Contract,
-  RevertOptions,
-  TxOptions,
-} from "../../../types/contracts.types";
+import { ERC20Contract } from "../../../types/contracts.types";
 import {
   broadcastGatewayTx,
   generateEvmDepositData,
 } from "../../../utils/gatewayEvm";
 import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
+import { evmDepositParamsSchema, evmOptionsSchema } from "../../schemas/evm";
 
-type evmDepositParams = {
-  amount: string;
-  receiver: string;
-  revertOptions: RevertOptions;
-  token?: string;
-};
-
-type evmOptions = {
-  gateway?: string;
-  signer: ethers.Wallet;
-  txOptions?: TxOptions;
-};
+type evmDepositParams = z.infer<typeof evmDepositParamsSchema>;
+type evmOptions = z.infer<typeof evmOptionsSchema>;
 
 /**
  * Deposits tokens from an EVM chain to ZetaChain.

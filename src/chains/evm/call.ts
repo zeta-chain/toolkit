@@ -1,25 +1,14 @@
-import { ethers } from "ethers";
+import { z } from "zod";
 
-import { RevertOptions, TxOptions } from "../../../types/contracts.types";
-import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import {
   broadcastGatewayTx,
   generateEvmCallData,
 } from "../../../utils/gatewayEvm";
 import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
+import { evmCallParamsSchema, evmOptionsSchema } from "../../schemas/evm";
 
-type evmCallParams = {
-  receiver: string;
-  revertOptions: RevertOptions;
-  types: string[];
-  values: ParseAbiValuesReturnType;
-};
-
-type evmOptions = {
-  gateway?: string;
-  signer: ethers.Wallet;
-  txOptions?: TxOptions;
-};
+type evmCallParams = z.infer<typeof evmCallParamsSchema>;
+type evmOptions = z.infer<typeof evmOptionsSchema>;
 
 /**
  * Makes a cross-chain call from an EVM chain to a universal contract on ZetaChain.

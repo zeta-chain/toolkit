@@ -1,32 +1,20 @@
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { ethers } from "ethers";
+import { z } from "zod";
 
-import {
-  ERC20Contract,
-  RevertOptions,
-  TxOptions,
-} from "../../../types/contracts.types";
-import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { ERC20Contract } from "../../../types/contracts.types";
 import {
   broadcastGatewayTx,
   generateEvmDepositAndCallData,
 } from "../../../utils/gatewayEvm";
 import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
+import {
+  evmDepositAndCallParamsSchema,
+  evmOptionsSchema,
+} from "../../schemas/evm";
 
-type evmDepositAndCallParams = {
-  amount: string;
-  receiver: string;
-  revertOptions: RevertOptions;
-  token?: string;
-  types: string[];
-  values: ParseAbiValuesReturnType;
-};
-
-type evmOptions = {
-  gateway?: string;
-  signer: ethers.Wallet;
-  txOptions?: TxOptions;
-};
+type evmDepositAndCallParams = z.infer<typeof evmDepositAndCallParamsSchema>;
+type evmOptions = z.infer<typeof evmOptionsSchema>;
 
 /**
  * Deposits tokens and makes a cross-chain call from an EVM chain to a universal contract on ZetaChain.
