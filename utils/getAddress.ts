@@ -5,6 +5,8 @@ import {
 } from "@zetachain/protocol-contracts/dist/lib/types";
 import { ethers } from "ethers";
 
+import { handleError } from "./handleError";
+
 export const getAddress = (
   type: ParamType,
   chainId: number,
@@ -34,7 +36,7 @@ export const getAddress = (
   return address.address;
 };
 
-export const getGatewayAddress = async (signer: ethers.Wallet) => {
+export const getGatewayAddressFromSigner = async (signer: ethers.Wallet) => {
   const provider = signer.provider;
   if (!provider) {
     throw new Error("Signer does not have a valid provider");
@@ -48,4 +50,24 @@ export const getGatewayAddress = async (signer: ethers.Wallet) => {
     throw new Error("Gateway address not found");
   }
   return gwAddress;
+};
+
+export const getGatewayAddressFromChainId = (
+  gateway: string | undefined,
+  chainId: string | undefined
+) => {
+  let gw;
+  if (gateway) {
+    gw = gateway;
+  } else if (chainId) {
+    gw = getAddress("gateway", parseInt(chainId));
+  } else {
+    handleError({
+      context: "Failed to retrieve gateway address",
+      error: new Error("Gateway address not found"),
+      shouldThrow: true,
+    });
+    process.exit(1);
+  }
+  return gw;
 };

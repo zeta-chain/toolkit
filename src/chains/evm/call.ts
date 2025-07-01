@@ -6,7 +6,7 @@ import {
   broadcastGatewayTx,
   generateEvmCallData,
 } from "../../../utils/gatewayEvm";
-import { getGatewayAddress } from "../../../utils/getAddress";
+import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
 
 type evmCallParams = {
   receiver: string;
@@ -23,7 +23,7 @@ type evmOptions = {
 
 export const evmCall = async (params: evmCallParams, options: evmOptions) => {
   const gatewayAddress =
-    options.gateway || (await getGatewayAddress(options.signer));
+    options.gateway || (await getGatewayAddressFromSigner(options.signer));
 
   const callData = generateEvmCallData({
     receiver: params.receiver,

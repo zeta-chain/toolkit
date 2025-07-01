@@ -11,7 +11,7 @@ import {
   broadcastGatewayTx,
   generateEvmDepositAndCallData,
 } from "../../../utils/gatewayEvm";
-import { getGatewayAddress } from "../../../utils/getAddress";
+import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
 
 type evmDepositAndCallParams = {
   amount: string;
@@ -33,7 +33,7 @@ export const evmDepositAndCall = async (
   options: evmOptions
 ) => {
   const gatewayAddress =
-    options.gateway || (await getGatewayAddress(options.signer));
+    options.gateway || (await getGatewayAddressFromSigner(options.signer));
 
   if (params.token) {
     const erc20Contract = new ethers.Contract(

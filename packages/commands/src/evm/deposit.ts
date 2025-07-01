@@ -21,7 +21,7 @@ import {
   prepareTxOptions,
   setupEvmTransaction,
 } from "../../../../utils/evm.command.helpers";
-import { getAddress } from "../../../../utils/getAddress";
+import { getGatewayAddressFromChainId } from "../../../../utils/getAddress";
 
 const depositOptionsSchema = baseEvmOptionsSchema
   .extend({
@@ -56,19 +56,10 @@ const main = async (options: DepositOptions) => {
 
     if (!isConfirmed) return;
 
-    let gateway: string;
-    if (options.gateway) {
-      gateway = options.gateway;
-    } else if (options.chainId) {
-      gateway = getAddress("gateway", parseInt(options.chainId));
-    } else {
-      handleError({
-        context: "Failed to retrieve gateway address",
-        error: new Error("Gateway address not found"),
-        shouldThrow: true,
-      });
-      process.exit(1);
-    }
+    const gateway = getGatewayAddressFromChainId(
+      options.gateway,
+      options.chainId
+    );
 
     const tx = await evmDeposit(
       {
