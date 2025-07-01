@@ -9,6 +9,7 @@ import {
   createSolanaCommandWithCommonOptions,
   getAPIbyChainId,
   getKeypair,
+  prepareRevertOptions,
   solanaDepositOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
 
@@ -23,13 +24,7 @@ const main = async (options: DepositOptions) => {
 
   const API = getAPIbyChainId(options.chainId);
 
-  const revertOptions = {
-    abortAddress: options.abortAddress,
-    callOnRevert: options.callOnRevert,
-    onRevertGasLimit: options.onRevertGasLimit,
-    revertAddress: options.revertAddress,
-    revertMessage: options.revertMessage,
-  };
+  const revertOptions = prepareRevertOptions(options);
 
   await confirmSolanaTx({
     amount: options.amount,

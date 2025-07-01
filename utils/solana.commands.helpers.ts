@@ -253,6 +253,19 @@ interface SolanaRevertOptions {
   revertMessage: Buffer;
 }
 
+// Common revert options preparation
+export const prepareRevertOptions = (
+  options: z.infer<typeof baseSolanaOptionsSchema>
+): RevertOptions => {
+  return {
+    abortAddress: options.abortAddress,
+    callOnRevert: options.callOnRevert,
+    onRevertGasLimit: options.onRevertGasLimit,
+    revertAddress: options.revertAddress,
+    revertMessage: options.revertMessage,
+  };
+};
+
 export const createRevertOptions = (
   options: RevertOptions,
   publicKey: anchor.web3.PublicKey
