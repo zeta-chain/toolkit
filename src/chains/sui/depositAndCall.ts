@@ -1,32 +1,22 @@
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { AbiCoder, ethers } from "ethers";
+import { z } from "zod";
 
-import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import {
-  chainIds,
   GAS_BUDGET,
   getCoin,
   getSuiGatewayAndClient,
   signAndExecuteTransaction,
   toSmallestUnit,
 } from "../../../utils/sui";
+import {
+  suiDepositAndCallParamsSchema,
+  suiOptionsSchema,
+} from "../../schemas/sui";
 
-type suiDepositAndCallParams = {
-  amount: string;
-  receiver: string;
-  token?: string;
-  types: string[];
-  values: ParseAbiValuesReturnType;
-};
-
-type suiOptions = {
-  chainId: (typeof chainIds)[number];
-  gasLimit?: string;
-  gatewayObject?: string;
-  gatewayPackage?: string;
-  signer: Ed25519Keypair;
-};
+type suiDepositAndCallParams = z.infer<typeof suiDepositAndCallParamsSchema>;
+type suiOptions = z.infer<typeof suiOptionsSchema>;
 
 /**
  * Deposits tokens and makes a cross-chain call from Sui to a universal contract on ZetaChain.

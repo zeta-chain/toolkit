@@ -1,8 +1,8 @@
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
+import { z } from "zod";
 
 import {
-  chainIds,
   GAS_BUDGET,
   getCoin,
   getSuiGatewayAndClient,
@@ -10,20 +10,10 @@ import {
   SUI_GAS_COIN_TYPE,
   toSmallestUnit,
 } from "../../../utils/sui";
+import { suiDepositParamsSchema, suiOptionsSchema } from "../../schemas/sui";
 
-type suiDepositParams = {
-  amount: string;
-  receiver: string;
-  token?: string;
-};
-
-type suiOptions = {
-  chainId: (typeof chainIds)[number];
-  gasLimit?: string;
-  gatewayObject?: string;
-  gatewayPackage?: string;
-  signer: Ed25519Keypair;
-};
+type suiDepositParams = z.infer<typeof suiDepositParamsSchema>;
+type suiOptions = z.infer<typeof suiOptionsSchema>;
 
 /**
  * Deposits tokens from Sui to ZetaChain.
