@@ -10079,7 +10079,7 @@ table-layout@^1.0.2:
     typical "^5.2.0"
     wordwrapjs "^4.0.0"
 
-table@^6.8.0, table@^6.8.1:
+table@^6.8.0, table@^6.8.1, table@^6.9.0:
   version "6.9.0"
   resolved "https://registry.npmjs.org/table/-/table-6.9.0.tgz#50040afa6264141c7566b3b81d4d82c47a8668f5"
   integrity sha512-9kY+CygyYM6j02t5YFHbNz2FN5QmYGv9zAjVp4lCDjlCw7amdckXlEt/bjMhUIfj4ThGRE4gCUH5+yGnNuPo5A==

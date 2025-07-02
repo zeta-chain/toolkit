@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import ora from "ora";
+import { getBorderCharacters, table } from "table";
 import { z } from "zod";
 
 import { Call } from "../../../../types/balances.types";
@@ -16,11 +17,16 @@ const DEFAULT_RPC_URL =
   "https://zetachain-athens-evm.blockpi.network/v1/rpc/public";
 const MULTICALL_ADDRESS = "0xca11bde05977b3631167028862be2a173976ca11";
 
+const feesParamsSchema = z.object({
+  gasLimit: z.string().optional(),
+});
+
 const feesOptionsSchema = z.object({
   api: z.string().default(DEFAULT_API_URL),
   rpc: z.string().default(DEFAULT_RPC_URL),
 });
 
+type FeesParams = z.infer<typeof feesParamsSchema>;
 type FeesOptions = z.infer<typeof feesOptionsSchema>;
 
 interface WithdrawGasFeeResult {
@@ -32,21 +38,29 @@ interface WithdrawGasFeeResult {
   zrc20Address: string;
 }
 
-const main = async (options: FeesOptions) => {
-  const spinner = ora("Fetching foreign coins...").start();
+export interface FeesData {
+  data?: WithdrawGasFeeResult[];
+  error?: string;
+  gasLimit?: string;
+  success: boolean;
+  totalTokens: number;
+}
 
+export const getFees = async (
+  params: FeesParams = {},
+  options: FeesOptions = feesOptionsSchema.parse({})
+): Promise<FeesData> => {
   try {
     const response = await axios.get<ForeignCoinsResponse>(
       `${options.api}/zeta-chain/fungible/foreign_coins`
     );
 
-    spinner.succeed(
-      `Successfully fetched ${response.data.foreignCoins.length} foreign coins`
-    );
-
     if (response.data.foreignCoins.length === 0) {
-      console.log(chalk.yellow("No foreign coins found"));
-      return;
+      return {
+        error: "No foreign coins found",
+        success: false,
+        totalTokens: 0,
+      };
     }
 
     const zrc20Contracts = response.data.foreignCoins.filter(
@@ -55,15 +69,20 @@ const main = async (options: FeesOptions) => {
     );
 
     if (zrc20Contracts.length === 0) {
-      console.log(chalk.yellow("No ZRC20 contracts found"));
-      return;
+      return {
+        error: "No ZRC20 contracts found",
+        success: false,
+        totalTokens: 0,
+      };
     }
-
-    spinner.text = "Querying withdrawGasFee for ZRC20 contracts...";
 
     const multicallContexts: Call[] = zrc20Contracts.map((contract) => {
       const zrc20Interface = new ethers.Interface(ZRC20ABI.abi);
-      const callData = zrc20Interface.encodeFunctionData("withdrawGasFee");
+      const callData = params.gasLimit
+        ? zrc20Interface.encodeFunctionData("withdrawGasFeeWithGasLimit", [
+            params.gasLimit,
+          ])
+        : zrc20Interface.encodeFunctionData("withdrawGasFee");
 
       return {
         callData,
@@ -89,7 +108,7 @@ const main = async (options: FeesOptions) => {
     for (let i = 0; i < returnData.length; i++) {
       try {
         const decoded = zrc20Interface.decodeFunctionResult(
-          "withdrawGasFee",
+          params.gasLimit ? "withdrawGasFeeWithGasLimit" : "withdrawGasFee",
           returnData[i] as ethers.BytesLike
         );
         const [gasTokenAddress, gasFee] = decoded;
@@ -118,18 +137,69 @@ const main = async (options: FeesOptions) => {
       }
     }
 
+    results.sort((a, b) => a.chain_id.localeCompare(b.chain_id));
+
+    return {
+      data: results,
+      gasLimit: params.gasLimit,
+      success: true,
+      totalTokens: results.length,
+    };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+      success: false,
+      totalTokens: 0,
+    };
+  }
+};
+
+const main = async (params: FeesParams, options: FeesOptions) => {
+  const spinner = ora("Fetching foreign coins...").start();
+
+  try {
+    const feesData = await getFees(params, options);
+
+    if (!feesData.success) {
+      spinner.fail("Failed to fetch data");
+      console.log(chalk.yellow(feesData.error));
+      return;
+    }
+
     spinner.succeed(
-      `Successfully queried withdrawGasFee for ${results.length} ZRC20 contracts`
+      `Successfully queried withdrawGasFee for ${feesData.totalTokens} ZRC-20 tokens`
     );
 
-    console.log(chalk.blue("\nWithdraw Gas Fees:"));
-    console.table(
-      results.map((result) => ({
-        chain_id: result.chain_id,
-        fee: `${result.gasFee} ${result.gasTokenSymbol}`,
-        zrc20: result.symbol,
-      }))
-    );
+    const title = params.gasLimit
+      ? `\nWithdraw and Call Gas Fees (with gas limit: ${params.gasLimit})`
+      : "\nWithdraw Gas Fees";
+
+    console.log(chalk.blue(title));
+
+    const tableData = [
+      ["Chain ID", "ZRC-20", "Fee Amount", "Fee Token"],
+      ...feesData.data!.map((result) => [
+        result.chain_id,
+        result.symbol,
+        result.gasFee,
+        result.gasTokenSymbol,
+      ]),
+    ];
+
+    const tableConfig = {
+      border: getBorderCharacters("norc"),
+      columnDefault: {
+        alignment: "left" as const,
+      },
+      columns: [
+        { alignment: "left" as const },
+        { alignment: "left" as const },
+        { alignment: "right" as const },
+        { alignment: "left" as const },
+      ],
+    };
+
+    console.log(table(tableData, tableConfig));
   } catch (error) {
     spinner.fail("Failed to fetch data");
     console.error(chalk.red("Error details:"), error);
@@ -144,7 +214,11 @@ export const feesCommand = new Command("fees")
   .addOption(
     new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_RPC_URL)
   )
-  .action(async (options: FeesOptions) => {
+  .addOption(
+    new Option("--gas-limit <limit>", "Gas limit for withdraw and call")
+  )
+  .action(async (options) => {
+    const params = feesParamsSchema.parse(options);
     const validatedOptions = feesOptionsSchema.parse(options);
-    await main(validatedOptions);
+    await main(params, validatedOptions);
   });
