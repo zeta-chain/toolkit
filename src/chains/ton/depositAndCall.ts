@@ -3,21 +3,16 @@ import { stringToCell } from "@ton/core/dist/boc/utils/strings";
 import { TonClient } from "@ton/ton";
 import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
 import { AbiCoder, ethers } from "ethers";
+import { z } from "zod";
 
-import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
 import { tonOptions } from "../../../types/ton.types";
+import { tonDepositAndCallParamsSchema } from "../../schemas/ton";
 import {
   getGatewayAddress,
   getWalletAndKeyPair,
 } from "../../../utils/ton.command.helpers";
 
-type tonDepositAndCallParams = {
-  amount: string;
-  data?: string;
-  receiver: string;
-  types?: string[];
-  values?: ParseAbiValuesReturnType;
-};
+type tonDepositAndCallParams = z.infer<typeof tonDepositAndCallParamsSchema>;
 
 /**
  * Deposits tokens and makes a cross-chain call from TON to a universal contract on ZetaChain.
