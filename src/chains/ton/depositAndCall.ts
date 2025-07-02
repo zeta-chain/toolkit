@@ -5,14 +5,17 @@ import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
 import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
-import { tonOptions } from "../../../types/ton.types";
 import {
   getGatewayAddress,
   getWalletAndKeyPair,
 } from "../../../utils/ton.command.helpers";
-import { tonDepositAndCallParamsSchema } from "../../schemas/ton";
+import {
+  tonDepositAndCallParamsSchema,
+  tonOptionsSchema,
+} from "../../schemas/ton";
 
 type tonDepositAndCallParams = z.infer<typeof tonDepositAndCallParamsSchema>;
+type tonOptions = z.infer<typeof tonOptionsSchema>;
 
 /**
  * Deposits tokens and makes a cross-chain call from TON to a universal contract on ZetaChain.

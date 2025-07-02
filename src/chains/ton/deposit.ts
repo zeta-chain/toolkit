@@ -2,14 +2,14 @@ import { toNano, TonClient } from "@ton/ton";
 import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
 import { z } from "zod";
 
-import { tonOptions } from "../../../types/ton.types";
 import {
   getGatewayAddress,
   getWalletAndKeyPair,
 } from "../../../utils/ton.command.helpers";
-import { tonDepositParamsSchema } from "../../schemas/ton";
+import { tonDepositParamsSchema, tonOptionsSchema } from "../../schemas/ton";
 
 type tonDepositParams = z.infer<typeof tonDepositParamsSchema>;
+type tonOptions = z.infer<typeof tonOptionsSchema>;
 
 /**
  * Deposits tokens from TON to ZetaChain.
