@@ -17,20 +17,10 @@ export const suiDepositParamsSchema = z.object({
   token: z.string().optional(),
 });
 
-export const suiDepositSchema = z.object({
-  options: suiOptionsSchema,
-  params: suiDepositParamsSchema,
-});
-
 export const suiDepositAndCallParamsSchema = z.object({
   amount: z.string(),
   receiver: z.string(),
   token: z.string().optional(),
   types: z.array(z.string()),
   values: z.array(z.union([z.string(), z.bigint(), z.boolean()])),
-});
-
-export const suiDepositAndCallSchema = z.object({
-  options: suiOptionsSchema,
-  params: suiDepositAndCallParamsSchema,
 });

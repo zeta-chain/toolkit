@@ -30,21 +30,11 @@ export const evmCallParamsSchema = z.object({
   values: z.array(z.union([z.string(), z.bigint(), z.boolean()])),
 });
 
-export const evmCallSchema = z.object({
-  options: evmOptionsSchema,
-  params: evmCallParamsSchema,
-});
-
 export const evmDepositParamsSchema = z.object({
   amount: z.string(),
   receiver: z.string(),
   revertOptions: revertOptionsSchema,
   token: z.string().optional(),
-});
-
-export const evmDepositSchema = z.object({
-  options: evmOptionsSchema,
-  params: evmDepositParamsSchema,
 });
 
 export const evmDepositAndCallParamsSchema = z.object({
@@ -54,9 +44,4 @@ export const evmDepositAndCallParamsSchema = z.object({
   token: z.string().optional(),
   types: z.array(z.string()),
   values: z.array(z.union([z.string(), z.bigint(), z.boolean()])),
-});
-
-export const evmDepositAndCallSchema = z.object({
-  options: evmOptionsSchema,
-  params: evmDepositAndCallParamsSchema,
 });

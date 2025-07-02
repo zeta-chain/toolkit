@@ -35,21 +35,11 @@ export const zetachainCallParamsSchema = z.object({
   zrc20: evmAddressSchema,
 });
 
-export const zetachainCallSchema = z.object({
-  options: zetachainOptionsSchema,
-  params: zetachainCallParamsSchema,
-});
-
 export const zetachainWithdrawParamsSchema = z.object({
   amount: z.string(),
   receiver: z.string(),
   revertOptions: revertOptionsSchema,
   zrc20: evmAddressSchema,
-});
-
-export const zetachainWithdrawSchema = z.object({
-  options: zetachainOptionsSchema,
-  params: zetachainWithdrawParamsSchema,
 });
 
 export const zetachainWithdrawAndCallParamsSchema = z.object({
@@ -62,9 +52,4 @@ export const zetachainWithdrawAndCallParamsSchema = z.object({
   types: z.array(z.string()).optional(),
   values: z.array(z.union([z.string(), z.bigint(), z.boolean()])).optional(),
   zrc20: evmAddressSchema,
-});
-
-export const zetachainWithdrawAndCallSchema = z.object({
-  options: zetachainOptionsSchema,
-  params: zetachainWithdrawAndCallParamsSchema,
 });

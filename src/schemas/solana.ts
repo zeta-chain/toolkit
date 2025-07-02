@@ -21,21 +21,11 @@ export const solanaCallParamsSchema = z.object({
   values: z.array(z.union([z.string(), z.bigint(), z.boolean()])),
 });
 
-export const solanaCallSchema = z.object({
-  options: solanaOptionsSchema,
-  params: solanaCallParamsSchema,
-});
-
 export const solanaDepositParamsSchema = z.object({
   amount: z.string(),
   receiver: z.string(),
   revertOptions: revertOptionsSchema,
   token: z.string().optional(),
-});
-
-export const solanaDepositSchema = z.object({
-  options: solanaOptionsSchema,
-  params: solanaDepositParamsSchema,
 });
 
 export const solanaDepositAndCallParamsSchema = z.object({
@@ -45,9 +35,4 @@ export const solanaDepositAndCallParamsSchema = z.object({
   token: z.string().optional(),
   types: z.array(z.string()),
   values: z.array(z.union([z.string(), z.bigint(), z.boolean()])),
-});
-
-export const solanaDepositAndCallSchema = z.object({
-  options: solanaOptionsSchema,
-  params: solanaDepositAndCallParamsSchema,
 });
