@@ -1,7 +1,13 @@
+import { AbiCoder, getBytes, hexlify } from "ethers";
 import { z } from "zod";
 
 import { suiDepositAndCall } from "../../../../src/chains/sui/depositAndCall";
-import { commonDepositObjectSchema, getKeypair } from "../../../../utils/sui";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
+import {
+  commonDepositObjectSchema,
+  getKeypair,
+  getSuiRpcByChainId,
+} from "../../../../utils/sui";
 import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
 
 const depositAndCallOptionsSchema = commonDepositObjectSchema
@@ -16,6 +22,20 @@ const depositAndCallOptionsSchema = commonDepositObjectSchema
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
 const main = async (options: DepositAndCallOptions) => {
+  const keypair = getKeypair(options);
+
+  const abiCoder = AbiCoder.defaultAbiCoder();
+  const payloadABI = abiCoder.encode(options.types, options.values);
+  const message = hexlify(getBytes(payloadABI));
+
+  const isConfirmed = await confirmTransaction({
+    amount: options.amount,
+    message,
+    receiver: options.receiver,
+    rpc: getSuiRpcByChainId(options.chainId),
+    sender: keypair.toSuiAddress(),
+  });
+  if (!isConfirmed) return;
   await suiDepositAndCall(
     {
       amount: options.amount,
@@ -29,7 +49,7 @@ const main = async (options: DepositAndCallOptions) => {
       gasLimit: options.gasBudget,
       gatewayObject: options.gatewayObject,
       gatewayPackage: options.gatewayPackage,
-      signer: getKeypair(options),
+      signer: keypair,
     }
   );
 };

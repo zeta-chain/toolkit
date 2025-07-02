@@ -285,3 +285,8 @@ export const getSuiGatewayAndClient = (
 
   return result;
 };
+
+export const getSuiRpcByChainId = (chainId: (typeof chainIds)[number]) => {
+  const network = networks[chainIds.indexOf(chainId)];
+  return getFullnodeUrl(network);
+};

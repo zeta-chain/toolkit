@@ -41,7 +41,6 @@ export const suiDepositAndCall = async (
 
   const gasBudget = BigInt(options.gasLimit || GAS_BUDGET);
   const tx = new Transaction();
-
   const abiCoder = AbiCoder.defaultAbiCoder();
   const payloadABI = abiCoder.encode(params.types, params.values);
   const payloadBytes = ethers.getBytes(payloadABI);

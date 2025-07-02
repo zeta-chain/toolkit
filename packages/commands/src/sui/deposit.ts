@@ -1,12 +1,25 @@
 import { z } from "zod";
 
 import { suiDeposit } from "../../../../src/chains/sui/deposit";
-import { commonDepositOptionsSchema, getKeypair } from "../../../../utils/sui";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
+import {
+  commonDepositOptionsSchema,
+  getKeypair,
+  getSuiRpcByChainId,
+} from "../../../../utils/sui";
 import { createSuiCommandWithCommonOptions } from "../../../../utils/sui.command.helpers";
 
 type DepositOptions = z.infer<typeof commonDepositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
+  const keypair = getKeypair(options);
+  const isConfirmed = await confirmTransaction({
+    amount: options.amount,
+    receiver: options.receiver,
+    rpc: getSuiRpcByChainId(options.chainId),
+    sender: keypair.toSuiAddress(),
+  });
+  if (!isConfirmed) return;
   await suiDeposit(
     {
       amount: options.amount,
@@ -18,7 +31,7 @@ const main = async (options: DepositOptions) => {
       gasLimit: options.gasBudget,
       gatewayObject: options.gatewayObject,
       gatewayPackage: options.gatewayPackage,
-      signer: getKeypair(options),
+      signer: keypair,
     }
   );
 };
