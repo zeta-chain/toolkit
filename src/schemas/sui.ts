@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { z } from "zod";
 
 export const chainIds = ["101", "103", "104"] as const;
 
