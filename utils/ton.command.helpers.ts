@@ -55,26 +55,6 @@ export const getAccount = async (options: {
   };
 };
 
-export const getAccountFromMnemonic = async (mnemonicRaw: string) => {
-  // Remove extra spaces and newlines
-  const mnemonic = mnemonicRaw.trim().replace(/\s+/g, " ");
-
-  const mnemonicWords = mnemonic.split(" ");
-
-  if (!(await mnemonicValidate(mnemonicWords))) {
-    throw new Error("Invalid mnemonic phrase");
-  }
-
-  const keyPair = await mnemonicToWalletKey(mnemonicWords);
-
-  const wallet = WalletContractV4.create({
-    publicKey: keyPair.publicKey,
-    workchain: 0,
-  });
-
-  return { keyPair, wallet };
-};
-
 export const getWalletAndKeyPair = async (
   wallet?: WalletContractV4,
   keyPair?: KeyPair,
@@ -86,7 +66,10 @@ export const getWalletAndKeyPair = async (
     resolvedWallet = wallet;
     resolvedKeyPair = keyPair;
   } else if (signer) {
-    const account = await getAccountFromMnemonic(signer);
+    const account = await getAccount({
+      mnemonic: signer,
+      name: DEFAULT_ACCOUNT_NAME,
+    });
     resolvedWallet = account.wallet;
     resolvedKeyPair = account.keyPair;
   } else {
