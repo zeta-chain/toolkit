@@ -51,7 +51,7 @@ const main = async (options: CallOptions) => {
   try {
     const { signer } = setupZetachainTransaction(options);
 
-    const gateway = getGatewayAddressFromChainId(
+    const gatewayAddress = getGatewayAddressFromChainId(
       options.gateway,
       options.chainId
     );
@@ -66,7 +66,7 @@ const main = async (options: CallOptions) => {
       console.log(`Contract call details:
 Raw data: ${options.data}
 Withdraw Gas Fee: ${gasFee} ${gasSymbol}
-ZetaChain Gateway: ${gateway}
+ZetaChain Gateway: ${gatewayAddress}
 `);
 
       const response = await zetachainCall(
@@ -78,7 +78,7 @@ ZetaChain Gateway: ${gateway}
           zrc20: options.zrc20,
         },
         {
-          gateway,
+          gateway: gatewayAddress,
           signer,
           txOptions: prepareTxOptions(options),
         }
@@ -93,7 +93,7 @@ Function: ${options.function}
 Function parameters: ${options.values?.join(", ")}
 Parameter types: ${stringifiedTypes}
 Withdraw Gas Fee: ${gasFee} ${gasSymbol}
-ZetaChain Gateway: ${gateway}
+ZetaChain Gateway: ${gatewayAddress}
 `);
 
       const isConfirmed = await confirmZetachainTransaction(options);
@@ -112,7 +112,7 @@ ZetaChain Gateway: ${gateway}
           zrc20: options.zrc20,
         },
         {
-          gateway,
+          gateway: gatewayAddress,
           signer,
           txOptions: prepareTxOptions(options),
         }
