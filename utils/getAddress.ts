@@ -17,12 +17,12 @@ export const getAddress = (
   if (type !== "zrc20" && symbol) {
     throw new Error("Symbol is only supported when ParamType is zrc20");
   }
-  if (type === "zrc20" && !symbol) {
+  if (type === "zrc20") {
     address = networks.find((n) => {
       return (
         n.foreign_chain_id === chainId.toString() &&
         n.type === type &&
-        n.coin_type === "gas"
+        (symbol ? n.symbol === symbol : n.coin_type === "gas")
       );
     });
   } else {
