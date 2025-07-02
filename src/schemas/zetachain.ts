@@ -1,22 +1,26 @@
 import { ethers } from "ethers";
 import { z } from "zod";
+
+import {
+  bigNumberishSchema,
+  evmAddressSchema,
+} from "../../types/shared.schema";
 import { revertOptionsSchema } from "./evm";
-import { evmAddressSchema } from "../../types/shared.schema";
 
 export const zetachainOptionsSchema = z.object({
   gateway: z.string().optional(),
   signer: z.instanceof(ethers.Wallet),
   txOptions: z
     .object({
-      gasLimit: z.union([z.string(), z.number(), z.bigint()]).optional(),
-      gasPrice: z.union([z.string(), z.number(), z.bigint()]).optional(),
-      value: z.union([z.string(), z.number(), z.bigint()]).optional(),
+      gasLimit: bigNumberishSchema.optional(),
+      gasPrice: bigNumberishSchema.optional(),
+      value: bigNumberishSchema.optional(),
     })
     .optional(),
 });
 
 export const callOptionsSchema = z.object({
-  gasLimit: z.union([z.string(), z.number(), z.bigint()]),
+  gasLimit: bigNumberishSchema,
   isArbitraryCall: z.boolean(),
 });
 

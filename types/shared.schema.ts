@@ -4,6 +4,8 @@ import { z } from "zod";
 import { exactlyOneOf } from "../utils/exactlyOneOf";
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 
+export const bigNumberishSchema = z.union([z.string(), z.number(), z.bigint()]);
+
 export const evmAddressSchema = z
   .string()
   .refine((val) => ethers.isAddress(val), "Must be a valid EVM address");

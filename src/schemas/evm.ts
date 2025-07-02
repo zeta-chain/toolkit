@@ -1,18 +1,20 @@
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { bigNumberishSchema } from "../../types/shared.schema";
+
 export const revertOptionsSchema = z.object({
   abortAddress: z.string().optional(),
   callOnRevert: z.boolean(),
-  onRevertGasLimit: z.union([z.string(), z.number(), z.bigint()]).optional(),
+  onRevertGasLimit: bigNumberishSchema.optional(),
   revertAddress: z.string().optional(),
   revertMessage: z.string(),
 });
 
 export const txOptionsSchema = z.object({
-  gasLimit: z.union([z.string(), z.number(), z.bigint()]).optional(),
-  gasPrice: z.union([z.string(), z.number(), z.bigint()]).optional(),
-  value: z.union([z.string(), z.number(), z.bigint()]).optional(),
+  gasLimit: bigNumberishSchema.optional(),
+  gasPrice: bigNumberishSchema.optional(),
+  value: bigNumberishSchema.optional(),
 });
 
 export const evmOptionsSchema = z.object({

@@ -3,17 +3,12 @@ import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers, NonceManager } from "ethers";
 import { z } from "zod";
 
-import {
-  GatewayContract,
-  RevertOptions,
-  TxOptions,
-  ZRC20Contract,
-} from "../../../types/contracts.types";
-import {
-  zetachainWithdrawParamsSchema,
-  zetachainOptionsSchema,
-} from "../../schemas/zetachain";
+import { GatewayContract, ZRC20Contract } from "../../../types/contracts.types";
 import { toHexString } from "../../../utils/toHexString";
+import {
+  zetachainOptionsSchema,
+  zetachainWithdrawParamsSchema,
+} from "../../schemas/zetachain";
 
 type ZetachainWithdrawParams = z.infer<typeof zetachainWithdrawParamsSchema>;
 type ZetachainWithdrawOptions = z.infer<typeof zetachainOptionsSchema>;

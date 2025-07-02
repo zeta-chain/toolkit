@@ -6,11 +6,11 @@ import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
 import { tonOptions } from "../../../types/ton.types";
-import { tonDepositAndCallParamsSchema } from "../../schemas/ton";
 import {
   getGatewayAddress,
   getWalletAndKeyPair,
 } from "../../../utils/ton.command.helpers";
+import { tonDepositAndCallParamsSchema } from "../../schemas/ton";
 
 type tonDepositAndCallParams = z.infer<typeof tonDepositAndCallParamsSchema>;
 

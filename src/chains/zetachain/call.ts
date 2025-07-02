@@ -3,20 +3,13 @@ import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { AbiCoder, ethers, NonceManager } from "ethers";
 import { z } from "zod";
 
-import {
-  CallOptions,
-  GatewayContract,
-  RevertOptions,
-  TxOptions,
-  ZRC20Contract,
-} from "../../../types/contracts.types";
-import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { GatewayContract, ZRC20Contract } from "../../../types/contracts.types";
+import { handleError } from "../../../utils/handleError";
+import { toHexString } from "../../../utils/toHexString";
 import {
   zetachainCallParamsSchema,
   zetachainOptionsSchema,
 } from "../../schemas/zetachain";
-import { handleError } from "../../../utils/handleError";
-import { toHexString } from "../../../utils/toHexString";
 
 type ZetachainCallParams = z.infer<typeof zetachainCallParamsSchema>;
 type ZetachainCallOptions = z.infer<typeof zetachainOptionsSchema>;
