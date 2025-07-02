@@ -4,6 +4,7 @@ import { AbiCoder, ethers, NonceManager } from "ethers";
 import { z } from "zod";
 
 import { GatewayContract, ZRC20Contract } from "../../../types/contracts.types";
+import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
 import { handleError } from "../../../utils/handleError";
 import { toHexString } from "../../../utils/toHexString";
 import {
@@ -29,10 +30,8 @@ export const zetachainCall = async (
   params: ZetachainCallParams,
   options: ZetachainCallOptions
 ) => {
-  const gatewayAddress = options.gateway;
-  if (!gatewayAddress) {
-    throw new Error("Gateway ZetaChain address is required");
-  }
+  const gatewayAddress =
+    options.gateway || (await getGatewayAddressFromSigner(options.signer));
   const nonceManager = new NonceManager(options.signer);
 
   const gateway = new ethers.Contract(

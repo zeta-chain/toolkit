@@ -4,6 +4,7 @@ import { ethers, NonceManager } from "ethers";
 import { z } from "zod";
 
 import { GatewayContract, ZRC20Contract } from "../../../types/contracts.types";
+import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
 import { toHexString } from "../../../utils/toHexString";
 import {
   zetachainOptionsSchema,
@@ -28,10 +29,8 @@ export const zetachainWithdraw = async (
   params: ZetachainWithdrawParams,
   options: ZetachainWithdrawOptions
 ) => {
-  const gatewayAddress = options.gateway;
-  if (!gatewayAddress) {
-    throw new Error("Gateway ZetaChain address is required");
-  }
+  const gatewayAddress =
+    options.gateway || (await getGatewayAddressFromSigner(options.signer));
 
   const nonceManager = new NonceManager(options.signer);
 
