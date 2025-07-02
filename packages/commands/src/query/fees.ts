@@ -112,12 +112,19 @@ export const getFees = async (
             (gasTokenAddress as string).toLowerCase()
         );
 
+        if (!gasToken) {
+          console.error(
+            `Gas token not found for address ${gasTokenAddress} in contract ${contract.symbol}`
+          );
+          continue;
+        }
+
         results.push({
           chain_id: contract.foreign_chain_id,
           gasFeeAmount: (gasFee as bigint).toString(),
-          gasFeeDecimals: contract.decimals,
-          gasTokenAddress: gasTokenAddress as string,
-          gasTokenSymbol: gasToken?.symbol || "Unknown",
+          gasFeeDecimals: gasToken.decimals,
+          gasTokenAddress: gasTokenAddress,
+          gasTokenSymbol: gasToken.symbol,
           symbol: contract.symbol,
           zrc20Address: contract.zrc20_contract_address,
         });
