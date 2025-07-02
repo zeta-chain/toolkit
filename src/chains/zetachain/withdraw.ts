@@ -1,6 +1,7 @@
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayZEVM.sol/GatewayZEVM.json";
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ethers, NonceManager } from "ethers";
+import { z } from "zod";
 
 import {
   GatewayContract,
@@ -8,20 +9,14 @@ import {
   TxOptions,
   ZRC20Contract,
 } from "../../../types/contracts.types";
+import {
+  zetachainWithdrawParamsSchema,
+  zetachainOptionsSchema,
+} from "../../schemas/zetachain";
 import { toHexString } from "../../../utils/toHexString";
 
-type ZetachainWithdrawParams = {
-  amount: string;
-  receiver: string;
-  revertOptions: RevertOptions;
-  zrc20: string;
-};
-
-type ZetachainWithdrawOptions = {
-  gateway?: string;
-  signer: ethers.Wallet;
-  txOptions?: TxOptions;
-};
+type ZetachainWithdrawParams = z.infer<typeof zetachainWithdrawParamsSchema>;
+type ZetachainWithdrawOptions = z.infer<typeof zetachainOptionsSchema>;
 
 /**
  * Withdraws tokens from ZetaChain to a destination chain

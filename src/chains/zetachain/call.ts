@@ -1,6 +1,7 @@
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayZEVM.sol/GatewayZEVM.json";
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { AbiCoder, ethers, NonceManager } from "ethers";
+import { z } from "zod";
 
 import {
   CallOptions,
@@ -10,25 +11,15 @@ import {
   ZRC20Contract,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import {
+  zetachainCallParamsSchema,
+  zetachainOptionsSchema,
+} from "../../schemas/zetachain";
 import { handleError } from "../../../utils/handleError";
 import { toHexString } from "../../../utils/toHexString";
 
-type ZetachainCallParams = {
-  callOptions: CallOptions;
-  data?: string;
-  function?: string;
-  receiver: string;
-  revertOptions: RevertOptions;
-  types?: string[];
-  values?: ParseAbiValuesReturnType;
-  zrc20: string;
-};
-
-type ZetachainCallOptions = {
-  gateway?: string;
-  signer: ethers.Wallet;
-  txOptions?: TxOptions;
-};
+type ZetachainCallParams = z.infer<typeof zetachainCallParamsSchema>;
+type ZetachainCallOptions = z.infer<typeof zetachainOptionsSchema>;
 
 /**
  * Makes a cross-chain call from ZetaChain to another chain
