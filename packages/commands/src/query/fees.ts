@@ -24,6 +24,7 @@ const feesParamsSchema = z.object({
 const feesOptionsSchema = z.object({
   api: z.string().default(DEFAULT_API_URL),
   rpc: z.string().default(DEFAULT_RPC_URL),
+  json: z.boolean().default(false),
 });
 
 type FeesParams = z.infer<typeof feesParamsSchema>;
@@ -31,7 +32,8 @@ type FeesOptions = z.infer<typeof feesOptionsSchema>;
 
 interface WithdrawGasFeeResult {
   chain_id: string;
-  gasFee: string;
+  gasFeeAmount: string;
+  gasFeeDecimals: number;
   gasTokenAddress: string;
   gasTokenSymbol: string;
   symbol: string;
@@ -39,28 +41,21 @@ interface WithdrawGasFeeResult {
 }
 
 export interface FeesData {
-  data?: WithdrawGasFeeResult[];
-  error?: string;
+  data: WithdrawGasFeeResult[];
   gasLimit?: string;
-  success: boolean;
-  totalTokens: number;
 }
 
 export const getFees = async (
   params: FeesParams = {},
   options: FeesOptions = feesOptionsSchema.parse({})
-): Promise<FeesData> => {
+): Promise<WithdrawGasFeeResult[]> => {
   try {
     const response = await axios.get<ForeignCoinsResponse>(
       `${options.api}/zeta-chain/fungible/foreign_coins`
     );
 
     if (response.data.foreignCoins.length === 0) {
-      return {
-        error: "No foreign coins found",
-        success: false,
-        totalTokens: 0,
-      };
+      throw new Error("No foreign coins found");
     }
 
     const zrc20Contracts = response.data.foreignCoins.filter(
@@ -69,11 +64,7 @@ export const getFees = async (
     );
 
     if (zrc20Contracts.length === 0) {
-      return {
-        error: "No ZRC20 contracts found",
-        success: false,
-        totalTokens: 0,
-      };
+      throw new Error("No ZRC20 contracts found");
     }
 
     const multicallContexts: Call[] = zrc20Contracts.map((contract) => {
@@ -123,7 +114,8 @@ export const getFees = async (
 
         results.push({
           chain_id: contract.foreign_chain_id,
-          gasFee: ethers.formatUnits(gasFee as bigint, contract.decimals),
+          gasFeeAmount: (gasFee as bigint).toString(),
+          gasFeeDecimals: contract.decimals,
           gasTokenAddress: gasTokenAddress as string,
           gasTokenSymbol: gasToken?.symbol || "Unknown",
           symbol: contract.symbol,
@@ -139,36 +131,32 @@ export const getFees = async (
 
     results.sort((a, b) => a.chain_id.localeCompare(b.chain_id));
 
-    return {
-      data: results,
-      gasLimit: params.gasLimit,
-      success: true,
-      totalTokens: results.length,
-    };
+    return results;
   } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-      success: false,
-      totalTokens: 0,
-    };
+    throw new Error(
+      error instanceof Error ? error.message : "Unknown error occurred"
+    );
   }
 };
 
 const main = async (params: FeesParams, options: FeesOptions) => {
-  const spinner = ora("Fetching foreign coins...").start();
+  const spinner = options.json
+    ? null
+    : ora("Fetching foreign coins...").start();
 
   try {
     const feesData = await getFees(params, options);
 
-    if (!feesData.success) {
-      spinner.fail("Failed to fetch data");
-      console.log(chalk.yellow(feesData.error));
-      return;
+    if (!options.json) {
+      spinner?.succeed(
+        `Successfully queried withdrawGasFee for ${feesData.length} ZRC-20 tokens`
+      );
     }
 
-    spinner.succeed(
-      `Successfully queried withdrawGasFee for ${feesData.totalTokens} ZRC-20 tokens`
-    );
+    if (options.json) {
+      console.log(JSON.stringify(feesData, null, 2));
+      return;
+    }
 
     const title = params.gasLimit
       ? `\nWithdraw and Call Gas Fees (with gas limit: ${params.gasLimit})`
@@ -178,10 +166,10 @@ const main = async (params: FeesParams, options: FeesOptions) => {
 
     const tableData = [
       ["Chain ID", "ZRC-20", "Fee Amount", "Fee Token"],
-      ...feesData.data!.map((result) => [
+      ...feesData.map((result) => [
         result.chain_id,
         result.symbol,
-        result.gasFee,
+        ethers.formatUnits(result.gasFeeAmount, result.gasFeeDecimals),
         result.gasTokenSymbol,
       ]),
     ];
@@ -201,8 +189,14 @@ const main = async (params: FeesParams, options: FeesOptions) => {
 
     console.log(table(tableData, tableConfig));
   } catch (error) {
-    spinner.fail("Failed to fetch data");
-    console.error(chalk.red("Error details:"), error);
+    if (!options.json) {
+      spinner?.fail("Failed to fetch data");
+    }
+    console.log(
+      chalk.yellow(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      )
+    );
   }
 };
 
@@ -217,6 +211,7 @@ export const feesCommand = new Command("fees")
   .addOption(
     new Option("--gas-limit <limit>", "Gas limit for withdraw and call")
   )
+  .addOption(new Option("--json", "Output results in JSON format"))
   .action(async (options) => {
     const params = feesParamsSchema.parse(options);
     const validatedOptions = feesOptionsSchema.parse(options);
