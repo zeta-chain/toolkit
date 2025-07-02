@@ -43,7 +43,13 @@ export const getAccount = async (options: {
     workchain: 0,
   });
 
+  const address = wallet.address.toString({
+    bounceable: false,
+    testOnly: true,
+  });
+
   return {
+    address,
     keyPair,
     wallet,
   };

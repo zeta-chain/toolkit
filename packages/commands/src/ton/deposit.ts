@@ -7,6 +7,7 @@ import {
   hasErrorStatus,
   validateAndParseSchema,
 } from "../../../../utils";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
 import { getAddress } from "../../../../utils/getAddress";
 import {
   createTonCommandWithCommonOptions,
@@ -17,13 +18,21 @@ type DepositOptions = z.infer<typeof depositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
-    const { wallet, keyPair } = await getAccount({
+    const { wallet, keyPair, address } = await getAccount({
       mnemonic: options.mnemonic,
       name: options.name,
     });
 
     const gateway =
       options.gateway || getAddress("gateway", Number(options.chainId));
+
+    const isConfirmed = await confirmTransaction({
+      amount: options.amount,
+      receiver: options.receiver,
+      rpc: options.rpc,
+      sender: address,
+    });
+    if (!isConfirmed) return;
 
     await tonDeposit(
       {
