@@ -7,6 +7,7 @@ import { GatewayContract, ZRC20Contract } from "../../../types/contracts.types";
 import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
 import { handleError } from "../../../utils/handleError";
 import { toHexString } from "../../../utils/toHexString";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
   zetachainOptionsSchema,
   zetachainWithdrawAndCallParamsSchema,
@@ -33,10 +34,20 @@ export const zetachainWithdrawAndCall = async (
   params: ZetachainWithdrawAndCallParams,
   options: ZetachainWithdrawAndCallOptions
 ) => {
-  const gatewayAddress =
-    options.gateway || (await getGatewayAddressFromSigner(options.signer));
+  const validatedParams = validateAndParseSchema(
+    params,
+    zetachainWithdrawAndCallParamsSchema
+  );
+  const validatedOptions = validateAndParseSchema(
+    options,
+    zetachainOptionsSchema
+  );
 
-  const nonceManager = new NonceManager(options.signer);
+  const gatewayAddress =
+    validatedOptions.gateway ||
+    (await getGatewayAddressFromSigner(validatedOptions.signer));
+
+  const nonceManager = new NonceManager(validatedOptions.signer);
 
   const gateway = new ethers.Contract(
     gatewayAddress,
@@ -45,22 +56,33 @@ export const zetachainWithdrawAndCall = async (
   ) as GatewayContract;
 
   const revertOptions = {
-    ...params.revertOptions,
-    revertMessage: toHexString(params.revertOptions.revertMessage),
+    ...validatedParams.revertOptions,
+    revertMessage: toHexString(validatedParams.revertOptions.revertMessage),
   };
 
   let message: string;
 
-  if (params.data) {
+  if (validatedParams.data) {
     // For non-EVM chains, use the raw data directly
-    message = params.data.startsWith("0x") ? params.data : `0x${params.data}`;
-  } else if (params.types && params.values && params.function) {
+    message = validatedParams.data.startsWith("0x")
+      ? validatedParams.data
+      : `0x${validatedParams.data}`;
+  } else if (
+    validatedParams.types &&
+    validatedParams.values &&
+    validatedParams.function
+  ) {
     // For EVM chains, encode the function and parameters
     const abiCoder = AbiCoder.defaultAbiCoder();
-    const encodedParameters = abiCoder.encode(params.types, params.values);
+    const encodedParameters = abiCoder.encode(
+      validatedParams.types,
+      validatedParams.values
+    );
 
-    if (params.callOptions.isArbitraryCall) {
-      const functionSignature = ethers.id(params.function).slice(0, 10);
+    if (validatedParams.callOptions.isArbitraryCall) {
+      const functionSignature = ethers
+        .id(validatedParams.function)
+        .slice(0, 10);
       message = ethers.hexlify(
         ethers.concat([functionSignature, encodedParameters])
       );
@@ -80,21 +102,21 @@ export const zetachainWithdrawAndCall = async (
   }
 
   const zrc20 = new ethers.Contract(
-    params.zrc20,
+    validatedParams.zrc20,
     ZRC20ABI.abi,
     nonceManager
   ) as ZRC20Contract;
   const decimals = await zrc20.decimals();
-  const value = ethers.parseUnits(params.amount, decimals);
+  const value = ethers.parseUnits(validatedParams.amount, decimals);
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
-    params.callOptions.gasLimit
+    validatedParams.callOptions.gasLimit
   );
 
-  if (params.zrc20 === gasZRC20) {
+  if (validatedParams.zrc20 === gasZRC20) {
     const approveGasAndWithdraw = await zrc20.approve(
       gatewayAddress,
       value + ethers.toBigInt(gasFee),
-      { ...options.txOptions }
+      { ...validatedOptions.txOptions }
     );
     await approveGasAndWithdraw.wait();
   } else {
@@ -104,16 +126,16 @@ export const zetachainWithdrawAndCall = async (
       nonceManager
     ) as ZRC20Contract;
     const approveGas = await gasZRC20Contract.approve(gatewayAddress, gasFee, {
-      ...options.txOptions,
+      ...validatedOptions.txOptions,
     });
     await approveGas.wait();
     const approveWithdraw = await zrc20.approve(gatewayAddress, value, {
-      ...options.txOptions,
+      ...validatedOptions.txOptions,
     });
     await approveWithdraw.wait();
   }
 
-  const receiver = toHexString(params.receiver);
+  const receiver = toHexString(validatedParams.receiver);
 
   const withdrawAndCallAbiSignature =
     "withdrawAndCall(bytes,uint256,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))";
@@ -124,11 +146,11 @@ export const zetachainWithdrawAndCall = async (
   const tx = await gatewayWithdrawAndCallFunction(
     receiver,
     value,
-    params.zrc20,
+    validatedParams.zrc20,
     message,
-    params.callOptions,
+    validatedParams.callOptions,
     revertOptions,
-    { ...options.txOptions }
+    { ...validatedOptions.txOptions }
   );
 
   return {

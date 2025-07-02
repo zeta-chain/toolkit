@@ -13,6 +13,7 @@ import {
   getSPLToken,
   isSOLBalanceSufficient,
 } from "../../../utils/solana.commands.helpers";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
   solanaDepositParamsSchema,
   solanaOptionsSchema,
@@ -36,23 +37,29 @@ export const solanaDeposit = async (
   params: solanaDepositParams,
   options: solanaOptions
 ) => {
+  const validatedParams = validateAndParseSchema(
+    params,
+    solanaDepositParamsSchema
+  );
+  const validatedOptions = validateAndParseSchema(options, solanaOptionsSchema);
+
   const { gatewayProgram, provider } = createSolanaGatewayProgram(
-    options.chainId,
-    options.signer
+    validatedOptions.chainId,
+    validatedOptions.signer
   );
 
-  const receiverBytes = ethers.getBytes(params.receiver);
+  const receiverBytes = ethers.getBytes(validatedParams.receiver);
 
   const revertOptions = createRevertOptions(
-    params.revertOptions,
-    options.signer.publicKey
+    validatedParams.revertOptions,
+    validatedOptions.signer.publicKey
   );
 
-  if (params.token) {
+  if (validatedParams.token) {
     const { from, decimals } = await getSPLToken(
       provider,
-      params.token,
-      params.amount
+      validatedParams.token,
+      validatedParams.amount
     );
 
     // Find the TSS PDA (meta)
@@ -66,7 +73,7 @@ export const solanaDeposit = async (
       [
         tssPda.toBuffer(),
         TOKEN_PROGRAM_ID.toBuffer(),
-        new PublicKey(params.token).toBuffer(),
+        new PublicKey(validatedParams.token).toBuffer(),
       ],
       ASSOCIATED_TOKEN_PROGRAM_ID
     );
@@ -75,14 +82,16 @@ export const solanaDeposit = async (
 
     const tx = await gatewayProgram.methods
       .depositSplToken(
-        new anchor.BN(ethers.parseUnits(params.amount, decimals).toString()),
+        new anchor.BN(
+          ethers.parseUnits(validatedParams.amount, decimals).toString()
+        ),
         receiverBytes,
         revertOptions
       )
       .accounts({
         from,
-        mintAccount: params.token,
-        signer: options.signer.publicKey,
+        mintAccount: validatedParams.token,
+        signer: validatedOptions.signer.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
         to,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -91,11 +100,11 @@ export const solanaDeposit = async (
     return tx;
   } else {
     // Check SOL balance
-    await isSOLBalanceSufficient(provider, params.amount);
+    await isSOLBalanceSufficient(provider, validatedParams.amount);
 
     const tx = await gatewayProgram.methods
       .deposit(
-        new anchor.BN(ethers.parseUnits(params.amount, 9).toString()),
+        new anchor.BN(ethers.parseUnits(validatedParams.amount, 9).toString()),
         receiverBytes,
         revertOptions
       )

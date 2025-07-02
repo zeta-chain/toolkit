@@ -9,6 +9,7 @@ import {
   SUI_GAS_COIN_TYPE,
   toSmallestUnit,
 } from "../../../utils/sui";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import { suiDepositParamsSchema, suiOptionsSchema } from "../../schemas/sui";
 
 type suiDepositParams = z.infer<typeof suiDepositParamsSchema>;
@@ -29,37 +30,45 @@ export const suiDeposit = async (
   params: suiDepositParams,
   options: suiOptions
 ) => {
+  const validatedParams = validateAndParseSchema(
+    params,
+    suiDepositParamsSchema
+  );
+  const validatedOptions = validateAndParseSchema(options, suiOptionsSchema);
+
   const { gatewayPackage, gatewayObject, client } = getSuiGatewayAndClient(
-    options.chainId,
-    options.gatewayPackage,
-    options.gatewayObject
+    validatedOptions.chainId,
+    validatedOptions.gatewayPackage,
+    validatedOptions.gatewayObject
   );
 
-  const gasBudget = BigInt(options.gasLimit || GAS_BUDGET);
+  const gasBudget = BigInt(validatedOptions.gasLimit || GAS_BUDGET);
   const tx = new Transaction();
 
   const target = `${gatewayPackage}::gateway::deposit`;
-  const receiver = tx.pure.string(params.receiver);
+  const receiver = tx.pure.string(validatedParams.receiver);
   const gateway = tx.object(gatewayObject);
 
-  if (params.token && params.token !== SUI_GAS_COIN_TYPE) {
+  if (validatedParams.token && validatedParams.token !== SUI_GAS_COIN_TYPE) {
     const coinObjectId = await getCoin(
       client,
-      options.signer.toSuiAddress(),
-      params.token
+      validatedOptions.signer.toSuiAddress(),
+      validatedParams.token
     );
 
     const [splitCoin] = tx.splitCoins(tx.object(coinObjectId), [
-      toSmallestUnit(params.amount),
+      toSmallestUnit(validatedParams.amount),
     ]);
 
     tx.moveCall({
       arguments: [gateway, splitCoin, receiver],
       target,
-      typeArguments: [params.token],
+      typeArguments: [validatedParams.token],
     });
   } else {
-    const [splitCoin] = tx.splitCoins(tx.gas, [toSmallestUnit(params.amount)]);
+    const [splitCoin] = tx.splitCoins(tx.gas, [
+      toSmallestUnit(validatedParams.amount),
+    ]);
 
     tx.moveCall({
       arguments: [gateway, splitCoin, receiver],
@@ -73,7 +82,7 @@ export const suiDeposit = async (
   await signAndExecuteTransaction({
     client,
     gasBudget,
-    keypair: options.signer,
+    keypair: validatedOptions.signer,
     tx,
   });
 };

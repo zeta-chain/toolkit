@@ -7,6 +7,7 @@ import { GatewayContract, ZRC20Contract } from "../../../types/contracts.types";
 import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
 import { handleError } from "../../../utils/handleError";
 import { toHexString } from "../../../utils/toHexString";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
   zetachainCallParamsSchema,
   zetachainOptionsSchema,
@@ -30,9 +31,19 @@ export const zetachainCall = async (
   params: ZetachainCallParams,
   options: ZetachainCallOptions
 ) => {
+  const validatedParams = validateAndParseSchema(
+    params,
+    zetachainCallParamsSchema
+  );
+  const validatedOptions = validateAndParseSchema(
+    options,
+    zetachainOptionsSchema
+  );
+
   const gatewayAddress =
-    options.gateway || (await getGatewayAddressFromSigner(options.signer));
-  const nonceManager = new NonceManager(options.signer);
+    validatedOptions.gateway ||
+    (await getGatewayAddressFromSigner(validatedOptions.signer));
+  const nonceManager = new NonceManager(validatedOptions.signer);
 
   const gateway = new ethers.Contract(
     gatewayAddress,
@@ -41,20 +52,29 @@ export const zetachainCall = async (
   ) as GatewayContract;
 
   const revertOptions = {
-    ...params.revertOptions,
-    revertMessage: toHexString(params.revertOptions.revertMessage),
+    ...validatedParams.revertOptions,
+    revertMessage: toHexString(validatedParams.revertOptions.revertMessage),
   };
 
   let message: string;
 
-  if (params.data) {
+  if (validatedParams.data) {
     // For non-EVM chains, use the raw data directly
-    message = params.data.startsWith("0x") ? params.data : `0x${params.data}`;
-  } else if (params.types && params.values && params.function) {
+    message = validatedParams.data.startsWith("0x")
+      ? validatedParams.data
+      : `0x${validatedParams.data}`;
+  } else if (
+    validatedParams.types &&
+    validatedParams.values &&
+    validatedParams.function
+  ) {
     // For EVM chains, encode the function and parameters
-    const functionSignature = ethers.id(params.function).slice(0, 10);
+    const functionSignature = ethers.id(validatedParams.function).slice(0, 10);
     const abiCoder = AbiCoder.defaultAbiCoder();
-    const encodedParameters = abiCoder.encode(params.types, params.values);
+    const encodedParameters = abiCoder.encode(
+      validatedParams.types,
+      validatedParams.values
+    );
     message = ethers.hexlify(
       ethers.concat([functionSignature, encodedParameters])
     );
@@ -71,13 +91,13 @@ export const zetachainCall = async (
   }
 
   const zrc20 = new ethers.Contract(
-    params.zrc20,
+    validatedParams.zrc20,
     ZRC20ABI.abi,
     nonceManager
   ) as ZRC20Contract;
 
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFeeWithGasLimit(
-    params.callOptions.gasLimit
+    validatedParams.callOptions.gasLimit
   );
   const gasZRC20Contract = new ethers.Contract(
     gasZRC20,
@@ -86,12 +106,12 @@ export const zetachainCall = async (
   ) as ZRC20Contract;
 
   const approve = await gasZRC20Contract.approve(gatewayAddress, gasFee, {
-    ...options.txOptions,
+    ...validatedOptions.txOptions,
   });
 
   await approve.wait();
 
-  const receiver = toHexString(params.receiver);
+  const receiver = toHexString(validatedParams.receiver);
 
   const callAbiSignature =
     "call(bytes,address,bytes,(uint256,bool),(address,bool,address,bytes,uint256))";
@@ -103,9 +123,9 @@ export const zetachainCall = async (
     receiver,
     gasZRC20,
     message,
-    params.callOptions,
+    validatedParams.callOptions,
     revertOptions,
-    { ...options.txOptions }
+    { ...validatedOptions.txOptions }
   );
 
   return { gasFee, gasZRC20, tx };

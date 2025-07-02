@@ -9,6 +9,7 @@ import {
   getGatewayAddress,
   getWalletAndKeyPair,
 } from "../../../utils/ton.command.helpers";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
   tonDepositAndCallParamsSchema,
   tonOptionsSchema,
@@ -36,16 +37,25 @@ export const tonDepositAndCall = async (
   params: tonDepositAndCallParams,
   options: tonOptions
 ) => {
-  const gatewayAddress = getGatewayAddress(options.chainId, options.gateway);
+  const validatedParams = validateAndParseSchema(
+    params,
+    tonDepositAndCallParamsSchema
+  );
+  const validatedOptions = validateAndParseSchema(options, tonOptionsSchema);
+
+  const gatewayAddress = getGatewayAddress(
+    validatedOptions.chainId,
+    validatedOptions.gateway
+  );
 
   const { wallet, keyPair } = await getWalletAndKeyPair(
-    options.wallet,
-    options.keyPair,
-    options.signer
+    validatedOptions.wallet,
+    validatedOptions.keyPair,
+    validatedOptions.signer
   );
   const client = new TonClient({
-    endpoint: options.rpc,
-    ...(options.apiKey && { apiKey: options.apiKey }),
+    endpoint: validatedOptions.rpc,
+    ...(validatedOptions.apiKey && { apiKey: validatedOptions.apiKey }),
   });
 
   const openedWallet = client.open(wallet);
@@ -55,22 +65,25 @@ export const tonDepositAndCall = async (
 
   let payload;
 
-  if (params.types && params.values) {
+  if (validatedParams.types && validatedParams.values) {
     const abiCoder = AbiCoder.defaultAbiCoder();
-    const encodedHex = abiCoder.encode(params.types, params.values);
+    const encodedHex = abiCoder.encode(
+      validatedParams.types,
+      validatedParams.values
+    );
     const encodedBin = ethers.getBytes(encodedHex);
 
     payload = beginCell().storeBuffer(Buffer.from(encodedBin)).endCell();
-  } else if (params.data) {
-    payload = stringToCell(params.data);
+  } else if (validatedParams.data) {
+    payload = stringToCell(validatedParams.data);
   } else {
     throw new Error("Either types and values or data must be provided");
   }
 
   await gateway.sendDepositAndCall(
     sender,
-    toNano(params.amount),
-    params.receiver,
+    toNano(validatedParams.amount),
+    validatedParams.receiver,
     payload
   );
 };

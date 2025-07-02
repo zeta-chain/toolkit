@@ -5,6 +5,7 @@ import {
   generateEvmCallData,
 } from "../../../utils/gatewayEvm";
 import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import { evmCallParamsSchema, evmOptionsSchema } from "../../schemas/evm";
 
 type evmCallParams = z.infer<typeof evmCallParamsSchema>;
@@ -22,23 +23,27 @@ type evmOptions = z.infer<typeof evmOptionsSchema>;
  * @returns Promise that resolves to the transaction receipt
  */
 export const evmCall = async (params: evmCallParams, options: evmOptions) => {
+  const validatedParams = validateAndParseSchema(params, evmCallParamsSchema);
+  const validatedOptions = validateAndParseSchema(options, evmOptionsSchema);
+
   const gatewayAddress =
-    options.gateway || (await getGatewayAddressFromSigner(options.signer));
+    validatedOptions.gateway ||
+    (await getGatewayAddressFromSigner(validatedOptions.signer));
 
   const callData = generateEvmCallData({
-    receiver: params.receiver,
-    revertOptions: params.revertOptions,
-    types: params.types,
-    values: params.values,
+    receiver: validatedParams.receiver,
+    revertOptions: validatedParams.revertOptions,
+    types: validatedParams.types,
+    values: validatedParams.values,
   });
 
   const tx = await broadcastGatewayTx({
-    signer: options.signer,
+    signer: validatedOptions.signer,
     txData: {
       data: callData.data,
       to: gatewayAddress,
     },
-    txOptions: options.txOptions || {},
+    txOptions: validatedOptions.txOptions || {},
   });
 
   return tx;

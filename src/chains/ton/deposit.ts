@@ -6,6 +6,7 @@ import {
   getGatewayAddress,
   getWalletAndKeyPair,
 } from "../../../utils/ton.command.helpers";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import { tonDepositParamsSchema, tonOptionsSchema } from "../../schemas/ton";
 
 type tonDepositParams = z.infer<typeof tonDepositParamsSchema>;
@@ -25,17 +26,26 @@ export const tonDeposit = async (
   params: tonDepositParams,
   options: tonOptions
 ) => {
-  const gatewayAddress = getGatewayAddress(options.chainId, options.gateway);
+  const validatedParams = validateAndParseSchema(
+    params,
+    tonDepositParamsSchema
+  );
+  const validatedOptions = validateAndParseSchema(options, tonOptionsSchema);
+
+  const gatewayAddress = getGatewayAddress(
+    validatedOptions.chainId,
+    validatedOptions.gateway
+  );
 
   const { wallet, keyPair } = await getWalletAndKeyPair(
-    options.wallet,
-    options.keyPair,
-    options.signer
+    validatedOptions.wallet,
+    validatedOptions.keyPair,
+    validatedOptions.signer
   );
 
   const client = new TonClient({
-    endpoint: options.rpc,
-    ...(options.apiKey && { apiKey: options.apiKey }),
+    endpoint: validatedOptions.rpc,
+    ...(validatedOptions.apiKey && { apiKey: validatedOptions.apiKey }),
   });
 
   const openedWallet = client.open(wallet);
@@ -43,5 +53,9 @@ export const tonDeposit = async (
 
   const gateway = client.open(Gateway.createFromAddress(gatewayAddress));
 
-  await gateway.sendDeposit(sender, toNano(params.amount), params.receiver);
+  await gateway.sendDeposit(
+    sender,
+    toNano(validatedParams.amount),
+    validatedParams.receiver
+  );
 };

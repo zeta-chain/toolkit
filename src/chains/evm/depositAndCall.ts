@@ -8,6 +8,7 @@ import {
   generateEvmDepositAndCallData,
 } from "../../../utils/gatewayEvm";
 import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
   evmDepositAndCallParamsSchema,
   evmOptionsSchema,
@@ -32,18 +33,25 @@ export const evmDepositAndCall = async (
   params: evmDepositAndCallParams,
   options: evmOptions
 ) => {
-  const gatewayAddress =
-    options.gateway || (await getGatewayAddressFromSigner(options.signer));
+  const validatedParams = validateAndParseSchema(
+    params,
+    evmDepositAndCallParamsSchema
+  );
+  const validatedOptions = validateAndParseSchema(options, evmOptionsSchema);
 
-  if (params.token) {
+  const gatewayAddress =
+    validatedOptions.gateway ||
+    (await getGatewayAddressFromSigner(validatedOptions.signer));
+
+  if (validatedParams.token) {
     const erc20Contract = new ethers.Contract(
-      params.token,
+      validatedParams.token,
       ERC20_ABI.abi,
-      options.signer
+      validatedOptions.signer
     ) as ERC20Contract;
 
     const decimals = await erc20Contract.decimals();
-    const value = ethers.parseUnits(params.amount, decimals);
+    const value = ethers.parseUnits(validatedParams.amount, decimals);
 
     // Approve the gateway to spend the tokens
     const approval = await erc20Contract.approve(gatewayAddress, value);
@@ -51,43 +59,43 @@ export const evmDepositAndCall = async (
 
     // Generate calldata for deposit and call
     const callData = generateEvmDepositAndCallData({
-      amount: params.amount,
+      amount: validatedParams.amount,
       decimals: Number(decimals),
-      erc20: params.token,
-      receiver: params.receiver,
-      revertOptions: params.revertOptions,
-      types: params.types,
-      values: params.values,
+      erc20: validatedParams.token,
+      receiver: validatedParams.receiver,
+      revertOptions: validatedParams.revertOptions,
+      types: validatedParams.types,
+      values: validatedParams.values,
     });
 
     const tx = await broadcastGatewayTx({
-      signer: options.signer,
+      signer: validatedOptions.signer,
       txData: {
         data: callData.data,
         to: gatewayAddress,
         value: callData.value,
       },
-      txOptions: options.txOptions || {},
+      txOptions: validatedOptions.txOptions || {},
     });
     return tx;
   } else {
     // Native token deposit and call
     const callData = generateEvmDepositAndCallData({
-      amount: params.amount,
-      receiver: params.receiver,
-      revertOptions: params.revertOptions,
-      types: params.types,
-      values: params.values,
+      amount: validatedParams.amount,
+      receiver: validatedParams.receiver,
+      revertOptions: validatedParams.revertOptions,
+      types: validatedParams.types,
+      values: validatedParams.values,
     });
 
     const tx = await broadcastGatewayTx({
-      signer: options.signer,
+      signer: validatedOptions.signer,
       txData: {
         data: callData.data,
         to: gatewayAddress,
         value: callData.value,
       },
-      txOptions: options.txOptions || {},
+      txOptions: validatedOptions.txOptions || {},
     });
     return tx;
   }

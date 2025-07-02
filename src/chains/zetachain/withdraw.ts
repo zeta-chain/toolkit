@@ -6,6 +6,7 @@ import { z } from "zod";
 import { GatewayContract, ZRC20Contract } from "../../../types/contracts.types";
 import { getGatewayAddressFromSigner } from "../../../utils/getAddress";
 import { toHexString } from "../../../utils/toHexString";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
   zetachainOptionsSchema,
   zetachainWithdrawParamsSchema,
@@ -29,10 +30,20 @@ export const zetachainWithdraw = async (
   params: ZetachainWithdrawParams,
   options: ZetachainWithdrawOptions
 ) => {
-  const gatewayAddress =
-    options.gateway || (await getGatewayAddressFromSigner(options.signer));
+  const validatedParams = validateAndParseSchema(
+    params,
+    zetachainWithdrawParamsSchema
+  );
+  const validatedOptions = validateAndParseSchema(
+    options,
+    zetachainOptionsSchema
+  );
 
-  const nonceManager = new NonceManager(options.signer);
+  const gatewayAddress =
+    validatedOptions.gateway ||
+    (await getGatewayAddressFromSigner(validatedOptions.signer));
+
+  const nonceManager = new NonceManager(validatedOptions.signer);
 
   const gateway = new ethers.Contract(
     gatewayAddress,
@@ -41,25 +52,25 @@ export const zetachainWithdraw = async (
   ) as GatewayContract;
 
   const revertOptions = {
-    ...params.revertOptions,
-    revertMessage: toHexString(params.revertOptions.revertMessage),
+    ...validatedParams.revertOptions,
+    revertMessage: toHexString(validatedParams.revertOptions.revertMessage),
   };
 
   const zrc20 = new ethers.Contract(
-    params.zrc20,
+    validatedParams.zrc20,
     ZRC20ABI.abi,
     nonceManager
   ) as ZRC20Contract;
 
   const decimals = await zrc20.decimals();
-  const value = ethers.parseUnits(params.amount, decimals);
+  const value = ethers.parseUnits(validatedParams.amount, decimals);
   const [gasZRC20, gasFee] = await zrc20.withdrawGasFee();
 
-  if (params.zrc20 === gasZRC20) {
+  if (validatedParams.zrc20 === gasZRC20) {
     const approveGasAndWithdraw = await zrc20.approve(
       gatewayAddress,
       value + ethers.toBigInt(gasFee),
-      { ...options.txOptions }
+      { ...validatedOptions.txOptions }
     );
     await approveGasAndWithdraw.wait();
   } else {
@@ -69,15 +80,15 @@ export const zetachainWithdraw = async (
       nonceManager
     ) as ZRC20Contract;
     const approveGas = await gasZRC20Contract.approve(gatewayAddress, gasFee, {
-      ...options.txOptions,
+      ...validatedOptions.txOptions,
     });
     await approveGas.wait();
     const approveWithdraw = await zrc20.approve(gatewayAddress, value, {
-      ...options.txOptions,
+      ...validatedOptions.txOptions,
     });
     await approveWithdraw.wait();
   }
-  const receiver = toHexString(params.receiver);
+  const receiver = toHexString(validatedParams.receiver);
 
   const withdrawAbiSignature =
     "withdraw(bytes,uint256,address,(address,bool,address,bytes,uint256))";
@@ -88,9 +99,9 @@ export const zetachainWithdraw = async (
   const tx = await gatewayWithdrawFunction(
     receiver,
     value,
-    params.zrc20,
+    validatedParams.zrc20,
     revertOptions,
-    options.txOptions
+    validatedOptions.txOptions
   );
   return { gasFee, gasZRC20, tx };
 };

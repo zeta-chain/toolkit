@@ -5,6 +5,7 @@ import {
   createRevertOptions,
   createSolanaGatewayProgram,
 } from "../../../utils/solana.commands.helpers";
+import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
   solanaCallParamsSchema,
   solanaOptionsSchema,
@@ -28,19 +29,28 @@ export const solanaCall = async (
   params: solanaCallParams,
   options: solanaOptions
 ) => {
+  const validatedParams = validateAndParseSchema(
+    params,
+    solanaCallParamsSchema
+  );
+  const validatedOptions = validateAndParseSchema(options, solanaOptionsSchema);
+
   const { gatewayProgram } = createSolanaGatewayProgram(
-    options.chainId,
-    options.signer
+    validatedOptions.chainId,
+    validatedOptions.signer
   );
 
-  const receiverBytes = ethers.getBytes(params.receiver);
+  const receiverBytes = ethers.getBytes(validatedParams.receiver);
   const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-  const encodedParameters = abiCoder.encode(params.types, params.values);
+  const encodedParameters = abiCoder.encode(
+    validatedParams.types,
+    validatedParams.values
+  );
   const message = Buffer.from(encodedParameters.slice(2), "hex");
 
   const revertOptions = createRevertOptions(
-    params.revertOptions,
-    options.signer.publicKey
+    validatedParams.revertOptions,
+    validatedOptions.signer.publicKey
   );
 
   const tx = await gatewayProgram.methods
