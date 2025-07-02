@@ -102,14 +102,15 @@ export const getFees = async (
           params.gasLimit ? "withdrawGasFeeWithGasLimit" : "withdrawGasFee",
           returnData[i] as ethers.BytesLike
         );
-        const [gasTokenAddress, gasFee] = decoded;
+        const gasTokenAddress = decoded[0] as string;
+        const gasFee = decoded[1] as bigint;
 
         const contract = zrc20Contracts[i];
 
         const gasToken = response.data.foreignCoins.find(
           (coin) =>
             coin.zrc20_contract_address.toLowerCase() ===
-            (gasTokenAddress as string).toLowerCase()
+            gasTokenAddress.toLowerCase()
         );
 
         if (!gasToken) {
@@ -121,9 +122,9 @@ export const getFees = async (
 
         results.push({
           chain_id: contract.foreign_chain_id,
-          gasFeeAmount: (gasFee as bigint).toString(),
+          gasFeeAmount: gasFee.toString(),
           gasFeeDecimals: gasToken.decimals,
-          gasTokenAddress: gasTokenAddress,
+          gasTokenAddress,
           gasTokenSymbol: gasToken.symbol,
           symbol: contract.symbol,
           zrc20Address: contract.zrc20_contract_address,
