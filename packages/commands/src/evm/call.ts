@@ -65,10 +65,6 @@ Parameter types: ${stringifiedTypes}
       options.chainId
     );
 
-    if (!gateway) {
-      throw new Error("Gateway address not found");
-    }
-
     const tx = await evmCall(
       {
         receiver: options.receiver,
