@@ -23,8 +23,8 @@ const feesParamsSchema = z.object({
 
 const feesOptionsSchema = z.object({
   api: z.string().default(DEFAULT_API_URL),
-  rpc: z.string().default(DEFAULT_RPC_URL),
   json: z.boolean().default(false),
+  rpc: z.string().default(DEFAULT_RPC_URL),
 });
 
 type FeesParams = z.infer<typeof feesParamsSchema>;
