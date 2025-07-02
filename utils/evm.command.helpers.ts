@@ -3,7 +3,6 @@ import { Command, Option } from "commander";
 import { ethers, ZeroAddress } from "ethers";
 import { z } from "zod";
 
-import { ZetaChainClient } from "../packages/client/src/client";
 import { EVMAccountData } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import {
@@ -13,13 +12,13 @@ import {
 } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
 import { hasSufficientBalanceEvm } from "./balances";
-import { getNetworkTypeByChainId, getRpcUrl } from "./chains";
+import { getRpcUrl } from "./chains";
 import { handleError } from "./handleError";
 
 export const baseEvmOptionsSchema = z.object({
   abortAddress: evmAddressSchema,
   callOnRevert: z.boolean().default(false),
-  chainId: numericStringSchema,
+  chainId: numericStringSchema.optional(),
   gasLimit: numericStringSchema.optional(),
   gasPrice: numericStringSchema.optional(),
   gateway: evmAddressSchema.optional(),
@@ -37,9 +36,19 @@ type BaseEvmOptions = z.infer<typeof baseEvmOptionsSchema>;
 
 // Common setup function for both deposit commands
 export const setupEvmTransaction = (options: BaseEvmOptions) => {
-  const chainId = parseInt(options.chainId);
-  const networkType = getNetworkTypeByChainId(chainId);
-  const rpcUrl = options.rpc || getRpcUrl(chainId);
+  let rpcUrl: string;
+  if (options.rpc) {
+    rpcUrl = options.rpc;
+  } else if (options.chainId) {
+    rpcUrl = getRpcUrl(parseInt(options.chainId));
+  } else {
+    handleError({
+      context: "Failed to retrieve RPC URL",
+      error: new Error("RPC URL or chain ID is required"),
+      shouldThrow: true,
+    });
+    process.exit(1);
+  }
 
   if (!rpcUrl) {
     handleError({
@@ -79,9 +88,7 @@ export const setupEvmTransaction = (options: BaseEvmOptions) => {
     throw new Error(errorMessage);
   }
 
-  const client = new ZetaChainClient({ network: networkType, signer });
-
-  return { chainId, client, provider, signer };
+  return { provider, signer };
 };
 
 export const checkSufficientEvmBalance = async (
@@ -169,7 +176,7 @@ export const prepareTxOptions = (options: BaseEvmOptions) => {
 
 export const addCommonEvmCommandOptions = (command: Command) => {
   return command
-    .requiredOption("--chain-id <chainId>", "Chain ID of the network")
+    .option("--chain-id <chainId>", "Chain ID of the network")
     .requiredOption("--receiver <address>", "Receiver address on ZetaChain")
     .addOption(
       new Option("--name <name>", "Account name")

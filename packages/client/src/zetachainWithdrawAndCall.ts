@@ -114,7 +114,7 @@ export const zetachainWithdrawAndCall = async function (
   if (args.zrc20 === gasZRC20) {
     const approveGasAndWithdraw = await zrc20.approve(
       gatewayZetaChainAddress,
-      value + ethers.toBigInt(gasFee),
+      value + gasFee,
       args.txOptions
     );
     await approveGasAndWithdraw.wait();

@@ -1,7 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
+import { Wallet } from "@coral-xyz/anchor";
 import confirm from "@inquirer/confirm";
 import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { clusterApiUrl, PublicKey } from "@solana/web3.js";
+import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
+import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 import * as bip39 from "bip39";
 import bs58 from "bs58";
 import { Command, Option } from "commander";
@@ -9,11 +12,12 @@ import { ethers } from "ethers";
 import { z } from "zod";
 
 import { SolanaAccountData } from "../types/accounts.types";
+import { RevertOptions } from "../types/contracts.types";
+import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import {
-  DEFAULT_ACCOUNT_NAME,
-  SOLANA_NETWORKS,
-} from "../types/shared.constants";
-import { hexStringSchema } from "../types/shared.schema";
+  hexStringSchema,
+  typesAndValuesLengthRefineRule,
+} from "../types/shared.schema";
 import { handleError } from "./";
 import { getAccountData } from "./accounts";
 import { trim0x } from "./trim0x";
@@ -21,9 +25,9 @@ import { trim0x } from "./trim0x";
 export const baseSolanaOptionsSchema = z.object({
   abortAddress: z.string(),
   callOnRevert: z.boolean().default(false),
+  chainId: z.string(),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
-  network: z.string(),
   onRevertGasLimit: z.string(),
   privateKey: z.string().optional(),
   recipient: z.string(),
@@ -36,19 +40,21 @@ export const solanaDepositOptionsSchema = baseSolanaOptionsSchema.extend({
   mint: z.string().optional(),
 });
 
-export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema.extend(
-  {
+export const solanaDepositAndCallOptionsSchema = baseSolanaOptionsSchema
+  .extend({
     amount: z.string(),
     mint: z.string().optional(),
     types: z.array(z.string()),
     values: z.array(z.string()),
-  }
-);
+  })
+  .refine(typesAndValuesLengthRefineRule.rule, typesAndValuesLengthRefineRule);
 
-export const solanaCallOptionsSchema = baseSolanaOptionsSchema.extend({
-  types: z.array(z.string()),
-  values: z.array(z.string()),
-});
+export const solanaCallOptionsSchema = baseSolanaOptionsSchema
+  .extend({
+    types: z.array(z.string()),
+    values: z.array(z.string()),
+  })
+  .refine(typesAndValuesLengthRefineRule.rule, typesAndValuesLengthRefineRule);
 
 export const keypairFromMnemonic = async (
   mnemonic: string
@@ -126,6 +132,16 @@ export const getAPI = (network: string) => {
   if (network === "devnet") {
     API = clusterApiUrl("devnet");
   } else if (network === "mainnet") {
+    API = clusterApiUrl("mainnet-beta");
+  }
+  return API;
+};
+
+export const getAPIbyChainId = (chainId: string) => {
+  let API = "http://localhost:8899";
+  if (chainId === "901") {
+    API = clusterApiUrl("devnet");
+  } else if (chainId === "900") {
     API = clusterApiUrl("mainnet-beta");
   }
   return API;
@@ -216,11 +232,7 @@ export const createSolanaCommandWithCommonOptions = (name: string): Command => {
         "Private key in base58 or hex format (with optional 0x prefix)"
       ).conflicts(["mnemonic", "name"])
     )
-    .addOption(
-      new Option("--network <network>", "Solana network").choices(
-        SOLANA_NETWORKS
-      )
-    )
+    .requiredOption("--chain-id <chainId>", "Chain ID of the network")
     .option("--revert-address <revertAddress>", "Revert address")
     .option(
       "--abort-address <abortAddress>",
@@ -244,16 +256,29 @@ interface SolanaRevertOptions {
   revertMessage: Buffer;
 }
 
-export const createRevertOptions = (
-  options: z.infer<typeof baseSolanaOptionsSchema>,
-  publicKey: PublicKey
-): SolanaRevertOptions => {
+// Common revert options preparation
+export const prepareRevertOptions = (
+  options: z.infer<typeof baseSolanaOptionsSchema>
+): RevertOptions => {
   return {
-    abortAddress: ethers.getBytes(options.abortAddress),
+    abortAddress: options.abortAddress,
+    callOnRevert: options.callOnRevert,
+    onRevertGasLimit: options.onRevertGasLimit,
+    revertAddress: options.revertAddress,
+    revertMessage: options.revertMessage,
+  };
+};
+
+export const createRevertOptions = (
+  options: RevertOptions,
+  publicKey: anchor.web3.PublicKey
+) => {
+  return {
+    abortAddress: ethers.getBytes(options.abortAddress ?? ethers.ZeroAddress),
     callOnRevert: options.callOnRevert,
     onRevertGasLimit: new anchor.BN(options.onRevertGasLimit ?? 0),
     revertAddress: options.revertAddress
-      ? new PublicKey(options.revertAddress)
+      ? new anchor.web3.PublicKey(options.revertAddress)
       : publicKey,
     revertMessage: Buffer.from(options.revertMessage, "utf8"),
   };
@@ -279,4 +304,20 @@ Revert options: ${JSON.stringify(options.revertOptions)}${
   }
 `);
   await confirm({ message: "Confirm transaction?" });
+};
+
+export const createSolanaGatewayProgram = (
+  chainId: string,
+  signer: anchor.web3.Keypair
+) => {
+  // Mainnet and devnet use the same IDL
+  const gatewayIDL = chainId === "902" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
+
+  const API = getAPIbyChainId(chainId);
+
+  const connection = new anchor.web3.Connection(API);
+  const provider = new anchor.AnchorProvider(connection, new Wallet(signer));
+  const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
+
+  return { gatewayProgram, provider };
 };

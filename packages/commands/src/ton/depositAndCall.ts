@@ -1,58 +1,56 @@
-import { Address, beginCell, toNano } from "@ton/core";
-import { stringToCell } from "@ton/core/dist/boc/utils/strings";
-import { TonClient } from "@ton/ton";
-import { Gateway } from "@zetachain/protocol-contracts-ton/dist/wrappers";
 import { Option } from "commander";
-import { AbiCoder, ethers } from "ethers";
 import { z } from "zod";
 
+import { tonDepositAndCall } from "../../../../src/chains/ton/depositAndCall";
 import { depositAndCallOptionsSchema } from "../../../../types/ton.types";
-import { handleError, hasErrorStatus } from "../../../../utils";
+import {
+  handleError,
+  hasErrorStatus,
+  validateAndParseSchema,
+} from "../../../../utils";
+import { confirmTransaction } from "../../../../utils/common.command.helpers";
+import { getAddress } from "../../../../utils/getAddress";
 import {
   createTonCommandWithCommonOptions,
   getAccount,
 } from "../../../../utils/ton.command.helpers";
-import { validateAndParseSchema } from "../../../../utils/validateAndParseSchema";
 
 type DepositAndCallOptions = z.infer<typeof depositAndCallOptionsSchema>;
 
 const main = async (options: DepositAndCallOptions) => {
   try {
-    const client = new TonClient({
-      endpoint: options.rpc,
-      ...(options.apiKey && { apiKey: options.apiKey }),
-    });
-
-    const { wallet, keyPair } = await getAccount({
+    const { wallet, keyPair, address } = await getAccount({
       mnemonic: options.mnemonic,
       name: options.name,
     });
 
-    const openedWallet = client.open(wallet);
-    const sender = openedWallet.sender(keyPair.secretKey);
+    const gateway =
+      options.gateway || getAddress("gateway", Number(options.chainId));
 
-    const gatewayAddr = Address.parse(options.gateway);
-    const gateway = client.open(Gateway.createFromAddress(gatewayAddr));
+    const isConfirmed = await confirmTransaction({
+      amount: options.amount,
+      receiver: options.receiver,
+      rpc: options.rpc,
+      sender: address,
+    });
+    if (!isConfirmed) return;
 
-    let payload;
-
-    if (options.types && options.values) {
-      const abiCoder = AbiCoder.defaultAbiCoder();
-      const encodedHex = abiCoder.encode(options.types, options.values);
-      const encodedBin = ethers.getBytes(encodedHex);
-
-      payload = beginCell().storeBuffer(Buffer.from(encodedBin)).endCell();
-    } else if (options.data) {
-      payload = stringToCell(options.data);
-    } else {
-      throw new Error("Either types and values or data must be provided");
-    }
-
-    await gateway.sendDepositAndCall(
-      sender,
-      toNano(options.amount),
-      options.receiver,
-      payload
+    await tonDepositAndCall(
+      {
+        amount: options.amount,
+        data: options.data,
+        receiver: options.receiver,
+        types: options.types,
+        values: options.values,
+      },
+      {
+        apiKey: options.apiKey,
+        chainId: options.chainId,
+        gateway,
+        keyPair,
+        rpc: options.rpc,
+        wallet,
+      }
     );
   } catch (error) {
     if (hasErrorStatus(error, 429)) {

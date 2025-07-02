@@ -2,20 +2,22 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { zetachainWithdrawAndCall } from "../../../../src/chains/zetachain/withdrawAndCall";
 import {
   functionTypesValuesConsistencyRule,
   hexStringSchema,
   namePkRefineRule,
+  rpcOrChainIdRefineRule,
   stringArraySchema,
   typesAndValuesLengthRefineRule,
 } from "../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../utils";
+import { getGatewayAddressFromChainId } from "../../../../utils/getAddress";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 import {
   addCommonZetachainCommandOptions,
   baseZetachainOptionsSchema,
   confirmZetachainTransaction,
-  getZevmGatewayAddress,
   getZRC20WithdrawFee,
   prepareCallOptions,
   prepareRevertOptions,
@@ -39,21 +41,24 @@ const withdrawAndCallOptionsSchema = baseZetachainOptionsSchema
     message: functionTypesValuesConsistencyRule.message,
     path: functionTypesValuesConsistencyRule.path,
   })
-  .refine(namePkRefineRule);
+  .refine(namePkRefineRule)
+  .refine(rpcOrChainIdRefineRule.rule, {
+    message: rpcOrChainIdRefineRule.message,
+  });
 
 type WithdrawAndCallOptions = z.infer<typeof withdrawAndCallOptionsSchema>;
 
 const main = async (options: WithdrawAndCallOptions) => {
   try {
-    const { client } = setupZetachainTransaction(options);
+    const { signer } = setupZetachainTransaction(options);
 
-    const gatewayZetaChain = getZevmGatewayAddress(
-      options.network,
-      options.gatewayZetachain
+    const gatewayAddress = getGatewayAddressFromChainId(
+      options.gateway,
+      options.chainId
     );
 
     const { gasFee, gasSymbol, zrc20Symbol } = await getZRC20WithdrawFee(
-      client.signer as ethers.ContractRunner,
+      signer as ethers.ContractRunner,
       options.zrc20,
       options.callOptionsGasLimit
     );
@@ -63,22 +68,27 @@ const main = async (options: WithdrawAndCallOptions) => {
 Amount: ${options.amount} ${zrc20Symbol}
 Withdraw Gas Fee: ${gasFee} ${gasSymbol}
 Raw data: ${options.data}
-ZetaChain Gateway: ${gatewayZetaChain}
+ZetaChain Gateway: ${gatewayAddress}
 `);
 
       const isConfirmed = await confirmZetachainTransaction(options);
       if (!isConfirmed) return;
 
-      const response = await client.zetachainWithdrawAndCall({
-        amount: options.amount,
-        callOptions: prepareCallOptions(options),
-        data: options.data,
-        gatewayZetaChain,
-        receiver: options.receiver,
-        revertOptions: prepareRevertOptions(options),
-        txOptions: prepareTxOptions(options),
-        zrc20: options.zrc20,
-      });
+      const response = await zetachainWithdrawAndCall(
+        {
+          amount: options.amount,
+          callOptions: prepareCallOptions(options),
+          data: options.data,
+          receiver: options.receiver,
+          revertOptions: prepareRevertOptions(options),
+          zrc20: options.zrc20,
+        },
+        {
+          gateway: gatewayAddress,
+          signer,
+          txOptions: prepareTxOptions(options),
+        }
+      );
 
       const receipt = await response.tx.wait();
       console.log("Transaction hash:", receipt?.hash);
@@ -90,7 +100,7 @@ Withdraw Gas Fee: ${gasFee} ${gasSymbol}
 Function: ${options.function}
 Function parameters: ${options.values.join(", ")}
 Parameter types: ${stringifiedTypes}
-ZetaChain Gateway: ${gatewayZetaChain}
+ZetaChain Gateway: ${gatewayAddress}
 `);
 
       const isConfirmed = await confirmZetachainTransaction(options);
@@ -98,18 +108,23 @@ ZetaChain Gateway: ${gatewayZetaChain}
 
       const values = parseAbiValues(stringifiedTypes, options.values);
 
-      const response = await client.zetachainWithdrawAndCall({
-        amount: options.amount,
-        callOptions: prepareCallOptions(options),
-        function: options.function,
-        gatewayZetaChain: options.gatewayZetachain,
-        receiver: options.receiver,
-        revertOptions: prepareRevertOptions(options),
-        txOptions: prepareTxOptions(options),
-        types: options.types,
-        values,
-        zrc20: options.zrc20,
-      });
+      const response = await zetachainWithdrawAndCall(
+        {
+          amount: options.amount,
+          callOptions: prepareCallOptions(options),
+          function: options.function,
+          receiver: options.receiver,
+          revertOptions: prepareRevertOptions(options),
+          types: options.types,
+          values,
+          zrc20: options.zrc20,
+        },
+        {
+          gateway: gatewayAddress,
+          signer,
+          txOptions: prepareTxOptions(options),
+        }
+      );
 
       const receipt = await response.tx.wait();
       console.log("Transaction hash:", receipt?.hash);
