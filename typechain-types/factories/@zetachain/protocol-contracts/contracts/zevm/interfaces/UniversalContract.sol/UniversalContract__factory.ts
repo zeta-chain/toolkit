@@ -15,12 +15,12 @@ const _abi = [
         components: [
           {
             internalType: "bytes",
-            name: "origin",
+            name: "sender",
             type: "bytes",
           },
           {
             internalType: "address",
-            name: "sender",
+            name: "senderEVM",
             type: "address",
           },
           {
