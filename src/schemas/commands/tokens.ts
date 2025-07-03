@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { DEFAULT_API_URL } from "../../constants/tokens";
+import { DEFAULT_API_URL } from "../../constants/api";
 
 export const tokensListOptionsSchema = z.object({
   api: z.string().default(DEFAULT_API_URL),

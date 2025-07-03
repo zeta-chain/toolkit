@@ -4,7 +4,7 @@ import ora from "ora";
 import { getBorderCharacters, table } from "table";
 import { z } from "zod";
 
-import { DEFAULT_API_URL } from "../../../../../src/constants/tokens";
+import { DEFAULT_API_URL } from "../../../../../src/constants/api";
 import { tokensListOptionsSchema } from "../../../../../src/schemas/commands/tokens";
 import {
   ForeignCoin,
