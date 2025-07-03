@@ -4,33 +4,12 @@ import ora from "ora";
 import { getBorderCharacters, table } from "table";
 import { z } from "zod";
 
-import {
-  ForeignCoin,
-  ForeignCoinsResponse,
-} from "../../../../../types/foreignCoins.types";
+import { DEFAULT_API_URL } from "../../../../../src/constants/tokens";
+import { tokensShowOptionsSchema } from "../../../../../src/schemas/commands/tokens";
+import { ForeignCoin } from "../../../../../types/foreignCoins.types";
+import { fetchForeignCoins } from "./list";
 
-const DEFAULT_API_URL =
-  "https://zetachain-athens.blockpi.network/lcd/v1/public";
-
-const showOptionsSchema = z.object({
-  api: z.string().default(DEFAULT_API_URL),
-  field: z.string().optional(),
-  json: z.boolean().default(false),
-  symbol: z.string(),
-});
-
-type ShowOptions = z.infer<typeof showOptionsSchema>;
-
-const fetchForeignCoins = async (apiUrl: string): Promise<ForeignCoin[]> => {
-  const response = await fetch(`${apiUrl}/zeta-chain/fungible/foreign_coins`);
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const data = (await response.json()) as ForeignCoinsResponse;
-  return data.foreignCoins;
-};
+type TokensShowOptions = z.infer<typeof tokensShowOptionsSchema>;
 
 const findTokenBySymbol = (
   tokens: ForeignCoin[],
@@ -97,7 +76,7 @@ const getFieldValue = (token: ForeignCoin, field: string): string => {
   );
 };
 
-const main = async (options: ShowOptions) => {
+const main = async (options: TokensShowOptions) => {
   const spinner =
     options.json || options.field
       ? null
@@ -181,7 +160,7 @@ export const showCommand = new Command("show")
     )
   )
   .option("--json", "Output token as JSON")
-  .action(async (options: ShowOptions) => {
-    const validatedOptions = showOptionsSchema.parse(options);
+  .action(async (options: TokensShowOptions) => {
+    const validatedOptions = tokensShowOptionsSchema.parse(options);
     await main(validatedOptions);
   });

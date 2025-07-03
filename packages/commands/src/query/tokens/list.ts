@@ -4,23 +4,18 @@ import ora from "ora";
 import { getBorderCharacters, table } from "table";
 import { z } from "zod";
 
+import { DEFAULT_API_URL } from "../../../../../src/constants/tokens";
+import { tokensListOptionsSchema } from "../../../../../src/schemas/commands/tokens";
 import {
   ForeignCoin,
   ForeignCoinsResponse,
 } from "../../../../../types/foreignCoins.types";
 
-const DEFAULT_API_URL =
-  "https://zetachain-athens.blockpi.network/lcd/v1/public";
+type TokensListOptions = z.infer<typeof tokensListOptionsSchema>;
 
-const tokensOptionsSchema = z.object({
-  api: z.string().default(DEFAULT_API_URL),
-  columns: z.array(z.enum(["asset", "type", "decimals"])).default([]),
-  json: z.boolean().default(false),
-});
-
-type TokensOptions = z.infer<typeof tokensOptionsSchema>;
-
-const fetchForeignCoins = async (apiUrl: string): Promise<ForeignCoin[]> => {
+export const fetchForeignCoins = async (
+  apiUrl: string
+): Promise<ForeignCoin[]> => {
   const response = await fetch(`${apiUrl}/zeta-chain/fungible/foreign_coins`);
 
   if (!response.ok) {
@@ -60,7 +55,7 @@ const formatTokensTable = (
   return [headers, ...rows];
 };
 
-const main = async (options: TokensOptions) => {
+const main = async (options: TokensListOptions) => {
   const spinner = ora("Fetching ZRC-20 tokens...").start();
 
   try {
@@ -106,7 +101,7 @@ export const listCommand = new Command("list")
       .choices(["asset", "type", "decimals"])
       .default([])
   )
-  .action(async (options: TokensOptions) => {
-    const validatedOptions = tokensOptionsSchema.parse(options);
+  .action(async (options: TokensListOptions) => {
+    const validatedOptions = tokensListOptionsSchema.parse(options);
     await main(validatedOptions);
   });
