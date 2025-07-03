@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import EventEmitter from "eventemitter3";
 import { z } from "zod";
 
+import { DEFAULT_API_URL } from "../../../../src/constants/tokens";
 import type { CrossChainTx } from "../../../../types/trackCCTX.types";
 import { fetchFromApi, sleep } from "../../../../utils";
 
@@ -233,11 +234,7 @@ const main = async (options: CctxOptions) => {
 export const cctxCommand = new Command("cctx")
   .description("Query cross-chain transaction data in real-time")
   .requiredOption("-h, --hash <hash>", "Inbound transaction hash")
-  .option(
-    "-r, --rpc <rpc>",
-    "RPC endpoint",
-    "https://zetachain-athens.blockpi.network/lcd/v1/public"
-  )
+  .option("-r, --rpc <rpc>", "RPC endpoint", DEFAULT_API_URL)
   .option(
     "-d, --delay <ms>",
     "Delay between polling rounds in milliseconds",
