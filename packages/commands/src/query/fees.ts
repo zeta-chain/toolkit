@@ -7,6 +7,7 @@ import ora from "ora";
 import { getBorderCharacters, table } from "table";
 import { z } from "zod";
 
+import { MULTICALL_ADDRESS } from "../../../../src/constants/addresses";
 import {
   DEFAULT_API_URL,
   DEFAULT_EVM_RPC_URL,
@@ -14,8 +15,6 @@ import {
 import { Call } from "../../../../types/balances.types";
 import { ForeignCoinsResponse } from "../../../../types/foreignCoins.types";
 import MULTICALL3_ABI from "../../../../utils/multicall3.json";
-
-const MULTICALL_ADDRESS = "0xca11bde05977b3631167028862be2a173976ca11";
 
 const feesParamsSchema = z.object({
   gasLimit: z.string().optional(),

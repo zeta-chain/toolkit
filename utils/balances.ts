@@ -5,6 +5,7 @@ import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import axios, { AxiosError } from "axios";
 import { AbiCoder, ethers } from "ethers";
 
+import { MULTICALL_ADDRESS } from "../src/constants/addresses";
 import {
   Call,
   MULTICALL3_ABI,
@@ -262,11 +263,10 @@ export const getEvmTokenBalancesWithMulticall = async (
   tokens: Token[]
 ): Promise<TokenBalance[]> => {
   const provider = new ethers.JsonRpcProvider(rpc);
-  const multicallAddress = "0xca11bde05977b3631167028862be2a173976ca11";
 
   const multicallInterface = new ethers.Interface(MULTICALL3_ABI);
   const multicallContract: MulticallContract = new ethers.Contract(
-    multicallAddress,
+    MULTICALL_ADDRESS,
     multicallInterface,
     provider
   );
