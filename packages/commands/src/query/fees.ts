@@ -61,8 +61,9 @@ export const getFees = async (
       throw new Error("No ZRC20 contracts found");
     }
 
+    const zrc20Interface = new ethers.Interface(ZRC20ABI.abi);
+
     const multicallContexts: Call[] = zrc20Contracts.map((contract) => {
-      const zrc20Interface = new ethers.Interface(ZRC20ABI.abi);
       const callData = params.gasLimit
         ? zrc20Interface.encodeFunctionData("withdrawGasFeeWithGasLimit", [
             params.gasLimit,
@@ -88,7 +89,6 @@ export const getFees = async (
     )) as [bigint, string[]];
 
     const results: WithdrawGasFeeResult[] = [];
-    const zrc20Interface = new ethers.Interface(ZRC20ABI.abi);
 
     for (let i = 0; i < returnData.length; i++) {
       try {
