@@ -1,19 +1,19 @@
 # ZetaChain Toolkit
 
-ZetaChain Toolkit provides a TypeScript SDK for depositing assets, invoking
-contracts, and querying data across every chain connected to ZetaChain.
-
-Currently supports major chains including EVM chains, Solana, Sui, Bitcoin, and
-TON.
+ZetaChain Toolkit is a TypeScript SDK for building universal apps that transfer
+tokens, invoke contracts, and track transactions across any chain connected to
+ZetaChain.
 
 ## ✨ Features
 
-- Asset transfer - deposit from connected chains to ZetaChain and withdraw both
-  gas and fungible tokens.
-- Cross-chain contract calls - make calls from connected chains to universal
-  contracts on ZetaChain and outgoing calls.
-- Real‑time transaction tracking — monitor the status of cross‑chain
-  transactions as they propagate.
+- Cross-chain asset transfers: deposit gas and fungible tokens from any
+  supported chain to ZetaChain and withdraw them back.
+- Cross-chain contract execution: make incoming calls to universal contracts on
+  ZetaChain or trigger outgoing calls to contracts on connected chains.
+- Real-time transaction tracking: monitor the full lifecycle of cross-chain
+  transactions as they propagate across networks.
+- Built-in multi-chain support: works out of the box with EVM chains, Solana,
+  Sui, Bitcoin, and TON.
 
 ## 📦 Installation
 
