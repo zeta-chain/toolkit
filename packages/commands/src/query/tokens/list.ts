@@ -27,7 +27,7 @@ const fetchForeignCoins = async (apiUrl: string): Promise<ForeignCoin[]> => {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  const data: ForeignCoinsResponse = await response.json();
+  const data = (await response.json()) as ForeignCoinsResponse;
   return data.foreignCoins;
 };
 

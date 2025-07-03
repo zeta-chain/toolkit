@@ -28,7 +28,7 @@ const fetchForeignCoins = async (apiUrl: string): Promise<ForeignCoin[]> => {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  const data: ForeignCoinsResponse = await response.json();
+  const data = (await response.json()) as ForeignCoinsResponse;
   return data.foreignCoins;
 };
 
@@ -73,7 +73,7 @@ const getFieldValue = (token: ForeignCoin, field: string): string => {
 
   // Check if the field exists on the token
   if (field in token) {
-    const value = (token as any)[field];
+    const value = token[field as keyof ForeignCoin];
     const stringValue = String(value);
 
     // Check for empty values (empty string, null, undefined, "null", "undefined", "N/A")
