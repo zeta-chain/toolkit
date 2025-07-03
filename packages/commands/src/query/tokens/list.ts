@@ -1,8 +1,9 @@
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
-import { table, getBorderCharacters } from "table";
+import { getBorderCharacters, table } from "table";
 import { z } from "zod";
+
 import {
   ForeignCoin,
   ForeignCoinsResponse,
@@ -13,8 +14,8 @@ const DEFAULT_API_URL =
 
 const tokensOptionsSchema = z.object({
   api: z.string().default(DEFAULT_API_URL),
-  json: z.boolean().default(false),
   columns: z.array(z.enum(["asset", "type", "decimals"])).default([]),
+  json: z.boolean().default(false),
 });
 
 type TokensOptions = z.infer<typeof tokensOptionsSchema>;
@@ -94,6 +95,7 @@ const main = async (options: TokensOptions) => {
 };
 
 export const listCommand = new Command("list")
+  .alias("l")
   .description("List all ZRC-20 tokens")
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)

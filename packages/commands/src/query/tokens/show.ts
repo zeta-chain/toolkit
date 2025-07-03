@@ -1,8 +1,9 @@
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
-import { table, getBorderCharacters } from "table";
+import { getBorderCharacters, table } from "table";
 import { z } from "zod";
+
 import {
   ForeignCoin,
   ForeignCoinsResponse,
@@ -13,6 +14,7 @@ const DEFAULT_API_URL =
 
 const showOptionsSchema = z.object({
   api: z.string().default(DEFAULT_API_URL),
+  field: z.string().optional(),
   json: z.boolean().default(false),
   symbol: z.string(),
 });
@@ -57,21 +59,88 @@ const formatTokenDetails = (token: ForeignCoin): string[][] => {
   ];
 };
 
+const getFieldValue = (token: ForeignCoin, field: string): string => {
+  // Handle shorthand for zrc20_contract_address
+  if (field === "zrc20") {
+    const value = token.zrc20_contract_address;
+    if (!value || value.trim() === "") {
+      throw new Error(
+        `Field 'zrc20_contract_address' is empty for token '${token.symbol}'`
+      );
+    }
+    return value;
+  }
+
+  // Check if the field exists on the token
+  if (field in token) {
+    const value = (token as any)[field];
+    const stringValue = String(value);
+
+    // Check for empty values (empty string, null, undefined, "null", "undefined", "N/A")
+    if (
+      !stringValue ||
+      stringValue.trim() === "" ||
+      stringValue === "null" ||
+      stringValue === "undefined" ||
+      stringValue === "N/A"
+    ) {
+      throw new Error(`Field '${field}' is empty for token '${token.symbol}'`);
+    }
+
+    return stringValue;
+  }
+
+  throw new Error(
+    `Invalid field: ${field}. Available fields: ${Object.keys(token).join(
+      ", "
+    )}, zrc20`
+  );
+};
+
 const main = async (options: ShowOptions) => {
-  const spinner = ora("Fetching ZRC-20 tokens...").start();
+  const spinner =
+    options.json || options.field
+      ? null
+      : ora("Fetching ZRC-20 tokens...").start();
 
   try {
     const tokens = await fetchForeignCoins(options.api);
-    spinner.succeed(`Successfully fetched ${tokens.length} ZRC-20 tokens`);
+    if (!options.json && !options.field) {
+      spinner?.succeed(`Successfully fetched ${tokens.length} ZRC-20 tokens`);
+    }
 
     const token = findTokenBySymbol(tokens, options.symbol);
 
     if (!token) {
-      spinner.fail(`Token with symbol '${options.symbol}' not found`);
-      console.log(chalk.yellow("Available tokens:"));
-      const availableSymbols = tokens.map((t) => t.symbol).sort();
-      console.log(availableSymbols.join(", "));
+      if (options.field) {
+        console.error(
+          chalk.red(`Token with symbol '${options.symbol}' not found`)
+        );
+        console.log(chalk.yellow("Available tokens:"));
+        const availableSymbols = tokens.map((t) => t.symbol).sort();
+        console.log(availableSymbols.join(", "));
+        process.exit(1);
+      } else if (!options.json) {
+        spinner?.fail(`Token with symbol '${options.symbol}' not found`);
+        console.log(chalk.yellow("Available tokens:"));
+        const availableSymbols = tokens.map((t) => t.symbol).sort();
+        console.log(availableSymbols.join(", "));
+      }
       return;
+    }
+
+    // Handle field option - return single value for scripting
+    if (options.field) {
+      try {
+        const value = getFieldValue(token, options.field);
+        console.log(value);
+        return;
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error(chalk.red(error.message));
+        }
+        return;
+      }
     }
 
     if (options.json) {
@@ -86,21 +155,30 @@ const main = async (options: ShowOptions) => {
 
     console.log(tableOutput);
   } catch (error) {
-    spinner.fail("Failed to fetch ZRC-20 tokens");
-    console.error(chalk.red("Error details:"), error);
+    if (!options.json && !options.field) {
+      spinner?.fail("Failed to fetch ZRC-20 tokens");
+      console.error(chalk.red("Error details:"), error);
+    }
   }
 };
 
 export const showCommand = new Command("show")
+  .alias("s")
   .description("Show detailed information for a specific ZRC-20 token")
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
   .addOption(
     new Option(
-      "--symbol <symbol>",
+      "--symbol -s <symbol>",
       "Token symbol (e.g., POL.AMOY, USDC.BSC)"
     ).makeOptionMandatory()
+  )
+  .addOption(
+    new Option(
+      "--field -f <field>",
+      "Return specific field value (for scripting). Use 'zrc20' as shorthand for 'zrc20_contract_address'"
+    )
   )
   .option("--json", "Output token as JSON")
   .action(async (options: ShowOptions) => {
