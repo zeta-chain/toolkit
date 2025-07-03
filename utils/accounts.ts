@@ -22,6 +22,7 @@ import {
   EVMAccountData,
   SolanaAccountData,
   SuiAccountData,
+  TONAccountData,
 } from "../types/accounts.types";
 import {
   safeExists,
@@ -56,6 +57,7 @@ export const getAccountData = <
     | SolanaAccountData
     | BitcoinAccountData
     | SuiAccountData
+    | TONAccountData
 >(
   accountType: (typeof AvailableAccountTypes)[number],
   accountName: string

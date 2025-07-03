@@ -1,12 +1,11 @@
-import { Command, Option } from "commander";
 import { z } from "zod";
 
 import { memoDepositOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
   constructMemo,
+  createBitcoinMemoCommandWithCommonOptions,
   displayAndConfirmMemoTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -70,23 +69,14 @@ const main = async (options: DepositOptions) => {
  * Command definition for deposit
  * This allows users to deposit BTC to EOAs and contracts on ZetaChain
  */
-export const depositCommand = new Command()
-  .name("deposit")
+export const depositCommand = createBitcoinMemoCommandWithCommonOptions(
+  "deposit"
+)
   .description("Deposit BTC to ZetaChain")
-  .requiredOption("-r, --receiver <address>", "ZetaChain receiver address")
-  .requiredOption(
-    "-g, --gateway <address>",
-    "Bitcoin gateway (TSS) address",
-    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
-  )
-  .requiredOption("--amount <btcAmount>", "BTC amount to send (in BTC)")
-  .addOption(new Option("--data <data>", "Pass raw data"))
-  .option("--network-fee <fee>", "Network fee (in sats)", "1750")
+  .requiredOption("-a, --amount <btcAmount>", "BTC amount to send (in BTC)")
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, memoDepositOptionsSchema, {
       exitOnError: true,
     });
     await main(validated);
   });
-
-addCommonBitcoinCommandOptions(depositCommand);

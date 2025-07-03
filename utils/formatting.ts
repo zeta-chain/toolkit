@@ -3,7 +3,6 @@ import { ethers } from "ethers";
 
 import { TokenBalance } from "../types/balances.types";
 import { CCTX } from "../types/trackCCTX.types";
-import { getChainName } from "./chains";
 import { handleError } from "./handleError";
 
 /**
@@ -77,6 +76,17 @@ export const formatAddresses = (options: FormatAddressesOptions): string => {
 };
 
 /**
+ * Normalize a float string by removing unnecessary zeros
+ */
+export const normalizeFloat = (str: string): string => {
+  const num = Number(str);
+  if (!Number.isFinite(num)) {
+    throw new Error(`'${str}' is not a valid number`);
+  }
+  return num.toString(); // drops unnecessary zeros
+};
+
+/**
  * Format token balances for display
  */
 export interface FormattedBalance {
@@ -103,7 +113,7 @@ export const formatBalances = (
   });
 
   return sortedBalances.map((balance) => ({
-    Amount: parseFloat(balance.balance).toFixed(6),
+    Amount: normalizeFloat(parseFloat(balance.balance).toFixed(6)),
     Chain: balance.chain_name || "Unknown",
     Token: balance.symbol,
     Type: balance.coin_type,
@@ -115,7 +125,6 @@ export const formatBalances = (
  */
 export const printEvmTransactionDetails = async (
   signer: ethers.Wallet,
-  chainId: number,
   options: {
     amount?: string;
     callOnRevert: boolean;
@@ -145,7 +154,7 @@ export const printEvmTransactionDetails = async (
   }
 
   console.log(`
-From:   ${signer.address} on ${getChainName(chainId)}
+From:   ${signer.address}
 To:     ${options.receiver} on ZetaChain${
     options.amount
       ? `\nAmount: ${options.amount} ${tokenSymbol}${

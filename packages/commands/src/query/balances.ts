@@ -9,8 +9,13 @@ import {
   resolveEvmAddress,
   resolveSolanaAddress,
   resolveSuiAddress,
+  resolveTONAddress,
 } from "../../../../utils/addressResolver";
-import { formatAddresses, formatBalances } from "../../../../utils/formatting";
+import {
+  formatAddresses,
+  formatBalances,
+  normalizeFloat,
+} from "../../../../utils/formatting";
 import { ZetaChainClient } from "../../../client/src/client";
 
 const WALLET_ERROR = `
@@ -34,6 +39,7 @@ const balancesOptionsSchema = z.object({
   json: z.boolean().default(false),
   name: accountNameSchema.optional(),
   network: z.enum(["mainnet", "testnet"]).default("testnet"),
+  showZero: z.boolean().default(false),
   solana: z.string().optional(),
   sui: z.string().optional(),
   ton: z.string().optional(),
@@ -92,7 +98,16 @@ const main = async (options: BalancesOptions) => {
       suiAddress: options.sui,
     });
 
-    const tonAddress = options.ton;
+    const tonAddress = resolveTONAddress({
+      accountName: options.name,
+      handleError: () =>
+        spinner.warn(
+          `Error resolving TON address ${
+            !options.ton && options.name ? `for user '${options.name}'` : ""
+          }`
+        ),
+      tonAddress: options.ton,
+    });
 
     if (
       !evmAddress &&
@@ -112,7 +127,7 @@ const main = async (options: BalancesOptions) => {
     });
 
     spinner.text = `Fetching balances on ${options.network}...`;
-    const balances = await client.getBalances({
+    let balances = await client.getBalances({
       btcAddress,
       evmAddress,
       solanaAddress,
@@ -121,6 +136,12 @@ const main = async (options: BalancesOptions) => {
     });
 
     spinner.succeed("Successfully fetched balances");
+
+    if (!options.showZero) {
+      balances = balances.filter(
+        ({ balance }) => normalizeFloat(balance) !== "0"
+      );
+    }
 
     if (options.json) {
       console.log(JSON.stringify(balances, null, 2));
@@ -168,6 +189,7 @@ export const balancesCommand = new Command("balances")
       .default("testnet")
   )
   .option("--json", "Output balances as JSON")
+  .option("--show-zero", "Include zero balances", false)
   .action(async (options: BalancesOptions) => {
     const validatedOptions = balancesOptionsSchema.parse(options);
     await main(validatedOptions);

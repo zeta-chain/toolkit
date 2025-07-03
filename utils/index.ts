@@ -12,6 +12,7 @@ export * from "./keyPaths";
 export * from "./parseAbiValues";
 export * from "./parseJson";
 export * from "./safeAwait";
+export * from "./sleep";
 export * from "./solanaAccounts";
 export * from "./toHexString";
 export * from "./trackCCTX";

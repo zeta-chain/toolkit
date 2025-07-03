@@ -39,10 +39,11 @@ export type ZRC20Contract = ethers.Contract & {
     txOptions: TxOptions
   ) => Promise<ContractTransactionResponse>;
   decimals: () => Promise<number>;
-  withdrawGasFee: () => Promise<[string, ethers.BigNumberish]>;
+  symbol: () => Promise<string>;
+  withdrawGasFee: () => Promise<[string, bigint]>;
   withdrawGasFeeWithGasLimit: (
     gasLimit: ethers.BigNumberish
-  ) => Promise<[string, ethers.BigNumberish]>;
+  ) => Promise<[string, bigint]>;
 };
 
 export type GatewayContract = ethers.Contract & {

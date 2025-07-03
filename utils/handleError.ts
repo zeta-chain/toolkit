@@ -43,3 +43,15 @@ export const handleError = (options: ErrorHandlingOptions): string => {
 
   return formattedMessage;
 };
+
+/**
+ * Checks if an error has a specific HTTP status code
+ * @param error - The caught error of unknown type
+ * @param status - The HTTP status code to check for (e.g., 429, 404, 500)
+ * @returns True if the error has the specified status code
+ */
+export const hasErrorStatus = (error: unknown, status: number) => {
+  return (
+    (error as { response: { status: number } })?.response?.status === status
+  );
+};

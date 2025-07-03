@@ -1,13 +1,19 @@
 import { Command } from "commander";
+import { ethers } from "ethers";
 import { z } from "zod";
 
-import { namePkRefineRule } from "../../../../types/shared.schema";
+import { zetachainWithdraw } from "../../../../src/chains/zetachain/withdraw";
+import {
+  namePkRefineRule,
+  rpcOrChainIdRefineRule,
+} from "../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../utils";
+import { getGatewayAddressFromChainId } from "../../../../utils/getAddress";
 import {
   addCommonZetachainCommandOptions,
   baseZetachainOptionsSchema,
   confirmZetachainTransaction,
-  getZevmGatewayAddress,
+  getZRC20WithdrawFee,
   prepareRevertOptions,
   prepareTxOptions,
   setupZetachainTransaction,
@@ -17,37 +23,51 @@ const withdrawOptionsSchema = baseZetachainOptionsSchema
   .extend({
     amount: z.string(),
   })
-  .refine(namePkRefineRule);
+  .refine(namePkRefineRule)
+  .refine(rpcOrChainIdRefineRule.rule, {
+    message: rpcOrChainIdRefineRule.message,
+  });
 
 type WithdrawOptions = z.infer<typeof withdrawOptionsSchema>;
 
 const main = async (options: WithdrawOptions) => {
   try {
-    const { client } = setupZetachainTransaction(options);
+    const { signer } = setupZetachainTransaction(options);
 
-    const gatewayZetaChain = getZevmGatewayAddress(
-      options.network,
-      options.gatewayZetachain
+    const gatewayAddress = getGatewayAddressFromChainId(
+      options.gateway,
+      options.chainId
+    );
+
+    const { gasFee, gasSymbol, zrc20Symbol } = await getZRC20WithdrawFee(
+      signer as ethers.ContractRunner,
+      options.zrc20
     );
 
     console.log(`Withdraw details:
-Amount: ${options.amount}
+Amount: ${options.amount} ${zrc20Symbol}
+Withdraw Gas Fee: ${gasFee} ${gasSymbol}
 Receiver: ${options.receiver}
 ZRC20: ${options.zrc20}
-ZetaChain Gateway: ${gatewayZetaChain}
+ZetaChain Gateway: ${gatewayAddress}
 `);
 
     const isConfirmed = await confirmZetachainTransaction(options);
     if (!isConfirmed) return;
 
-    const response = await client.zetachainWithdraw({
-      amount: options.amount,
-      gatewayZetaChain,
-      receiver: options.receiver,
-      revertOptions: prepareRevertOptions(options),
-      txOptions: prepareTxOptions(options),
-      zrc20: options.zrc20,
-    });
+    const response = await zetachainWithdraw(
+      {
+        amount: options.amount,
+        receiver: options.receiver,
+        revertOptions: prepareRevertOptions(options),
+        zrc20: options.zrc20,
+      },
+      {
+        gateway: gatewayAddress,
+        signer,
+        txOptions: prepareTxOptions(options),
+      }
+    );
 
     const receipt = await response.tx.wait();
     console.log("Transaction hash:", receipt?.hash);
