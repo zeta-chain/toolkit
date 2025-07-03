@@ -21,6 +21,11 @@
       "require": "./dist/packages/test/src/index.js",
       "types": "./dist/packages/test/src/index.d.ts"
     },
+    "./chains": {
+      "import": "./dist/src/chains/index.js",
+      "require": "./dist/src/chains/index.js",
+      "types": "./dist/src/chains/index.d.ts"
+    },
     "./typechain-types": {
       "types": "./dist/typechain-types/index.ts"
     }
@@ -51,6 +56,7 @@
     "@jest/globals": "^29.7.0",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-foundry": "^1.1.4",
     "@nomicfoundation/hardhat-ignition": "^0.15.10",
     "@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
@@ -120,9 +126,11 @@
     "@uniswap/v3-periphery": "^1.4.4",
     "@zetachain/faucet-cli": "^4.1.1",
     "@zetachain/networks": "14.0.0-rc1",
-    "@zetachain/protocol-contracts": "13.1.0-rc3",
+    "@zetachain/protocol-contracts": "13.0.0",
     "@zetachain/protocol-contracts-solana": "^5.0.0",
     "@zetachain/protocol-contracts-ton": "1.0.0-rc4",
+    "@zetachain/standard-contracts": "^2.0.1",
+    "@zetachain/toolkit": "^15.0.2",
     "axios": "^1.4.0",
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",

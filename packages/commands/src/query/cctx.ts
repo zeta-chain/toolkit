@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import EventEmitter from "eventemitter3";
 import { z } from "zod";
 
+import { DEFAULT_API_URL } from "../../../../src/constants/tokens";
 import type { CrossChainTx } from "../../../../types/trackCCTX.types";
 import { fetchFromApi, sleep } from "../../../../utils";
 
@@ -197,14 +198,16 @@ Receiver: ${receiver}
         ? "Reverted to sender address, because revert address is not set"
         : revert_address;
 
+    const revertMessage = revert_message
+      ? Buffer.from(revert_message, "base64").toString()
+      : "null";
+
     const revertTx = `
-${receiver_chainId} → ${
-      outbound_params[1].receiver_chainId
-    } ${revertStatusIcon} ${revertStatusMessage}
+${receiver_chainId} → ${outbound_params[1].receiver_chainId} ${revertStatusIcon} ${revertStatusMessage}
 Revert Address:   ${revertAddress}
 Call on Revert:   ${call_on_revert}
 Abort Address:    ${abort_address}
-Revert Message:   ${Buffer.from(revert_message, "base64").toString()}
+Revert Message:   ${revertMessage}
 Revert Gas Limit: ${revert_gas_limit}
 `;
 
@@ -233,11 +236,7 @@ const main = async (options: CctxOptions) => {
 export const cctxCommand = new Command("cctx")
   .description("Query cross-chain transaction data in real-time")
   .requiredOption("-h, --hash <hash>", "Inbound transaction hash")
-  .option(
-    "-r, --rpc <rpc>",
-    "RPC endpoint",
-    "https://zetachain-athens.blockpi.network/lcd/v1/public"
-  )
+  .option("-r, --rpc <rpc>", "RPC endpoint", DEFAULT_API_URL)
   .option(
     "-d, --delay <ms>",
     "Delay between polling rounds in milliseconds",

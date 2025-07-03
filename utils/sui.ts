@@ -1,4 +1,4 @@
-import { SuiClient } from "@mysten/sui/client";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { bech32 } from "bech32";
@@ -7,7 +7,10 @@ import { HDKey } from "ethereum-cryptography/hdkey";
 import { z } from "zod";
 
 import { SuiAccountData } from "../types/accounts.types";
+import { suiGatewayAddressSchema } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
+import { getAddress } from "./getAddress";
+import { validateAndParseSchema } from "./validateAndParseSchema";
 
 export const GAS_BUDGET = 10_000_000;
 export const SUI_GAS_COIN_TYPE = "0x2::sui::SUI";
@@ -168,8 +171,8 @@ export const signAndExecuteTransaction = async ({
   return result;
 };
 
-export const chainIds = ["0103", "101", "103"] as const;
-export const networks = ["localnet", "mainnet", "testnet"] as const;
+export const chainIds = ["101", "103", "104"] as const;
+export const networks = ["mainnet", "testnet", "localnet"] as const;
 
 export type SuiNetwork = (typeof networks)[number];
 
@@ -215,15 +218,14 @@ export const toSmallestUnit = (amount: string, decimals = 9): bigint => {
 
 export const commonDepositObjectSchema = z.object({
   amount: z.string(),
-  chainId: z.enum(chainIds).optional(),
+  chainId: z.enum(chainIds),
   coinType: z.string().default(SUI_GAS_COIN_TYPE),
   decimals: z.string(),
   gasBudget: z.string(),
-  gatewayObject: z.string(),
-  gatewayPackage: z.string(),
+  gatewayObject: z.string().optional(),
+  gatewayPackage: z.string().optional(),
   mnemonic: z.string().optional(),
   name: z.string().optional(),
-  network: z.enum(networks).optional(),
   privateKey: z.string().optional(),
   receiver: z.string(),
 });
@@ -234,3 +236,57 @@ export const commonDepositOptionsSchema = commonDepositObjectSchema.refine(
     message: "Either mnemonic, private key or name must be provided",
   }
 );
+
+/**
+ * Parses and validates a Sui gateway address string
+ * @param gatewayAddress - The gateway address string in format "package,object"
+ * @returns Parsed gateway address with package and object properties
+ * @throws Error if the gateway address format is invalid
+ */
+export const parseSuiGatewayAddress = (gatewayAddress: string) => {
+  return validateAndParseSchema(gatewayAddress, suiGatewayAddressSchema, {
+    shouldLogError: false,
+  });
+};
+
+/**
+ * Gets the gateway address from chain ID and parses it, or uses provided package and object
+ * @param chainId - The chain ID to get the gateway address for
+ * @param gatewayPackage - Optional gateway package to use instead of getting from chain ID
+ * @param gatewayObject - Optional gateway object to use instead of getting from chain ID
+ * @returns Parsed gateway address with package and object properties
+ * @throws Error if the gateway address is not found or format is invalid
+ */
+export const getSuiGatewayAndClient = (
+  chainId: (typeof chainIds)[number],
+  gatewayPackage?: string,
+  gatewayObject?: string
+) => {
+  let result;
+
+  const network = networks[chainIds.indexOf(chainId)];
+  const client = new SuiClient({ url: getFullnodeUrl(network) });
+
+  // If both package and object are provided, use them directly
+  if (gatewayPackage && gatewayObject) {
+    result = { client, gatewayObject, gatewayPackage };
+  } else {
+    // Otherwise, get the gateway address from chain ID and parse it
+    const gatewayAddress = getAddress("gateway", Number(chainId));
+    if (!gatewayAddress) {
+      throw new Error("Gateway address not found");
+    }
+
+    result = {
+      ...parseSuiGatewayAddress(gatewayAddress),
+      client,
+    };
+  }
+
+  return result;
+};
+
+export const getSuiRpcByChainId = (chainId: (typeof chainIds)[number]) => {
+  const network = networks[chainIds.indexOf(chainId)];
+  return getFullnodeUrl(network);
+};

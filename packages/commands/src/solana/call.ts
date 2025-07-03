@@ -1,62 +1,55 @@
-import * as anchor from "@coral-xyz/anchor";
-import { Wallet } from "@coral-xyz/anchor";
-import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
-import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
-import { ethers } from "ethers";
 import { z } from "zod";
 
+import { solanaCall } from "../../../../src/chains/solana/call";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 import {
   confirmSolanaTx,
   createRevertOptions,
   createSolanaCommandWithCommonOptions,
-  getAPI,
+  getAPIbyChainId,
   getKeypair,
+  prepareRevertOptions,
   solanaCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
 
 type CallOptions = z.infer<typeof solanaCallOptionsSchema>;
 
 const main = async (options: CallOptions) => {
-  // Mainnet and devnet use the same IDL
-  const gatewayIDL =
-    options.network === "localnet" ? GATEWAY_DEV_IDL : GATEWAY_PROD_IDL;
-
   const keypair = await getKeypair({
     mnemonic: options.mnemonic,
     name: options.name,
     privateKey: options.privateKey,
   });
 
-  const API = getAPI(options.network);
+  const API = getAPIbyChainId(options.chainId);
 
-  const connection = new anchor.web3.Connection(API);
-  const provider = new anchor.AnchorProvider(connection, new Wallet(keypair));
-  const gatewayProgram = new anchor.Program(gatewayIDL as anchor.Idl, provider);
-
-  const receiverBytes = ethers.getBytes(options.recipient);
   const stringifiedTypes = JSON.stringify(options.types);
   const values = parseAbiValues(stringifiedTypes, options.values);
-  const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-  const encodedParameters = abiCoder.encode(options.types, values);
-  const message = Buffer.from(encodedParameters.slice(2), "hex");
 
-  const revertOptions = createRevertOptions(options, provider.wallet.publicKey);
+  const revertOptions = prepareRevertOptions(options);
+
+  await confirmSolanaTx({
+    api: API,
+    message: values.join(", "),
+    recipient: options.recipient,
+    revertOptions: createRevertOptions(revertOptions, keypair.publicKey),
+    sender: keypair.publicKey.toBase58(),
+  });
 
   try {
-    await confirmSolanaTx({
-      api: API,
-      message: message.toString(),
-      recipient: options.recipient,
-      revertOptions,
-      sender: keypair.publicKey.toBase58(),
-    });
-
-    const tx = await gatewayProgram.methods
-      .call(receiverBytes, message, revertOptions)
-      .accounts({})
-      .rpc();
+    const tx = await solanaCall(
+      {
+        receiver: options.recipient,
+        revertOptions,
+        types: options.types,
+        values,
+      },
+      {
+        chainId: options.chainId,
+        signer: keypair,
+      }
+    );
     console.log("Transaction hash:", tx);
   } catch (error) {
     handleError({

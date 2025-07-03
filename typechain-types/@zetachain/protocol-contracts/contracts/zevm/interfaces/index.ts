@@ -3,8 +3,10 @@
 /* eslint-disable */
 import type * as iGatewayZevmSol from "./IGatewayZEVM.sol";
 export type { iGatewayZevmSol };
+import type * as iwzetaSol from "./IWZETA.sol";
+export type { iwzetaSol };
 import type * as izrc20Sol from "./IZRC20.sol";
 export type { izrc20Sol };
 import type * as universalContractSol from "./UniversalContract.sol";
 export type { universalContractSol };
-export type { ICoreRegistry } from "./ICoreRegistry";
+export type { ISystem } from "./ISystem";

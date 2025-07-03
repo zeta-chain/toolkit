@@ -7,6 +7,7 @@ export * as swapHelpersSol from "./SwapHelpers.sol";
 export * as systemContractSol from "./SystemContract.sol";
 export * as universalContractSol from "./UniversalContract.sol";
 export * as shared from "./shared";
+export * as testing from "./testing";
 export { BytesHelperLib__factory } from "./BytesHelperLib__factory";
 export { OnlySystem__factory } from "./OnlySystem__factory";
 export { SwapHelperLib__factory } from "./SwapHelperLib__factory";

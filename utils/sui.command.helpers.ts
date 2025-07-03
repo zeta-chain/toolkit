@@ -1,13 +1,7 @@
 import { Command, Option } from "commander";
 
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
-import {
-  chainIds,
-  GAS_BUDGET,
-  networks,
-  SUI_DEFAULT_DECIMALS,
-  SUI_GAS_COIN_TYPE,
-} from "./sui";
+import { GAS_BUDGET, SUI_DEFAULT_DECIMALS, SUI_GAS_COIN_TYPE } from "./sui";
 
 export const createSuiCommandWithCommonOptions = (name: string): Command => {
   return new Command(name)
@@ -22,22 +16,12 @@ export const createSuiCommandWithCommonOptions = (name: string): Command => {
         "Private key for the account"
       ).conflicts(["mnemonic", "name"])
     )
-    .requiredOption("--gateway-object <gatewayObject>", "Gateway object ID")
-    .requiredOption("--gateway-package <gatewayPackage>", "Gateway package ID")
+    .option("--gateway-object <gatewayObject>", "Gateway object ID")
+    .option("--gateway-package <gatewayPackage>", "Gateway package ID")
     .requiredOption("--receiver <receiver>", "Receiver address on ZetaChain")
     .requiredOption("--amount <amount>", "Amount to deposit in decimal format")
-    .addOption(
-      new Option("--chain-id <chainId>", "Chain ID")
-        .choices(chainIds)
-        .default("103")
-        .conflicts(["network"])
-    )
+    .requiredOption("--chain-id <chainId>", "Chain ID")
     .option("--coin-type <coinType>", "Coin type to deposit", SUI_GAS_COIN_TYPE)
-    .addOption(
-      new Option("--network <network>", "Network to use")
-        .choices(networks)
-        .conflicts(["chain-id"])
-    )
     .option(
       "--gas-budget <gasBudget>",
       "Gas budget in MIST",

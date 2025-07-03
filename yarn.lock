@@ -1822,6 +1822,13 @@
     debug "^4.1.1"
     lodash.isequal "^4.5.0"
 
+"@nomicfoundation/hardhat-foundry@^1.1.4":
+  version "1.1.4"
+  resolved "https://registry.npmjs.org/@nomicfoundation/hardhat-foundry/-/hardhat-foundry-1.1.4.tgz#56b681ecb43410481ba37e9af37ca88689eaf187"
+  integrity sha512-jpKyOr8bYKJPCuxJIJGOJzzyQPLcLJYq+kLPx135dkgCXyHiFdbSaGA9AEwqsPf97wlwXkskXGn4a21XOkSOPg==
+  dependencies:
+    picocolors "^1.1.0"
+
 "@nomicfoundation/hardhat-ignition-ethers@^0.15.0":
   version "0.15.12"
   resolved "https://registry.npmjs.org/@nomicfoundation/hardhat-ignition-ethers/-/hardhat-ignition-ethers-0.15.12.tgz#f4ffb791a253a4fe05234ad4d0fde7cb5e125e6f"
@@ -3301,15 +3308,76 @@
   dependencies:
     ethers "^6.13.2"
 
+"@zetachain/protocol-contracts@13.0.0":
+  version "13.0.0"
+  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-13.0.0.tgz#dc194144b21bd333c6939cb7b6fa60f103bf8735"
+  integrity sha512-gqylJeCI4rt6VYVpyr+5wXaUVHmLpr7WiGO6weJX2sOlwOlUk4+HSeRUgI3muK+k3CrY6igCETx/EP3UGMLf+Q==
+  dependencies:
+    "@openzeppelin/contracts" "^5.0.2"
+    "@openzeppelin/contracts-upgradeable" "^5.0.2"
+    "@zetachain/networks" "^10.0.0"
+    ethers "6.13.5"
+
 "@zetachain/protocol-contracts@13.1.0-rc3":
   version "13.1.0-rc3"
-  resolved "https://registry.npmjs.org/@zetachain/protocol-contracts/-/protocol-contracts-13.1.0-rc3.tgz#23e637dd53147701033f50079ce0b93f8c14cf37"
+  resolved "https://registry.yarnpkg.com/@zetachain/protocol-contracts/-/protocol-contracts-13.1.0-rc3.tgz#23e637dd53147701033f50079ce0b93f8c14cf37"
   integrity sha512-8nrIOOBl2PXt6TNkrSDjqZxJwd2u8PmQKY3vJo0a4gQgCoKYT44gGvLk8TVp8cjnP/OJStbmIQt/NKZhk1188g==
   dependencies:
     "@openzeppelin/contracts" "^5.0.2"
     "@openzeppelin/contracts-upgradeable" "^5.0.2"
     "@zetachain/networks" "^10.0.0"
     ethers "6.13.5"
+
+"@zetachain/standard-contracts@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@zetachain/standard-contracts/-/standard-contracts-2.0.1.tgz#aefd28bb81f1f05b183bd73dc62bd68e456a6ebf"
+  integrity sha512-SHV9a1bSgy8litI/LRZ4VIus7Gsjy0wj3n9bZeIsEydn0C5NNZxYO4XW+P06dlEyDQjtcVJQHoQOyHkodBoVsQ==
+
+"@zetachain/toolkit@^15.0.2":
+  version "15.0.2"
+  resolved "https://registry.yarnpkg.com/@zetachain/toolkit/-/toolkit-15.0.2.tgz#d62b2ab7bf618cfb2ba566861b39969e0a63a1b6"
+  integrity sha512-mkaMXTGFKGDBL4Fh2ZDpMznf73eaWaBYVNmXbyKgIR0nOk+DtY8HEwLoy6J/quha/mNwV25D1Db7mI2ieRCgew==
+  dependencies:
+    "@coral-xyz/anchor" "^0.30.1"
+    "@ethersproject/units" "^5.8.0"
+    "@inquirer/prompts" "^2.1.1"
+    "@inquirer/select" "1.1.3"
+    "@mysten/sui" "^1.28.2"
+    "@nomiclabs/hardhat-ethers" "^2.2.3"
+    "@openzeppelin/contracts" "^5.0.2"
+    "@openzeppelin/contracts-upgradeable" "^5.0.2"
+    "@solana/wallet-adapter-react" "^0.15.35"
+    "@solana/web3.js" "1.95.8"
+    "@ton/core" "^0.60.1"
+    "@ton/crypto" "^3.3.0"
+    "@ton/ton" "^15.2.1"
+    "@uniswap/v2-periphery" "^1.1.0-beta.0"
+    "@uniswap/v3-periphery" "^1.4.4"
+    "@zetachain/faucet-cli" "^4.1.1"
+    "@zetachain/networks" "14.0.0-rc1"
+    "@zetachain/protocol-contracts" "13.1.0-rc3"
+    "@zetachain/protocol-contracts-solana" "^5.0.0"
+    "@zetachain/protocol-contracts-ton" "1.0.0-rc4"
+    axios "^1.4.0"
+    bech32 "^2.0.0"
+    bip39 "^3.1.0"
+    bitcoinjs-lib "^6.1.7"
+    bs58 "^6.0.0"
+    commander "^13.1.0"
+    dotenv "16.0.3"
+    ecpair "^2.1.0"
+    envfile "^6.18.0"
+    ethers "^6.13.2"
+    eventemitter3 "^5.0.1"
+    form-data "^4.0.0"
+    handlebars "4.7.7"
+    hardhat "^2.22.8"
+    lodash "^4.17.21"
+    ora "5.4.1"
+    spinnies "^0.5.1"
+    tiny-secp256k1 "^2.2.3"
+    web3 "^4.15.0"
+    zod "^3.24.2"
 
 abbrev@1:
   version "1.1.1"
