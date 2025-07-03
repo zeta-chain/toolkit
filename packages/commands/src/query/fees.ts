@@ -39,11 +39,6 @@ interface WithdrawGasFeeResult {
   zrc20Address: string;
 }
 
-export interface FeesData {
-  data: WithdrawGasFeeResult[];
-  gasLimit?: string;
-}
-
 export const getFees = async (
   params: FeesParams = {},
   options: FeesOptions = feesOptionsSchema.parse({})
