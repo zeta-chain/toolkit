@@ -32,7 +32,6 @@ const formatTokensTable = (
 ): string[][] => {
   const headers = ["Chain ID", "Symbol", "ZRC-20"];
 
-  // Add selected columns to headers
   if (columns.includes("asset")) headers.push("Asset");
   if (columns.includes("type")) headers.push("Type");
   if (columns.includes("decimals")) headers.push("Decimals");
@@ -44,7 +43,6 @@ const formatTokensTable = (
       token.zrc20_contract_address,
     ];
 
-    // Add selected columns to rows
     if (columns.includes("asset")) baseRow.push(token.asset || "-");
     if (columns.includes("type")) baseRow.push(token.coin_type);
     if (columns.includes("decimals")) baseRow.push(token.decimals.toString());
@@ -56,11 +54,15 @@ const formatTokensTable = (
 };
 
 const main = async (options: TokensListOptions) => {
-  const spinner = ora("Fetching ZRC-20 tokens...").start();
+  const spinner = options.json
+    ? null
+    : ora("Fetching ZRC-20 tokens...").start();
 
   try {
     const tokens = await fetchForeignCoins(options.api);
-    spinner.succeed(`Successfully fetched ${tokens.length} ZRC-20 tokens`);
+    if (!options.json) {
+      spinner?.succeed(`Successfully fetched ${tokens.length} ZRC-20 tokens`);
+    }
 
     if (options.json) {
       console.log(JSON.stringify(tokens, null, 2));
@@ -72,7 +74,6 @@ const main = async (options: TokensListOptions) => {
       return;
     }
 
-    // Sort tokens by chain ID
     const sortedTokens = tokens.sort(
       (a, b) => parseInt(a.foreign_chain_id) - parseInt(b.foreign_chain_id)
     );
@@ -84,7 +85,9 @@ const main = async (options: TokensListOptions) => {
 
     console.log(tableOutput);
   } catch (error) {
-    spinner.fail("Failed to fetch ZRC-20 tokens");
+    if (!options.json) {
+      spinner?.fail("Failed to fetch ZRC-20 tokens");
+    }
     console.error(chalk.red("Error details:"), error);
   }
 };
