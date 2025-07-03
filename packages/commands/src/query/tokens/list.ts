@@ -64,8 +64,12 @@ const main = async (options: TokensListOptions) => {
       spinner?.succeed(`Successfully fetched ${tokens.length} ZRC-20 tokens`);
     }
 
+    const sortedTokens = tokens.sort(
+      (a, b) => parseInt(a.foreign_chain_id) - parseInt(b.foreign_chain_id)
+    );
+
     if (options.json) {
-      console.log(JSON.stringify(tokens, null, 2));
+      console.log(JSON.stringify(sortedTokens, null, 2));
       return;
     }
 
@@ -73,10 +77,6 @@ const main = async (options: TokensListOptions) => {
       console.log(chalk.yellow("No ZRC-20 tokens found"));
       return;
     }
-
-    const sortedTokens = tokens.sort(
-      (a, b) => parseInt(a.foreign_chain_id) - parseInt(b.foreign_chain_id)
-    );
 
     const tableData = formatTokensTable(sortedTokens, options.columns);
     const tableOutput = table(tableData, {
