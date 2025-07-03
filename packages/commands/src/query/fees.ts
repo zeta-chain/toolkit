@@ -7,14 +7,14 @@ import ora from "ora";
 import { getBorderCharacters, table } from "table";
 import { z } from "zod";
 
+import {
+  DEFAULT_API_URL,
+  DEFAULT_EVM_RPC_URL,
+} from "../../../../src/constants/api";
 import { Call } from "../../../../types/balances.types";
 import { ForeignCoinsResponse } from "../../../../types/foreignCoins.types";
 import MULTICALL3_ABI from "../../../../utils/multicall3.json";
 
-const DEFAULT_API_URL =
-  "https://zetachain-athens.blockpi.network/lcd/v1/public";
-const DEFAULT_RPC_URL =
-  "https://zetachain-athens-evm.blockpi.network/v1/rpc/public";
 const MULTICALL_ADDRESS = "0xca11bde05977b3631167028862be2a173976ca11";
 
 const feesParamsSchema = z.object({
@@ -24,7 +24,7 @@ const feesParamsSchema = z.object({
 const feesOptionsSchema = z.object({
   api: z.string().default(DEFAULT_API_URL),
   json: z.boolean().default(false),
-  rpc: z.string().default(DEFAULT_RPC_URL),
+  rpc: z.string().default(DEFAULT_EVM_RPC_URL),
 });
 
 type FeesParams = z.infer<typeof feesParamsSchema>;
@@ -214,7 +214,7 @@ export const feesCommand = new Command("fees")
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
   .addOption(
-    new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_RPC_URL)
+    new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_EVM_RPC_URL)
   )
   .addOption(
     new Option("--gas-limit <limit>", "Gas limit for withdraw and call")

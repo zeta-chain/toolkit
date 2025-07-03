@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import EventEmitter from "eventemitter3";
 import { z } from "zod";
 
-import { DEFAULT_API_URL } from "../../../../src/constants/tokens";
+import { DEFAULT_API_URL } from "../../../../src/constants/api";
 import type { CrossChainTx } from "../../../../types/trackCCTX.types";
 import { fetchFromApi, sleep } from "../../../../utils";
 
