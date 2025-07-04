@@ -1,70 +1,63 @@
 # ZetaChain Toolkit
 
-This repository contains a collection of helper contracts, Hardhat tasks, and
-utility functions that make it easier to build with ZetaChain.
+ZetaChain Toolkit is a TypeScript SDK for building universal apps that transfer
+tokens, invoke contracts, and track transactions across any chain connected to
+ZetaChain.
 
-## Building a dApp on ZetaChain
+## ✨ Features
 
-If you're looking to build a dapp on ZetaChain, we recommend checking out
-[the tutorials section](https://www.zetachain.com/docs/developers/tutorials/hello/) in ZetaChain docs.
+- Cross-chain asset transfers: deposit gas and fungible tokens from any
+  supported chain to ZetaChain and withdraw them back.
+- Cross-chain contract execution: make incoming calls to universal contracts on
+  ZetaChain or trigger outgoing calls to contracts on connected chains.
+- Real-time transaction tracking: monitor the full lifecycle of cross-chain
+  transactions as they propagate across networks.
+- Built-in multi-chain support: works out of the box with EVM chains, Solana,
+  Sui, Bitcoin, and TON.
 
-## Prerequisites
+## 📦 Installation
 
-Before getting started, ensure that you have
-[Node.js](https://nodejs.org/en/download) and [Yarn](https://yarnpkg.com/)
-installed on your system.
-
-## Installation
-
-To install this package in Hardhat project, add it as a development dependency:
-
+```bash
+npm i @zetachain/toolkit
 ```
-yarn add --dev @zetachain/toolkit
-```
 
-## Installing tasks
-
-To install all the the tasks into a Hardhat template, add the following import
-statement to `hardhat.config.js`:
+## 🚀 Quick start
 
 ```ts
-import "@zetachain/toolkit/tasks";
+import { evmDeposit, zetachainCall } from "@zetachain/toolkit";
+
+// Deposit USDC from Ethereum to ZetaChain
+await evmDeposit(
+  {
+    amount: "1.0",
+    receiver: "0xReceiverOnZetaChain", // EOA or contract on ZetaChain
+    token: "0xUSDC", // ERC-20 on the origin chain
+  },
+  { signer: ethersSigner }
+);
+
+// Ping a contract on Ethereum from ZetaChain
+await zetachainCall(
+  {
+    receiver: "0xRecevierContract", // contract on a connected chain
+    function: "hello(string)",
+    types: ["string"],
+    values: ["alice"],
+    zrc20: "0xZRC20",
+  },
+  { signer: ethersSigner }
+);
 ```
 
-## Importing Helper Functions
+All Toolkit capabilities are also exposed through [`zetachain`
+CLI](https://github.com/zeta-chain/cli).
 
-```ts
-import {
-  deployZetaConnectorMock,
-  deployZetaEthMock,
-  prepareData,
-  prepareParams,
-  evmSetup,
-} from "@zetachain/toolkit/helpers";
-```
+## 🧑‍💻 Documentation
 
-## Importing Helper Contracts
+Full API reference, architecture guides, and recipes live in the [docs
+site](docs/index.md).
 
-```solidity
-pragma solidity 0.8.7;
+## 🤝 Contributing
 
-import "@zetachain/toolkit/contracts/BytesHelperLib.sol";
-import "@zetachain/toolkit/contracts/TestSystemContract.sol";
-import "@zetachain/toolkit/contracts/TestZRC20.sol";
-import "@zetachain/toolkit/contracts/SwapHelperLib.sol";
-import "@zetachain/toolkit/contracts/ZetaConnectorMock.sol";
-import "@zetachain/toolkit/contracts/EthZetaMock.sol";
-```
-
-## Contributing to the Project
-
-To get started, install the necessary dependencies by running the following
-command in your terminal:
-
-```
-yarn
-```
-
-```
-yarn build
-```
+Issues and PRs are welcome! Please read the [contributing
+guide](CONTRIBUTING.md) before getting started.
