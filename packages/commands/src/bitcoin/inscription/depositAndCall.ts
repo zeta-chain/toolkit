@@ -148,7 +148,7 @@ const main = async (options: DepositAndCallOptions) => {
  */
 export const depositAndCallCommand =
   createBitcoinInscriptionCommandWithCommonOptions("deposit-and-call")
-    .description("Deposit BTC and call a contract on ZetaChain")
+    .summary("Deposit BTC and call a contract on ZetaChain")
     .option("-t, --types <types...>", "ABI types")
     .option("-v, --values <values...>", "Values corresponding to types")
     .requiredOption("-a, --amount <btcAmount>", "BTC amount to send (in BTC)")

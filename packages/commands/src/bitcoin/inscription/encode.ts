@@ -57,7 +57,7 @@ const main = (options: EncodeOptions) => {
 
 export const encodeCommand = new Command()
   .name("encode")
-  .description("Encode data for Bitcoin transactions using ABI encoding")
+  .summary("Encode data for Bitcoin transactions using ABI encoding")
   .requiredOption("-r, --receiver <address>", "Receiver address")
   .option("-t, --types <types...>", "ABI types (e.g. string uint256)", [])
   .option("-v, --values <values...>", "Values corresponding to types", [])

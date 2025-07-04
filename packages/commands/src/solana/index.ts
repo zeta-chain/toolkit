@@ -6,7 +6,7 @@ import { depositAndCallCommand } from "./depositAndCall";
 import { encodeCommand } from "./encode";
 
 export const solanaCommand = new Command("solana")
-  .description("Solana commands")
+  .summary("Solana commands")
   .addCommand(callCommand)
   .addCommand(depositAndCallCommand)
   .addCommand(depositCommand)

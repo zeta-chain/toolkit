@@ -7,7 +7,7 @@ import { tokensCommand } from "./tokens";
 
 export const queryCommand = new Command("query")
   .alias("q")
-  .description("Query commands")
+  .summary("Query commands")
   .addCommand(balancesCommand)
   .addCommand(cctxCommand)
   .addCommand(feesCommand)

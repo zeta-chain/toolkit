@@ -144,7 +144,7 @@ const main = async (options: CallOptions) => {
 export const callCommand = createBitcoinInscriptionCommandWithCommonOptions(
   "call"
 )
-  .description("Call a contract on ZetaChain")
+  .summary("Call a contract on ZetaChain")
   .option("-t, --types <types...>", "ABI types")
   .option("-v, --values <values...>", "Values corresponding to types")
   .action(async (opts) => {

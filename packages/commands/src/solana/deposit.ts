@@ -60,7 +60,7 @@ const main = async (options: DepositOptions) => {
 };
 
 export const depositCommand = createSolanaCommandWithCommonOptions("deposit")
-  .description("Deposit tokens from Solana")
+  .summary("Deposit tokens from Solana")
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")
   .option(
     "--token-program <tokenProgram>",

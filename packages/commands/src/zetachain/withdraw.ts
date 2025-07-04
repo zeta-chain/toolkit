@@ -81,7 +81,7 @@ ZetaChain Gateway: ${gatewayAddress}
   }
 };
 
-export const withdrawCommand = new Command("withdraw").description(
+export const withdrawCommand = new Command("withdraw").summary(
   "Withdraw tokens from ZetaChain to a connected chain"
 );
 

@@ -173,7 +173,7 @@ const main = async (options: BalancesOptions) => {
 };
 
 export const balancesCommand = new Command("balances")
-  .description("Fetch native and ZETA token balances")
+  .summary("Fetch native and ZETA token balances")
   .option("--evm <address>", "Fetch balances for a specific EVM address")
   .option("--solana <address>", "Fetch balances for a specific Solana address")
   .option(
