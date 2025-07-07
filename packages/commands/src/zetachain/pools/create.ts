@@ -1,19 +1,19 @@
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json";
 import { Command } from "commander";
-import { Contract, JsonRpcProvider, Wallet, ethers } from "ethers";
+import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
 
 import {
   DEFAULT_FACTORY,
   DEFAULT_FEE,
   DEFAULT_RPC,
 } from "../../../../../src/constants/pools";
+import { IERC20Metadata__factory } from "../../../../../typechain-types";
 import {
   type CreatePoolOptions,
   createPoolOptionsSchema,
   PoolCreationError,
 } from "../../../../../types/pools";
-import { IERC20Metadata__factory } from "../../../../../typechain-types";
 
 /* ╭─────────────────── helpers ────────────────────╮ */
 const SCALE = 1_000_000_000_000_000_000n; // 1e18

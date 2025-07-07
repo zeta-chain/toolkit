@@ -4,15 +4,15 @@
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json";
 import * as SwapRouterArtifact from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
-import { IERC20Metadata__factory } from "../../../../../typechain-types";
 import { Command } from "commander";
-import { Contract, JsonRpcProvider, Wallet, ethers } from "ethers";
+import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
 import { z } from "zod";
 
 import {
   DEFAULT_FACTORY,
   DEFAULT_RPC,
 } from "../../../../../src/constants/pools";
+import { IERC20Metadata__factory } from "../../../../../typechain-types";
 
 const DEFAULT_SWAP_ROUTER = "0x42F98DfA0Bcca632b5e979E766331E7599b83686";
 const TWO_192 = 1n << 192n;
@@ -52,14 +52,14 @@ function calcSqrtPriceX96(
 
 /* ------------- CLI schema -------------------------------------- */
 const swapOpts = z.object({
-  privateKey: z.string(),
-  tokens: z.array(z.string()).length(2),
-  prices: z.array(z.string()).length(2),
-  fee: z.string().default("3000"),
   amountIn: z.string().default("1"),
   approve: z.boolean().default(true),
-  rpc: z.string().default(DEFAULT_RPC),
+  fee: z.string().default("3000"),
+  prices: z.array(z.string()).length(2),
+  privateKey: z.string(),
   router: z.string().default(DEFAULT_SWAP_ROUTER),
+  rpc: z.string().default(DEFAULT_RPC),
+  tokens: z.array(z.string()).length(2),
 });
 type SwapOpts = z.infer<typeof swapOpts>;
 
@@ -121,14 +121,14 @@ const main = async (raw: SwapOpts) => {
   /* router swap */
   const router = new Contract(o.router, SwapRouterArtifact.abi, signer);
   const params = {
-    tokenIn,
-    tokenOut: zeroForOne ? token0 : token1,
-    fee: Number(o.fee),
-    recipient: await signer.getAddress(),
-    deadline: Math.floor(Date.now() / 1e3) + 600,
     amountIn,
     amountOutMinimum: 0,
+    deadline: Math.floor(Date.now() / 1e3) + 600,
+    fee: Number(o.fee),
+    recipient: await signer.getAddress(),
     sqrtPriceLimitX96: sqrtLimit,
+    tokenIn,
+    tokenOut: zeroForOne ? token0 : token1,
   } as const;
 
   const tx = await router.exactInputSingle(params, { gasLimit: 900_000 });

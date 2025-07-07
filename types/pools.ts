@@ -74,13 +74,13 @@ export const addLiquidityOptionsSchema = z.object({
 });
 
 export const removeLiquidityOptionsSchema = z.object({
+  burn: z.boolean().optional(),
+  privateKey: z.string(),
   rpc: z.string().default(DEFAULT_RPC),
   tokenId: z
     .string()
     .regex(/^\d+$/, { message: "tokenId must be a numeric string" })
     .optional(),
-  burn: z.boolean().optional(),
-  privateKey: z.string(),
 });
 
 export const createPoolOptionsSchema = z.object({
@@ -99,8 +99,8 @@ export const deployOptionsSchema = z.object({
 });
 
 export const showLiquidityOptionsSchema = z.object({
-  rpc: z.string().default(DEFAULT_RPC),
   privateKey: z.string(),
+  rpc: z.string().default(DEFAULT_RPC),
 });
 
 export type ShowPoolOptions = z.infer<typeof showPoolOptionsSchema>;

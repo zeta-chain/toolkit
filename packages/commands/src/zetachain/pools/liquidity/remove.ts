@@ -41,10 +41,10 @@ const main = async (options: RemoveLiquidityOptions): Promise<void> => {
 
       const { chosen } = await inquirer.prompt([
         {
-          type: "list",
-          name: "chosen",
-          message: "Select position to remove liquidity from",
           choices: ids.map((id) => ({ name: id.toString(), value: id })),
+          message: "Select position to remove liquidity from",
+          name: "chosen",
+          type: "list",
         },
       ]);
       tokenId = chosen.toString();
@@ -66,10 +66,10 @@ const main = async (options: RemoveLiquidityOptions): Promise<void> => {
       !(
         await inquirer.prompt([
           {
-            type: "confirm",
-            name: "ok",
-            message: "Remove ALL liquidity and collect the tokens?",
             default: false,
+            message: "Remove ALL liquidity and collect the tokens?",
+            name: "ok",
+            type: "confirm",
           },
         ])
       ).ok
@@ -80,21 +80,21 @@ const main = async (options: RemoveLiquidityOptions): Promise<void> => {
     /* ─── 4. decreaseLiquidity ─────────────────────────────────────────────── */
     const deadline = Math.floor(Date.now() / 1e3) + 60 * 20;
     const decTx = await pm.decreaseLiquidity({
-      tokenId,
-      liquidity,
       amount0Min: 0,
       amount1Min: 0,
       deadline,
+      liquidity,
+      tokenId,
     });
     await decTx.wait();
     console.log("✓ Liquidity removed (tx:", decTx.hash + ")");
 
     /* ─── 5. collect ───────────────────────────────────────────────────────── */
     const colTx = await pm.collect({
-      tokenId,
-      recipient: signer.address,
       amount0Max: MaxUint128,
       amount1Max: MaxUint128,
+      recipient: signer.address,
+      tokenId,
     });
     await colTx.wait();
     console.log("✓ Fees + principal collected (tx:", colTx.hash + ")");

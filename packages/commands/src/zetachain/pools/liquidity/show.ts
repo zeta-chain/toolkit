@@ -1,17 +1,18 @@
+import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
-import { IERC20Metadata__factory } from "../../../../../../typechain-types";
 import { Command } from "commander";
-import { Contract, JsonRpcProvider, Wallet, ethers } from "ethers";
+import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
+
 import {
-  DEFAULT_POSITION_MANAGER,
   DEFAULT_FACTORY,
+  DEFAULT_POSITION_MANAGER,
   DEFAULT_RPC,
 } from "../../../../../../src/constants/pools";
+import { IERC20Metadata__factory } from "../../../../../../typechain-types";
 import {
   ShowLiquidityOptions,
   showLiquidityOptionsSchema,
 } from "../../../../../../types/pools";
-import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 
 const main = async (raw: ShowLiquidityOptions) => {
   try {
