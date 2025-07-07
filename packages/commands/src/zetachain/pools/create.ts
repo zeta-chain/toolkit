@@ -16,7 +16,7 @@ import {
 import { IERC20Metadata__factory } from "../../../../../typechain-types";
 
 /* ╭─────────────────── helpers ────────────────────╮ */
-const SCALE = 1_000_000n; // 6-dp USD → int
+const SCALE = 1_000_000_000_000_000_000n; // 1e18
 const TWO_192 = 1n << 192n;
 
 /** integer √ via Newton (both args BigInt) */
@@ -50,6 +50,7 @@ function buildSqrtPriceX96(
 
   // ratio (token1 / token0) in base units
   const ratio = (p0 * 10n ** BigInt(dec1)) / (p1 * 10n ** BigInt(dec0));
+  console.log("Ratio:", ratio.toString());
 
   // sqrtPriceX96 = floor( sqrt(ratio) * 2^96 )
   return sqrtBig(ratio * TWO_192);
@@ -115,6 +116,12 @@ const main = async (raw: CreatePoolOptions): Promise<void> => {
       Number(dec1),
       isCliOrderToken0
     );
+
+    if (sqrtPriceX96 === 0n) {
+      throw new Error(
+        "Computed sqrtPriceX96 = 0. Check that your --prices have enough precision."
+      );
+    }
 
     /* ─── initialise if not yet initialised ─────────────── */
     const slot0 = await pool.slot0().catch(() => null);

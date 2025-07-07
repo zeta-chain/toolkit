@@ -171,15 +171,19 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
       signer
     );
 
+    let nonce = await provider.getTransactionCount(signer.address, "pending");
+
     // Approve tokens
     console.log("\nApproving tokens...");
     const approve0Tx = (await token0ContractForApproval.approve(
       positionManager.target,
-      amount0
+      amount0,
+      { nonce: nonce++ }
     )) as ethers.TransactionResponse;
     const approve1Tx = (await token1ContractForApproval.approve(
       positionManager.target,
-      amount1
+      amount1,
+      { nonce: nonce++ }
     )) as ethers.TransactionResponse;
 
     console.log("Waiting for approvals...");
@@ -211,9 +215,9 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
 
     // Send transaction
     console.log("\nAdding liquidity...");
-    const tx = (await positionManager.mint(
-      params
-    )) as ethers.TransactionResponse;
+    const tx = (await positionManager.mint(params, {
+      nonce: nonce++,
+    })) as ethers.TransactionResponse;
     const receipt = await tx.wait();
 
     if (!receipt) {
