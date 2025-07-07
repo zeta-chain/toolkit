@@ -10,6 +10,7 @@ import {
   ZRC20Contract,
 } from "../../../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
+import { handleError } from "../../../utils/handleError";
 import { toHexString } from "../../../utils/toHexString";
 import { validateSigner } from "../../../utils/validateSigner";
 import { ZetaChainClient } from "./client";
@@ -30,6 +31,7 @@ import { ZetaChainClient } from "./client";
  * @param {any} args.callOptions - Call options.
  * @param {txOptions} args.txOptions - Transaction options such as gasPrice, nonce, etc.
  * @param {revertOptions} args.revertOptions - Options to handle call reversion, including revert address and message.
+ * @param {string} args.data - Optional raw data for non-EVM chains like Solana.
  *
  * @returns {object} - Returns an object containing the transaction, gas token, and gas fee.
  * @property {object} tx - The transaction object for the withdrawal and contract call.
@@ -42,13 +44,14 @@ export const zetachainWithdrawAndCall = async function (
   args: {
     amount: string;
     callOptions: CallOptions;
+    data?: string;
     function?: string;
     gatewayZetaChain?: string;
     receiver: string;
     revertOptions: RevertOptions;
     txOptions: TxOptions;
-    types: string[];
-    values: ParseAbiValuesReturnType;
+    types?: string[];
+    values?: ParseAbiValuesReturnType;
     zrc20: string;
   }
 ) {
@@ -67,18 +70,34 @@ export const zetachainWithdrawAndCall = async function (
     revertMessage: toHexString(args.revertOptions.revertMessage),
   };
 
-  const abiCoder = AbiCoder.defaultAbiCoder();
-  const encodedParameters = abiCoder.encode(args.types, args.values);
-
   let message: string;
 
-  if (args.callOptions.isArbitraryCall && args.function) {
-    const functionSignature = ethers.id(args.function).slice(0, 10);
-    message = ethers.hexlify(
-      ethers.concat([functionSignature, encodedParameters])
-    );
+  if (args.data) {
+    // For non-EVM chains, use the raw data directly
+    message = args.data.startsWith("0x") ? args.data : `0x${args.data}`;
+  } else if (args.types && args.values && args.function) {
+    // For EVM chains, encode the function and parameters
+    const abiCoder = AbiCoder.defaultAbiCoder();
+    const encodedParameters = abiCoder.encode(args.types, args.values);
+
+    if (args.callOptions.isArbitraryCall) {
+      const functionSignature = ethers.id(args.function).slice(0, 10);
+      message = ethers.hexlify(
+        ethers.concat([functionSignature, encodedParameters])
+      );
+    } else {
+      message = encodedParameters;
+    }
   } else {
-    message = encodedParameters;
+    const errorMessage = handleError({
+      context: "Invalid arguments",
+      error: new Error(
+        "Either provide 'data' OR provide all three of 'function', 'types', and 'values' together. These two approaches are mutually exclusive."
+      ),
+      shouldThrow: false,
+    });
+
+    throw new Error(errorMessage);
   }
 
   const zrc20 = new ethers.Contract(
@@ -95,7 +114,7 @@ export const zetachainWithdrawAndCall = async function (
   if (args.zrc20 === gasZRC20) {
     const approveGasAndWithdraw = await zrc20.approve(
       gatewayZetaChainAddress,
-      value + ethers.toBigInt(gasFee),
+      value + gasFee,
       args.txOptions
     );
     await approveGasAndWithdraw.wait();

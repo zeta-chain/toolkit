@@ -16,7 +16,7 @@ const main = (options: EncodeOptions) => {
 };
 
 export const encodeCommand = new Command("encode")
-  .description("Encode payload data for SUI")
+  .summary("Encode payload data for SUI")
   .requiredOption("--data <data>", "Data to encode")
   .option(
     "--type-arguments <typeArguments...>",

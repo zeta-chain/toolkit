@@ -1,10 +1,20 @@
-import { SuiClient } from "@mysten/sui/client";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
 import { bech32 } from "bech32";
 import { mnemonicToSeedSync } from "bip39";
 import { HDKey } from "ethereum-cryptography/hdkey";
+import { z } from "zod";
+
+import { SuiAccountData } from "../types/accounts.types";
+import { suiGatewayAddressSchema } from "../types/shared.schema";
+import { getAccountData } from "./accounts";
+import { getAddress } from "./getAddress";
+import { validateAndParseSchema } from "./validateAndParseSchema";
 
 export const GAS_BUDGET = 10_000_000;
+export const SUI_GAS_COIN_TYPE = "0x2::sui::SUI";
+export const SUI_DEFAULT_DECIMALS = "9";
 
 export const getCoin = async (
   client: SuiClient,
@@ -100,4 +110,183 @@ export const getKeypairFromPrivateKey = (
       error instanceof Error ? error.message : "Unknown error";
     throw new Error(`Invalid private key format: ${errorMessage}`);
   }
+};
+
+export interface KeypairOptions {
+  mnemonic?: string;
+  name?: string;
+  privateKey?: string;
+}
+
+export const getKeypair = (options: KeypairOptions): Ed25519Keypair => {
+  if (options.mnemonic) {
+    return getKeypairFromMnemonic(options.mnemonic);
+  } else if (options.privateKey) {
+    return getKeypairFromPrivateKey(options.privateKey);
+  } else if (options.name) {
+    const account = getAccountData<SuiAccountData>("sui", options.name);
+    if (!account?.privateKey) {
+      throw new Error("No private key found for the specified account");
+    }
+    return getKeypairFromPrivateKey(account.privateKey);
+  } else {
+    throw new Error("Either mnemonic, private key or name must be provided");
+  }
+};
+
+export interface SignAndExecuteTransactionOptions {
+  client: SuiClient;
+  gasBudget: bigint;
+  keypair: Ed25519Keypair;
+  tx: Transaction;
+}
+
+export const signAndExecuteTransaction = async ({
+  client,
+  keypair,
+  tx,
+  gasBudget,
+}: SignAndExecuteTransactionOptions) => {
+  tx.setGasBudget(gasBudget);
+
+  const result = await client.signAndExecuteTransaction({
+    options: {
+      showEffects: true,
+      showEvents: true,
+      showObjectChanges: true,
+    },
+    requestType: "WaitForLocalExecution",
+    signer: keypair,
+    transaction: tx,
+  });
+
+  if (result.effects?.status.status === "failure") {
+    console.error("Transaction failed:", result.effects.status.error);
+    throw new Error(`Transaction failed: ${result.effects.status.error}`);
+  }
+
+  console.log("\nTransaction successful!");
+  console.log(`Transaction hash: ${result.digest}`);
+
+  return result;
+};
+
+export const chainIds = ["101", "103", "104"] as const;
+export const networks = ["mainnet", "testnet", "localnet"] as const;
+
+export type SuiNetwork = (typeof networks)[number];
+
+export const getNetwork = (
+  network?: SuiNetwork,
+  chainId?: (typeof chainIds)[number]
+): SuiNetwork => {
+  if (network) {
+    return network;
+  }
+  if (chainId) {
+    const index = chainIds.indexOf(chainId);
+    if (index === -1) {
+      throw new Error(`Invalid chain ID: ${chainId}`);
+    }
+    return networks[index];
+  }
+  throw new Error("Either network or chainId must be provided");
+};
+
+// Convert decimal amount to smallest unit (e.g., SUI to MIST)
+export const toSmallestUnit = (amount: string, decimals = 9): bigint => {
+  if (!/^\d+(\.\d+)?$/.test(amount)) {
+    throw new Error("Invalid decimal amount");
+  }
+  const [whole = "0", fraction = ""] = amount.split(".");
+
+  // Check for precision loss
+  if (fraction.length > decimals) {
+    const truncatedPart = fraction.slice(decimals);
+    if (/[1-9]/.test(truncatedPart)) {
+      throw new Error(
+        `Precision loss detected: Input has ${fraction.length} decimal places but only ${decimals} are supported. ` +
+          `Non-zero digits would be lost: "${truncatedPart}"`
+      );
+    }
+  }
+
+  const paddedFraction = (fraction + "0".repeat(decimals)).slice(0, decimals);
+  const multiplier = BigInt(10) ** BigInt(decimals);
+  return BigInt(whole) * multiplier + BigInt(paddedFraction);
+};
+
+export const commonDepositObjectSchema = z.object({
+  amount: z.string(),
+  chainId: z.enum(chainIds),
+  coinType: z.string().default(SUI_GAS_COIN_TYPE),
+  decimals: z.string(),
+  gasBudget: z.string(),
+  gatewayObject: z.string().optional(),
+  gatewayPackage: z.string().optional(),
+  mnemonic: z.string().optional(),
+  name: z.string().optional(),
+  privateKey: z.string().optional(),
+  receiver: z.string(),
+});
+
+export const commonDepositOptionsSchema = commonDepositObjectSchema.refine(
+  (data) => data.mnemonic || data.privateKey || data.name,
+  {
+    message: "Either mnemonic, private key or name must be provided",
+  }
+);
+
+/**
+ * Parses and validates a Sui gateway address string
+ * @param gatewayAddress - The gateway address string in format "package,object"
+ * @returns Parsed gateway address with package and object properties
+ * @throws Error if the gateway address format is invalid
+ */
+export const parseSuiGatewayAddress = (gatewayAddress: string) => {
+  return validateAndParseSchema(gatewayAddress, suiGatewayAddressSchema, {
+    shouldLogError: false,
+  });
+};
+
+/**
+ * Gets the gateway address from chain ID and parses it, or uses provided package and object
+ * @param chainId - The chain ID to get the gateway address for
+ * @param gatewayPackage - Optional gateway package to use instead of getting from chain ID
+ * @param gatewayObject - Optional gateway object to use instead of getting from chain ID
+ * @returns Parsed gateway address with package and object properties
+ * @throws Error if the gateway address is not found or format is invalid
+ */
+export const getSuiGatewayAndClient = (
+  chainId: (typeof chainIds)[number],
+  gatewayPackage?: string,
+  gatewayObject?: string
+) => {
+  let result;
+
+  const network = networks[chainIds.indexOf(chainId)];
+  const client = new SuiClient({ url: getFullnodeUrl(network) });
+
+  // If both package and object are provided, use them directly
+  if (gatewayPackage && gatewayObject) {
+    result = { client, gatewayObject, gatewayPackage };
+  } else {
+    // Otherwise, get the gateway address from chain ID and parse it
+    const gatewayAddress = getAddress("gateway", Number(chainId));
+    if (!gatewayAddress) {
+      throw new Error("Gateway address not found");
+    }
+
+    result = {
+      ...parseSuiGatewayAddress(gatewayAddress),
+      client,
+    };
+  }
+
+  return result;
+};
+
+export const getSuiRpcByChainId = (chainId: (typeof chainIds)[number]) => {
+  const network = networks[chainIds.indexOf(chainId)];
+  return getFullnodeUrl(network);
 };

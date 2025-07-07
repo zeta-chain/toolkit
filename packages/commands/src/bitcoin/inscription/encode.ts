@@ -3,13 +3,14 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { formatEncodingChoices } from "../../../../../types/bitcoin.types";
 import { typesAndValuesLengthRefineRule } from "../../../../../types/shared.schema";
 import {
   bitcoinEncode,
   EncodingFormat,
   OpCode,
-  trimOx,
 } from "../../../../../utils/bitcoinEncode";
+import { trim0x } from "../../../../../utils/trim0x";
 
 const encodeOptionsSchema = z
   .object({
@@ -39,7 +40,7 @@ const main = (options: EncodeOptions) => {
     payloadBuffer = Buffer.from([]);
   } else {
     const encodedPayload = new ethers.AbiCoder().encode(types, values);
-    payloadBuffer = Buffer.from(trimOx(encodedPayload), "hex");
+    payloadBuffer = Buffer.from(trim0x(encodedPayload), "hex");
   }
 
   // Encode the data
@@ -56,7 +57,7 @@ const main = (options: EncodeOptions) => {
 
 export const encodeCommand = new Command()
   .name("encode")
-  .description("Encode data for Bitcoin transactions using ABI encoding")
+  .summary("Encode data for Bitcoin transactions using ABI encoding")
   .requiredOption("-r, --receiver <address>", "Receiver address")
   .option("-t, --types <types...>", "ABI types (e.g. string uint256)", [])
   .option("-v, --values <values...>", "Values corresponding to types", [])
@@ -68,7 +69,7 @@ export const encodeCommand = new Command()
   )
   .addOption(
     new Option("-f, --format <format>", "Encoding format")
-      .choices(Object.keys(EncodingFormat).filter((key) => isNaN(Number(key))))
-      .default("EncodingFmtABI")
+      .choices(formatEncodingChoices)
+      .default("ABI")
   )
   .action(main);

@@ -32,7 +32,7 @@ const main = (options: ListAccountsOptions): void => {
 };
 
 export const listAccountsCommand = new Command("list")
-  .description("List all available accounts")
+  .summary("List all available accounts")
   .option("--json", "Output in JSON format")
   .action((opts) => {
     const validated = validateAndParseSchema(opts, listAccountsOptionsSchema, {

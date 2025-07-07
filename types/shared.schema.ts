@@ -1,7 +1,10 @@
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { exactlyOneOf } from "../utils/exactlyOneOf";
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
+
+export const bigNumberishSchema = z.union([z.string(), z.number(), z.bigint()]);
 
 export const evmAddressSchema = z
   .string()
@@ -99,6 +102,15 @@ export const typesAndDataExclusivityRefineRule = {
   },
 };
 
+export const privateKeyOrMnemonicRefineRule = {
+  message: "Exactly one of --private-key or --mnemonic must be provided",
+  path: ["privateKey", "mnemonic"],
+  rule: exactlyOneOf<{
+    mnemonic?: string;
+    privateKey?: string;
+  }>("mnemonic", "privateKey"),
+};
+
 export const functionTypesValuesConsistencyRule = {
   message:
     "If providing --function, you must also provide --types and --values (and vice versa)",
@@ -117,3 +129,33 @@ export const functionTypesValuesConsistencyRule = {
     return true;
   },
 };
+
+export const rpcOrChainIdRefineRule = {
+  message: "Either 'rpc' or 'chainId' must be provided",
+  rule: (data: { chainId?: string; rpc?: string }) => {
+    return !!(data.rpc || data.chainId);
+  },
+};
+
+export const suiGatewayAddressSchema = z
+  .string()
+  .min(1, "Gateway address cannot be empty")
+  .refine(
+    (val) => {
+      const parts = val.split(",");
+      return (
+        parts.length === 2 && parts[0].trim() !== "" && parts[1].trim() !== ""
+      );
+    },
+    {
+      message:
+        "Gateway address must be in format 'package,object' with both parts non-empty",
+    }
+  )
+  .transform((val) => {
+    const parts = val.split(",");
+    return {
+      gatewayObject: parts[1].trim(),
+      gatewayPackage: parts[0].trim(),
+    };
+  });

@@ -1,12 +1,11 @@
-import { Command, Option } from "commander";
 import { z } from "zod";
 
 import { memoCallOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
 import {
-  addCommonBitcoinCommandOptions,
   broadcastBtcTransaction,
   constructMemo,
+  createBitcoinMemoCommandWithCommonOptions,
   displayAndConfirmMemoTransaction,
   fetchUtxos,
   setupBitcoinKeyPair,
@@ -75,22 +74,11 @@ const main = async (options: CallOptions) => {
  * Command definition for call
  * This allows users to call contracts on ZetaChain
  */
-export const callCommand = new Command()
-  .name("call")
-  .description("Call a contract on ZetaChain")
-  .option("-r, --receiver <address>", "ZetaChain receiver address")
-  .requiredOption(
-    "-g, --gateway <address>",
-    "Bitcoin gateway (TSS) address",
-    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
-  )
-  .addOption(new Option("--data <data>", "Pass raw data"))
-  .option("--network-fee <fee>", "Network fee (in sats)", "1750")
+export const callCommand = createBitcoinMemoCommandWithCommonOptions("call")
+  .summary("Call a contract on ZetaChain")
   .action(async (opts) => {
     const validated = validateAndParseSchema(opts, memoCallOptionsSchema, {
       exitOnError: true,
     });
     await main(validated);
   });
-
-addCommonBitcoinCommandOptions(callCommand);
