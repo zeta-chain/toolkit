@@ -73,6 +73,16 @@ export const addLiquidityOptionsSchema = z.object({
   tokens: z.array(z.string()).min(2).max(2),
 });
 
+export const removeLiquidityOptionsSchema = z.object({
+  rpc: z.string().default(DEFAULT_RPC),
+  tokenId: z
+    .string()
+    .regex(/^\d+$/, { message: "tokenId must be a numeric string" })
+    .optional(),
+  burn: z.boolean().optional(),
+  privateKey: z.string(),
+});
+
 export const createPoolOptionsSchema = z.object({
   factory: z.string().default(DEFAULT_FACTORY),
   fee: z.string().default(DEFAULT_FEE.toString()),
@@ -88,7 +98,16 @@ export const deployOptionsSchema = z.object({
   wzeta: z.string().default(DEFAULT_WZETA),
 });
 
+export const showLiquidityOptionsSchema = z.object({
+  rpc: z.string().default(DEFAULT_RPC),
+  privateKey: z.string(),
+});
+
 export type ShowPoolOptions = z.infer<typeof showPoolOptionsSchema>;
 export type AddLiquidityOptions = z.infer<typeof addLiquidityOptionsSchema>;
 export type CreatePoolOptions = z.infer<typeof createPoolOptionsSchema>;
 export type DeployOptions = z.infer<typeof deployOptionsSchema>;
+export type RemoveLiquidityOptions = z.infer<
+  typeof removeLiquidityOptionsSchema
+>;
+export type ShowLiquidityOptions = z.infer<typeof showLiquidityOptionsSchema>;

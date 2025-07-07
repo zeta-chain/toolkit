@@ -1,7 +1,7 @@
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json";
 import { Command } from "commander";
-import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
+import { Contract, JsonRpcProvider, Wallet, ethers } from "ethers";
 
 import {
   DEFAULT_FACTORY,
@@ -13,115 +13,139 @@ import {
   createPoolOptionsSchema,
   PoolCreationError,
 } from "../../../../../types/pools";
+import { IERC20Metadata__factory } from "../../../../../typechain-types";
 
-const main = async (options: CreatePoolOptions): Promise<void> => {
+/* ╭─────────────────── helpers ────────────────────╮ */
+const SCALE = 1_000_000n; // 6-dp USD → int
+const TWO_192 = 1n << 192n;
+
+/** integer √ via Newton (both args BigInt) */
+function sqrtBig(n: bigint): bigint {
+  if (n < 0n) throw new Error("sqrt of negative");
+  if (n < 2n) return n;
+  let x0 = n >> 1n;
+  let x1 = (x0 + n / x0) >> 1n;
+  while (x1 < x0) {
+    x0 = x1;
+    x1 = (x0 + n / x0) >> 1n;
+  }
+  return x0;
+}
+
+/** build sqrtPriceX96 (Q64.96) for token1/token0 ratio in base-units */
+function buildSqrtPriceX96(
+  usd0: number,
+  usd1: number,
+  dec0: number,
+  dec1: number,
+  isCliOrderToken0: boolean
+): bigint {
+  // map USD prices into factory-sorted order
+  const priceToken0Usd = isCliOrderToken0 ? usd0 : usd1;
+  const priceToken1Usd = isCliOrderToken0 ? usd1 : usd0;
+
+  // integer USD (6 decimals) to avoid FP
+  const p0 = BigInt(Math.round(priceToken0Usd * Number(SCALE)));
+  const p1 = BigInt(Math.round(priceToken1Usd * Number(SCALE)));
+
+  // ratio (token1 / token0) in base units
+  const ratio = (p0 * 10n ** BigInt(dec1)) / (p1 * 10n ** BigInt(dec0));
+
+  // sqrtPriceX96 = floor( sqrt(ratio) * 2^96 )
+  return sqrtBig(ratio * TWO_192);
+}
+/* ╰───────────────────────────────────────────────╯ */
+
+const main = async (raw: CreatePoolOptions): Promise<void> => {
   try {
-    const validatedOptions = createPoolOptionsSchema.parse(options);
-
-    if (validatedOptions.tokens.length !== 2) {
-      throw new Error("Exactly 2 token addresses must be provided");
+    const o = createPoolOptionsSchema.parse(raw);
+    const [usdA, usdB] = o.prices.map(Number);
+    if (usdA <= 0 || usdB <= 0 || Number.isNaN(usdA) || Number.isNaN(usdB)) {
+      throw new Error("--prices must be positive numbers");
     }
 
-    if (!validatedOptions.prices || validatedOptions.prices.length !== 2) {
-      throw new Error("Exactly 2 prices must be provided using --prices");
-    }
+    const provider = new JsonRpcProvider(o.rpc ?? DEFAULT_RPC);
+    const signer = new Wallet(o.privateKey, provider);
 
-    const [price0, price1] = validatedOptions.prices.map(Number);
-    if (price0 <= 0 || price1 <= 0 || isNaN(price0) || isNaN(price1)) {
-      throw new Error("Both prices must be valid positive numbers");
-    }
-
-    // Initialize provider and signer
-    const provider = new JsonRpcProvider(validatedOptions.rpc);
-    const signer = new Wallet(validatedOptions.privateKey, provider);
-
-    console.log("Creating Uniswap V3 pool...");
-    console.log("Signer address:", await signer.getAddress());
-    console.log(
-      "Balance:",
-      ethers.formatEther(await provider.getBalance(await signer.getAddress())),
-      "ZETA"
-    );
-
-    // Initialize factory contract
-    const uniswapV3FactoryInstance = new Contract(
-      validatedOptions.factory,
+    /* ─── factory & existing pool check ─────────────────── */
+    const factory = new Contract(
+      o.factory ?? DEFAULT_FACTORY,
       UniswapV3Factory.abi,
       signer
     );
 
-    // Create the pool
-    console.log("\nCreating pool...");
-    const fee = validatedOptions.fee;
-    const createPoolTx = (await uniswapV3FactoryInstance.createPool(
-      validatedOptions.tokens[0],
-      validatedOptions.tokens[1],
-      fee
-    )) as ethers.TransactionResponse;
-    console.log("Pool creation transaction hash:", createPoolTx.hash);
-    await createPoolTx.wait();
+    let poolAddr = await factory.getPool(
+      o.tokens[0],
+      o.tokens[1],
+      o.fee ?? DEFAULT_FEE
+    );
 
-    // Get the pool address
-    const poolAddress = (await uniswapV3FactoryInstance.getPool(
-      validatedOptions.tokens[0],
-      validatedOptions.tokens[1],
-      fee
-    )) as string;
-    console.log("Pool deployed at:", poolAddress);
-
-    // Initialize the pool
-    const pool = new Contract(poolAddress, UniswapV3Pool.abi, signer);
-
-    // Calculate sqrtPriceX96 from USD prices
-    const initialPrice = price1 / price0;
-    const sqrtPrice = Math.sqrt(initialPrice);
-    const sqrtPriceX96 = BigInt(Math.floor(sqrtPrice * 2 ** 96));
-
-    const initTx = (await pool.initialize(
-      sqrtPriceX96
-    )) as ethers.TransactionResponse;
-    console.log("Pool initialization transaction hash:", initTx.hash);
-    await initTx.wait();
-
-    console.log("\nPool created and initialized successfully!");
-    console.log("Pool address:", poolAddress);
-  } catch (error) {
-    const poolError = error as PoolCreationError;
-    console.error("\nPool creation failed with error:");
-    console.error("Error message:", poolError.message);
-    if (poolError.receipt) {
-      console.error("Transaction receipt:", poolError.receipt);
+    if (poolAddr === ethers.ZeroAddress) {
+      console.log("Creating pool…");
+      const tx = await factory.createPool(
+        o.tokens[0],
+        o.tokens[1],
+        o.fee ?? DEFAULT_FEE
+      );
+      await tx.wait();
+      poolAddr = await factory.getPool(
+        o.tokens[0],
+        o.tokens[1],
+        o.fee ?? DEFAULT_FEE
+      );
+      console.log("✦ createPool tx:", tx.hash);
+    } else {
+      console.log("Pool already exists:", poolAddr);
     }
-    if (poolError.transaction) {
-      console.error("Transaction details:", poolError.transaction);
+
+    /* ─── pool contract ─────────────────────────────────── */
+    const pool = new Contract(poolAddr, UniswapV3Pool.abi, signer);
+    const [token0, token1] = await Promise.all([pool.token0(), pool.token1()]);
+    const [dec0, dec1] = await Promise.all([
+      IERC20Metadata__factory.connect(token0, provider).decimals(),
+      IERC20Metadata__factory.connect(token1, provider).decimals(),
+    ]);
+
+    /* ─── compute sqrtPriceX96 ──────────────────────────── */
+    const isCliOrderToken0 = token0.toLowerCase() === o.tokens[0].toLowerCase();
+    const sqrtPriceX96 = buildSqrtPriceX96(
+      usdA,
+      usdB,
+      Number(dec0),
+      Number(dec1),
+      isCliOrderToken0
+    );
+
+    /* ─── initialise if not yet initialised ─────────────── */
+    const slot0 = await pool.slot0().catch(() => null);
+    if (!slot0 || slot0.sqrtPriceX96 === 0n) {
+      const initTx = await pool.initialize(sqrtPriceX96);
+      await initTx.wait();
+      console.log("✓ Pool initialised (tx:", initTx.hash, ")");
+    } else {
+      console.log("Pool already initialised; skipped.");
     }
+
+    console.log("Done ✔  address =", poolAddr);
+  } catch (err) {
+    const e = err as PoolCreationError;
+    console.error("Pool creation failed:", e.message);
+    if (e.transaction) console.error("tx:", e.transaction);
+    if (e.receipt) console.error("receipt:", e.receipt);
     process.exit(1);
   }
 };
 
+/* ─── CLI wiring ───────────────────────────────────────────── */
 export const createCommand = new Command("create")
-  .summary("Create a new Uniswap V3 pool")
+  .summary("Create & initialise a Uniswap V3 pool at a USD price ratio")
+  .requiredOption("--private-key <pk>", "Private key paying gas")
+  .requiredOption("--tokens <addrs...>", "Two token addresses (CLI order)")
   .requiredOption(
-    "--private-key <privateKey>",
-    "Private key for signing transactions"
+    "--prices <usd...>",
+    "USD prices for the tokens in same order"
   )
-  .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
-  .option(
-    "--factory <factory>",
-    "Uniswap V3 Factory contract address",
-    DEFAULT_FACTORY
-  )
-  .requiredOption(
-    "--tokens <tokens...>",
-    "Token addresses for the pool (exactly 2 required)"
-  )
-  .option(
-    "--fee <fee>",
-    "Fee tier for the pool (3000 = 0.3%)",
-    DEFAULT_FEE.toString()
-  )
-  .requiredOption(
-    "--prices <prices...>",
-    "USD prices of the two tokens in the same order as --tokens"
-  )
+  .option("--fee <fee>", "Fee tier (e.g. 3000 = 0.3%)", DEFAULT_FEE.toString())
+  .option("--factory <addr>", "Uniswap V3 Factory", DEFAULT_FACTORY)
+  .option("--rpc <url>", "JSON-RPC endpoint", DEFAULT_RPC)
   .action(main);
