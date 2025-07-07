@@ -73,7 +73,9 @@ const main = async (options: CreatePoolOptions): Promise<void> => {
     const sqrtPrice = Math.sqrt(initialPrice);
     const sqrtPriceX96 = BigInt(Math.floor(sqrtPrice * 2 ** 96));
 
-    const initTx = (await pool.initialize(sqrtPriceX96)) as ethers.TransactionResponse;
+    const initTx = (await pool.initialize(
+      sqrtPriceX96
+    )) as ethers.TransactionResponse;
     console.log("Pool initialization transaction hash:", initTx.hash);
     await initTx.wait();
 

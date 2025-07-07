@@ -14,7 +14,6 @@ import {
   DEFAULT_FEE,
   DEFAULT_POSITION_MANAGER,
   DEFAULT_RPC,
-  DEFAULT_WZETA,
 } from "../constants";
 
 const main = async (options: AddLiquidityOptions): Promise<void> => {
