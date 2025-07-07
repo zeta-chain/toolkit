@@ -1,7 +1,6 @@
 export * from "./accounts";
 export * from "./bitcoin";
 export * from "./evm";
-export * from "./pools";
 export * from "./query";
 export * from "./solana";
 export * from "./sui";

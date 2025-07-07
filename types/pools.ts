@@ -6,7 +6,7 @@ import {
   DEFAULT_FEE,
   DEFAULT_RPC,
   DEFAULT_WZETA,
-} from "../packages/commands/src/pools/constants";
+} from "../src/constants/pools";
 
 export interface MintParams {
   amount0Desired: bigint;

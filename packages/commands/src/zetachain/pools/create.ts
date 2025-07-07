@@ -4,11 +4,15 @@ import { Command } from "commander";
 import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
 
 import {
+  DEFAULT_FACTORY,
+  DEFAULT_FEE,
+  DEFAULT_RPC,
+} from "../../../../../src/constants/pools";
+import {
   type CreatePoolOptions,
   createPoolOptionsSchema,
   PoolCreationError,
-} from "../../../../types/pools";
-import { DEFAULT_FACTORY, DEFAULT_FEE, DEFAULT_RPC } from "./constants";
+} from "../../../../../types/pools";
 
 const main = async (options: CreatePoolOptions): Promise<void> => {
   try {
@@ -96,7 +100,7 @@ const main = async (options: CreatePoolOptions): Promise<void> => {
 };
 
 export const createCommand = new Command("create")
-  .description("Create a new Uniswap V3 pool")
+  .summary("Create a new Uniswap V3 pool")
   .requiredOption(
     "--private-key <privateKey>",
     "Private key for signing transactions"

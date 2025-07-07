@@ -4,12 +4,12 @@ import * as SwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRoute
 import { Command } from "commander";
 import { ContractFactory, ethers, JsonRpcProvider, Wallet } from "ethers";
 
+import { DEFAULT_RPC, DEFAULT_WZETA } from "../../../../../src/constants/pools";
 import {
   DeploymentError,
   type DeployOptions,
   deployOptionsSchema,
-} from "../../../../types/pools";
-import { DEFAULT_RPC, DEFAULT_WZETA } from "./constants";
+} from "../../../../../types/pools";
 
 const deployOpts = {
   gasLimit: 8000000,
@@ -180,7 +180,7 @@ const main = async (options: DeployOptions): Promise<void> => {
 };
 
 export const deployCommand = new Command("deploy")
-  .description("Deploy Uniswap V3 contracts")
+  .summary("Deploy Uniswap V3 contracts")
   .requiredOption("--private-key <privateKey>", "Private key for deployment")
   .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
   .option("--wzeta <wzeta>", "WZETA token address", DEFAULT_WZETA)

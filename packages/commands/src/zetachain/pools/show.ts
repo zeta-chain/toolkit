@@ -4,11 +4,15 @@ import { Command, Option } from "commander";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 
 import {
+  DEFAULT_FACTORY,
+  DEFAULT_FEE,
+  DEFAULT_RPC,
+} from "../../../../../src/constants/pools";
+import {
   type ShowPoolOptions,
   showPoolOptionsSchema,
   Slot0Result,
-} from "../../../../types/pools";
-import { DEFAULT_FACTORY, DEFAULT_FEE, DEFAULT_RPC } from "./constants";
+} from "../../../../../types/pools";
 
 const main = async (options: ShowPoolOptions): Promise<void> => {
   try {
@@ -85,7 +89,7 @@ const main = async (options: ShowPoolOptions): Promise<void> => {
 };
 
 export const showCommand = new Command("show")
-  .description("Show information about a Uniswap V3 pool")
+  .summary("Show information about a Uniswap V3 pool")
   .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
   .addOption(
     new Option("--pool <pool>", "Pool contract address").conflicts("tokens")

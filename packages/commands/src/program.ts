@@ -5,7 +5,6 @@ import { showRequiredOptions } from "../../../utils/common.command.helpers";
 import { accountsCommand } from "./accounts";
 import { bitcoinCommand } from "./bitcoin";
 import { evmCommand } from "./evm";
-import { poolsCommand } from "./pools";
 import { queryCommand } from "./query";
 import { solanaCommand } from "./solana";
 import { suiCommand } from "./sui";
@@ -19,7 +18,6 @@ export const toolkitCommand = new Command("toolkit")
 toolkitCommand.addCommand(accountsCommand);
 toolkitCommand.addCommand(bitcoinCommand);
 toolkitCommand.addCommand(evmCommand);
-toolkitCommand.addCommand(poolsCommand);
 toolkitCommand.addCommand(queryCommand);
 toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(suiCommand);

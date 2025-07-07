@@ -5,16 +5,16 @@ import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
 import inquirer from "inquirer";
 
 import {
-  type AddLiquidityOptions,
-  addLiquidityOptionsSchema,
-  MintParams,
-} from "../../../../../types/pools";
-import {
   DEFAULT_FACTORY,
   DEFAULT_FEE,
   DEFAULT_POSITION_MANAGER,
   DEFAULT_RPC,
-} from "../constants";
+} from "../../../../../../src/constants/pools";
+import {
+  type AddLiquidityOptions,
+  addLiquidityOptionsSchema,
+  MintParams,
+} from "../../../../../../types/pools";
 
 const main = async (options: AddLiquidityOptions): Promise<void> => {
   try {
@@ -269,7 +269,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
 };
 
 export const addCommand = new Command("add")
-  .description("Add liquidity to a Uniswap V3 pool")
+  .summary("Add liquidity to a Uniswap V3 pool")
   .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
   .requiredOption(
     "--tokens <tokens...>",

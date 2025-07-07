@@ -6,7 +6,8 @@ import { liquidityCommand } from "./liquidity";
 import { showCommand } from "./show";
 
 export const poolsCommand = new Command("pools")
-  .description("Manage Uniswap V3 pools")
+  .summary("ZetaChain pools commands")
+  .alias("p")
   .addCommand(deployCommand)
   .addCommand(createCommand)
   .addCommand(showCommand)
