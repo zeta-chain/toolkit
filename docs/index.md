@@ -58,8 +58,7 @@ CLI](https://github.com/zeta-chain/cli).
 
 ## 🧑‍💻 Documentation
 
-Full API reference, architecture guides, and recipes live in the [docs
-site]([docs/index.md](https://github.com/zeta-chain/toolkit/blob/main/docs/index.md)).
+Full API reference is in [docs/index.md](https://github.com/zeta-chain/toolkit/blob/main/docs/index.md).
 
 ## Functions
 
