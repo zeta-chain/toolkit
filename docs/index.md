@@ -59,12 +59,7 @@ CLI](https://github.com/zeta-chain/cli).
 ## 🧑‍💻 Documentation
 
 Full API reference, architecture guides, and recipes live in the [docs
-site](docs/index.md).
-
-## 🤝 Contributing
-
-Issues and PRs are welcome! Please read the [contributing
-guide](CONTRIBUTING.md) before getting started.
+site]([docs/index.md](https://github.com/zeta-chain/toolkit/blob/main/docs/index.md)).
 
 ## Functions
 
