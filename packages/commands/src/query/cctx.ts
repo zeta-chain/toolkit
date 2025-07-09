@@ -4,6 +4,11 @@ import EventEmitter from "eventemitter3";
 import { z } from "zod";
 
 import { DEFAULT_API_URL } from "../../../../src/constants/api";
+import {
+  DEFAULT_DELAY,
+  DEFAULT_TIMEOUT,
+} from "../../../../src/constants/commands/cctx";
+import { cctxOptionsSchema } from "../../../../src/schemas/commands/cctx";
 import type { CrossChainTx } from "../../../../types/trackCCTX.types";
 import { fetchFromApi, sleep } from "../../../../utils";
 
@@ -16,13 +21,6 @@ interface CctxEvents {
 }
 
 export const cctxEmitter = new EventEmitter<CctxEvents>();
-
-const cctxOptionsSchema = z.object({
-  delay: z.coerce.number().int().positive().default(2000),
-  hash: z.string(),
-  rpc: z.string(),
-  timeout: z.coerce.number().int().min(0).default(0),
-});
 
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
 
@@ -234,8 +232,7 @@ Revert Gas Limit: ${revert_gas_limit}
  * CLI entry – clears screen and prints the list of indexes each round.
  */
 const main = async (options: CctxOptions) => {
-  const { hash, rpc, delay, timeout } = cctxOptionsSchema.parse(options);
-
+  const { hash, rpc, delay, timeout } = options;
   cctxEmitter.on("cctx", (all) => {
     console.clear();
     all.forEach((cctx) => {
@@ -253,13 +250,14 @@ export const cctxCommand = new Command("cctx")
   .option(
     "-d, --delay <ms>",
     "Delay between polling rounds in milliseconds",
-    "2000"
+    DEFAULT_DELAY.toString()
   )
   .option(
     "-t, --timeout <ms>",
     "Timeout duration in milliseconds (default: indefinite)",
-    "0"
+    DEFAULT_TIMEOUT.toString()
   )
   .action(async (opts) => {
-    await main(opts as CctxOptions);
+    const validatedOptions = cctxOptionsSchema.parse(opts);
+    await main(validatedOptions);
   });
