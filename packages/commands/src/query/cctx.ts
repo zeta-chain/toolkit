@@ -181,16 +181,22 @@ Receiver: ${receiver}
 
   output += mainTx;
 
-  if (outbound_params[1]) {
-    let revertStatusIcon = "🔄";
-    if (status === "Reverted") {
-      revertStatusIcon = "✅";
-    }
-    let revertStatusMessage = "";
-    if (status === "Reverted") {
-      revertStatusMessage = "Revert executed";
-    } else if (status === "PendingRevert") {
-      revertStatusMessage = "Revert pending";
+  if (
+    outbound_params[1] &&
+    ["Reverted", "PendingRevert", "Aborted"].includes(status)
+  ) {
+    const isReverted = status === "Reverted";
+    const isPendingRevert = status === "PendingRevert";
+    const isAborted = status === "Aborted";
+
+    const statusIcon = isPendingRevert ? "🔄" : "✅";
+    let statusMessage = "Unknown";
+    if (isReverted) {
+      statusMessage = "Revert executed";
+    } else if (isPendingRevert) {
+      statusMessage = "Revert pending";
+    } else if (isAborted) {
+      statusMessage = "Abort executed";
     }
 
     const revertAddress =
@@ -202,8 +208,15 @@ Receiver: ${receiver}
       ? Buffer.from(revert_message, "base64").toString("hex")
       : "null";
 
-    const revertTx = `
-${receiver_chainId} → ${outbound_params[1].receiver_chainId} ${revertStatusIcon} ${revertStatusMessage}
+    let chainDetails = "Unknown";
+    if (isReverted || isPendingRevert) {
+      chainDetails = `${receiver_chainId} → ${outbound_params[1].receiver_chainId} ${statusIcon} ${statusMessage}`;
+    } else if (isAborted) {
+      chainDetails = `${receiver_chainId} ${statusIcon} ${statusMessage}`;
+    }
+
+    const revertOrAbortTx = `
+${chainDetails}
 Revert Address:   ${revertAddress}
 Call on Revert:   ${call_on_revert}
 Abort Address:    ${abort_address}
@@ -211,7 +224,7 @@ Revert Message:   ${revertMessage}
 Revert Gas Limit: ${revert_gas_limit}
 `;
 
-    output += revertTx;
+    output += revertOrAbortTx;
   }
 
   return output;
