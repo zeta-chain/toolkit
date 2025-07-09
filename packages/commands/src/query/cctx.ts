@@ -199,7 +199,7 @@ Receiver: ${receiver}
         : revert_address;
 
     const revertMessage = revert_message
-      ? Buffer.from(revert_message, "base64").toString()
+      ? Buffer.from(revert_message, "base64").toString("hex")
       : "null";
 
     const revertTx = `
