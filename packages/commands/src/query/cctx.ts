@@ -213,7 +213,7 @@ Receiver: ${receiver}
       chainDetails = `${receiver_chainId} ${statusIcon} ${statusMessage}`;
     }
 
-    const revertOrAbortTx = `
+    let revertOrAbortTx = `
 ${chainDetails}
 Revert Address:   ${revertAddress}
 Call on Revert:   ${call_on_revert}
@@ -221,6 +221,11 @@ Abort Address:    ${abort_address}
 Revert Message:   ${revertMessage}
 Revert Gas Limit: ${revert_gas_limit}
 `;
+
+    if (isReverted && outbound_params[1].hash !== "") {
+      revertOrAbortTx += `Tx Hash:          ${outbound_params[1].hash} (on chain ${outbound_params[1].receiver_chainId})
+`;
+    }
 
     output += revertOrAbortTx;
   }
