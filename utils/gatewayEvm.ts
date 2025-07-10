@@ -1,5 +1,11 @@
 import GatewayEvmAbi from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
-import { AbiCoder, ethers, InterfaceAbi, ZeroAddress } from "ethers";
+import {
+  AbiCoder,
+  ethers,
+  InterfaceAbi,
+  NonceManager,
+  ZeroAddress,
+} from "ethers";
 
 import { RevertOptions, TxOptions } from "../types/contracts.types";
 import { ParseAbiValuesReturnType } from "../types/parseAbiValues.types";
@@ -250,11 +256,14 @@ export const broadcastGatewayTx = async ({
   txData,
   txOptions,
 }: BroadcastGatewayTxArgs): Promise<ethers.ContractTransactionResponse> => {
+  const nonceManager = new NonceManager(signer);
+
   const options = {
     data: txData.data,
     gasLimit: txOptions.gasLimit,
     gasPrice: txOptions.gasPrice,
     to: txData.to,
+    nonce: await nonceManager.getNonce(),
     ...(txData.value ? { value: txData.value } : {}),
   };
 
