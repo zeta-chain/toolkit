@@ -262,8 +262,8 @@ export const broadcastGatewayTx = async ({
     data: txData.data,
     gasLimit: txOptions.gasLimit,
     gasPrice: txOptions.gasPrice,
-    to: txData.to,
     nonce: await nonceManager.getNonce(),
+    to: txData.to,
     ...(txData.value ? { value: txData.value } : {}),
   };
 
