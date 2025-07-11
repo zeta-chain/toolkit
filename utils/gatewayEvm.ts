@@ -258,11 +258,22 @@ export const broadcastGatewayTx = async ({
 }: BroadcastGatewayTxArgs): Promise<ethers.ContractTransactionResponse> => {
   const nonceManager = new NonceManager(signer);
 
+  let nonce;
+  try {
+    nonce = await nonceManager.getNonce();
+  } catch (error) {
+    console.error(
+      "Failed to retrieve nonce while preparing gateway transaction:",
+      error
+    );
+    nonce = undefined;
+  }
+
   const options = {
     data: txData.data,
     gasLimit: txOptions.gasLimit,
     gasPrice: txOptions.gasPrice,
-    nonce: await nonceManager.getNonce(),
+    nonce,
     to: txData.to,
     ...(txData.value ? { value: txData.value } : {}),
   };
