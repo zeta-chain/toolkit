@@ -93,12 +93,12 @@ export const baseBitcoinOptionsSchema = z.object({
 
 export const baseBitcoinInscriptionOptionsSchema =
   baseBitcoinOptionsSchema.extend({
+    commitFee: z.string().optional(),
     data: hexStringSchema.optional(),
     format: encodingFormatSchema,
     network: z.enum(["signet", "mainnet"]).default("signet"),
     receiver: evmAddressSchema.optional(),
     revertAddress: z.string().optional(),
-    commitFee: z.string().optional(),
   });
 
 const withCommonBitcoinInscriptionRefines = <

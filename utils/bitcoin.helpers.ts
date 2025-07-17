@@ -10,7 +10,6 @@ import {
   ESTIMATED_VIRTUAL_SIZE,
 } from "../types/bitcoin.constants";
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
-import { getDepositFee } from "./bitcoinMemo.helpers";
 
 export const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
 
@@ -256,29 +255,6 @@ export const makeRevealTransaction = (
   psbt.finalizeAllInputs();
 
   return psbt.extractTransaction(true).toHex();
-};
-
-/**
- * Calculates the total fees for a Bitcoin inscription transaction
- * @param data - The inscription data buffer
- * @returns Object containing commit fee, reveal fee, deposit fee, and total fee
- */
-export const calculateFees = async (data: Buffer, api: string) => {
-  const commitFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
-  const revealFee = Math.ceil(
-    (BITCOIN_TX.TX_OVERHEAD +
-      36 +
-      1 +
-      43 +
-      Math.ceil(data.length / 4) +
-      BITCOIN_TX.P2WPKH_OUTPUT_VBYTES) *
-      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
-  );
-
-  const depositFee = await getDepositFee(api);
-
-  const totalFee = commitFee + revealFee + depositFee;
-  return { commitFee, depositFee, revealFee, totalFee };
 };
 
 /**
