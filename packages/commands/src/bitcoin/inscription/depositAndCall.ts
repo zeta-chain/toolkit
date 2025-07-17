@@ -1,3 +1,4 @@
+import * as bitcoin from "bitcoinjs-lib";
 import { ethers } from "ethers";
 import { z } from "zod";
 
@@ -36,6 +37,10 @@ type DepositAndCallOptions = z.infer<
  */
 const main = async (options: DepositAndCallOptions) => {
   try {
+    const network =
+      options.network === "signet"
+        ? bitcoin.networks.testnet
+        : bitcoin.networks.bitcoin;
     const { key, address } = setupBitcoinKeyPair(
       options.privateKey,
       options.name
@@ -73,7 +78,8 @@ const main = async (options: DepositAndCallOptions) => {
       address,
       data,
       options.bitcoinApi,
-      amount
+      amount,
+      network
     );
 
     const { revealFee, vsize } = calculateRevealFee(
@@ -123,7 +129,8 @@ const main = async (options: DepositAndCallOptions) => {
         internalKey: commit.internalKey,
         leafScript: commit.leafScript,
       },
-      key
+      key,
+      network
     );
 
     const revealTxid = await broadcastBtcTransaction(

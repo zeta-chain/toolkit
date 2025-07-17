@@ -86,6 +86,7 @@ export const makeCommitTransaction = async (
   inscriptionData: Buffer,
   api: string,
   amount: number,
+  network: bitcoin.Network,
   feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
 ) => {
   const scriptItems = [
@@ -111,7 +112,7 @@ export const makeCommitTransaction = async (
   /* p2tr */
   const { output: commitScript, witness } = bitcoin.payments.p2tr({
     internalPubkey: key.publicKey.slice(1, 33),
-    network: bitcoin.networks.testnet,
+    network,
     redeem: { output: leafScript, redeemVersion: LEAF_VERSION_TAPSCRIPT },
     scriptTree: { output: leafScript },
   });
@@ -144,7 +145,7 @@ export const makeCommitTransaction = async (
 
   if (!commitScript) throw new Error("taproot build failed");
 
-  const psbt = new bitcoin.Psbt({ network: bitcoin.networks.testnet });
+  const psbt = new bitcoin.Psbt({ network });
   psbt.addOutput({ script: commitScript, value: amountSat });
   if (changeSat > 0)
     psbt.addOutput({ address: changeAddress, value: changeSat });
@@ -218,12 +219,13 @@ export const makeRevealTransaction = (
   to: string,
   feeRate: number,
   commitData: { controlBlock: Buffer; internalKey: Buffer; leafScript: Buffer },
-  key: bitcoin.Signer
+  key: bitcoin.Signer,
+  network: bitcoin.Network
 ) => {
-  const psbt = new bitcoin.Psbt({ network: bitcoin.networks.testnet });
+  const psbt = new bitcoin.Psbt({ network });
   const { output: commitScript } = bitcoin.payments.p2tr({
     internalPubkey: commitData.internalKey,
-    network: bitcoin.networks.testnet,
+    network,
     scriptTree: { output: commitData.leafScript },
   });
   psbt.addInput({

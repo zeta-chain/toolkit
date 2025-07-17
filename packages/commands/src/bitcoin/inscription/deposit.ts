@@ -1,3 +1,4 @@
+import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
 import {
@@ -26,6 +27,10 @@ type DepositOptions = z.infer<typeof inscriptionDepositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
+    const network =
+      options.network === "signet"
+        ? bitcoin.networks.testnet
+        : bitcoin.networks.bitcoin;
     const { key, address } = setupBitcoinKeyPair(
       options.privateKey,
       options.name
@@ -60,7 +65,8 @@ const main = async (options: DepositOptions) => {
       address,
       data,
       options.bitcoinApi,
-      amount
+      amount,
+      network
     );
 
     const { revealFee, vsize } = calculateRevealFee(
@@ -109,7 +115,8 @@ const main = async (options: DepositOptions) => {
         internalKey: commit.internalKey,
         leafScript: commit.leafScript,
       },
-      key
+      key,
+      network
     );
 
     const revealTxid = await broadcastBtcTransaction(

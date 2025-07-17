@@ -95,6 +95,7 @@ export const baseBitcoinInscriptionOptionsSchema =
   baseBitcoinOptionsSchema.extend({
     data: hexStringSchema.optional(),
     format: encodingFormatSchema,
+    network: z.enum(["signet", "mainnet"]).default("signet"),
     receiver: evmAddressSchema.optional(),
     revertAddress: z.string().optional(),
   });
