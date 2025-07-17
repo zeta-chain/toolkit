@@ -98,6 +98,7 @@ export const baseBitcoinInscriptionOptionsSchema =
     network: z.enum(["signet", "mainnet"]).default("signet"),
     receiver: evmAddressSchema.optional(),
     revertAddress: z.string().optional(),
+    commitFee: z.string().optional(),
   });
 
 const withCommonBitcoinInscriptionRefines = <

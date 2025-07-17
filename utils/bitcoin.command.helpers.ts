@@ -175,6 +175,7 @@ export const createBitcoinCommandWithCommonOptions = (
   return new Command(name)
     .option("--yes", "Skip confirmation prompt", false)
     .option("-r, --receiver <address>", "ZetaChain receiver address")
+    .option("--commit-fee <fee>", "Commit fee (in sats)", "15000")
     .requiredOption(
       "-g, --gateway <address>",
       "Bitcoin gateway (TSS) address",
