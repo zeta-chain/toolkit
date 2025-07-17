@@ -40,7 +40,8 @@ const main = async (options: CallOptions) => {
         : bitcoin.networks.bitcoin;
     const { key, address } = setupBitcoinKeyPair(
       options.privateKey,
-      options.name
+      options.name,
+      network
     );
     const utxos = await fetchUtxos(address, options.bitcoinApi);
     const revertAddress = options.revertAddress || address;

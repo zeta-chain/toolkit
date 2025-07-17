@@ -44,7 +44,8 @@ export interface TransactionInfo {
  */
 export const setupBitcoinKeyPair = (
   privateKey: string | undefined,
-  name: string
+  name: string,
+  network: bitcoin.Network
 ): BitcoinKeyPair => {
   const keyPrivateKey =
     privateKey ||
@@ -66,11 +67,11 @@ export const setupBitcoinKeyPair = (
   // Set up Bitcoin key pair
   const ECPair = ECPairFactory(ecc);
   const key = ECPair.fromPrivateKey(Buffer.from(keyPrivateKey, "hex"), {
-    network: bitcoin.networks.testnet,
+    network,
   });
 
   const { address } = bitcoin.payments.p2wpkh({
-    network: bitcoin.networks.testnet,
+    network,
     pubkey: key.publicKey,
   });
 

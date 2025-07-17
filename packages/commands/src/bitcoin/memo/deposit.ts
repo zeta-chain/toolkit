@@ -1,3 +1,4 @@
+import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
 import { memoDepositOptionsSchema } from "../../../../../types/bitcoin.types";
@@ -23,7 +24,8 @@ const main = async (options: DepositOptions) => {
   try {
     const { key, address } = setupBitcoinKeyPair(
       options.privateKey,
-      options.name
+      options.name,
+      bitcoin.networks.testnet
     );
     const utxos = await fetchUtxos(address, options.bitcoinApi);
 
