@@ -20,7 +20,6 @@ import { getAccountData } from "./accounts";
 import {
   makeCommitTransaction,
   makeRevealTransaction,
-  SIGNET,
 } from "./bitcoin.helpers";
 import { handleError } from "./handleError";
 
@@ -72,11 +71,11 @@ export const setupBitcoinKeyPair = (
   // Set up Bitcoin key pair
   const ECPair = ECPairFactory(ecc);
   const key = ECPair.fromPrivateKey(Buffer.from(keyPrivateKey, "hex"), {
-    network: SIGNET,
+    network: bitcoin.networks.testnet,
   });
 
   const { address } = bitcoin.payments.p2wpkh({
-    network: SIGNET,
+    network: bitcoin.networks.testnet,
     pubkey: key.publicKey,
   });
 

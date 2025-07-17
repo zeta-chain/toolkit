@@ -5,29 +5,12 @@ import { ethers } from "ethers";
 import {
   BITCOIN_FEES,
   BITCOIN_LIMITS,
-  BITCOIN_NETWORKS,
   BITCOIN_SCRIPT,
   BITCOIN_TX,
   ESTIMATED_VIRTUAL_SIZE,
 } from "../types/bitcoin.constants";
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
 import { getDepositFee } from "./bitcoinMemo.helpers";
-
-/**
- * Bitcoin Signet network parameters
- * Used for creating Signet-compatible transactions
- */
-export const SIGNET = {
-  bech32: BITCOIN_NETWORKS.SIGNET.BECH32,
-  bip32: {
-    private: BITCOIN_NETWORKS.SIGNET.BIP32.PRIVATE,
-    public: BITCOIN_NETWORKS.SIGNET.BIP32.PUBLIC,
-  },
-  messagePrefix: BITCOIN_NETWORKS.SIGNET.MESSAGE_PREFIX,
-  pubKeyHash: BITCOIN_NETWORKS.SIGNET.PUBKEY_HASH,
-  scriptHash: BITCOIN_NETWORKS.SIGNET.SCRIPT_HASH,
-  wif: BITCOIN_NETWORKS.SIGNET.WIF,
-};
 
 export const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
 
@@ -128,7 +111,7 @@ export const makeCommitTransaction = async (
   /* p2tr */
   const { output: commitScript, witness } = bitcoin.payments.p2tr({
     internalPubkey: key.publicKey.slice(1, 33),
-    network: SIGNET,
+    network: bitcoin.networks.testnet,
     redeem: { output: leafScript, redeemVersion: LEAF_VERSION_TAPSCRIPT },
     scriptTree: { output: leafScript },
   });
@@ -161,7 +144,7 @@ export const makeCommitTransaction = async (
 
   if (!commitScript) throw new Error("taproot build failed");
 
-  const psbt = new bitcoin.Psbt({ network: SIGNET });
+  const psbt = new bitcoin.Psbt({ network: bitcoin.networks.testnet });
   psbt.addOutput({ script: commitScript, value: amountSat });
   if (changeSat > 0)
     psbt.addOutput({ address: changeAddress, value: changeSat });
@@ -237,10 +220,10 @@ export const makeRevealTransaction = (
   commitData: { controlBlock: Buffer; internalKey: Buffer; leafScript: Buffer },
   key: bitcoin.Signer
 ) => {
-  const psbt = new bitcoin.Psbt({ network: SIGNET });
+  const psbt = new bitcoin.Psbt({ network: bitcoin.networks.testnet });
   const { output: commitScript } = bitcoin.payments.p2tr({
     internalPubkey: commitData.internalKey,
-    network: SIGNET,
+    network: bitcoin.networks.testnet,
     scriptTree: { output: commitData.leafScript },
   });
   psbt.addInput({

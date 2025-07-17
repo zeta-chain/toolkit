@@ -3,22 +3,6 @@ export const DEFAULT_BITCOIN_API = "https://mempool.space/signet/api";
 export const DEFAULT_GAS_PRICE_API =
   "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/gasPrice/18333";
 
-/**
- * Bitcoin network constants
- */
-export const BITCOIN_NETWORKS = {
-  SIGNET: {
-    BECH32: "tb",
-    BIP32: {
-      PRIVATE: 0x04358394,
-      PUBLIC: 0x043587cf,
-    },
-    MESSAGE_PREFIX: "\x18Bitcoin Signed Message:\n",
-    PUBKEY_HASH: 0x6f,
-    SCRIPT_HASH: 0xc4,
-    WIF: 0xef,
-  },
-};
 
 /**
  * Bitcoin script and transaction constants
