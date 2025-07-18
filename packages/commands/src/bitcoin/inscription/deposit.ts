@@ -16,7 +16,6 @@ import {
 } from "../../../../../utils/bitcoin.command.helpers";
 import {
   calculateRevealFee,
-  makeRevealTransaction,
   prepareUtxos,
   safeParseBitcoinAmount,
 } from "../../../../../utils/bitcoin.helpers";
@@ -28,9 +27,6 @@ type DepositOptions = z.infer<typeof inscriptionDepositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
-    /* ─────────────────────────────────────────────────────────── */
-    /* 0.  Setup                                                  */
-    /* ─────────────────────────────────────────────────────────── */
     const network =
       options.network === "signet"
         ? bitcoin.networks.testnet
@@ -66,22 +62,17 @@ const main = async (options: DepositOptions) => {
     const preparedUtxos = await prepareUtxos(address, options.bitcoinApi);
 
     const commit = makeCommitPsbt(
-      key.publicKey.subarray(1, 33), // x‑only pubkey
+      key.publicKey.subarray(1, 33),
       preparedUtxos,
-      address, // change address
+      address,
       data,
       amount,
       network,
       options.commitFee
     );
 
-    /* fees & user confirmation (needs revealFee estimate) */
     const { revealFee, vsize } = calculateRevealFee(
-      {
-        controlBlock: commit.controlBlock,
-        internalKey: commit.internalKey,
-        leafScript: commit.leafScript,
-      },
+      commit,
       BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
     );
     const depositFee = Math.ceil(
@@ -103,7 +94,6 @@ const main = async (options: DepositOptions) => {
       sender: address,
     });
 
-    /* sign & broadcast commit */
     const commitPsbt = bitcoin.Psbt.fromBase64(commit.unsignedPsbtBase64);
     commitPsbt.signAllInputs(key);
     commitPsbt.finalizeAllInputs();
@@ -126,7 +116,7 @@ const main = async (options: DepositOptions) => {
     );
 
     const revealPsbt = bitcoin.Psbt.fromBase64(revealInfo.unsignedPsbtBase64);
-    revealPsbt.signAllInputs(key); // only input 0 needs signature
+    revealPsbt.signAllInputs(key);
     revealPsbt.finalizeAllInputs();
     const revealHex = revealPsbt.extractTransaction().toHex();
 
