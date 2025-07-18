@@ -37,7 +37,6 @@ const main = async (options: DepositOptions) => {
       options.name,
       network
     );
-    const utxos = await fetchUtxos(address, options.bitcoinApi);
 
     const revertAddress = options.revertAddress || address;
     let data;
@@ -62,7 +61,7 @@ const main = async (options: DepositOptions) => {
 
     const commitFee = Number(options.commitFee);
 
-    const preparedUtxos = await prepareUtxos(utxos, options.bitcoinApi);
+    const preparedUtxos = await prepareUtxos(address, options.bitcoinApi);
 
     const commit = makeCommitPsbt(
       key.publicKey.subarray(1, 33),

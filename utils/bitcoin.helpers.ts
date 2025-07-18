@@ -13,6 +13,7 @@ import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
 
 export const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
 import type { PreparedUtxo } from "../src/chains/bitcoin/inscription/makeCommitPsbt";
+import { fetchUtxos } from "./bitcoin.command.helpers";
 
 /**
  * Encodes a number as a Bitcoin compact size.
@@ -177,9 +178,10 @@ export const makeCommitTransaction = async (
  * to get the scriptPubKey information needed for PSBT creation.
  */
 export const prepareUtxos = async (
-  utxos: BtcUtxo[],
+  address: string,
   api: string
 ): Promise<PreparedUtxo[]> => {
+  const utxos = await fetchUtxos(address, api);
   const preparedUtxos: PreparedUtxo[] = [];
 
   for (const utxo of utxos) {
