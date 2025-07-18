@@ -13,6 +13,7 @@ artifacts
 access_token
 
 lib
+lib/forge-std
 out
 
 cache_hardhat

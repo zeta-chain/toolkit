@@ -8,7 +8,6 @@ import * as ecc from "tiny-secp256k1";
 
 import { BitcoinAccountData } from "../types/accounts.types";
 import {
-  BITCOIN_FEES,
   DEFAULT_BITCOIN_API,
   DEFAULT_GAS_PRICE_API,
   DEFAULT_GATEWAY,
@@ -17,11 +16,6 @@ import { type BtcUtxo, formatEncodingChoices } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { EncodingFormat } from "../utils/bitcoinEncode";
 import { getAccountData } from "./accounts";
-import {
-  makeCommitTransaction,
-  makeRevealTransaction,
-  SIGNET,
-} from "./bitcoin.helpers";
 import { handleError } from "./handleError";
 
 export interface BitcoinKeyPair {
@@ -31,16 +25,16 @@ export interface BitcoinKeyPair {
 
 export interface TransactionInfo {
   amount: string;
+  commitFee: number;
   depositFee: number;
   encodedMessage?: string;
-  encodingFormat: EncodingFormat;
+  format: EncodingFormat;
   gateway: string;
-  inscriptionCommitFee: number;
-  inscriptionRevealFee: number;
   network: string;
   operation: string;
   rawInscriptionData: string;
   receiver?: string;
+  revealFee: number;
   revertAddress?: string;
   sender: string;
 }
@@ -50,7 +44,8 @@ export interface TransactionInfo {
  */
 export const setupBitcoinKeyPair = (
   privateKey: string | undefined,
-  name: string
+  name: string,
+  network: bitcoin.Network
 ): BitcoinKeyPair => {
   const keyPrivateKey =
     privateKey ||
@@ -72,11 +67,11 @@ export const setupBitcoinKeyPair = (
   // Set up Bitcoin key pair
   const ECPair = ECPairFactory(ecc);
   const key = ECPair.fromPrivateKey(Buffer.from(keyPrivateKey, "hex"), {
-    network: SIGNET,
+    network,
   });
 
   const { address } = bitcoin.payments.p2wpkh({
-    network: SIGNET,
+    network,
     pubkey: key.publicKey,
   });
 
@@ -104,20 +99,13 @@ export const displayAndConfirmTransaction = async (info: TransactionInfo) => {
     ? Number(ethers.parseUnits(info.amount, 8))
     : 0;
   const totalSats =
-    amountInSats +
-    info.inscriptionCommitFee +
-    info.inscriptionRevealFee +
-    info.depositFee;
+    amountInSats + info.commitFee + info.revealFee + info.depositFee;
 
   console.log(`
 Network: ${info.network}
 ${info.amount ? `Amount: ${info.amount} BTC (${amountInSats} sats)` : ""}
-Inscription Commit Fee: ${info.inscriptionCommitFee} sats (${formatBTC(
-    info.inscriptionCommitFee
-  )} BTC)
-Inscription Reveal Fee: ${info.inscriptionRevealFee} sats (${formatBTC(
-    info.inscriptionRevealFee
-  )} BTC)
+Commit Fee: ${info.commitFee} sats (${formatBTC(info.commitFee)} BTC)
+Reveal Fee: ${info.revealFee} sats (${formatBTC(info.revealFee)} BTC)
 Deposit Fee: ${info.depositFee} sats (${formatBTC(info.depositFee)} BTC)
 Total: ${totalSats} sats (${formatBTC(totalSats)} BTC)
 Gateway: ${info.gateway}
@@ -126,7 +114,7 @@ Receiver: ${info.receiver || notApplicable}
 Revert Address: ${info.revertAddress || notApplicable}
 Operation: ${info.operation}
 ${info.encodedMessage ? `Encoded Message: ${info.encodedMessage}` : ""}
-Encoding Format: ${info.encodingFormat}
+Encoding Format: ${info.format}
 Raw Inscription Data: ${info.rawInscriptionData}
 `);
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
@@ -174,57 +162,13 @@ export const broadcastBtcTransaction = async (
   return data;
 };
 
-/**
- * Creates and broadcasts both commit and reveal transactions for Bitcoin inscriptions
- */
-export const createAndBroadcastTransactions = async (
-  key: ECPairInterface,
-  utxos: BtcUtxo[],
-  address: string,
-  data: Buffer,
-  api: string,
-  amount: number,
-  gateway: string
-) => {
-  // Create and broadcast commit transaction
-  const commit = await makeCommitTransaction(
-    key,
-    utxos,
-    address,
-    data,
-    api,
-    amount
-  );
-
-  const commitTxid = await broadcastBtcTransaction(commit.txHex, api);
-  console.log("Commit TXID:", commitTxid);
-
-  // Create and broadcast reveal transaction
-  const revealHex = makeRevealTransaction(
-    commitTxid,
-    0,
-    amount,
-    gateway,
-    BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE,
-    {
-      controlBlock: commit.controlBlock,
-      internalKey: commit.internalKey,
-      leafScript: commit.leafScript,
-    },
-    key
-  );
-  const revealTxid = await broadcastBtcTransaction(revealHex, api);
-  console.log("Reveal TXID:", revealTxid);
-
-  return { commitTxid, revealTxid };
-};
-
 export const createBitcoinCommandWithCommonOptions = (
   name: string
 ): Command => {
   return new Command(name)
     .option("--yes", "Skip confirmation prompt", false)
     .option("-r, --receiver <address>", "ZetaChain receiver address")
+    .option("--commit-fee <fee>", "Commit fee (in sats)", "15000")
     .requiredOption(
       "-g, --gateway <address>",
       "Bitcoin gateway (TSS) address",
@@ -255,6 +199,11 @@ export const createBitcoinInscriptionCommandWithCommonOptions = (
 ): Command => {
   return createBitcoinCommandWithCommonOptions(name)
     .option("--revert-address <address>", "Revert address")
+    .addOption(
+      new Option("--network <network>", "Network")
+        .choices(["signet", "mainnet"])
+        .default("signet")
+    )
     .addOption(
       new Option("--format <format>", "Encoding format")
         .choices(formatEncodingChoices)

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { EncodingFormat } from "../utils/bitcoinEncode";
 import {
+  BITCOIN_FEES,
   DEFAULT_BITCOIN_API,
   DEFAULT_GAS_PRICE_API,
 } from "./bitcoin.constants";
@@ -93,8 +94,14 @@ export const baseBitcoinOptionsSchema = z.object({
 
 export const baseBitcoinInscriptionOptionsSchema =
   baseBitcoinOptionsSchema.extend({
+    commitFee: z
+      .string()
+      .optional()
+      .default(BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT.toString())
+      .transform((val) => Number(val)),
     data: hexStringSchema.optional(),
     format: encodingFormatSchema,
+    network: z.enum(["signet", "mainnet"]).default("signet"),
     receiver: evmAddressSchema.optional(),
     revertAddress: z.string().optional(),
   });
