@@ -95,17 +95,12 @@ const main = async (options: DepositAndCallOptions) => {
     );
 
     await displayAndConfirmTransaction({
-      amount: options.amount,
+      ...options,
       depositFee,
       encodedMessage,
-      encodingFormat: options.format,
-      gateway: options.gateway,
-      inscriptionCommitFee: commitFee,
-      inscriptionRevealFee: revealFee,
-      network: options.bitcoinApi,
       operation: "DepositAndCall",
       rawInscriptionData: data.toString("hex"),
-      receiver: options.receiver,
+      revealFee,
       revertAddress,
       sender: address,
     });

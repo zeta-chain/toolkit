@@ -80,16 +80,11 @@ const main = async (options: DepositOptions) => {
     );
 
     await displayAndConfirmTransaction({
-      amount: options.amount,
+      ...options,
       depositFee,
-      encodingFormat: options.format,
-      gateway: options.gateway,
-      inscriptionCommitFee: options.commitFee,
-      inscriptionRevealFee: revealFee,
-      network: options.bitcoinApi,
       operation: "Deposit",
       rawInscriptionData: data.toString("hex"),
-      receiver: options.receiver,
+      revealFee,
       revertAddress,
       sender: address,
     });

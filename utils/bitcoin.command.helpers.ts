@@ -25,16 +25,16 @@ export interface BitcoinKeyPair {
 
 export interface TransactionInfo {
   amount: string;
+  commitFee: number;
   depositFee: number;
   encodedMessage?: string;
-  encodingFormat: EncodingFormat;
+  format: EncodingFormat;
   gateway: string;
-  inscriptionCommitFee: number;
-  inscriptionRevealFee: number;
   network: string;
   operation: string;
   rawInscriptionData: string;
   receiver?: string;
+  revealFee: number;
   revertAddress?: string;
   sender: string;
 }
@@ -99,20 +99,13 @@ export const displayAndConfirmTransaction = async (info: TransactionInfo) => {
     ? Number(ethers.parseUnits(info.amount, 8))
     : 0;
   const totalSats =
-    amountInSats +
-    info.inscriptionCommitFee +
-    info.inscriptionRevealFee +
-    info.depositFee;
+    amountInSats + info.commitFee + info.revealFee + info.depositFee;
 
   console.log(`
 Network: ${info.network}
 ${info.amount ? `Amount: ${info.amount} BTC (${amountInSats} sats)` : ""}
-Inscription Commit Fee: ${info.inscriptionCommitFee} sats (${formatBTC(
-    info.inscriptionCommitFee
-  )} BTC)
-Inscription Reveal Fee: ${info.inscriptionRevealFee} sats (${formatBTC(
-    info.inscriptionRevealFee
-  )} BTC)
+Commit Fee: ${info.commitFee} sats (${formatBTC(info.commitFee)} BTC)
+Reveal Fee: ${info.revealFee} sats (${formatBTC(info.revealFee)} BTC)
 Deposit Fee: ${info.depositFee} sats (${formatBTC(info.depositFee)} BTC)
 Total: ${totalSats} sats (${formatBTC(totalSats)} BTC)
 Gateway: ${info.gateway}
@@ -121,7 +114,7 @@ Receiver: ${info.receiver || notApplicable}
 Revert Address: ${info.revertAddress || notApplicable}
 Operation: ${info.operation}
 ${info.encodedMessage ? `Encoded Message: ${info.encodedMessage}` : ""}
-Encoding Format: ${info.encodingFormat}
+Encoding Format: ${info.format}
 Raw Inscription Data: ${info.rawInscriptionData}
 `);
   await confirm({ message: "Proceed?" }, { clearPromptOnDone: true });
