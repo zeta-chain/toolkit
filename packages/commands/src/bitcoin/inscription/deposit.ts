@@ -14,12 +14,13 @@ import {
   fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../../utils/bitcoin.command.helpers";
+import { makeCommitPsbt } from "../../../../../src/chains/bitcoin/inscription/makeCommitPsbt";
 import {
   calculateRevealFee,
-  makeCommitTransaction,
   makeRevealTransaction,
   safeParseBitcoinAmount,
 } from "../../../../../utils/bitcoin.helpers";
+import { prepareUtxos } from "../../../../../utils/bitcoin.helpers";
 import { bitcoinEncode, OpCode } from "../../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
@@ -61,12 +62,13 @@ const main = async (options: DepositOptions) => {
 
     const commitFee = Number(options.commitFee);
 
-    const commit = await makeCommitTransaction(
-      key,
-      utxos,
+    const preparedUtxos = await prepareUtxos(utxos, options.bitcoinApi);
+
+    const commit = makeCommitPsbt(
+      key.publicKey.slice(1, 33),
+      preparedUtxos,
       address,
       data,
-      options.bitcoinApi,
       amount,
       network,
       commitFee
@@ -100,8 +102,13 @@ const main = async (options: DepositOptions) => {
       sender: address,
     });
 
+    const psbt = bitcoin.Psbt.fromBase64(commit.unsignedPsbtBase64);
+    psbt.signAllInputs(key);
+    psbt.finalizeAllInputs();
+    const commitTxHex = psbt.extractTransaction().toHex();
+
     const commitTxid = await broadcastBtcTransaction(
-      commit.txHex,
+      commitTxHex,
       options.bitcoinApi
     );
 

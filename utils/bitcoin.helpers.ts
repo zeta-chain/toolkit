@@ -12,6 +12,7 @@ import {
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
 
 export const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
+import type { PreparedUtxo } from "../src/chains/bitcoin/inscription/makeCommitPsbt";
 
 /**
  * Encodes a number as a Bitcoin compact size.
@@ -169,6 +170,29 @@ export const makeCommitTransaction = async (
     leafScript,
     txHex: psbt.extractTransaction().toHex(),
   };
+};
+
+/**
+ * Converts BtcUtxo[] to PreparedUtxo[] by fetching transaction details for each UTXO
+ * to get the scriptPubKey information needed for PSBT creation.
+ */
+export const prepareUtxos = async (
+  utxos: BtcUtxo[],
+  api: string
+): Promise<PreparedUtxo[]> => {
+  const preparedUtxos: PreparedUtxo[] = [];
+
+  for (const utxo of utxos) {
+    const tx = (await axios.get<BtcTxById>(`${api}/tx/${utxo.txid}`)).data;
+    preparedUtxos.push({
+      txid: utxo.txid,
+      vout: utxo.vout,
+      value: utxo.value,
+      scriptPubKey: Buffer.from(tx.vout[utxo.vout].scriptpubkey, "hex"),
+    });
+  }
+
+  return preparedUtxos;
 };
 
 export const calculateRevealFee = (
