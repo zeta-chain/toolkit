@@ -14,10 +14,13 @@ export interface CommitData {
 
 /** Return type – ready for Dynamic Labs */
 export interface RevealPsbtResult {
-  unsignedPsbtBase64: string; // feed this to signPsbt
-  signingIndexes: number[]; // always [0] – only one input
-  revealFee: number; // satoshi fee we just budgeted
-  outputValue: number; // value that arrives at `to`
+  // satoshi fee we just budgeted
+  outputValue: number;
+  // always [0] – only one input
+  revealFee: number;
+  // feed this to signPsbt
+  signingIndexes: number[];
+  unsignedPsbtBase64: string; // value that arrives at `to`
 }
 
 /**
@@ -43,8 +46,8 @@ export const makeRevealPsbt = (
 ): RevealPsbtResult => {
   const { output: commitScript } = bitcoin.payments.p2tr({
     internalPubkey: commitData.internalKey,
-    scriptTree: { output: commitData.leafScript },
     network,
+    scriptTree: { output: commitData.leafScript },
   });
   if (!commitScript) throw new Error("could not rebuild commit script");
 
@@ -63,7 +66,6 @@ export const makeRevealPsbt = (
   psbt.addInput({
     hash: commitTxId,
     index: commitVout,
-    witnessUtxo: { script: commitScript, value: commitValue },
     tapLeafScript: [
       {
         controlBlock: commitData.controlBlock,
@@ -71,14 +73,15 @@ export const makeRevealPsbt = (
         script: commitData.leafScript,
       },
     ],
+    witnessUtxo: { script: commitScript, value: commitValue },
   });
 
   psbt.addOutput({ address: to, value: outputValue });
 
   return {
-    unsignedPsbtBase64: psbt.toBase64(),
-    signingIndexes: [0],
-    revealFee,
     outputValue,
+    revealFee,
+    signingIndexes: [0],
+    unsignedPsbtBase64: psbt.toBase64(),
   };
 };

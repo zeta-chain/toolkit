@@ -2,6 +2,7 @@ import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
 import { makeCommitPsbt } from "../../../../../src/chains/bitcoin/inscription/makeCommitPsbt";
+import { makeRevealPsbt } from "../../../../../src/chains/bitcoin/inscription/makeRevealPsbt";
 import {
   BITCOIN_FEES,
   ESTIMATED_VIRTUAL_SIZE,
@@ -21,7 +22,6 @@ import {
 } from "../../../../../utils/bitcoin.helpers";
 import { bitcoinEncode, OpCode } from "../../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
-import { makeRevealPsbt } from "../../../../../src/chains/bitcoin/inscription/makeRevealPsbt";
 
 type DepositOptions = z.infer<typeof inscriptionDepositOptionsSchema>;
 
