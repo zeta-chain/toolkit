@@ -2,6 +2,10 @@ import * as bitcoin from "bitcoinjs-lib";
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import {
+  bitcoinEncode,
+  OpCode,
+} from "../../../../../src/chains/bitcoin/inscription/encode";
 import { makeCommitPsbt } from "../../../../../src/chains/bitcoin/inscription/makeCommitPsbt";
 import { makeRevealPsbt } from "../../../../../src/chains/bitcoin/inscription/makeRevealPsbt";
 import {
@@ -20,7 +24,6 @@ import {
   calculateRevealFee,
   prepareUtxos,
 } from "../../../../../utils/bitcoin.helpers";
-import { bitcoinEncode, OpCode } from "../../../../../utils/bitcoinEncode";
 import { trim0x } from "../../../../../utils/trim0x";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 

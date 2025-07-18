@@ -6,6 +6,7 @@ import ECPairFactory, { ECPairInterface } from "ecpair";
 import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
 
+import { EncodingFormat } from "../src/chains/bitcoin/inscription/encode";
 import { BitcoinAccountData } from "../types/accounts.types";
 import {
   DEFAULT_BITCOIN_API,
@@ -14,7 +15,6 @@ import {
 } from "../types/bitcoin.constants";
 import { type BtcUtxo, formatEncodingChoices } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
-import { EncodingFormat } from "../utils/bitcoinEncode";
 import { getAccountData } from "./accounts";
 import { handleError } from "./handleError";
 

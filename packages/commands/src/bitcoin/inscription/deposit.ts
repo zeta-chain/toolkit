@@ -1,6 +1,10 @@
 import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
+import {
+  bitcoinEncode,
+  OpCode,
+} from "../../../../../src/chains/bitcoin/inscription/encode";
 import { makeCommitPsbt } from "../../../../../src/chains/bitcoin/inscription/makeCommitPsbt";
 import { makeRevealPsbt } from "../../../../../src/chains/bitcoin/inscription/makeRevealPsbt";
 import {
@@ -20,7 +24,6 @@ import {
   prepareUtxos,
   safeParseBitcoinAmount,
 } from "../../../../../utils/bitcoin.helpers";
-import { bitcoinEncode, OpCode } from "../../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
 type DepositOptions = z.infer<typeof inscriptionDepositOptionsSchema>;

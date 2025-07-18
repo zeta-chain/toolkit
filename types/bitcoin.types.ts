@@ -1,7 +1,7 @@
 import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
-import { EncodingFormat } from "../utils/bitcoinEncode";
+import { EncodingFormat } from "../src/chains/bitcoin/inscription/encode";
 import {
   BITCOIN_FEES,
   DEFAULT_BITCOIN_API,
