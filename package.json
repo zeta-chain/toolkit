@@ -126,7 +126,7 @@
     "@uniswap/v3-periphery": "^1.4.4",
     "@zetachain/faucet-cli": "^4.1.1",
     "@zetachain/networks": "14.0.0-rc1",
-    "@zetachain/protocol-contracts": "13.0.0",
+    "@zetachain/protocol-contracts": "13.1.0-rc3",
     "@zetachain/protocol-contracts-solana": "^5.0.0",
     "@zetachain/protocol-contracts-ton": "1.0.0-rc4",
     "@zetachain/standard-contracts": "^2.0.1",
