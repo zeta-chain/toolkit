@@ -10,10 +10,10 @@ import { calculateRevealFee } from "../../../../utils/bitcoin.helpers";
 export const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
 
 export type PreparedUtxo = {
-  txid: string;
-  vout: number;
-  value: number;
   scriptPubKey: Buffer;
+  txid: string;
+  value: number;
+  vout: number;
 };
 
 export const makeCommitPsbt = (
@@ -25,11 +25,11 @@ export const makeCommitPsbt = (
   network: bitcoin.Network,
   feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
 ): {
-  unsignedPsbtBase64: string;
-  signingIndexes: number[];
   controlBlock: Buffer;
   internalKey: Buffer;
   leafScript: Buffer;
+  signingIndexes: number[];
+  unsignedPsbtBase64: string;
 } => {
   const scriptItems = [
     internalPubkey,
@@ -107,10 +107,10 @@ export const makeCommitPsbt = (
   });
 
   return {
-    unsignedPsbtBase64: psbt.toBase64(),
-    signingIndexes: picks.map((_, i) => i),
     controlBlock: witness[witness.length - 1],
     internalKey: internalPubkey,
     leafScript,
+    signingIndexes: picks.map((_, i) => i),
+    unsignedPsbtBase64: psbt.toBase64(),
   };
 };

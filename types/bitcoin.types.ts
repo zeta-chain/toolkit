@@ -3,9 +3,9 @@ import { z } from "zod";
 
 import { EncodingFormat } from "../utils/bitcoinEncode";
 import {
+  BITCOIN_FEES,
   DEFAULT_BITCOIN_API,
   DEFAULT_GAS_PRICE_API,
-  BITCOIN_FEES,
 } from "./bitcoin.constants";
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 import {

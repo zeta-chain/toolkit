@@ -1,6 +1,7 @@
 import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
+import { makeCommitPsbt } from "../../../../../src/chains/bitcoin/inscription/makeCommitPsbt";
 import {
   BITCOIN_FEES,
   ESTIMATED_VIRTUAL_SIZE,
@@ -11,16 +12,14 @@ import {
   broadcastBtcTransaction,
   createBitcoinInscriptionCommandWithCommonOptions,
   displayAndConfirmTransaction,
-  fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../../utils/bitcoin.command.helpers";
-import { makeCommitPsbt } from "../../../../../src/chains/bitcoin/inscription/makeCommitPsbt";
 import {
   calculateRevealFee,
   makeRevealTransaction,
+  prepareUtxos,
   safeParseBitcoinAmount,
 } from "../../../../../utils/bitcoin.helpers";
-import { prepareUtxos } from "../../../../../utils/bitcoin.helpers";
 import { bitcoinEncode, OpCode } from "../../../../../utils/bitcoinEncode";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 

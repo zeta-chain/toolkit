@@ -187,10 +187,10 @@ export const prepareUtxos = async (
   for (const utxo of utxos) {
     const tx = (await axios.get<BtcTxById>(`${api}/tx/${utxo.txid}`)).data;
     preparedUtxos.push({
-      txid: utxo.txid,
-      vout: utxo.vout,
-      value: utxo.value,
       scriptPubKey: Buffer.from(tx.vout[utxo.vout].scriptpubkey, "hex"),
+      txid: utxo.txid,
+      value: utxo.value,
+      vout: utxo.vout,
     });
   }
 
