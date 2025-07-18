@@ -1,13 +1,15 @@
 [profile.default]
 src = 'contracts'
+out = 'out'
+viaIR = true
+libs = ['node_modules', "dependencies"]
+test = 'test'
+cache_path  = 'cache_forge'
+verbosity = 3
 fs_permissions = [{ access = "read", path = "./node_modules" }]
-via_ir = false
-optimizer = true
-optimizer_runs = 200
-auto_detect_solc = true
-libs = ["node_modules", "lib"]
 remappings = [
-    "forge-std/=lib/forge-std/src/",
-    "@openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/",
-    "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/"
+  "forge-std/=dependencies/forge-std-1.9.7/src/",
 ]
+
+[dependencies]
+forge-std = "1.9.7"

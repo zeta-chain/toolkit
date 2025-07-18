@@ -45,7 +45,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "zetachain:build": "yarn build && node dist/packages/commands/src/program.js",
-    "zetachain": "npx ts-node packages/commands/src/program.ts"
+    "zetachain": "npx ts-node packages/commands/src/program.ts",
+    "postinstall": "forge soldeer update"
   },
   "keywords": [],
   "author": "ZetaChain",
