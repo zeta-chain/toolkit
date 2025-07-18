@@ -16,3 +16,5 @@ lib
 out
 
 cache_hardhat
+
+dependencies
