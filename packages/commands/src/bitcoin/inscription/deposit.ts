@@ -65,7 +65,7 @@ const main = async (options: DepositOptions) => {
     const preparedUtxos = await prepareUtxos(utxos, options.bitcoinApi);
 
     const commit = makeCommitPsbt(
-      key.publicKey.slice(1, 33),
+      key.publicKey.subarray(1, 33),
       preparedUtxos,
       address,
       data,
