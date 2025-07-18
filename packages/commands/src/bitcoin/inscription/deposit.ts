@@ -59,8 +59,6 @@ const main = async (options: DepositOptions) => {
 
     const amount = safeParseBitcoinAmount(options.amount);
 
-    const commitFee = Number(options.commitFee);
-
     const preparedUtxos = await prepareUtxos(address, options.bitcoinApi);
 
     const commit = makeCommitPsbt(
@@ -70,7 +68,7 @@ const main = async (options: DepositOptions) => {
       data,
       amount,
       network,
-      commitFee
+      options.commitFee
     );
 
     const { revealFee, vsize } = calculateRevealFee(
@@ -91,7 +89,7 @@ const main = async (options: DepositOptions) => {
       depositFee,
       encodingFormat: options.format,
       gateway: options.gateway,
-      inscriptionCommitFee: commitFee,
+      inscriptionCommitFee: options.commitFee,
       inscriptionRevealFee: revealFee,
       network: options.bitcoinApi,
       operation: "Deposit",
