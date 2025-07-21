@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 import { z } from "zod";
 
 import { bigNumberishSchema } from "../../types/shared.schema";
+import { isValidEthersSigner } from "../../utils/validateSigner";
 
 export const revertOptionsSchema = z.object({
   abortAddress: z.string().optional(),
@@ -19,7 +20,10 @@ export const txOptionsSchema = z.object({
 
 export const evmOptionsSchema = z.object({
   gateway: z.string().optional(),
-  signer: z.instanceof(ethers.AbstractSigner),
+  signer: z.custom<ethers.AbstractSigner>(isValidEthersSigner, {
+    message: "signer must be an ethers Signer",
+  }),
+
   txOptions: txOptionsSchema.optional(),
 });
 
