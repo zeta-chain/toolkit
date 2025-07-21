@@ -19,7 +19,7 @@ export const txOptionsSchema = z.object({
 
 export const evmOptionsSchema = z.object({
   gateway: z.string().optional(),
-  signer: z.instanceof(ethers.Wallet),
+  signer: z.instanceof(ethers.AbstractSigner),
   txOptions: txOptionsSchema.optional(),
 });
 
