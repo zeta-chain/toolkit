@@ -12,7 +12,8 @@
     "outDir": "./dist",
     "skipLibCheck": true,
     "sourceMap": false,
-    "strict": true
+    "strict": true,
+    "types": []
   },
   "files": [
     "./hardhat.config.ts"
