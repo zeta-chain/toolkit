@@ -41,7 +41,6 @@
     }
   },
   "scripts": {
-    "watch": "tsc --watch",
     "prebuild": "rimraf dist",
     "build": "npx hardhat clean && npm run copy-templates && npx hardhat compile --force && tsc && npm run copy-types",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
