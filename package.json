@@ -5,19 +5,19 @@
   "main": "",
   "exports": {
   ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/types/index.d.ts"
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./chains": {
-      "import": "./dist/esm/src/chains/index.js",
-      "require": "./dist/cjs/src/chains/index.js",
-      "types": "./dist/types/src/chains/index.d.ts"
+      "import": "./dist/src/chains/index.js",
+      "require": "./dist/src/chains/index.js",
+      "types": "./dist/src/chains/index.d.ts"
     },
     "./chains/evm": {
-      "import": "./dist/esm/src/chains/evm/index.js",
-      "require": "./dist/cjs/src/chains/evm/index.js",
-      "types": "./dist/types/src/chains/evm/index.d.ts"
+      "import": "./dist/src/chains/evm/index.js",
+      "require": "./dist/src/chains/evm/index.js",
+      "types": "./dist/src/chains/evm/index.d.ts"
     },
     "./tasks": "./dist/packages/tasks/src/index.js",
     "./commands": "./dist/packages/commands/src/index.js",
@@ -42,9 +42,6 @@
   },
   "scripts": {
     "watch": "tsc --watch",
-    "build:cjs": "tsc -p tsconfig.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build:all": "rimraf dist && yarn build:cjs && yarn build:esm && yarn copy-types",
     "prebuild": "rimraf dist",
     "build": "npx hardhat clean && npm run copy-templates && npx hardhat compile --force && tsc && npm run copy-types",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",

@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "module": "ESNext",          // ← ESM
-    "moduleResolution": "bundler", // TS ≥ 5; NodeNext works too
-    "outDir": "./dist/esm",
-    "declarationDir": "./dist/types"
-  }
-}
