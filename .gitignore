@@ -17,3 +17,5 @@ lib/forge-std
 out
 
 cache_hardhat
+
+dependencies
