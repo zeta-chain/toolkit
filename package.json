@@ -49,9 +49,9 @@
     "copy-types": "npx cpx './typechain-types/**/*' ./dist/typechain-types",
     "test": "jest",
     "test:watch": "jest --watch",
+    "soldeer": "forge soldeer update",
     "zetachain:build": "yarn build && node dist/packages/commands/src/program.js",
-    "zetachain": "npx ts-node packages/commands/src/program.ts",
-    "postinstall": "forge soldeer update"
+    "zetachain": "npx ts-node packages/commands/src/program.ts"
   },
   "keywords": [],
   "author": "ZetaChain",
