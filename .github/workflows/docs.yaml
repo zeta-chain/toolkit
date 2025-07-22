@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
+      - name: Run Soldeer
+        run: yarn soldeer
+
       - name: Generate docs
         run: yarn docs
 

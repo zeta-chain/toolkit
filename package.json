@@ -4,6 +4,16 @@
   "description": "A library of ZetaChain helper utilities, contracts, and Hardhat tasks for smart-contract development",
   "main": "",
   "exports": {
+    "./chains": {
+      "import": "./dist/src/chains/index.js",
+      "require": "./dist/src/chains/index.js",
+      "types": "./dist/src/chains/index.d.ts"
+    },
+    "./chains/evm": {
+      "import": "./dist/src/chains/evm/index.js",
+      "require": "./dist/src/chains/evm/index.js",
+      "types": "./dist/src/chains/evm/index.d.ts"
+    },
     "./tasks": "./dist/packages/tasks/src/index.js",
     "./commands": "./dist/packages/commands/src/index.js",
     "./client": {
@@ -20,11 +30,6 @@
       "import": "./dist/packages/test/src/index.js",
       "require": "./dist/packages/test/src/index.js",
       "types": "./dist/packages/test/src/index.d.ts"
-    },
-    "./chains": {
-      "import": "./dist/src/chains/index.js",
-      "require": "./dist/src/chains/index.js",
-      "types": "./dist/src/chains/index.d.ts"
     },
     "./typechain-types": {
       "types": "./dist/typechain-types/index.ts"
@@ -44,9 +49,9 @@
     "copy-types": "npx cpx './typechain-types/**/*' ./dist/typechain-types",
     "test": "jest",
     "test:watch": "jest --watch",
+    "soldeer": "forge soldeer update",
     "zetachain:build": "yarn build && node dist/packages/commands/src/program.js",
-    "zetachain": "npx ts-node packages/commands/src/program.ts",
-    "postinstall": "forge soldeer update"
+    "zetachain": "npx ts-node packages/commands/src/program.ts"
   },
   "keywords": [],
   "author": "ZetaChain",

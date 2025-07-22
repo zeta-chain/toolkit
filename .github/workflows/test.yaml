@@ -24,5 +24,8 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
+      - name: Run Soldeer
+        run: yarn soldeer
+
       - name: Test
         run: yarn test

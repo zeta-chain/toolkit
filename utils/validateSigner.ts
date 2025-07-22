@@ -18,3 +18,12 @@ export const validateSigner = (
 
   return signer;
 };
+
+export const isValidEthersSigner = (val: unknown): val is ethers.Signer => {
+  try {
+    validateSigner(val as ethers.Signer | SignerWithAddress | undefined);
+    return true;
+  } catch {
+    return false;
+  }
+};
