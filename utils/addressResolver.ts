@@ -313,7 +313,9 @@ export const formatAddress = (bytesHex: string): string => {
 
   // Decode as ASCII if not an address
   try {
-    return ethers.toUtf8String(bytesHex).replace(/\x00+$/g, "");
+    const decoded = ethers.toUtf8String(bytesHex);
+    // Remove null bytes from the end
+    return decoded.replace(/\0+$/, "");
   } catch {
     return bytesHex;
   }

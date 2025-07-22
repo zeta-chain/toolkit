@@ -9,14 +9,19 @@ import { z } from "zod";
 import { CONTRACT_REGISTRY_ADDRESS } from "../../../../../src/constants/addresses";
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 import { contractsListOptionsSchema } from "../../../../../src/schemas/commands/contracts";
-import {
-  formatAddress,
-  tryParseEvmAddress,
-} from "../../../../../utils/addressResolver";
+import { formatAddress } from "../../../../../utils/addressResolver";
 
 type ContractsListOptions = z.infer<typeof contractsListOptionsSchema>;
 
-export const fetchContracts = async (rpcUrl: string): Promise<any[]> => {
+interface ContractData {
+  addressBytes: string;
+  chainId: ethers.BigNumberish;
+  contractType: string;
+}
+
+export const fetchContracts = async (
+  rpcUrl: string
+): Promise<ContractData[]> => {
   const provider = new ethers.JsonRpcProvider(rpcUrl);
   const contractRegistry = new ethers.Contract(
     CONTRACT_REGISTRY_ADDRESS,
@@ -24,12 +29,13 @@ export const fetchContracts = async (rpcUrl: string): Promise<any[]> => {
     provider
   );
 
-  const contracts = await contractRegistry.getAllContracts();
+  const contracts =
+    (await contractRegistry.getAllContracts()) as ContractData[];
   return contracts;
 };
 
 const formatContractsTable = (
-  contracts: any[],
+  contracts: ContractData[],
   columns: ("type" | "address")[]
 ): string[][] => {
   const headers = ["Chain ID"];
@@ -66,7 +72,7 @@ const main = async (options: ContractsListOptions) => {
     );
 
     if (options.json) {
-      const jsonOutput = sortedContracts.map((c: any) => ({
+      const jsonOutput = sortedContracts.map((c: ContractData) => ({
         address: formatAddress(c.addressBytes),
         chainId: c.chainId.toString(),
         type: c.contractType,

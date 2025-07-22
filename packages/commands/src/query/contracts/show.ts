@@ -10,11 +10,17 @@ import { fetchContracts } from "./list";
 
 type ContractsShowOptions = z.infer<typeof contractsShowOptionsSchema>;
 
+interface ContractData {
+  addressBytes: string;
+  chainId: ethers.BigNumberish;
+  contractType: string;
+}
+
 const findContractByChainId = (
-  contracts: any[],
+  contracts: ContractData[],
   chainId: string,
   type: string
-): any | null => {
+): ContractData | null => {
   const matchingContracts = contracts.filter(
     (contract) => contract.chainId.toString() === chainId
   );
