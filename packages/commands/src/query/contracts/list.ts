@@ -1,55 +1,20 @@
+import RegistryABI from "@zetachain/protocol-contracts/abi/Registry.sol/Registry.json";
 import chalk from "chalk";
 import { Command, Option } from "commander";
-import ora from "ora";
 import { ethers } from "ethers";
+import ora from "ora";
 import { getBorderCharacters, table } from "table";
 import { z } from "zod";
-import RegistryABI from "@zetachain/protocol-contracts/abi/Registry.sol/Registry.json";
-import { contractsListOptionsSchema } from "../../../../../src/schemas/commands/contracts";
+
+import { CONTRACT_REGISTRY_ADDRESS } from "../../../../../src/constants/addresses";
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
+import { contractsListOptionsSchema } from "../../../../../src/schemas/commands/contracts";
+import {
+  formatAddress,
+  tryParseEvmAddress,
+} from "../../../../../utils/addressResolver";
 
 type ContractsListOptions = z.infer<typeof contractsListOptionsSchema>;
-
-const CONTRACT_REGISTRY_ADDRESS = "0x7cce3eb018bf23e1fe2a32692f2c77592d110394";
-
-/**
- * Attempts to extract and checksum‑encode a valid 20‑byte EVM address from the
- * supplied bytes‑hex string. If none can be found, returns `null`.
- */
-const tryParseEvmAddress = (bytesHex: string): string | null => {
-  const clean = bytesHex.toLowerCase();
-
-  // Case 1 – value is already a 20‑byte address (0x + 40 hex chars)
-  if (clean.length === 42 && ethers.isAddress(clean)) {
-    return ethers.getAddress(clean);
-  }
-
-  // Case 2 – value is a left‑padded bytes32: slice last 40 hex chars
-  if (clean.length === 66) {
-    const potential = `0x${clean.slice(-40)}`;
-    if (ethers.isAddress(potential)) {
-      return ethers.getAddress(potential);
-    }
-  }
-
-  return null;
-};
-
-/**
- * Decodes a bytes‑hex string into ASCII, trimming any trailing null bytes.
- */
-const toAscii = (bytesHex: string): string => {
-  try {
-    return ethers.toUtf8String(bytesHex).replace(/\x00+$/g, "");
-  } catch {
-    return bytesHex;
-  }
-};
-
-const formatAddress = (bytesHex: string): string => {
-  const evm = tryParseEvmAddress(bytesHex);
-  return evm ?? toAscii(bytesHex);
-};
 
 export const fetchContracts = async (rpcUrl: string): Promise<any[]> => {
   const provider = new ethers.JsonRpcProvider(rpcUrl);
@@ -102,9 +67,9 @@ const main = async (options: ContractsListOptions) => {
 
     if (options.json) {
       const jsonOutput = sortedContracts.map((c: any) => ({
+        address: formatAddress(c.addressBytes),
         chainId: c.chainId.toString(),
         type: c.contractType,
-        address: formatAddress(c.addressBytes),
       }));
       console.log(JSON.stringify(jsonOutput, null, 2));
       return;

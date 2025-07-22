@@ -3,14 +3,14 @@ import { z } from "zod";
 import { DEFAULT_EVM_RPC_URL } from "../../constants/api";
 
 export const contractsListOptionsSchema = z.object({
-  rpc: z.string().default(DEFAULT_EVM_RPC_URL),
   columns: z.array(z.enum(["type", "address"])).default([]),
   json: z.boolean().default(false),
+  rpc: z.string().default(DEFAULT_EVM_RPC_URL),
 });
 
 export const contractsShowOptionsSchema = z.object({
-  rpc: z.string().default(DEFAULT_EVM_RPC_URL),
-  json: z.boolean().default(false),
   chainId: z.string(),
+  json: z.boolean().default(false),
+  rpc: z.string().default(DEFAULT_EVM_RPC_URL),
   type: z.string(),
 });

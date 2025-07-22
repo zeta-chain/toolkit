@@ -2,9 +2,11 @@ import chalk from "chalk";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
-import { contractsShowOptionsSchema } from "../../../../../src/schemas/commands/contracts";
-import { fetchContracts } from "./list";
+
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
+import { contractsShowOptionsSchema } from "../../../../../src/schemas/commands/contracts";
+import { formatAddress } from "../../../../../utils/addressResolver";
+import { fetchContracts } from "./list";
 
 type ContractsShowOptions = z.infer<typeof contractsShowOptionsSchema>;
 
@@ -22,30 +24,6 @@ const findContractByChainId = (
       (contract) => contract.contractType.toLowerCase() === type.toLowerCase()
     ) || null
   );
-};
-
-const formatAddress = (bytesHex: string): string => {
-  const clean = bytesHex.toLowerCase();
-
-  // Case 1 – value is already a 20‑byte address (0x + 40 hex chars)
-  if (clean.length === 42 && ethers.isAddress(clean)) {
-    return ethers.getAddress(clean);
-  }
-
-  // Case 2 – value is a left‑padded bytes32: slice last 40 hex chars
-  if (clean.length === 66) {
-    const potential = `0x${clean.slice(-40)}`;
-    if (ethers.isAddress(potential)) {
-      return ethers.getAddress(potential);
-    }
-  }
-
-  // Decode as ASCII if not an address
-  try {
-    return ethers.toUtf8String(bytesHex).replace(/\x00+$/g, "");
-  } catch {
-    return bytesHex;
-  }
 };
 
 const main = async (options: ContractsShowOptions) => {
@@ -86,15 +64,11 @@ export const showCommand = new Command("show")
     new Option("--rpc <url>", "Custom RPC URL").default(DEFAULT_EVM_RPC_URL)
   )
   .addOption(
-    new Option(
-      "--chain-id -c <chainId>",
-      "Chain ID (e.g., 7000, 7001)"
-    ).makeOptionMandatory()
+    new Option("--chain-id -c <chainId>", "Chain ID").makeOptionMandatory()
   )
   .addOption(
     new Option("--type -t <type>", "Contract type").makeOptionMandatory()
   )
-  .option("--json", "Output contract as JSON")
   .action(async (options: ContractsShowOptions) => {
     const validatedOptions = contractsShowOptionsSchema.parse(options);
     await main(validatedOptions);

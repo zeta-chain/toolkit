@@ -277,3 +277,44 @@ export const resolveTONAddress = ({
   if (handleError) handleError();
   return undefined;
 };
+
+/**
+ * Attempts to extract and checksum‑encode a valid 20‑byte EVM address from the
+ * supplied bytes‑hex string. If none can be found, returns `null`.
+ */
+export const tryParseEvmAddress = (bytesHex: string): string | null => {
+  const clean = bytesHex.toLowerCase();
+
+  // Case 1 – value is already a 20‑byte address (0x + 40 hex chars)
+  if (clean.length === 42 && ethers.isAddress(clean)) {
+    return ethers.getAddress(clean);
+  }
+
+  // Case 2 – value is a left‑padded bytes32: slice last 40 hex chars
+  if (clean.length === 66) {
+    const potential = `0x${clean.slice(-40)}`;
+    if (ethers.isAddress(potential)) {
+      return ethers.getAddress(potential);
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Formats a bytes‑hex string as either an EVM address or ASCII text.
+ * First attempts to parse as an EVM address, then falls back to ASCII decoding.
+ */
+export const formatAddress = (bytesHex: string): string => {
+  const evmAddress = tryParseEvmAddress(bytesHex);
+  if (evmAddress) {
+    return evmAddress;
+  }
+
+  // Decode as ASCII if not an address
+  try {
+    return ethers.toUtf8String(bytesHex).replace(/\x00+$/g, "");
+  } catch {
+    return bytesHex;
+  }
+};
