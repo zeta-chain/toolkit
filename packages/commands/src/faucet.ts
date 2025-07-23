@@ -17,7 +17,9 @@ const main = async (options: FaucetOptions) => {
     });
 
     if (!address) {
-      throw new Error("Valid address not provided");
+      throw new Error(
+        "Please, create an account or provide an address as an argument."
+      );
     }
 
     await drip({ address });
