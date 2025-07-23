@@ -32,6 +32,7 @@ export const validateGithubAccount = async (token: string) => {
       `${GITHUB_WHOAMI_URL}/${githubUser.id}`,
       {
         headers: {
+          Authorization: `Bearer ${token}`,
           Accept: "application/json",
         },
       }
