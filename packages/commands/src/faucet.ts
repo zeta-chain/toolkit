@@ -1,7 +1,7 @@
-import { drip } from "../../../src/utils/faucet/drip";
 import { Command, Option } from "commander";
 import { z } from "zod";
 
+import { drip } from "../../../src/utils/faucet/drip";
 import { faucetOptionsSchema } from "../../../types/faucet.types";
 import { DEFAULT_ACCOUNT_NAME } from "../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../utils";

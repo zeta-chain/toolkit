@@ -1,7 +1,7 @@
 import axios from "axios";
 import fs from "fs";
-import path from "path";
 import os from "os";
+import path from "path";
 import { createInterface } from "readline";
 import { z } from "zod";
 
@@ -13,17 +13,32 @@ import {
   GITHUB_WHOAMI_URL,
 } from "../../constants/faucet";
 
+interface TokenData {
+  access_token: string;
+}
+
 const getTokenFilePath = () => {
   const homeDir = os.homedir();
   return path.resolve(ACCESS_TOKEN_FILE_PATH.replace("~", homeDir));
 };
 
-const readTokenFromFile = () => {
+const readTokenFromFile = (): TokenData => {
   const filePath = getTokenFilePath();
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  const parsed: unknown = JSON.parse(fs.readFileSync(filePath, "utf8"));
+
+  if (
+    typeof parsed === "object" &&
+    parsed !== null &&
+    "access_token" in parsed &&
+    typeof (parsed as Record<string, unknown>).access_token === "string"
+  ) {
+    return parsed as TokenData;
+  }
+
+  throw new Error("Invalid token data format");
 };
 
-const writeTokenToFile = (token: any) => {
+const writeTokenToFile = (token: TokenData) => {
   const filePath = getTokenFilePath();
   const dirPath = path.dirname(filePath);
 
@@ -46,14 +61,14 @@ const requestDeviceCode = async () => {
     });
 
     const response = await axios({
-      method: "post",
-      url: GITHUB_REQUEST_CODE_URL,
-      params: {
-        client_id: CLIENT_ID,
-      },
       headers: {
         Accept: "application/json",
       },
+      method: "post",
+      params: {
+        client_id: CLIENT_ID,
+      },
+      url: GITHUB_REQUEST_CODE_URL,
     });
 
     const parseResult = requestCodeSchema.safeParse(response.data);
@@ -67,10 +82,11 @@ const requestDeviceCode = async () => {
       response.data,
       parseResult.error.message
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(
       "❌ Could not request device code from GitHub.",
-      error.message
+      errorMessage
     );
   }
 
@@ -80,23 +96,23 @@ const requestDeviceCode = async () => {
 const requestToken = async (deviceCode: string) => {
   try {
     const accessTokenSchema = z.object({
+      access_token: z.string().optional(),
       error: z.string().optional(),
       error_description: z.string().optional(),
       error_uri: z.string().optional(),
-      access_token: z.string().optional(),
     });
 
     const response = await axios({
+      headers: {
+        Accept: "application/json",
+      },
       method: "post",
-      url: GITHUB_REQUEST_TOKEN_URL,
       params: {
         client_id: CLIENT_ID,
         device_code: deviceCode,
         grant_type: "urn:ietf:params:oauth:grant-type:device_code",
       },
-      headers: {
-        Accept: "application/json",
-      },
+      url: GITHUB_REQUEST_TOKEN_URL,
     });
 
     const parseResult = accessTokenSchema.safeParse(response.data);
@@ -110,10 +126,11 @@ const requestToken = async (deviceCode: string) => {
       response.data,
       parseResult.error.message
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(
       "❌ Could not request access token from GitHub.",
-      error.message
+      errorMessage
     );
   }
 
@@ -138,8 +155,9 @@ const whoami = async (accessToken?: string) => {
     if (parseResult.success) {
       return parseResult.data;
     }
-  } catch (error: any) {
-    console.error("❌ Could not request user from GitHub.", error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("❌ Could not request user from GitHub.", errorMessage);
   }
 
   return null;
@@ -152,7 +170,7 @@ export const getGithubAccessToken = async (): Promise<string | null> => {
   });
 
   const readLineAsync = (msg: string) => {
-    return new Promise((resolve) => {
+    return new Promise<string>((resolve) => {
       readline.question(msg, (userRes) => {
         resolve(userRes);
       });
@@ -172,7 +190,7 @@ export const getGithubAccessToken = async (): Promise<string | null> => {
     }
 
     console.error("❌ Invalid access token.");
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Need to request a new access token.
 
     // Requesting device code.

@@ -1,8 +1,8 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 
 import { FAUCET_BASE_URL } from "../../constants/faucet";
-import { validateGithubAccount } from "./validation";
 import { getGithubAccessToken } from "./github";
+import { validateGithubAccount } from "./validation";
 
 interface DripParams {
   address: string;
@@ -20,8 +20,10 @@ export const drip = async ({ address }: DripParams) => {
 
     try {
       await validateGithubAccount(token);
-    } catch (error: any) {
-      console.error("❌ Invalid GitHub account.", error.message);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error("❌ Invalid GitHub account.", errorMessage);
 
       return;
     }
@@ -43,14 +45,16 @@ export const drip = async ({ address }: DripParams) => {
     console.info(
       `✅ ${message}. Please wait a few minutes for the assets to arrive.`
     );
-  } catch (error: any) {
-    if (axios.isAxiosError(error)) {
+  } catch (error: unknown) {
+    if (isAxiosError(error)) {
       console.error(
         "❌ Could not request assets from faucet.",
         error.response?.data || error.message
       );
     } else {
-      console.error("❌ Could not request assets from faucet.", error.message);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error("❌ Could not request assets from faucet.", errorMessage);
     }
   }
 };

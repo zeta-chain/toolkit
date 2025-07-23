@@ -3,21 +3,21 @@ import dayjs from "dayjs";
 import { z } from "zod";
 
 const githubUserSchema = z.object({
-  login: z.string(),
-  id: z.number(),
   created_at: z.string(),
+  id: z.number(),
+  login: z.string(),
   public_repos: z.number(),
   two_factor_authentication: z.boolean().optional(),
 });
 
 const githubUserByIdApiResponseSchema = z.object({
-  login: z.string(),
   id: z.number(),
+  login: z.string(),
   url: z.string(),
 });
 
-export async function validateGithubAccount(token: string) {
-  const { data: userResponse } = await axios.get(
+export const validateGithubAccount = async (token: string) => {
+  const { data: userResponse } = await axios.get<unknown>(
     `https://api.github.com/user`,
     {
       headers: {
@@ -28,7 +28,7 @@ export async function validateGithubAccount(token: string) {
 
   const githubUser = githubUserSchema.parse(userResponse);
 
-  const { data: userByIdResponse } = await axios.get(
+  const { data: userByIdResponse } = await axios.get<unknown>(
     `https://api.github.com/user/${githubUser.id}`,
     {
       headers: {
@@ -56,4 +56,4 @@ export async function validateGithubAccount(token: string) {
   }
 
   return githubUser;
-}
+};
