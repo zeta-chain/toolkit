@@ -1,10 +1,16 @@
 import axios from "axios";
-import fs from "fs";
 import os from "os";
 import path from "path";
 import { createInterface } from "readline";
 import { z } from "zod";
 
+import {
+  safeExists,
+  safeMkdir,
+  safeReadJson,
+  safeUnlink,
+  safeWriteFile,
+} from "../../../utils/fsUtils";
 import {
   ACCESS_TOKEN_FILE_PATH,
   CLIENT_ID,
@@ -13,9 +19,12 @@ import {
   GITHUB_WHOAMI_URL,
 } from "../../constants/faucet";
 
-interface TokenData {
-  access_token: string;
-}
+// Zod schema for token data validation
+const TokenDataSchema = z.object({
+  access_token: z.string(),
+});
+
+type TokenData = z.infer<typeof TokenDataSchema>;
 
 const getTokenFilePath = () => {
   const homeDir = os.homedir();
@@ -24,30 +33,45 @@ const getTokenFilePath = () => {
 
 const readTokenFromFile = (): TokenData => {
   const filePath = getTokenFilePath();
-  const parsed: unknown = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-  if (
-    typeof parsed === "object" &&
-    parsed !== null &&
-    "access_token" in parsed &&
-    typeof (parsed as Record<string, unknown>).access_token === "string"
-  ) {
-    return parsed as TokenData;
+  if (!safeExists(filePath)) {
+    throw new Error("Token file does not exist");
   }
 
-  throw new Error("Invalid token data format");
+  try {
+    const parsed = safeReadJson<unknown>(filePath);
+    const validationResult = TokenDataSchema.safeParse(parsed);
+
+    if (validationResult.success) {
+      return validationResult.data;
+    }
+
+    throw new Error(
+      `Invalid token data format: ${validationResult.error.message}`
+    );
+  } catch (error) {
+    // If it's a file not found error, re-throw as a simple "does not exist" message
+    if (error instanceof Error && error.message.includes("ENOENT")) {
+      throw new Error("Token file does not exist");
+    }
+
+    throw new Error(
+      `Failed to read or validate token data: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 };
 
 const writeTokenToFile = (token: TokenData) => {
   const filePath = getTokenFilePath();
   const dirPath = path.dirname(filePath);
 
-  // Ensure the directory exists
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
+  // Ensure the directory exists using safe helper
+  safeMkdir(dirPath);
 
-  fs.writeFileSync(filePath, JSON.stringify(token), "utf8");
+  // Write token data using safe helper
+  safeWriteFile(filePath, token);
 };
 
 const requestDeviceCode = async () => {
@@ -251,8 +275,8 @@ export const getGithubAccessToken = async (): Promise<string | null> => {
 
 export const logoutGithub = () => {
   const filePath = getTokenFilePath();
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
+  if (safeExists(filePath)) {
+    safeUnlink(filePath);
 
     console.info("👤 GitHub logged out.");
   } else {
