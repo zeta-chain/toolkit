@@ -1,4 +1,4 @@
-export const LD_CLIENT_SIDE_ID = "6454092189ffbf1251467c89"; // @todo (Guille): create a new LD app for A3?
+export const LD_CLIENT_SIDE_ID = "6454092189ffbf1251467c89";
 export const FAUCET_BASE_URL = "https://faucet-backend.cl05.zetachain.com";
 export const CLIENT_ID = "Iv1.09b6b391674ad245"; // Zeta App
 export const GITHUB_REQUEST_CODE_URL = "https://github.com/login/device/code";
