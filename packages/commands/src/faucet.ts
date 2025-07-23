@@ -1,5 +1,4 @@
-// @ts-expect-error - The drip function from faucet-cli is not properly typed
-import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
+import { drip } from "../../../src/utils/faucet/drip";
 import { Command, Option } from "commander";
 import { z } from "zod";
 
@@ -16,7 +15,11 @@ const main = async (options: FaucetOptions) => {
       accountName: options.name,
       evmAddress: options.address,
     });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
+    if (!address) {
+      throw new Error("Valid address not provided");
+    }
+
     await drip({ address });
   } catch (error) {
     handleError({
