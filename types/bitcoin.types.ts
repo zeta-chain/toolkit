@@ -1,12 +1,43 @@
+import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
+import { EncodingFormat } from "../utils/bitcoinEncode";
+import {
+  DEFAULT_BITCOIN_API,
+  DEFAULT_GAS_PRICE_API,
+} from "./bitcoin.constants";
 import { DEFAULT_ACCOUNT_NAME } from "./shared.constants";
 import {
+  evmAddressSchema,
   hexStringSchema,
   typesAndDataExclusivityRefineRule,
   typesAndValuesLengthRefineRule,
   validAmountSchema,
 } from "./shared.schema";
+
+const enumKeys = Object.keys(EncodingFormat).filter(
+  (k) => isNaN(Number(k)) // filters out numeric reverse mappings
+) as [keyof typeof EncodingFormat, ...Array<keyof typeof EncodingFormat>];
+
+const encodingFormatSchema = z
+  .enum(enumKeys)
+  .transform((val) => EncodingFormat[val]);
+
+export const formatEncodingChoices = Object.keys(EncodingFormat).filter((key) =>
+  isNaN(Number(key))
+);
+
+export interface BitcoinTxParams {
+  address: string;
+  amount: number;
+  api: string;
+  depositFee: number;
+  gateway: string;
+  key: bitcoin.Signer;
+  memo?: string;
+  networkFee: number;
+  utxos: BtcUtxo[];
+}
 
 export interface BtcUtxo {
   status: {
@@ -52,58 +83,75 @@ export interface BtcTxById {
   weight: number;
 }
 
-export const depositAndCallOptionsSchema = z
-  .object({
-    amount: validAmountSchema,
-    api: z.string().url(),
-    data: hexStringSchema.optional(),
-    gateway: z.string(),
-    name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
-    privateKey: z.string().optional(),
-    receiver: z.string().optional(),
-    revertAddress: z.string().optional(),
-    types: z.array(z.string()).optional(),
-    values: z.array(z.string()).optional(),
-  })
-  .refine(typesAndValuesLengthRefineRule.rule, {
-    message: typesAndValuesLengthRefineRule.message,
-    path: typesAndValuesLengthRefineRule.path,
-  })
-  .refine(typesAndDataExclusivityRefineRule.rule, {
-    message: typesAndDataExclusivityRefineRule.message,
-    path: typesAndDataExclusivityRefineRule.path,
-  });
-
-export const depositOptionsSchema = z.object({
-  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Amount must be a valid positive number",
-  }),
-  api: z.string().url(),
-  data: hexStringSchema.optional(),
+export const baseBitcoinOptionsSchema = z.object({
+  bitcoinApi: z.string().url().optional().default(DEFAULT_BITCOIN_API),
+  gasPriceApi: z.string().url().optional().default(DEFAULT_GAS_PRICE_API),
   gateway: z.string(),
   name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
   privateKey: z.string().optional(),
-  receiver: z.string().optional(),
-  revertAddress: z.string().optional(),
 });
 
-export const callOptionsSchema = z
-  .object({
-    api: z.string().url(),
+export const baseBitcoinInscriptionOptionsSchema =
+  baseBitcoinOptionsSchema.extend({
     data: hexStringSchema.optional(),
-    gateway: z.string(),
-    name: z.string().optional().default(DEFAULT_ACCOUNT_NAME),
-    privateKey: z.string().optional(),
-    receiver: z.string().optional(),
+    format: encodingFormatSchema,
+    receiver: evmAddressSchema.optional(),
     revertAddress: z.string().optional(),
+  });
+
+const withCommonBitcoinInscriptionRefines = <
+  TSchema extends z.ZodTypeAny,
+  TOut = z.infer<TSchema>,
+  TIn = z.input<TSchema>
+>(
+  schema: TSchema
+): z.ZodEffects<TSchema, TOut, TIn> =>
+  schema
+    .refine(typesAndValuesLengthRefineRule.rule, {
+      message: typesAndValuesLengthRefineRule.message,
+      path: typesAndValuesLengthRefineRule.path,
+    })
+    .refine(typesAndDataExclusivityRefineRule.rule, {
+      message: typesAndDataExclusivityRefineRule.message,
+      path: typesAndDataExclusivityRefineRule.path,
+    }) as unknown as z.ZodEffects<TSchema, TOut, TIn>;
+
+export const inscriptionDepositAndCallOptionsSchema =
+  withCommonBitcoinInscriptionRefines(
+    baseBitcoinInscriptionOptionsSchema.extend({
+      amount: validAmountSchema,
+      types: z.array(z.string()).optional(),
+      values: z.array(z.string()).optional(),
+    })
+  );
+
+export const inscriptionDepositOptionsSchema =
+  baseBitcoinInscriptionOptionsSchema.extend({
+    amount: validAmountSchema,
+  });
+
+export const inscriptionCallOptionsSchema = withCommonBitcoinInscriptionRefines(
+  baseBitcoinInscriptionOptionsSchema.extend({
     types: z.array(z.string()).optional(),
     values: z.array(z.string()).optional(),
   })
-  .refine(typesAndValuesLengthRefineRule.rule, {
-    message: typesAndValuesLengthRefineRule.message,
-    path: typesAndValuesLengthRefineRule.path,
-  })
-  .refine(typesAndDataExclusivityRefineRule.rule, {
-    message: typesAndDataExclusivityRefineRule.message,
-    path: typesAndDataExclusivityRefineRule.path,
+);
+
+export const baseBitcoinMemoOptionsSchema = baseBitcoinOptionsSchema.extend({
+  networkFee: z.string(),
+  receiver: evmAddressSchema,
+});
+
+export const memoDepositAndCallOptionsSchema =
+  baseBitcoinMemoOptionsSchema.extend({
+    amount: validAmountSchema,
+    data: hexStringSchema.optional(),
   });
+
+export const memoDepositOptionsSchema = baseBitcoinMemoOptionsSchema.extend({
+  amount: validAmountSchema,
+});
+
+export const memoCallOptionsSchema = baseBitcoinMemoOptionsSchema.extend({
+  data: hexStringSchema.optional(),
+});

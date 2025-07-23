@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { z } from "zod";
 
+import { evmCall } from "../../../../src/chains/evm/call";
 import {
   namePkRefineRule,
   stringArraySchema,
@@ -19,6 +20,7 @@ import {
   prepareTxOptions,
   setupEvmTransaction,
 } from "../../../../utils/evm.command.helpers";
+import { getGatewayAddressFromChainId } from "../../../../utils/getAddress";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
 
 const callOptionsSchema = baseEvmOptionsSchema
@@ -36,9 +38,9 @@ type CallOptions = z.infer<typeof callOptionsSchema>;
 
 const main = async (options: CallOptions) => {
   try {
-    const { client, signer, chainId } = setupEvmTransaction(options);
+    const { signer } = setupEvmTransaction(options);
 
-    await printEvmTransactionDetails(signer, chainId, {
+    await printEvmTransactionDetails(signer, {
       callOnRevert: options.callOnRevert,
       onRevertGasLimit: options.onRevertGasLimit,
       receiver: options.receiver,
@@ -58,14 +60,24 @@ Parameter types: ${stringifiedTypes}
 
     const values = parseAbiValues(stringifiedTypes, options.values);
 
-    const tx = await client.evmCall({
-      gatewayEvm: options.gateway,
-      receiver: options.receiver,
-      revertOptions: prepareRevertOptions(options, signer),
-      txOptions: prepareTxOptions(options),
-      types: options.types,
-      values,
-    });
+    const gateway = getGatewayAddressFromChainId(
+      options.gateway,
+      options.chainId
+    );
+
+    const tx = await evmCall(
+      {
+        receiver: options.receiver,
+        revertOptions: prepareRevertOptions(options, signer),
+        types: options.types,
+        values,
+      },
+      {
+        gateway,
+        signer,
+        txOptions: prepareTxOptions(options),
+      }
+    );
     console.log("Transaction hash:", tx.hash);
   } catch (error) {
     handleError({
@@ -77,7 +89,7 @@ Parameter types: ${stringifiedTypes}
   }
 };
 
-export const callCommand = new Command("call").description(
+export const callCommand = new Command("call").summary(
   "Call a contract on ZetaChain from an EVM-compatible chain"
 );
 

@@ -13,6 +13,8 @@ import type * as universalContractSol from "./UniversalContract.sol";
 export type { universalContractSol };
 import type * as shared from "./shared";
 export type { shared };
+import type * as testing from "./testing";
+export type { testing };
 export type { BytesHelperLib } from "./BytesHelperLib";
 export type { OnlySystem } from "./OnlySystem";
 export type { SwapHelperLib } from "./SwapHelperLib";

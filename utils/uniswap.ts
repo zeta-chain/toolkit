@@ -4,12 +4,11 @@ import SystemContract from "@zetachain/protocol-contracts/abi/SystemContract.sol
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "../packages/client/src/client";
+import { MULTICALL_ADDRESS } from "../src/constants/addresses";
 import { MulticallContract } from "../types/balances.types";
 import { ForeignCoin } from "../types/foreignCoins.types";
 import { Pair, Pool, Reserves, Zrc20Details } from "../types/pools.types";
 import MULTICALL3_ABI from "./multicall3.json";
-
-const MULTICALL_ADDRESS = "0xca11bde05977b3631167028862be2a173976ca11";
 
 /**
  * Initialize provider and contracts for Uniswap interaction

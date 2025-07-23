@@ -7,7 +7,7 @@ import { listAccountsCommand } from "./list";
 import { showAccountsCommand } from "./show";
 
 export const accountsCommand = new Command("accounts")
-  .description("Account management commands")
+  .summary("Account management commands")
   .addCommand(createAccountsCommand)
   .addCommand(deleteAccountsCommand)
   .addCommand(importAccountsCommand)

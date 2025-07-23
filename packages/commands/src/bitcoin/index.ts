@@ -1,13 +1,11 @@
 import { Command } from "commander";
 
-import { callCommand } from "./call";
-import { depositCommand } from "./deposit";
-import { depositAndCallCommand } from "./depositAndCall";
-import { encodeCommand } from "./encode";
+import { inscriptionCommand } from "./inscription/";
+import { memoCommand } from "./memo/";
+
 export const bitcoinCommand = new Command("bitcoin")
   .description("Bitcoin-related commands")
-  .addCommand(callCommand)
-  .addCommand(depositAndCallCommand)
-  .addCommand(depositCommand)
-  .addCommand(encodeCommand)
+  .alias("b")
+  .addCommand(inscriptionCommand)
+  .addCommand(memoCommand)
   .helpCommand(false);

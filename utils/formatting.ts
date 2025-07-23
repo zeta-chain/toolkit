@@ -3,7 +3,6 @@ import { ethers } from "ethers";
 
 import { TokenBalance } from "../types/balances.types";
 import { CCTX } from "../types/trackCCTX.types";
-import { getChainName } from "./chains";
 import { handleError } from "./handleError";
 
 /**
@@ -42,18 +41,19 @@ export interface FormatAddressesOptions {
   evm?: string;
   solana?: string;
   sui?: string;
+  ton?: string;
 }
 
 export const formatAddresses = (options: FormatAddressesOptions): string => {
   const parts = [];
 
   if (options.evm) {
-    const evmStr = `EVM: \x1b[36m${options.evm}\x1b[0m`;
+    const evmStr = `EVM: \x1b[96m${options.evm}\x1b[0m`;
     parts.push(evmStr);
   }
 
   if (options.bitcoin) {
-    const btcStr = `Bitcoin: \x1b[33m${options.bitcoin}\x1b[0m`;
+    const btcStr = `Bitcoin: \x1b[91m${options.bitcoin}\x1b[0m`;
     parts.push(btcStr);
   }
 
@@ -63,11 +63,27 @@ export const formatAddresses = (options: FormatAddressesOptions): string => {
   }
 
   if (options.sui) {
-    const suiStr = `Sui: \x1b[32m${options.sui}\x1b[0m`;
+    const suiStr = `Sui: \x1b[36m${options.sui}\x1b[0m`;
     parts.push(suiStr);
   }
 
+  if (options.ton) {
+    const tonStr = `TON: \x1b[94m${options.ton}\x1b[0m`;
+    parts.push(tonStr);
+  }
+
   return parts.join("\n");
+};
+
+/**
+ * Normalize a float string by removing unnecessary zeros
+ */
+export const normalizeFloat = (str: string): string => {
+  const num = Number(str);
+  if (!Number.isFinite(num)) {
+    throw new Error(`'${str}' is not a valid number`);
+  }
+  return num.toString(); // drops unnecessary zeros
 };
 
 /**
@@ -97,7 +113,7 @@ export const formatBalances = (
   });
 
   return sortedBalances.map((balance) => ({
-    Amount: parseFloat(balance.balance).toFixed(6),
+    Amount: normalizeFloat(parseFloat(balance.balance).toFixed(6)),
     Chain: balance.chain_name || "Unknown",
     Token: balance.symbol,
     Type: balance.coin_type,
@@ -109,7 +125,6 @@ export const formatBalances = (
  */
 export const printEvmTransactionDetails = async (
   signer: ethers.Wallet,
-  chainId: number,
   options: {
     amount?: string;
     callOnRevert: boolean;
@@ -139,7 +154,7 @@ export const printEvmTransactionDetails = async (
   }
 
   console.log(`
-From:   ${signer.address} on ${getChainName(chainId)}
+From:   ${signer.address}
 To:     ${options.receiver} on ZetaChain${
     options.amount
       ? `\nAmount: ${options.amount} ${tokenSymbol}${

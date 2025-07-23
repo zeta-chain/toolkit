@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import { Address } from "@ton/core";
 import * as bitcoin from "bitcoinjs-lib";
 import { ethers } from "ethers";
 
@@ -7,6 +8,7 @@ import {
   EVMAccountData,
   SolanaAccountData,
   SuiAccountData,
+  TONAccountData,
 } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { accountExists, getAccountData } from "./accounts";
@@ -65,6 +67,19 @@ const isValidSuiAddress = (address?: string): boolean => {
   if (!address) return false;
   // Sui addresses are 1-64 hex chars prefixed with 0x
   return /^0x[a-fA-F0-9]{1,64}$/.test(address);
+};
+
+/**
+ * Check if a string is a valid TON address
+ */
+const isValidTonAddress = (address?: string): boolean => {
+  if (!address) return false;
+  try {
+    Address.parse(address);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 /**
@@ -217,6 +232,42 @@ export const resolveSuiAddress = ({
   // Otherwise, try to derive from account name
   if (accountName && accountExists("sui", accountName)) {
     const accountData = getAccountData<SuiAccountData>("sui", accountName);
+    if (accountData?.address) {
+      return accountData.address;
+    }
+  }
+
+  // Handle error if no valid address found
+  if (handleError) handleError();
+  return undefined;
+};
+
+/**
+ * Args for resolving a TON address
+ */
+export interface ResolveTonAddressArgs {
+  /** Account name to use if address not provided */
+  accountName?: string;
+  /** Function to handle errors */
+  handleError?: () => void;
+  /** A TON address to validate */
+  tonAddress?: string;
+}
+
+/**
+ * Resolve a TON address from either a direct input or account name
+ */
+export const resolveTONAddress = ({
+  tonAddress,
+  accountName = DEFAULT_ACCOUNT_NAME,
+  handleError,
+}: ResolveTonAddressArgs): string | undefined => {
+  // If valid address provided, return it
+  if (tonAddress && isValidTonAddress(tonAddress)) return tonAddress;
+
+  // Otherwise, try to derive from account name
+  if (accountName && accountExists("ton", accountName)) {
+    const accountData = getAccountData<TONAccountData>("ton", accountName);
     if (accountData?.address) {
       return accountData.address;
     }

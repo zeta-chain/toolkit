@@ -9,8 +9,13 @@ import {
   resolveEvmAddress,
   resolveSolanaAddress,
   resolveSuiAddress,
+  resolveTONAddress,
 } from "../../../../utils/addressResolver";
-import { formatAddresses, formatBalances } from "../../../../utils/formatting";
+import {
+  formatAddresses,
+  formatBalances,
+  normalizeFloat,
+} from "../../../../utils/formatting";
 import { ZetaChainClient } from "../../../client/src/client";
 
 const WALLET_ERROR = `
@@ -34,8 +39,10 @@ const balancesOptionsSchema = z.object({
   json: z.boolean().default(false),
   name: accountNameSchema.optional(),
   network: z.enum(["mainnet", "testnet"]).default("testnet"),
+  showZero: z.boolean().default(false),
   solana: z.string().optional(),
   sui: z.string().optional(),
+  ton: z.string().optional(),
 });
 
 type BalancesOptions = z.infer<typeof balancesOptionsSchema>;
@@ -91,7 +98,24 @@ const main = async (options: BalancesOptions) => {
       suiAddress: options.sui,
     });
 
-    if (!evmAddress && !btcAddress && !solanaAddress && !suiAddress) {
+    const tonAddress = resolveTONAddress({
+      accountName: options.name,
+      handleError: () =>
+        spinner.warn(
+          `Error resolving TON address ${
+            !options.ton && options.name ? `for user '${options.name}'` : ""
+          }`
+        ),
+      tonAddress: options.ton,
+    });
+
+    if (
+      !evmAddress &&
+      !btcAddress &&
+      !solanaAddress &&
+      !suiAddress &&
+      !tonAddress
+    ) {
       spinner.fail("No addresses provided or derivable from account name");
       console.error(chalk.red(WALLET_ERROR));
       return;
@@ -103,14 +127,21 @@ const main = async (options: BalancesOptions) => {
     });
 
     spinner.text = `Fetching balances on ${options.network}...`;
-    const balances = await client.getBalances({
+    let balances = await client.getBalances({
       btcAddress,
       evmAddress,
       solanaAddress,
       suiAddress,
+      tonAddress,
     });
 
     spinner.succeed("Successfully fetched balances");
+
+    if (!options.showZero) {
+      balances = balances.filter(
+        ({ balance }) => normalizeFloat(balance) !== "0"
+      );
+    }
 
     if (options.json) {
       console.log(JSON.stringify(balances, null, 2));
@@ -122,6 +153,7 @@ const main = async (options: BalancesOptions) => {
       evm: evmAddress,
       solana: solanaAddress,
       sui: suiAddress,
+      ton: tonAddress,
     });
 
     if (addressesInfo) {
@@ -141,7 +173,7 @@ const main = async (options: BalancesOptions) => {
 };
 
 export const balancesCommand = new Command("balances")
-  .description("Fetch native and ZETA token balances")
+  .summary("Fetch native and ZETA token balances")
   .option("--evm <address>", "Fetch balances for a specific EVM address")
   .option("--solana <address>", "Fetch balances for a specific Solana address")
   .option(
@@ -149,6 +181,7 @@ export const balancesCommand = new Command("balances")
     "Fetch balances for a specific Bitcoin address"
   )
   .option("--sui <address>", "Fetch balances for a specific Sui address")
+  .option("--ton <address>", "Fetch balances for a specific TON address")
   .option("--name <name>", "Account name")
   .addOption(
     new Option("--network <network>", "Network to use")
@@ -156,6 +189,7 @@ export const balancesCommand = new Command("balances")
       .default("testnet")
   )
   .option("--json", "Output balances as JSON")
+  .option("--show-zero", "Include zero balances", false)
   .action(async (options: BalancesOptions) => {
     const validatedOptions = balancesOptionsSchema.parse(options);
     await main(validatedOptions);

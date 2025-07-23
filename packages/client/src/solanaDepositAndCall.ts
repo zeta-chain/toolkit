@@ -1,11 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
 import {
+  Connection,
   Transaction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
 import { getEndpoints } from "@zetachain/networks";
-import Gateway_IDL from "@zetachain/protocol-contracts-solana/idl/gateway.json";
+import Gateway_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import { AbiCoder, ethers } from "ethers";
 
 import { ParseAbiValuesReturnType } from "../../../types/parseAbiValues.types";
@@ -126,7 +127,7 @@ export const solanaDepositAndCall = async function (
 
       txSignature = await this.solanaAdapter.sendTransaction(
         versionedTransaction,
-        connection
+        connection as unknown as Connection
       );
     } else {
       txSignature = await anchor.web3.sendAndConfirmTransaction(

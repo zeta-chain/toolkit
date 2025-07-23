@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as bitcoin from "bitcoinjs-lib";
+import { ethers } from "ethers";
 
 import {
   BITCOIN_FEES,
@@ -7,8 +8,10 @@ import {
   BITCOIN_NETWORKS,
   BITCOIN_SCRIPT,
   BITCOIN_TX,
+  ESTIMATED_VIRTUAL_SIZE,
 } from "../types/bitcoin.constants";
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
+import { getDepositFee } from "./bitcoinMemo.helpers";
 
 /**
  * Bitcoin Signet network parameters
@@ -99,33 +102,15 @@ export const makeCommitTransaction = async (
   changeAddress: string,
   inscriptionData: Buffer,
   api: string,
-  amountSat: number,
+  amount: number,
   feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
 ) => {
-  const effectiveAmount = Math.max(
-    amountSat,
-    BITCOIN_LIMITS.MIN_COMMIT_AMOUNT + BITCOIN_LIMITS.ESTIMATED_REVEAL_FEE
-  );
-
-  /* pick utxos */
-  utxos.sort((a, b) => a.value - b.value);
-  let inTotal = 0;
-  const picks: BtcUtxo[] = [];
-  for (const u of utxos) {
-    inTotal += u.value;
-    picks.push(u);
-    if (inTotal >= effectiveAmount + feeSat) break;
-  }
-  if (inTotal < effectiveAmount + feeSat) throw new Error("Not enough funds");
-  const changeSat = inTotal - effectiveAmount - feeSat;
-
   const scriptItems = [
     key.publicKey.slice(1, 33),
     bitcoin.opcodes.OP_CHECKSIG,
     bitcoin.opcodes.OP_FALSE,
     bitcoin.opcodes.OP_IF,
   ];
-
   // Add inscription data in chunks if it exceeds 520 bytes (max script element size)
   const MAX_SCRIPT_ELEMENT_SIZE = 520;
   if (inscriptionData.length > MAX_SCRIPT_ELEMENT_SIZE) {
@@ -140,7 +125,6 @@ export const makeCommitTransaction = async (
   scriptItems.push(bitcoin.opcodes.OP_ENDIF);
 
   const leafScript = bitcoin.script.compile(scriptItems);
-
   /* p2tr */
   const { output: commitScript, witness } = bitcoin.payments.p2tr({
     internalPubkey: key.publicKey.slice(1, 33),
@@ -148,10 +132,37 @@ export const makeCommitTransaction = async (
     redeem: { output: leafScript, redeemVersion: LEAF_VERSION_TAPSCRIPT },
     scriptTree: { output: leafScript },
   });
-  if (!commitScript || !witness) throw new Error("taproot build failed");
+
+  if (!witness) throw new Error("taproot build failed");
+  const { revealFee, vsize } = calculateRevealFee(
+    {
+      controlBlock: witness[witness.length - 1],
+      internalKey: key.publicKey.slice(1, 33),
+      leafScript,
+    },
+    BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
+  );
+  const depositFee = Math.ceil(
+    (ESTIMATED_VIRTUAL_SIZE * 2 * revealFee) / vsize
+  );
+  const amountSat = amount + revealFee + depositFee;
+
+  const sortedUtxos = utxos.sort((a, b) => a.value - b.value);
+
+  let inTotal = 0;
+  const picks: BtcUtxo[] = [];
+  for (const u of sortedUtxos) {
+    inTotal += u.value;
+    picks.push(u);
+    if (inTotal >= amountSat + feeSat) break;
+  }
+  if (inTotal < amountSat + feeSat) throw new Error("Not enough funds");
+  const changeSat = inTotal - amountSat - feeSat;
+
+  if (!commitScript) throw new Error("taproot build failed");
 
   const psbt = new bitcoin.Psbt({ network: SIGNET });
-  psbt.addOutput({ script: commitScript, value: effectiveAmount });
+  psbt.addOutput({ script: commitScript, value: amountSat });
   if (changeSat > 0)
     psbt.addOutput({ address: changeAddress, value: changeSat });
   for (const u of picks) {
@@ -165,6 +176,7 @@ export const makeCommitTransaction = async (
       },
     });
   }
+
   psbt.signAllInputs(key);
   psbt.finalizeAllInputs();
 
@@ -174,6 +186,33 @@ export const makeCommitTransaction = async (
     leafScript,
     txHex: psbt.extractTransaction().toHex(),
   };
+};
+
+export const calculateRevealFee = (
+  commitData: { controlBlock: Buffer; internalKey: Buffer; leafScript: Buffer },
+  feeRate: number
+) => {
+  const witness = buildRevealWitness(
+    commitData.leafScript,
+    commitData.controlBlock
+  );
+
+  const txOverhead = BITCOIN_TX.TX_OVERHEAD; // 10 bytes: version (4) + marker (1) + flag (1) + locktime (4)
+
+  // Input vbytes:
+  // 36 bytes: outpoint (32-byte txid + 4-byte vout)
+  // 1 byte: scriptSig length (always 0 for segwit, but still encoded as a 1-byte varint)
+  // 4 bytes: sequence
+  // witness length is counted in weight units, so we divide by 4 to convert to virtual bytes
+  const inputVbytes = 36 + 1 + 4 + Math.ceil(witness.length / 4);
+
+  const outputVbytes = BITCOIN_TX.P2WPKH_OUTPUT_VBYTES; // 31 bytes: 8 (value) + 1 (script length) + 22 (P2WPKH script)
+
+  const vsize = txOverhead + inputVbytes + outputVbytes;
+
+  const revealFee = Math.ceil(vsize * feeRate);
+
+  return { revealFee, vsize };
 };
 
 /**
@@ -217,21 +256,12 @@ export const makeRevealTransaction = (
     witnessUtxo: { script: commitScript!, value: commitValue },
   });
 
-  const witness = buildRevealWitness(
-    commitData.leafScript,
-    commitData.controlBlock
-  );
-  const txOverhead = BITCOIN_TX.TX_OVERHEAD;
-  const inputVbytes = 36 + 1 + 43 + Math.ceil(witness.length / 4); // txin + marker+flag + varint scriptSig len (0) + sequence + witness weight/4
-  const outputVbytes = BITCOIN_TX.P2WPKH_OUTPUT_VBYTES;
-  const vsize = txOverhead + inputVbytes + outputVbytes;
-  const feeSat = Math.ceil(vsize * feeRate);
+  const { revealFee } = calculateRevealFee(commitData, feeRate);
 
-  // Ensure we have enough value for the output after fee
-  const outputValue = commitValue - feeSat;
+  const outputValue = commitValue - revealFee;
   if (outputValue < BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH) {
     throw new Error(
-      `Insufficient value in commit output (${commitValue} sat) to cover reveal fee (${feeSat} sat) and maintain minimum output (${BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH} sat)`
+      `Insufficient value in commit output (${commitValue} sat) to cover reveal fee (${revealFee} sat) and maintain minimum output (${BITCOIN_LIMITS.DUST_THRESHOLD.P2WPKH} sat)`
     );
   }
 
@@ -246,9 +276,9 @@ export const makeRevealTransaction = (
 /**
  * Calculates the total fees for a Bitcoin inscription transaction
  * @param data - The inscription data buffer
- * @returns Object containing commit fee, reveal fee, and total fee
+ * @returns Object containing commit fee, reveal fee, deposit fee, and total fee
  */
-export const calculateFees = (data: Buffer) => {
+export const calculateFees = async (data: Buffer, api: string) => {
   const commitFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
   const revealFee = Math.ceil(
     (BITCOIN_TX.TX_OVERHEAD +
@@ -259,6 +289,31 @@ export const calculateFees = (data: Buffer) => {
       BITCOIN_TX.P2WPKH_OUTPUT_VBYTES) *
       BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
   );
-  const totalFee = commitFee + revealFee;
-  return { commitFee, revealFee, totalFee };
+
+  const depositFee = await getDepositFee(api);
+
+  const totalFee = commitFee + revealFee + depositFee;
+  return { commitFee, depositFee, revealFee, totalFee };
+};
+
+/**
+ * Safely converts a Bitcoin amount from string to number.
+ * Validates that the amount doesn't exceed JavaScript's safe integer limit.
+ *
+ * @param amount - The Bitcoin amount as a string (e.g. "1.5" for 1.5 BTC)
+ * @param decimals - Number of decimal places (default: 8 for Bitcoin)
+ * @returns The amount in satoshis as a number
+ * @throws Error if the amount exceeds JavaScript's safe integer limit
+ */
+export const safeParseBitcoinAmount = (
+  amount: string,
+  decimals: number = 8
+): number => {
+  const parsedAmount = ethers.parseUnits(amount, decimals);
+
+  if (parsedAmount > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new Error("Amount exceeds maximum safe integer limit");
+  }
+
+  return Number(parsedAmount);
 };

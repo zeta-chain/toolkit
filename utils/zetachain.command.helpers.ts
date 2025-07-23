@@ -1,9 +1,10 @@
 import confirm from "@inquirer/confirm";
+import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { Command, Option } from "commander";
 import { ethers, ZeroAddress } from "ethers";
+import { ZRC20Contract } from "types/contracts.types";
 import { z } from "zod";
 
-import { ZetaChainClient } from "../packages/client/src/client";
 import { EVMAccountData } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import {
@@ -11,6 +12,7 @@ import {
   evmPrivateKeySchema,
   hexStringSchema,
   numericStringSchema,
+  rpcOrChainIdRefineRule,
 } from "../types/shared.schema";
 import { getAccountData } from "./accounts";
 import { getRpcUrl } from "./chains";
@@ -22,9 +24,9 @@ export const baseZetachainOptionsSchema = z.object({
   callOnRevert: z.boolean().default(false),
   callOptionsGasLimit: numericStringSchema.default("7000000"),
   callOptionsIsArbitraryCall: z.boolean().default(false),
-  gatewayZetachain: evmAddressSchema.optional(),
+  chainId: z.string().optional(),
+  gateway: evmAddressSchema.optional(),
   name: z.string().default(DEFAULT_ACCOUNT_NAME),
-  network: z.enum(["mainnet", "testnet"]).default("testnet"),
   onRevertGasLimit: numericStringSchema.default("7000000"),
   privateKey: evmPrivateKeySchema.optional(),
   receiver: z.string().transform((val) => {
@@ -37,13 +39,21 @@ export const baseZetachainOptionsSchema = z.object({
   }),
   revertAddress: evmAddressSchema,
   revertMessage: z.string().default("0x"),
+  rpc: z.string().optional(),
   txOptionsGasLimit: numericStringSchema.default("7000000"),
   txOptionsGasPrice: numericStringSchema.default("10000000000"),
   yes: z.boolean().default(false),
   zrc20: evmAddressSchema,
 });
 
-type BaseZetachainOptions = z.infer<typeof baseZetachainOptionsSchema>;
+export const baseZetachainOptionsRefined = baseZetachainOptionsSchema.refine(
+  rpcOrChainIdRefineRule.rule,
+  {
+    message: rpcOrChainIdRefineRule.message,
+  }
+);
+
+type BaseZetachainOptions = z.infer<typeof baseZetachainOptionsRefined>;
 
 export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
   const privateKey =
@@ -62,15 +72,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
 
   let signer: ethers.Wallet;
 
-  const rpc = getRpcUrl(options.network === "mainnet" ? 7000 : 7001);
-
-  if (!rpc) {
-    handleError({
-      context: "Failed to retrieve RPC URL",
-      error: new Error("RPC URL not found"),
-      shouldThrow: true,
-    });
-  }
+  const rpc = options.rpc || getRpcUrl(parseInt(options.chainId!));
 
   const provider = new ethers.JsonRpcProvider(rpc);
 
@@ -86,12 +88,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
     throw new Error(errorMessage);
   }
 
-  const client = new ZetaChainClient({
-    network: options.network,
-    signer,
-  });
-
-  return { client };
+  return { signer };
 };
 
 export const confirmZetachainTransaction = async (
@@ -157,6 +154,40 @@ export const prepareCallOptions = (options: BaseZetachainOptions) => {
   };
 };
 
+export const getZRC20WithdrawFee = async (
+  provider: ethers.ContractRunner,
+  zrc20: string,
+  gasLimit?: string
+): Promise<{
+  gasFee: string;
+  gasSymbol: string;
+  gasZRC20: string;
+  zrc20Symbol: string;
+}> => {
+  const contract = new ethers.Contract(
+    zrc20,
+    ZRC20ABI.abi,
+    provider
+  ) as ZRC20Contract;
+  let gasZRC20: string;
+  let gasFee: bigint;
+  const zrc20Symbol = await contract.symbol();
+  if (gasLimit) {
+    [gasZRC20, gasFee] = await contract.withdrawGasFeeWithGasLimit(gasLimit);
+  } else {
+    [gasZRC20, gasFee] = await contract.withdrawGasFee();
+  }
+  const gasContract = new ethers.Contract(
+    gasZRC20,
+    ZRC20ABI.abi,
+    provider
+  ) as ZRC20Contract;
+  const decimals = await gasContract.decimals();
+  const gasSymbol = await gasContract.symbol();
+  const gasFeeFormatted = ethers.formatUnits(gasFee, decimals);
+  return { gasFee: gasFeeFormatted, gasSymbol, gasZRC20, zrc20Symbol };
+};
+
 export const addCommonZetachainCommandOptions = (command: Command) => {
   return command
     .requiredOption("--zrc20 <address>", "The address of ZRC-20 to pay fees")
@@ -169,34 +200,28 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
         .default(DEFAULT_ACCOUNT_NAME)
         .conflicts(["private-key"])
     )
-    .addOption(
-      new Option("--network <network>", "Network to use")
-        .choices(["mainnet", "testnet"])
-        .default("testnet")
-    )
+    .addOption(new Option("--chain-id <chainId>", "Chain ID of the network"))
     .addOption(
       new Option(
         "--private-key <key>",
         "Private key for signing transactions"
       ).conflicts(["name"])
     )
-    .option(
-      "--gateway-zetachain <address>",
-      "Gateway contract address on ZetaChain"
-    )
+    .addOption(new Option("--rpc <url>", "RPC URL of the network"))
+    .option("--gateway <address>", "Gateway contract address on ZetaChain")
     .option("--revert-address <address>", "Revert address", ZeroAddress)
     .option("--abort-address <address>", "Abort address", ZeroAddress)
     .option("--call-on-revert", "Whether to call on revert", false)
     .option(
       "--on-revert-gas-limit <limit>",
       "Gas limit for the revert transaction",
-      "7000000"
+      "1000000"
     )
     .option("--revert-message <message>", "Revert message", "0x")
     .option(
       "--tx-options-gas-limit <limit>",
       "Gas limit for the transaction",
-      "7000000"
+      "1000000"
     )
     .option(
       "--tx-options-gas-price <price>",
@@ -206,7 +231,7 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
     .option(
       "--call-options-gas-limit <limit>",
       "Gas limit for the call",
-      "7000000"
+      "1000000"
     )
     .option("--call-options-is-arbitrary-call", "Call any function", false)
     .option("--yes", "Skip confirmation prompt", false);

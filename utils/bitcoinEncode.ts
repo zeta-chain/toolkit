@@ -16,9 +16,9 @@ export enum OpCode {
 }
 
 export enum EncodingFormat {
-  EncodingFmtABI = 0b0000,
-  EncodingFmtCompactLong = 0b0010,
-  EncodingFmtCompactShort = 0b0001,
+  ABI = 0b0000,
+  CompactLong = 0b0010,
+  CompactShort = 0b0001,
 }
 
 // Header Class
@@ -59,7 +59,7 @@ export const bitcoinEncode = (
   payload: Buffer,
   revertAddress: BtcAddress,
   opCode: OpCode = OpCode.DepositAndCall,
-  encodingFormat: EncodingFormat = EncodingFormat.EncodingFmtABI
+  encodingFormat: EncodingFormat = EncodingFormat.ABI
 ): string => {
   // Create memo header
   const header = new Header(encodingFormat, opCode);
@@ -86,11 +86,11 @@ export const encodeToBytes = (header: Header, fields: FieldsV0): Uint8Array => {
   // Encode Fields
   let encodedFields: Uint8Array;
   switch (header.encodingFmt) {
-    case EncodingFormat.EncodingFmtABI:
+    case EncodingFormat.ABI:
       encodedFields = encodeFieldsABI(fields);
       break;
-    case EncodingFormat.EncodingFmtCompactShort:
-    case EncodingFormat.EncodingFmtCompactLong:
+    case EncodingFormat.CompactShort:
+    case EncodingFormat.CompactLong:
       encodedFields = encodeFieldsCompact(header.encodingFmt, fields);
       break;
     default:
@@ -137,7 +137,7 @@ const encodeDataCompact = (
   let encodedLength: Buffer;
 
   switch (compactFmt) {
-    case EncodingFormat.EncodingFmtCompactShort:
+    case EncodingFormat.CompactShort:
       if (dataLen > 255) {
         throw new Error(
           "Data length exceeds 255 bytes for EncodingFmtCompactShort"
@@ -145,7 +145,7 @@ const encodeDataCompact = (
       }
       encodedLength = Buffer.from([dataLen]);
       break;
-    case EncodingFormat.EncodingFmtCompactLong:
+    case EncodingFormat.CompactLong:
       if (dataLen > 65535) {
         throw new Error(
           "Data length exceeds 65535 bytes for EncodingFmtCompactLong"
@@ -177,9 +177,4 @@ const bytesToHex = (bytes: Uint8Array): string => {
   return Array.from(bytes)
     .map((byte) => byte.toString(16).padStart(2, "0")) // Convert each byte to a 2-digit hex
     .join("");
-};
-
-// Helper function to trim the '0x' prefix from a hex string
-export const trimOx = (hexString: string): string => {
-  return hexString.startsWith("0x") ? hexString.slice(2) : hexString;
 };

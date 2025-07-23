@@ -15,8 +15,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "21"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
 
       - name: Install Dependencies
         run: yarn install
@@ -37,8 +40,7 @@ jobs:
           GITHUB_REF: ${{ github.ref }}
 
       - name: Publish to NPM
-        run:
-          yarn publish --new-version ${GITHUB_REF#refs/tags/v} --tag ${{
+        run: yarn publish --new-version ${GITHUB_REF#refs/tags/v} --tag ${{
           steps.determine-npm-tag.outputs.NPM_TAG }} --no-git-tag-version
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
