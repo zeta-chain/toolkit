@@ -49,7 +49,7 @@ const formatChainsTable = (
   tokens: ForeignCoin[],
   chainParams: ChainParams[]
 ): string[][] => {
-  const headers = ["Chain ID", "Chain Name", "Confirmations", "Tokens"];
+  const headers = ["Chain ID", "Chain Name", "Count", "Tokens"];
 
   // Group tokens by foreign_chain_id
   const tokensByChain: Record<string, string[]> = {};
@@ -117,6 +117,8 @@ const main = async (options: ChainsListOptions) => {
     });
 
     console.log(tableOutput);
+    console.log(`Note: Count refers to the number of confirmations required for a transaction
+from that connected chain to be observed`);
   } catch (error) {
     if (!options.json) {
       spinner?.fail(
