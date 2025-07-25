@@ -10,6 +10,8 @@ import { makeRevealPsbt } from "../../../../../src/chains/bitcoin/inscription/ma
 import {
   BITCOIN_FEES,
   ESTIMATED_VIRTUAL_SIZE,
+  X_ONLY_PUBKEY_END_INDEX,
+  X_ONLY_PUBKEY_START_INDEX,
 } from "../../../../../types/bitcoin.constants";
 import { inscriptionDepositOptionsSchema } from "../../../../../types/bitcoin.types";
 import { handleError } from "../../../../../utils";
@@ -69,7 +71,10 @@ const main = async (options: DepositOptions) => {
       changeAddress: address,
       feeSat: options.commitFee,
       inscriptionData: data,
-      internalPubkey: key.publicKey.subarray(1, 33),
+      internalPubkey: key.publicKey.subarray(
+        X_ONLY_PUBKEY_START_INDEX,
+        X_ONLY_PUBKEY_END_INDEX
+      ),
       network,
       utxos: preparedUtxos,
     });

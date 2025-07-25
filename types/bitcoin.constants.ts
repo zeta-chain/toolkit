@@ -48,3 +48,9 @@ export const BITCOIN_FEES = {
 export const ESTIMATED_VIRTUAL_SIZE = 68;
 export const EVM_ADDRESS_LENGTH = 20;
 export const MAX_MEMO_LENGTH = 80;
+
+// In Bitcoin's Taproot upgrade (BIP 340), public keys are represented in a compressed
+// format that only stores the x-coordinate of the elliptic curve point, hence "x-only".
+// This is different from traditional Bitcoin public keys which store both x and y coordinates.
+export const X_ONLY_PUBKEY_START_INDEX = 1;
+export const X_ONLY_PUBKEY_END_INDEX = 33;
