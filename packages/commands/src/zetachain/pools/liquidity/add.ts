@@ -71,15 +71,12 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     );
 
     // Check if pool exists
-    const poolAddress = (await factory.getPool(
-      token0,
-      token1,
-      DEFAULT_FEE
-    )) as string;
+    const fee = parseInt(validatedOptions.fee);
+    const poolAddress = (await factory.getPool(token0, token1, fee)) as string;
     if (poolAddress === ethers.ZeroAddress) {
       throw new Error(
         `No pool exists for token pair ${symbol0}/${symbol1} with fee ${
-          DEFAULT_FEE / 10000
+          fee / 10000
         }%`
       );
     }
@@ -121,9 +118,9 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     // Use signer's address as recipient if not provided
     const recipient = validatedOptions.recipient ?? signerAddress;
 
-    // Set default tick range if not provided
-    const tickLower = validatedOptions.tickLower ?? -887220;
-    const tickUpper = validatedOptions.tickUpper ?? 887220;
+    // Use provided tick range (now defaults to concentrated range)
+    const tickLower = validatedOptions.tickLower;
+    const tickUpper = validatedOptions.tickUpper;
 
     // Show transaction details and get confirmation
     console.log("\nTransaction Details:");
@@ -136,7 +133,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log(`Pool Address: ${poolAddress}`);
     console.log(`Recipient: ${recipient}`);
     console.log(`Tick Range: [${tickLower}, ${tickUpper}]`);
-    console.log(`Fee: ${DEFAULT_FEE / 10000}%`);
+    console.log(`Fee: ${fee / 10000}%`);
 
     const { confirm } = (await inquirer.prompt([
       {
@@ -197,7 +194,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
       amount1Desired: amount1,
       amount1Min: 0n,
       deadline: Math.floor(Date.now() / 1000) + 60 * 20,
-      fee: DEFAULT_FEE,
+      fee: fee,
       recipient,
       tickLower,
       tickUpper,
@@ -291,6 +288,7 @@ export const addCommand = new Command("add")
     "--private-key <privateKey>",
     "Private key of the account that will send the transaction"
   )
-  .option("--tick-lower <tickLower>", "Lower tick of the position", "-887220")
-  .option("--tick-upper <tickUpper>", "Upper tick of the position", "887220")
+  .option("--tick-lower <tickLower>", "Lower tick of the position", "276000")
+  .option("--tick-upper <tickUpper>", "Upper tick of the position", "277000")
+  .option("--fee <fee>", "Fee tier (e.g. 3000 for 0.3%, 10000 for 1%)", "10000")
   .action(main);
