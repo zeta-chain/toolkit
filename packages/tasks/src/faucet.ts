@@ -1,17 +1,14 @@
-// @ts-expect-error @description Could not find a declaration file for drip module
-import { drip } from "@zetachain/faucet-cli/dist/commands/drip";
 import * as dotenv from "dotenv";
 import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { z } from "zod";
 
+import { drip } from "../../../src/utils/faucet/drip";
 import { evmAddressSchema } from "../../../types/shared.schema";
 import { validateAndParseSchema } from "../../../utils";
 import { walletError } from "./balances";
 
 dotenv.config();
-
-const typedDripFunction = drip as (args: { address: string }) => Promise<void>;
 
 const faucetError = `
 * Alternatively, you can request tokens on any address
@@ -41,7 +38,7 @@ const main = async (args: FaucetArgs) => {
 
   try {
     const address = getRecipientAddress(parsedArgs.address);
-    await typedDripFunction({ address });
+    await drip({ address });
   } catch (error) {
     console.error(error);
   }
