@@ -16,15 +16,26 @@ export type PreparedUtxo = {
   vout: number;
 };
 
-export const makeCommitPsbt = (
-  internalPubkey: Buffer,
-  utxos: PreparedUtxo[],
-  changeAddress: string,
-  inscriptionData: Buffer,
-  amount: number,
-  network: bitcoin.Network,
-  feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
-): {
+// Insert parameter interface for the new single-object argument
+export interface MakeCommitPsbtParams {
+  amount: number;
+  changeAddress: string;
+  feeSat?: number;
+  inscriptionData: Buffer;
+  internalPubkey: Buffer;
+  network: bitcoin.Network;
+  utxos: PreparedUtxo[];
+}
+
+export const makeCommitPsbt = ({
+  internalPubkey,
+  utxos,
+  changeAddress,
+  inscriptionData,
+  amount,
+  network,
+  feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT,
+}: MakeCommitPsbtParams): {
   controlBlock: Buffer;
   internalKey: Buffer;
   leafScript: Buffer;

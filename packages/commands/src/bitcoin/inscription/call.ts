@@ -77,15 +77,17 @@ const main = async (options: CallOptions) => {
 
     const commitFee = options.commitFee ?? BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
 
-    const commit = makeCommitPsbt(
-      key.publicKey.subarray(1, 33),
-      preparedUtxos,
-      address,
-      data,
-      0, // amount (sat) – call does not transfer value
+    const commit = makeCommitPsbt({
+      amount: 0,
+      changeAddress: address,
+      feeSat: commitFee,
+      inscriptionData: data,
+      internalPubkey: key.publicKey.subarray(1, 33),
+      // amount (sat) – call does not transfer value
       network,
-      commitFee
-    );
+
+      utxos: preparedUtxos,
+    });
 
     const { revealFee, vsize } = calculateRevealFee(
       commit,

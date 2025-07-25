@@ -64,15 +64,15 @@ const main = async (options: DepositOptions) => {
     const amount = safeParseBitcoinAmount(options.amount);
     const preparedUtxos = await prepareUtxos(address, options.bitcoinApi);
 
-    const commit = makeCommitPsbt(
-      key.publicKey.subarray(1, 33),
-      preparedUtxos,
-      address,
-      data,
+    const commit = makeCommitPsbt({
       amount,
+      changeAddress: address,
+      feeSat: options.commitFee,
+      inscriptionData: data,
+      internalPubkey: key.publicKey.subarray(1, 33),
       network,
-      options.commitFee
-    );
+      utxos: preparedUtxos,
+    });
 
     const { revealFee, vsize } = calculateRevealFee(
       commit,
