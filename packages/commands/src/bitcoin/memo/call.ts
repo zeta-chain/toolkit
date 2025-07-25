@@ -1,3 +1,4 @@
+import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
 import { memoCallOptionsSchema } from "../../../../../types/bitcoin.types";
@@ -26,9 +27,15 @@ type CallOptions = z.infer<typeof memoCallOptionsSchema>;
  */
 const main = async (options: CallOptions) => {
   try {
+    const network =
+      options.network === "signet"
+        ? bitcoin.networks.testnet
+        : bitcoin.networks.bitcoin;
+
     const { key, address } = setupBitcoinKeyPair(
       options.privateKey,
-      options.name
+      options.name,
+      network
     );
     const utxos = await fetchUtxos(address, options.bitcoinApi);
 
@@ -44,7 +51,8 @@ const main = async (options: CallOptions) => {
       depositFee,
       options.gateway,
       address,
-      memo || ""
+      memo || "",
+      options.network
     );
 
     const tx = await bitcoinMakeTransactionWithMemo({

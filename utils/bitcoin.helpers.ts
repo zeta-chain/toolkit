@@ -5,31 +5,15 @@ import { ethers } from "ethers";
 import {
   BITCOIN_FEES,
   BITCOIN_LIMITS,
-  BITCOIN_NETWORKS,
   BITCOIN_SCRIPT,
   BITCOIN_TX,
   ESTIMATED_VIRTUAL_SIZE,
 } from "../types/bitcoin.constants";
 import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
-import { getDepositFee } from "./bitcoinMemo.helpers";
-
-/**
- * Bitcoin Signet network parameters
- * Used for creating Signet-compatible transactions
- */
-export const SIGNET = {
-  bech32: BITCOIN_NETWORKS.SIGNET.BECH32,
-  bip32: {
-    private: BITCOIN_NETWORKS.SIGNET.BIP32.PRIVATE,
-    public: BITCOIN_NETWORKS.SIGNET.BIP32.PUBLIC,
-  },
-  messagePrefix: BITCOIN_NETWORKS.SIGNET.MESSAGE_PREFIX,
-  pubKeyHash: BITCOIN_NETWORKS.SIGNET.PUBKEY_HASH,
-  scriptHash: BITCOIN_NETWORKS.SIGNET.SCRIPT_HASH,
-  wif: BITCOIN_NETWORKS.SIGNET.WIF,
-};
 
 export const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
+import type { PreparedUtxo } from "../src/chains/bitcoin/inscription/makeCommitPsbt";
+import { fetchUtxos } from "./bitcoin.command.helpers";
 
 /**
  * Encodes a number as a Bitcoin compact size.
@@ -103,6 +87,7 @@ export const makeCommitTransaction = async (
   inscriptionData: Buffer,
   api: string,
   amount: number,
+  network: bitcoin.Network,
   feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
 ) => {
   const scriptItems = [
@@ -128,7 +113,7 @@ export const makeCommitTransaction = async (
   /* p2tr */
   const { output: commitScript, witness } = bitcoin.payments.p2tr({
     internalPubkey: key.publicKey.slice(1, 33),
-    network: SIGNET,
+    network,
     redeem: { output: leafScript, redeemVersion: LEAF_VERSION_TAPSCRIPT },
     scriptTree: { output: leafScript },
   });
@@ -161,7 +146,7 @@ export const makeCommitTransaction = async (
 
   if (!commitScript) throw new Error("taproot build failed");
 
-  const psbt = new bitcoin.Psbt({ network: SIGNET });
+  const psbt = new bitcoin.Psbt({ network });
   psbt.addOutput({ script: commitScript, value: amountSat });
   if (changeSat > 0)
     psbt.addOutput({ address: changeAddress, value: changeSat });
@@ -186,6 +171,30 @@ export const makeCommitTransaction = async (
     leafScript,
     txHex: psbt.extractTransaction().toHex(),
   };
+};
+
+/**
+ * Converts BtcUtxo[] to PreparedUtxo[] by fetching transaction details for each UTXO
+ * to get the scriptPubKey information needed for PSBT creation.
+ */
+export const prepareUtxos = async (
+  address: string,
+  api: string
+): Promise<PreparedUtxo[]> => {
+  const utxos = await fetchUtxos(address, api);
+  const preparedUtxos: PreparedUtxo[] = [];
+
+  for (const utxo of utxos) {
+    const tx = (await axios.get<BtcTxById>(`${api}/tx/${utxo.txid}`)).data;
+    preparedUtxos.push({
+      scriptPubKey: Buffer.from(tx.vout[utxo.vout].scriptpubkey, "hex"),
+      txid: utxo.txid,
+      value: utxo.value,
+      vout: utxo.vout,
+    });
+  }
+
+  return preparedUtxos;
 };
 
 export const calculateRevealFee = (
@@ -235,12 +244,13 @@ export const makeRevealTransaction = (
   to: string,
   feeRate: number,
   commitData: { controlBlock: Buffer; internalKey: Buffer; leafScript: Buffer },
-  key: bitcoin.Signer
+  key: bitcoin.Signer,
+  network: bitcoin.Network
 ) => {
-  const psbt = new bitcoin.Psbt({ network: SIGNET });
+  const psbt = new bitcoin.Psbt({ network });
   const { output: commitScript } = bitcoin.payments.p2tr({
     internalPubkey: commitData.internalKey,
-    network: SIGNET,
+    network,
     scriptTree: { output: commitData.leafScript },
   });
   psbt.addInput({
@@ -271,29 +281,6 @@ export const makeRevealTransaction = (
   psbt.finalizeAllInputs();
 
   return psbt.extractTransaction(true).toHex();
-};
-
-/**
- * Calculates the total fees for a Bitcoin inscription transaction
- * @param data - The inscription data buffer
- * @returns Object containing commit fee, reveal fee, deposit fee, and total fee
- */
-export const calculateFees = async (data: Buffer, api: string) => {
-  const commitFee = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT;
-  const revealFee = Math.ceil(
-    (BITCOIN_TX.TX_OVERHEAD +
-      36 +
-      1 +
-      43 +
-      Math.ceil(data.length / 4) +
-      BITCOIN_TX.P2WPKH_OUTPUT_VBYTES) *
-      BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
-  );
-
-  const depositFee = await getDepositFee(api);
-
-  const totalFee = commitFee + revealFee + depositFee;
-  return { commitFee, depositFee, revealFee, totalFee };
 };
 
 /**

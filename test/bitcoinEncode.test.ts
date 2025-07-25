@@ -1,6 +1,10 @@
 import { ethers } from "ethers";
 
-import { Address, bitcoinEncode, BtcAddress } from "../utils/bitcoinEncode";
+import {
+  Address,
+  bitcoinEncode,
+  BtcAddress,
+} from "../src/chains/bitcoin/inscription/encode";
 import { trim0x } from "../utils/trim0x";
 
 describe("bitcoinEncode", () => {

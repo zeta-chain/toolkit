@@ -4,23 +4,6 @@ export const DEFAULT_GAS_PRICE_API =
   "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/gasPrice/18333";
 
 /**
- * Bitcoin network constants
- */
-export const BITCOIN_NETWORKS = {
-  SIGNET: {
-    BECH32: "tb",
-    BIP32: {
-      PRIVATE: 0x04358394,
-      PUBLIC: 0x043587cf,
-    },
-    MESSAGE_PREFIX: "\x18Bitcoin Signed Message:\n",
-    PUBKEY_HASH: 0x6f,
-    SCRIPT_HASH: 0xc4,
-    WIF: 0xef,
-  },
-};
-
-/**
  * Bitcoin script and transaction constants
  */
 export const BITCOIN_SCRIPT = {
@@ -65,3 +48,9 @@ export const BITCOIN_FEES = {
 export const ESTIMATED_VIRTUAL_SIZE = 68;
 export const EVM_ADDRESS_LENGTH = 20;
 export const MAX_MEMO_LENGTH = 80;
+
+// In Bitcoin's Taproot upgrade (BIP 340), public keys are represented in a compressed
+// format that only stores the x-coordinate of the elliptic curve point, hence "x-only".
+// This is different from traditional Bitcoin public keys which store both x and y coordinates.
+export const X_ONLY_PUBKEY_START_INDEX = 1;
+export const X_ONLY_PUBKEY_END_INDEX = 33;

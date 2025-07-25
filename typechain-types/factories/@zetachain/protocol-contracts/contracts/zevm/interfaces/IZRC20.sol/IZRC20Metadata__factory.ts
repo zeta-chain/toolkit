@@ -36,6 +36,19 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "SYSTEM_CONTRACT_ADDRESS",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "address",

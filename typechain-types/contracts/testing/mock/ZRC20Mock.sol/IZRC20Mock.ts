@@ -26,6 +26,7 @@ export interface IZRC20MockInterface extends Interface {
     nameOrSignature:
       | "GAS_LIMIT"
       | "PROTOCOL_FLAT_FEE"
+      | "SYSTEM_CONTRACT_ADDRESS"
       | "allowance"
       | "approve"
       | "balanceOf"
@@ -46,6 +47,10 @@ export interface IZRC20MockInterface extends Interface {
   encodeFunctionData(functionFragment: "GAS_LIMIT", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "PROTOCOL_FLAT_FEE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "SYSTEM_CONTRACT_ADDRESS",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -106,6 +111,10 @@ export interface IZRC20MockInterface extends Interface {
   decodeFunctionResult(functionFragment: "GAS_LIMIT", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "PROTOCOL_FLAT_FEE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "SYSTEM_CONTRACT_ADDRESS",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
@@ -190,6 +199,8 @@ export interface IZRC20Mock extends BaseContract {
 
   PROTOCOL_FLAT_FEE: TypedContractMethod<[], [bigint], "view">;
 
+  SYSTEM_CONTRACT_ADDRESS: TypedContractMethod<[], [string], "view">;
+
   allowance: TypedContractMethod<
     [owner: AddressLike, spender: AddressLike],
     [bigint],
@@ -270,6 +281,9 @@ export interface IZRC20Mock extends BaseContract {
   getFunction(
     nameOrSignature: "PROTOCOL_FLAT_FEE"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "SYSTEM_CONTRACT_ADDRESS"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "allowance"
   ): TypedContractMethod<
