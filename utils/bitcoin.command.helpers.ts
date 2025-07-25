@@ -129,12 +129,13 @@ export const displayAndConfirmMemoTransaction = async (
   depositFee: number,
   gateway: string,
   sender: string,
-  memo: string
+  memo: string,
+  network: "signet" | "mainnet"
 ) => {
   const totalAmount = amount + depositFee;
 
   console.log(`
-Network: Signet
+Network: ${network === "signet" ? "Signet" : "Mainnet"}
 Gateway: ${gateway}
 Sender: ${sender}
 Operation: Memo Transaction
@@ -191,7 +192,14 @@ export const createBitcoinMemoCommandWithCommonOptions = (
 ): Command => {
   return createBitcoinCommandWithCommonOptions(name)
     .option("-d, --data <data>", "Pass raw data")
-    .option("--network-fee <fee>", "Network fee (in sats)", "1750");
+    .option("--network-fee <fee>", "Network fee (in sats)", "1750")
+    .addOption(
+      new Option("--network <network>", "Network")
+        .choices(["signet", "mainnet"])
+        .default("signet")
+    )
+    .option("--bitcoin-api <url>", "Bitcoin API", DEFAULT_BITCOIN_API)
+    .option("--gas-price-api <url>", "ZetaChain API", DEFAULT_GAS_PRICE_API);
 };
 
 export const createBitcoinInscriptionCommandWithCommonOptions = (

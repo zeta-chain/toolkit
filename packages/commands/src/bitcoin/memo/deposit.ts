@@ -22,10 +22,15 @@ type DepositOptions = z.infer<typeof memoDepositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
   try {
+    const network =
+      options.network === "signet"
+        ? bitcoin.networks.testnet
+        : bitcoin.networks.bitcoin;
+
     const { key, address } = setupBitcoinKeyPair(
       options.privateKey,
       options.name,
-      bitcoin.networks.testnet
+      network
     );
     const utxos = await fetchUtxos(address, options.bitcoinApi);
 
@@ -41,7 +46,8 @@ const main = async (options: DepositOptions) => {
       depositFee,
       options.gateway,
       address,
-      memo || ""
+      memo || "",
+      options.network
     );
 
     const tx = await bitcoinMakeTransactionWithMemo({

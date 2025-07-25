@@ -145,6 +145,7 @@ export const inscriptionCallOptionsSchema = withCommonBitcoinInscriptionRefines(
 );
 
 export const baseBitcoinMemoOptionsSchema = baseBitcoinOptionsSchema.extend({
+  network: z.enum(["signet", "mainnet"]).default("signet"),
   networkFee: z.string(),
   receiver: evmAddressSchema,
 });
