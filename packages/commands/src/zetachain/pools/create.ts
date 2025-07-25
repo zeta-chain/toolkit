@@ -58,7 +58,7 @@ function buildSqrtPriceX96(
 const main = async (raw: CreatePoolOptions) => {
   try {
     const o = createPoolOptionsSchema.parse(raw);
-    const [usdA, usdB] = o.prices.map(Number);
+    const [usdB, usdA] = o.prices.map(Number);
 
     const provider = new JsonRpcProvider(o.rpc ?? DEFAULT_RPC);
     const signer = new Wallet(o.privateKey, provider);
