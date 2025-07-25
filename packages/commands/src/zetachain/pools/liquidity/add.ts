@@ -288,7 +288,7 @@ export const addCommand = new Command("add")
     "--private-key <privateKey>",
     "Private key of the account that will send the transaction"
   )
-  .option("--tick-lower <tickLower>", "Lower tick of the position", "276000")
-  .option("--tick-upper <tickUpper>", "Upper tick of the position", "277000")
-  .option("--fee <fee>", "Fee tier (e.g. 3000 for 0.3%, 10000 for 1%)", "10000")
+  .option("--tick-lower <tickLower>", "Lower tick of the position", "361450")
+  .option("--tick-upper <tickUpper>", "Upper tick of the position", "361550")
+  .option("--fee <fee>", "Fee tier (e.g. 500 for 0.05%, 3000 for 0.3%)", "500")
   .action(main);

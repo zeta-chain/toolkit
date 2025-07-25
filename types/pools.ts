@@ -59,18 +59,18 @@ export const showPoolOptionsSchema = z.object({
 
 export const addLiquidityOptionsSchema = z.object({
   amounts: z.array(z.string()).min(2).max(2),
-  fee: z.string().default("10000"),
+  fee: z.string().default("500"),
   privateKey: z.string(),
   recipient: z.string().optional(),
   rpc: z.string().default(DEFAULT_RPC),
   tickLower: z
     .string()
     .transform((val) => Number(val))
-    .default("276000"),
+    .default("361450"),
   tickUpper: z
     .string()
     .transform((val) => Number(val))
-    .default("277000"),
+    .default("361550"),
   tokens: z.array(z.string()).min(2).max(2),
 });
 
