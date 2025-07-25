@@ -1,7 +1,7 @@
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import { Command } from "commander";
-import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
+import { Contract, ethers, JsonRpcProvider, Wallet, Log } from "ethers";
 import inquirer from "inquirer";
 
 import {
@@ -18,277 +18,269 @@ import {
 
 const main = async (options: AddLiquidityOptions): Promise<void> => {
   try {
-    // Validate options
+    // 1. Validate CLI options
     const validatedOptions = addLiquidityOptionsSchema.parse(options);
 
-    // Initialize provider and signer
-    const provider = new JsonRpcProvider(validatedOptions.rpc);
+    /**
+     * 2. Bootstrap signer & provider
+     */
+    const provider = new JsonRpcProvider(validatedOptions.rpc ?? DEFAULT_RPC);
     const signer = new Wallet(validatedOptions.privateKey, provider);
 
-    // Get token addresses
+    /**
+     * 3. Parse token addresses from CLI
+     */
     if (validatedOptions.tokens.length !== 2) {
       throw new Error("Exactly 2 token addresses must be provided");
     }
-    const [token0, token1]: [string, string] = [
-      validatedOptions.tokens[0],
-      validatedOptions.tokens[1],
-    ];
 
-    // Initialize token contracts to get decimals and symbols
-    const token0Contract = new Contract(
-      token0,
-      [
-        "function decimals() view returns (uint8)",
-        "function symbol() view returns (string)",
-      ],
-      provider
-    );
-    const token1Contract = new Contract(
-      token1,
-      [
-        "function decimals() view returns (uint8)",
-        "function symbol() view returns (string)",
-      ],
-      provider
+    let [inputTokenA, inputTokenB] = validatedOptions.tokens.map((addr) =>
+      ethers.getAddress(addr)
     );
 
-    // Get token decimals and symbols
-    const [decimals0, decimals1, symbol0, symbol1] = (await Promise.all([
-      token0Contract.decimals(),
-      token1Contract.decimals(),
-      token0Contract.symbol(),
-      token1Contract.symbol(),
-    ])) as [number, number, string, string];
-
-    const amount0 = ethers.parseUnits(validatedOptions.amounts[0], decimals0);
-    const amount1 = ethers.parseUnits(validatedOptions.amounts[1], decimals1);
-
-    // Initialize factory contract to check if pool exists
+    /**
+     * 4. Locate (or verify) the pool — order agnostic
+     */
     const factory = new Contract(
       DEFAULT_FACTORY,
       UniswapV3Factory.abi,
       provider
     );
 
-    // Check if pool exists
-    const fee = parseInt(validatedOptions.fee);
-    const poolAddress = (await factory.getPool(token0, token1, fee)) as string;
+    const fee = Number(validatedOptions.fee ?? DEFAULT_FEE);
+
+    const poolAddress = (await factory.getPool(
+      inputTokenA,
+      inputTokenB,
+      fee
+    )) as string;
+
     if (poolAddress === ethers.ZeroAddress) {
-      throw new Error(
-        `No pool exists for token pair ${symbol0}/${symbol1} with fee ${
-          fee / 10000
-        }%`
-      );
+      throw new Error("No pool found for supplied token pair and fee tier");
     }
 
-    // Check token balances
-    const token0ContractForBalance = new Contract(
-      token0,
-      ["function balanceOf(address) view returns (uint256)"],
+    /**
+     * 5. Read canonical token ordering from the pool
+     */
+    const pool = new Contract(
+      poolAddress,
+      [
+        "function token0() view returns (address)",
+        "function token1() view returns (address)",
+        "function tickSpacing() view returns (int24)",
+      ],
       provider
     );
-    const token1ContractForBalance = new Contract(
-      token1,
-      ["function balanceOf(address) view returns (uint256)"],
-      provider
-    );
+    const poolToken0 = ethers.getAddress(await pool.token0());
+    const poolToken1 = ethers.getAddress(await pool.token1());
+    const tickSpacing = Number(await pool.tickSpacing());
 
+    /**
+     * 6. Build token helpers (decimals, symbol, balances, approve)
+     */
+    const tokenContracts: Record<string, Contract> = {};
+
+    const getTokenContract = (addr: string): Contract => {
+      if (!tokenContracts[addr]) {
+        tokenContracts[addr] = new Contract(
+          addr,
+          [
+            "function decimals() view returns (uint8)",
+            "function symbol() view returns (string)",
+            "function balanceOf(address) view returns (uint256)",
+            "function approve(address,uint256) returns (bool)",
+          ],
+          signer
+        );
+      }
+      return tokenContracts[addr];
+    };
+
+    const [decA, symA] = await Promise.all([
+      getTokenContract(inputTokenA).decimals(),
+      getTokenContract(inputTokenA).symbol(),
+    ]).then(([d, s]) => [Number(d), s as string]);
+
+    const [decB, symB] = await Promise.all([
+      getTokenContract(inputTokenB).decimals(),
+      getTokenContract(inputTokenB).symbol(),
+    ]).then(([d, s]) => [Number(d), s as string]);
+
+    /**
+     * 7. Parse user-entered amounts (aligned with the order the user typed)
+     */
+    if (validatedOptions.amounts.length !== 2) {
+      throw new Error("Exactly 2 amounts must be provided");
+    }
+    const amountA = ethers.parseUnits(validatedOptions.amounts[0], decA);
+    const amountB = ethers.parseUnits(validatedOptions.amounts[1], decB);
+
+    /**
+     * 8. Ensure we pass token0/token1 in *pool* order. Swap amounts if needed.
+     */
+    let finalToken0 = poolToken0;
+    let finalToken1 = poolToken1;
+
+    let finalAmount0: bigint;
+    let finalAmount1: bigint;
+    let symbol0: string;
+    let symbol1: string;
+
+    if (inputTokenA === poolToken0) {
+      // user's first address matches pool.token0 ⇒ no swap
+      finalAmount0 = amountA;
+      finalAmount1 = amountB;
+      symbol0 = symA as string;
+      symbol1 = symB as string;
+    } else {
+      // user supplied in reverse order ⇒ swap
+      finalAmount0 = amountB;
+      finalAmount1 = amountA;
+      symbol0 = symB as string;
+      symbol1 = symA as string;
+    }
+
+    /**
+     * 9. Balance checks
+     */
     const signerAddress = await signer.getAddress();
-    const [balance0, balance1] = (await Promise.all([
-      token0ContractForBalance.balanceOf(signerAddress),
-      token1ContractForBalance.balanceOf(signerAddress),
-    ])) as [bigint, bigint];
 
-    if (balance0 < amount0) {
-      throw new Error(
-        `Insufficient ${symbol0} balance. Required: ${
-          validatedOptions.amounts[0]
-        }, Available: ${ethers.formatUnits(balance0, decimals0)}`
-      );
+    const [balance0, balance1] = await Promise.all([
+      getTokenContract(finalToken0).balanceOf(signerAddress) as Promise<bigint>,
+      getTokenContract(finalToken1).balanceOf(signerAddress) as Promise<bigint>,
+    ]);
+
+    if (balance0 < finalAmount0) {
+      throw new Error(`Insufficient ${symbol0} balance`);
+    }
+    if (balance1 < finalAmount1) {
+      throw new Error(`Insufficient ${symbol1} balance`);
     }
 
-    if (balance1 < amount1) {
-      throw new Error(
-        `Insufficient ${symbol1} balance. Required: ${
-          validatedOptions.amounts[1]
-        }, Available: ${ethers.formatUnits(balance1, decimals1)}`
-      );
+    /**
+     * 10. Tick range sanity & alignment
+     */
+    if (!validatedOptions.tickLower || !validatedOptions.tickUpper) {
+      throw new Error("tickLower and tickUpper must be provided");
     }
 
-    // Use signer's address as recipient if not provided
+    const rawLower = Number(validatedOptions.tickLower);
+    const rawUpper = Number(validatedOptions.tickUpper);
+
+    const tickLower = Math.floor(rawLower / tickSpacing) * tickSpacing;
+    const tickUpper = Math.floor(rawUpper / tickSpacing) * tickSpacing;
+
+    if (tickLower >= tickUpper) {
+      throw new Error("tickLower must be smaller than tickUpper");
+    }
+
+    /**
+     * 11. Recipient & summary
+     */
     const recipient = validatedOptions.recipient ?? signerAddress;
 
-    // Use provided tick range (now defaults to concentrated range)
-    const tickLower = validatedOptions.tickLower;
-    const tickUpper = validatedOptions.tickUpper;
-
-    // Show transaction details and get confirmation
     console.log("\nTransaction Details:");
+    console.log(`Pool:        ${poolAddress}`);
+    console.log(`Fee tier:    ${fee / 10000}%`);
+    console.log(`Token0:      ${symbol0} (${finalToken0})`);
+    console.log(`Token1:      ${symbol1} (${finalToken1})`);
     console.log(
-      `Token0 (${symbol0}): ${validatedOptions.amounts[0]} (${token0})`
+      `Amount0:     ${
+        validatedOptions.amounts[inputTokenA === poolToken0 ? 0 : 1]
+      }`
     );
     console.log(
-      `Token1 (${symbol1}): ${validatedOptions.amounts[1]} (${token1})`
+      `Amount1:     ${
+        validatedOptions.amounts[inputTokenA === poolToken0 ? 1 : 0]
+      }`
     );
-    console.log(`Pool Address: ${poolAddress}`);
-    console.log(`Recipient: ${recipient}`);
-    console.log(`Tick Range: [${tickLower}, ${tickUpper}]`);
-    console.log(`Fee: ${fee / 10000}%`);
+    console.log(`Tick range:  [${tickLower}, ${tickUpper}]`);
+    console.log(`Recipient:   ${recipient}`);
 
-    const { confirm } = (await inquirer.prompt([
-      {
-        default: false,
-        message: "Do you want to proceed with the transaction?",
-        name: "confirm",
-        type: "confirm",
-      },
-    ])) as { confirm: boolean };
-
+    const { confirm } = await inquirer.prompt([
+      { type: "confirm", name: "confirm", message: "Proceed?" },
+    ]);
     if (!confirm) {
-      console.log("Transaction cancelled by user");
-      process.exit(0);
+      console.log("Cancelled by user");
+      return;
     }
 
-    // Initialize token contracts for approval
-    const token0ContractForApproval = new Contract(
-      token0,
-      ["function approve(address spender, uint256 amount) returns (bool)"],
-      signer
+    /**
+     * 12. Approvals
+     */
+    console.log("Approving tokens...");
+    const approve0Tx = await getTokenContract(finalToken0).approve(
+      DEFAULT_POSITION_MANAGER,
+      finalAmount0
     );
-    const token1ContractForApproval = new Contract(
-      token1,
-      ["function approve(address spender, uint256 amount) returns (bool)"],
-      signer
+    const approve1Tx = await getTokenContract(finalToken1).approve(
+      DEFAULT_POSITION_MANAGER,
+      finalAmount1
     );
+    await Promise.all([approve0Tx.wait(), approve1Tx.wait()]);
+    console.log("Tokens approved");
 
-    // Initialize position manager contract
+    /**
+     * 13. Mint
+     */
+    const params: MintParams = {
+      token0: finalToken0,
+      token1: finalToken1,
+      fee,
+      tickLower,
+      tickUpper,
+      amount0Desired: finalAmount0,
+      amount1Desired: finalAmount1,
+      amount0Min: 0n,
+      amount1Min: 0n,
+      recipient,
+      deadline: Math.floor(Date.now() / 1000) + 60 * 20,
+    };
+
     const positionManager = new Contract(
       DEFAULT_POSITION_MANAGER,
       NonfungiblePositionManager.abi,
       signer
     );
 
-    let nonce = await provider.getTransactionCount(signer.address, "pending");
+    console.log("Minting position...");
+    const mintTx = await positionManager.mint(params);
+    const receipt = await mintTx.wait();
 
-    // Approve tokens
-    console.log("\nApproving tokens...");
-    const approve0Tx = (await token0ContractForApproval.approve(
-      positionManager.target,
-      amount0,
-      { nonce: nonce++ }
-    )) as ethers.TransactionResponse;
-    const approve1Tx = (await token1ContractForApproval.approve(
-      positionManager.target,
-      amount1,
-      { nonce: nonce++ }
-    )) as ethers.TransactionResponse;
-
-    console.log("Waiting for approvals...");
-    await Promise.all([approve0Tx.wait(), approve1Tx.wait()]);
-    console.log("Tokens approved successfully");
-
-    // Prepare parameters for minting
-    const params: MintParams = {
-      amount0Desired: amount0,
-      amount0Min: 0n,
-      amount1Desired: amount1,
-      amount1Min: 0n,
-      deadline: Math.floor(Date.now() / 1000) + 60 * 20,
-      fee: fee,
-      recipient,
-      tickLower,
-      tickUpper,
-      token0,
-      token1,
-    };
-
-    console.log("\nMint parameters:");
-    console.log("token0:", token0);
-    console.log("token1:", token1);
-    console.log("amount0Desired:", amount0.toString());
-    console.log("amount1Desired:", amount1.toString());
-    console.log("tickLower:", tickLower);
-    console.log("tickUpper:", tickUpper);
-
-    // Send transaction
-    console.log("\nAdding liquidity...");
-    const tx = (await positionManager.mint(params, {
-      nonce: nonce++,
-    })) as ethers.TransactionResponse;
-    const receipt = await tx.wait();
-
-    if (!receipt) {
-      throw new Error("Transaction receipt is null");
-    }
-
-    // Parse transaction receipt to get token ID
+    /**
+     * 14. Extract NFT token ID from Transfer event
+     */
     const iface = positionManager.interface;
-    const positionManagerAddress = ethers.getAddress(
-      String(positionManager.target)
-    );
-    const transferEvent = receipt.logs
-      .filter((log: Log) => {
-        // Only try to parse logs from the position manager contract
-        return (
-          ethers.getAddress(log.address.toString()) === positionManagerAddress
-        );
-      })
-      .map((log: Log) => {
-        try {
-          return iface.parseLog({
-            data: log.data,
-            topics: log.topics,
-          });
-        } catch {
-          return null;
-        }
-      })
-      .find((event) => event?.name === "Transfer");
+    const transferLog = receipt.logs.find((l: Log) => {
+      try {
+        const parsed = iface.parseLog({ data: l.data, topics: l.topics });
+        return parsed?.name === "Transfer";
+      } catch {
+        return false;
+      }
+    });
 
-    if (!transferEvent) {
-      throw new Error("Could not find Transfer event in transaction receipt");
-    }
+    const tokenId = transferLog
+      ? iface.parseLog(transferLog)?.args[2] ?? "<unknown>"
+      : "<unknown>";
 
-    const tokenId = transferEvent.args[2] as bigint;
-
-    console.log("\nLiquidity Added Successfully:");
-    console.log("Transaction Hash:", tx.hash);
-    console.log("Position NFT ID:", tokenId.toString());
-    console.log("Recipient Address:", recipient);
-    console.log("Token 0 Address:", token0);
-    console.log("Token 1 Address:", token1);
-    console.log("Amount0:", validatedOptions.amounts[0]);
-    console.log("Amount1:", validatedOptions.amounts[1]);
-  } catch (error) {
-    console.error("\nFailed to add liquidity:");
-    console.error(
-      "Error:",
-      error instanceof Error ? error.message : String(error)
-    );
+    console.log("\nLiquidity added successfully!");
+    console.log(`Position NFT ID: ${tokenId}`);
+    console.log(`Transaction:     ${mintTx.hash}`);
+  } catch (err) {
+    console.error("Failed to add liquidity:", (err as Error).message);
     process.exit(1);
   }
 };
 
 export const addCommand = new Command("add")
   .summary("Add liquidity to a Uniswap V3 pool")
-  .option("--rpc <rpc>", "RPC URL for the network", DEFAULT_RPC)
-  .requiredOption(
-    "--tokens <tokens...>",
-    "Token addresses for the pool (exactly 2 required)"
-  )
-  .requiredOption(
-    "--amounts <amounts...>",
-    "Amounts of tokens to add (in human-readable format, e.g. 0.1 5)"
-  )
-  .option(
-    "--recipient <recipient>",
-    "Address that will receive the liquidity position NFT (defaults to signer's address)"
-  )
-  .requiredOption(
-    "--private-key <privateKey>",
-    "Private key of the account that will send the transaction"
-  )
-  .option("--tick-lower <tickLower>", "Lower tick of the position", "361450")
-  .option("--tick-upper <tickUpper>", "Upper tick of the position", "361550")
-  .option("--fee <fee>", "Fee tier (e.g. 500 for 0.05%, 3000 for 0.3%)", "500")
+  .requiredOption("--private-key <pk>", "Private key")
+  .requiredOption("--tokens <tokens...>", "Token addresses (2)")
+  .requiredOption("--amounts <amounts...>", "Token amounts (2)")
+  .option("--rpc <url>", "JSON-RPC endpoint", DEFAULT_RPC)
+  .option("--tick-lower <tick>", "Lower tick")
+  .option("--tick-upper <tick>", "Upper tick")
+  .option("--fee <fee>", "Fee tier", "3000")
+  .option("--recipient <address>", "Recipient address")
   .action(main);
