@@ -81,16 +81,24 @@ const main = async (options: ShowPoolOptions): Promise<void> => {
         pool.slot0(),
       ])) as [string, string, bigint, bigint, bigint, Slot0Result];
 
-    // Get token symbols
-    const [token0Symbol, token1Symbol] = await Promise.all([
+    // Get token symbols and decimals (decimals needed for accurate price calculation)
+    const [token0Symbol, token1Symbol, dec0, dec1] = await Promise.all([
       getTokenSymbol(provider, token0),
       getTokenSymbol(provider, token1),
+      IERC20Metadata__factory.connect(token0, provider).decimals(),
+      IERC20Metadata__factory.connect(token1, provider).decimals(),
     ]);
 
-    // Calculate price from sqrtPriceX96
+    // Calculate price from sqrtPriceX96 accounting for token decimals
     const sqrtPriceX96 = slot0.sqrtPriceX96;
     const sqrtPrice = Number(sqrtPriceX96) / 2 ** 96;
-    const priceToken1PerToken0 = sqrtPrice ** 2;
+    const priceUnits = sqrtPrice ** 2; // price in base-unit ratio (token1 base units / token0 base units)
+
+    // Adjust for token decimals to get token-level price
+    const decDiff = Number(dec0) - Number(dec1);
+    const priceToken1PerToken0 =
+      decDiff >= 0 ? priceUnits / 10 ** decDiff : priceUnits * 10 ** -decDiff;
+
     const priceToken0PerToken1 = 1 / priceToken1PerToken0;
 
     console.log("\nPool Information:");
