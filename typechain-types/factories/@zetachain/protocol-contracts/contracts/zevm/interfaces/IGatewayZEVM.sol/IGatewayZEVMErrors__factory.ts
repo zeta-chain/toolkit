@@ -53,17 +53,12 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InsufficientAmount",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InsufficientGasLimit",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InsufficientZRC20Amount",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InsufficientZetaAmount",
     type: "error",
   },
   {
@@ -174,6 +169,11 @@ const _abi = [
       },
     ],
     name: "ZRC20TransferFailed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ZeroGasPrice",
     type: "error",
   },
 ] as const;

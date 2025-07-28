@@ -37,10 +37,6 @@ export type RevertContextStructOutput = [
   revertMessage: string
 ] & { sender: string; asset: string; amount: bigint; revertMessage: string };
 
-export type MessageContextStruct = { sender: AddressLike };
-
-export type MessageContextStructOutput = [sender: string] & { sender: string };
-
 export interface ZetaConnectorBaseInterface extends Interface {
   getFunction(
     nameOrSignature:
@@ -49,6 +45,7 @@ export interface ZetaConnectorBaseInterface extends Interface {
       | "TSS_ROLE"
       | "UPGRADE_INTERFACE_VERSION"
       | "WITHDRAWER_ROLE"
+      | "deposit"
       | "gateway"
       | "getRoleAdmin"
       | "grantRole"
@@ -57,7 +54,6 @@ export interface ZetaConnectorBaseInterface extends Interface {
       | "pause"
       | "paused"
       | "proxiableUUID"
-      | "receiveTokens"
       | "renounceRole"
       | "revokeRole"
       | "supportsInterface"
@@ -65,9 +61,6 @@ export interface ZetaConnectorBaseInterface extends Interface {
       | "unpause"
       | "updateTSSAddress"
       | "upgradeToAndCall"
-      | "withdraw"
-      | "withdrawAndCall"
-      | "withdrawAndRevert"
       | "zetaToken"
   ): FunctionFragment;
 
@@ -103,6 +96,10 @@ export interface ZetaConnectorBaseInterface extends Interface {
     functionFragment: "WITHDRAWER_ROLE",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "deposit",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "gateway", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getRoleAdmin",
@@ -125,10 +122,6 @@ export interface ZetaConnectorBaseInterface extends Interface {
   encodeFunctionData(
     functionFragment: "proxiableUUID",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "receiveTokens",
-    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceRole",
@@ -155,30 +148,6 @@ export interface ZetaConnectorBaseInterface extends Interface {
     functionFragment: "upgradeToAndCall",
     values: [AddressLike, BytesLike]
   ): string;
-  encodeFunctionData(
-    functionFragment: "withdraw",
-    values: [AddressLike, BigNumberish, BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "withdrawAndCall",
-    values: [
-      MessageContextStruct,
-      AddressLike,
-      BigNumberish,
-      BytesLike,
-      BytesLike
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "withdrawAndRevert",
-    values: [
-      AddressLike,
-      BigNumberish,
-      BytesLike,
-      BytesLike,
-      RevertContextStruct
-    ]
-  ): string;
   encodeFunctionData(functionFragment: "zetaToken", values?: undefined): string;
 
   decodeFunctionResult(
@@ -198,6 +167,7 @@ export interface ZetaConnectorBaseInterface extends Interface {
     functionFragment: "WITHDRAWER_ROLE",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "gateway", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getRoleAdmin",
@@ -210,10 +180,6 @@ export interface ZetaConnectorBaseInterface extends Interface {
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "proxiableUUID",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "receiveTokens",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -233,15 +199,6 @@ export interface ZetaConnectorBaseInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "upgradeToAndCall",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "withdrawAndCall",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "withdrawAndRevert",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "zetaToken", data: BytesLike): Result;
@@ -478,6 +435,8 @@ export interface ZetaConnectorBase extends BaseContract {
 
   WITHDRAWER_ROLE: TypedContractMethod<[], [string], "view">;
 
+  deposit: TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+
   gateway: TypedContractMethod<[], [string], "view">;
 
   getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], "view">;
@@ -510,12 +469,6 @@ export interface ZetaConnectorBase extends BaseContract {
   paused: TypedContractMethod<[], [boolean], "view">;
 
   proxiableUUID: TypedContractMethod<[], [string], "view">;
-
-  receiveTokens: TypedContractMethod<
-    [amount: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
 
   renounceRole: TypedContractMethod<
     [role: BytesLike, callerConfirmation: AddressLike],
@@ -551,36 +504,6 @@ export interface ZetaConnectorBase extends BaseContract {
     "payable"
   >;
 
-  withdraw: TypedContractMethod<
-    [to: AddressLike, amount: BigNumberish, internalSendHash: BytesLike],
-    [void],
-    "nonpayable"
-  >;
-
-  withdrawAndCall: TypedContractMethod<
-    [
-      messageContext: MessageContextStruct,
-      to: AddressLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      internalSendHash: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-
-  withdrawAndRevert: TypedContractMethod<
-    [
-      to: AddressLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      internalSendHash: BytesLike,
-      revertContext: RevertContextStruct
-    ],
-    [void],
-    "nonpayable"
-  >;
-
   zetaToken: TypedContractMethod<[], [string], "view">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
@@ -602,6 +525,9 @@ export interface ZetaConnectorBase extends BaseContract {
   getFunction(
     nameOrSignature: "WITHDRAWER_ROLE"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "deposit"
+  ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "gateway"
   ): TypedContractMethod<[], [string], "view">;
@@ -644,9 +570,6 @@ export interface ZetaConnectorBase extends BaseContract {
     nameOrSignature: "proxiableUUID"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "receiveTokens"
-  ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "renounceRole"
   ): TypedContractMethod<
     [role: BytesLike, callerConfirmation: AddressLike],
@@ -678,39 +601,6 @@ export interface ZetaConnectorBase extends BaseContract {
     [newImplementation: AddressLike, data: BytesLike],
     [void],
     "payable"
-  >;
-  getFunction(
-    nameOrSignature: "withdraw"
-  ): TypedContractMethod<
-    [to: AddressLike, amount: BigNumberish, internalSendHash: BytesLike],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "withdrawAndCall"
-  ): TypedContractMethod<
-    [
-      messageContext: MessageContextStruct,
-      to: AddressLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      internalSendHash: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "withdrawAndRevert"
-  ): TypedContractMethod<
-    [
-      to: AddressLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      internalSendHash: BytesLike,
-      revertContext: RevertContextStruct
-    ],
-    [void],
-    "nonpayable"
   >;
   getFunction(
     nameOrSignature: "zetaToken"
