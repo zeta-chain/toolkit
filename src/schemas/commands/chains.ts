@@ -15,8 +15,8 @@ export const chainsShowOptionsSchema = z
   .object({
     apiMainnet: z.string().default(DEFAULT_API_MAINNET_URL),
     apiTestnet: z.string().default(DEFAULT_API_TESTNET_URL),
-    chainName: z.string().optional(),
     chainId: z.string().optional(),
+    chainName: z.string().optional(),
     field: z.string().optional(),
     json: z.boolean().default(false),
   })
