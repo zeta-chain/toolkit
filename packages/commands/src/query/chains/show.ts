@@ -12,6 +12,7 @@ import {
 } from "../../../../../src/constants/api";
 import { chainsShowOptionsSchema } from "../../../../../src/schemas/commands/chains";
 import { ObserverSupportedChain } from "../../../../../types/supportedChains.types";
+import { getAPIbyChainId } from "../../../../../utils/solana.commands.helpers";
 import { fetchAllChainData } from "./list";
 
 type ChainsShowOptions = z.infer<typeof chainsShowOptionsSchema>;
@@ -36,6 +37,9 @@ const getFieldValue = (
     return confirmations || "";
   }
   if (field === "rpc") {
+    if (chain.chain_id === "900" || chain.chain_id === "901") {
+      return getAPIbyChainId(chain.chain_id);
+    }
     return viemChain?.rpcUrls?.default?.http?.[0] || "";
   }
   if (field === "explorer") {
@@ -110,8 +114,14 @@ const formatChainDetails = (
 
   // Add viem chain information if available
   if (viemChain) {
+    let rpcUrl = viemChain.rpcUrls?.default?.http?.[0] || "-";
+    // Check if this is a Solana chain and use getAPIbyChainId
+    if (chain.chain_id === "900" || chain.chain_id === "901") {
+      rpcUrl = getAPIbyChainId(chain.chain_id);
+    }
+
     baseDetails.push(
-      ["RPC URL", viemChain.rpcUrls?.default?.http?.[0] || "-"],
+      ["RPC URL", rpcUrl],
       ["Explorer", viemChain.blockExplorers?.default?.url || "-"]
     );
   }
