@@ -56,16 +56,6 @@ await zetachainCall(
 All Toolkit capabilities are also exposed through [`zetachain`
 CLI](https://github.com/zeta-chain/cli).
 
-## 🧑‍💻 Documentation
-
-Full API reference, architecture guides, and recipes live in the [docs
-site](docs/index.md).
-
-## 🤝 Contributing
-
-Issues and PRs are welcome! Please read the [contributing
-guide](CONTRIBUTING.md) before getting started.
-
 ## Functions
 
 ### evmCall()
@@ -130,7 +120,7 @@ Configuration options including signer and optional gateway address
 
 ###### signer
 
-`Wallet` = `...`
+`AbstractSigner`\<`null` \| `Provider`\> = `...`
 
 ###### txOptions?
 
@@ -218,7 +208,7 @@ Configuration options including signer and optional gateway address
 
 ###### signer
 
-`Wallet` = `...`
+`AbstractSigner`\<`null` \| `Provider`\> = `...`
 
 ###### txOptions?
 
@@ -315,7 +305,7 @@ Configuration options including signer and optional gateway address
 
 ###### signer
 
-`Wallet` = `...`
+`AbstractSigner`\<`null` \| `Provider`\> = `...`
 
 ###### txOptions?
 

@@ -21,11 +21,11 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install Foundry Dependencies
-        run: forge install foundry-rs/forge-std
-
       - name: Install Dependencies
         run: yarn install
+
+      - name: Run Soldeer
+        run: yarn soldeer
 
       - name: Build
         run: yarn build

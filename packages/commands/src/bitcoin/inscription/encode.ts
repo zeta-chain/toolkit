@@ -3,13 +3,13 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { formatEncodingChoices } from "../../../../../types/bitcoin.types";
-import { typesAndValuesLengthRefineRule } from "../../../../../types/shared.schema";
 import {
   bitcoinEncode,
   EncodingFormat,
   OpCode,
-} from "../../../../../utils/bitcoinEncode";
+} from "../../../../../src/chains/bitcoin/inscription/encode";
+import { formatEncodingChoices } from "../../../../../types/bitcoin.types";
+import { typesAndValuesLengthRefineRule } from "../../../../../types/shared.schema";
 import { trim0x } from "../../../../../utils/trim0x";
 
 const encodeOptionsSchema = z
