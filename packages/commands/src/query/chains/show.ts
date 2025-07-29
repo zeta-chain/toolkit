@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
 import { getBorderCharacters, table } from "table";
+import * as viemChains from "viem/chains";
 import { z } from "zod";
 
 import {
@@ -14,43 +15,34 @@ import { fetchAllChainData } from "./list";
 
 type ChainsShowOptions = z.infer<typeof chainsShowOptionsSchema>;
 
-const findChain = (
-  chains: ObserverSupportedChain[],
-  chain: string
-): ObserverSupportedChain | null => {
-  return (
-    chains.find(
-      (c) =>
-        // Only match by name (case-insensitive)
-        c.name.toLowerCase() === chain.toLowerCase()
-    ) || null
-  );
+// Helper function to convert field names to lowercase with underscores
+const toFieldName = (str: string): string => {
+  return str.toLowerCase().replace(/[^a-z0-9]/g, "_");
 };
 
-const formatChainDetails = (
-  chain: ObserverSupportedChain,
-  tokens: string[],
-  confirmations: string | undefined
-): string[][] => {
-  return [
-    ["Property", "Value"],
-    ["Chain ID", chain.chain_id],
-    ["Name", chain.name],
-    ["Network", chain.network],
-    ["Network Type", chain.network_type],
-    ["VM", chain.vm],
-    ["Consensus", chain.consensus],
-    ["External", chain.is_external ? "Yes" : "No"],
-    ["Gateway", chain.cctx_gateway],
-    ["Confirmations", confirmations || "-"],
-    ["Tokens", tokens.length ? tokens.join(", ") : "-"],
-  ];
-};
-
+// Helper function to get field value from chain or derived data
 const getFieldValue = (
   chain: ObserverSupportedChain,
-  field: string
+  field: string,
+  tokens: string[],
+  confirmations: string | undefined,
+  viemChain: any
 ): string => {
+  // Handle special derived fields
+  if (field === "tokens") {
+    return tokens.join(", ");
+  }
+  if (field === "confirmations") {
+    return confirmations || "";
+  }
+  if (field === "rpc") {
+    return viemChain?.rpcUrls?.default?.http?.[0] || "";
+  }
+  if (field === "explorer") {
+    return viemChain?.blockExplorers?.default?.url || "";
+  }
+
+  // Handle chain properties
   if (field in chain) {
     const value = chain[field as keyof ObserverSupportedChain];
     const stringValue = String(value);
@@ -65,11 +57,66 @@ const getFieldValue = (
     }
     return stringValue;
   }
+
+  // Try to match field name using the conversion function
+  const chainKeys = Object.keys(chain);
+  const matchingKey = chainKeys.find((key) => toFieldName(key) === field);
+
+  if (matchingKey) {
+    const value = chain[matchingKey as keyof ObserverSupportedChain];
+    const stringValue = String(value);
+    if (
+      !stringValue ||
+      stringValue.trim() === "" ||
+      stringValue === "null" ||
+      stringValue === "undefined" ||
+      stringValue === "N/A"
+    ) {
+      throw new Error(`Field '${field}' is empty for chain '${chain.name}'`);
+    }
+    return stringValue;
+  }
+
   throw new Error(
-    `Invalid field: ${field}. Available fields: ${Object.keys(chain)
-      .filter((k) => k !== "chain_name")
-      .join(", ")}`
+    `Invalid field: ${field}. Available fields: ${[
+      ...chainKeys.map((k) => toFieldName(k)),
+      "tokens",
+      "confirmations",
+      "rpc",
+      "explorer",
+    ].join(", ")}`
   );
+};
+
+const formatChainDetails = (
+  chain: ObserverSupportedChain,
+  tokens: string[],
+  confirmations: string | undefined,
+  viemChain: any
+): string[][] => {
+  const baseDetails = [
+    ["Property", "Value"],
+    ["Chain ID", chain.chain_id],
+    ["Name", chain.name],
+    ["Network", chain.network],
+    ["Network Type", chain.network_type],
+    ["VM", chain.vm],
+    ["Consensus", chain.consensus],
+    ["External", chain.is_external ? "Yes" : "No"],
+    ["Gateway", chain.cctx_gateway],
+    ["Confirmations", confirmations || "-"],
+    ["Tokens", tokens.length ? tokens.join(", ") : "-"],
+  ];
+
+  // Add viem chain information if available
+  if (viemChain) {
+    baseDetails.push(
+      ["RPC URL", viemChain.rpcUrls?.default?.http?.[0] || "-"],
+      ["Explorer", viemChain.blockExplorers?.default?.url || "-"]
+    );
+  }
+
+  return baseDetails;
 };
 
 const main = async (options: ChainsShowOptions) => {
@@ -79,13 +126,11 @@ const main = async (options: ChainsShowOptions) => {
       : ora("Fetching supported chains, tokens, and chain params...").start();
 
   try {
-    // Fetch data for both networks in parallel
     const [testnetData, mainnetData] = await Promise.all([
       fetchAllChainData(options.apiTestnet),
       fetchAllChainData(options.apiMainnet),
     ]);
 
-    // Merge results (simple concatenation – duplicates are unlikely across networks)
     const chains = [...testnetData.chains, ...mainnetData.chains];
     const allTokens = [...testnetData.tokens, ...mainnetData.tokens];
     const chainParams = [
@@ -99,7 +144,9 @@ const main = async (options: ChainsShowOptions) => {
       );
     }
 
-    const chain = findChain(chains, options.chain);
+    const chain = chains.find(
+      (c) => c.name.toLowerCase() === options.chain.toLowerCase()
+    );
 
     if (!chain) {
       if (options.field) {
@@ -121,29 +168,30 @@ const main = async (options: ChainsShowOptions) => {
       return;
     }
 
-    // Find tokens for this chain
     const tokens = allTokens
       .filter(
         (t: { foreign_chain_id: string }) =>
           t.foreign_chain_id === chain.chain_id
       )
       .map((t: { symbol: string }) => t.symbol);
-    // Find confirmations for this chain
     const confirmations = chainParams.find(
       (p: { chain_id: string }) => p.chain_id === chain.chain_id
     )?.confirmation_count;
 
+    const numericChainId = parseInt(chain.chain_id);
+    const viemChain = Object.values(viemChains).find(
+      (chain: any) => chain.id === numericChainId
+    );
+
     if (options.field) {
       try {
-        if (options.field === "tokens") {
-          console.log(tokens.join(", "));
-          return;
-        }
-        if (options.field === "confirmations") {
-          console.log(confirmations || "-");
-          return;
-        }
-        const value = getFieldValue(chain, options.field);
+        const value = getFieldValue(
+          chain,
+          options.field,
+          tokens,
+          confirmations,
+          viemChain
+        );
         console.log(value);
         return;
       } catch (error) {
@@ -159,7 +207,12 @@ const main = async (options: ChainsShowOptions) => {
       return;
     }
 
-    const tableData = formatChainDetails(chain, tokens, confirmations);
+    const tableData = formatChainDetails(
+      chain,
+      tokens,
+      confirmations,
+      viemChain
+    );
     const tableOutput = table(tableData, {
       border: getBorderCharacters("norc"),
       columns: {
