@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
 import { getBorderCharacters, table } from "table";
+import { Chain } from "viem";
 import * as viemChains from "viem/chains";
 import { z } from "zod";
 
@@ -20,13 +21,29 @@ const toFieldName = (str: string): string => {
   return str.toLowerCase().replace(/[^a-z0-9]/g, "_");
 };
 
+// Helper function to safely get RPC URL from viem chain
+const getRpcUrl = (viemChain: Chain | undefined): string => {
+  if (!viemChain?.rpcUrls?.default?.http?.[0]) {
+    return "";
+  }
+  return viemChain.rpcUrls.default.http[0];
+};
+
+// Helper function to safely get explorer URL from viem chain
+const getExplorerUrl = (viemChain: Chain | undefined): string => {
+  if (!viemChain?.blockExplorers?.default?.url) {
+    return "";
+  }
+  return viemChain.blockExplorers.default.url;
+};
+
 // Helper function to get field value from chain or derived data
 const getFieldValue = (
   chain: ObserverSupportedChain,
   field: string,
   tokens: string[],
   confirmations: string | undefined,
-  viemChain: any
+  viemChain: Chain | undefined
 ): string => {
   // Handle special derived fields
   if (field === "tokens") {
@@ -36,10 +53,10 @@ const getFieldValue = (
     return confirmations || "";
   }
   if (field === "rpc") {
-    return viemChain?.rpcUrls?.default?.http?.[0] || "";
+    return getRpcUrl(viemChain);
   }
   if (field === "explorer") {
-    return viemChain?.blockExplorers?.default?.url || "";
+    return getExplorerUrl(viemChain);
   }
 
   // Handle chain properties
@@ -92,7 +109,7 @@ const formatChainDetails = (
   chain: ObserverSupportedChain,
   tokens: string[],
   confirmations: string | undefined,
-  viemChain: any
+  viemChain: Chain | undefined
 ): string[][] => {
   const baseDetails = [
     ["Property", "Value"],
@@ -111,8 +128,8 @@ const formatChainDetails = (
   // Add viem chain information if available
   if (viemChain) {
     baseDetails.push(
-      ["RPC URL", viemChain.rpcUrls?.default?.http?.[0] || "-"],
-      ["Explorer", viemChain.blockExplorers?.default?.url || "-"]
+      ["RPC URL", getRpcUrl(viemChain) || "-"],
+      ["Explorer", getExplorerUrl(viemChain) || "-"]
     );
   }
 
@@ -180,7 +197,7 @@ const main = async (options: ChainsShowOptions) => {
 
     const numericChainId = parseInt(chain.chain_id);
     const viemChain = Object.values(viemChains).find(
-      (chain: any) => chain.id === numericChainId
+      (chain: Chain) => chain.id === numericChainId
     );
 
     if (options.field) {
