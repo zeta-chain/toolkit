@@ -268,10 +268,10 @@ export const showCommand = new Command("show")
     )
   )
   .addOption(
-    new Option("--chain -c <chain>", "Chain name").conflicts(["chain-id"])
+    new Option("--chain-name  <chain>", "Chain name").conflicts(["chain-id"])
   )
   .addOption(
-    new Option("--chain-id <chain-id>", "Chain ID").conflicts(["chain"])
+    new Option("-c, --chain-id <chain-id>", "Chain ID").conflicts(["chain"])
   )
   .addOption(
     new Option(
