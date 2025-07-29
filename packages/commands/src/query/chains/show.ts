@@ -13,6 +13,7 @@ import {
 import { chainsShowOptionsSchema } from "../../../../../src/schemas/commands/chains";
 import { ObserverSupportedChain } from "../../../../../types/supportedChains.types";
 import { getAPIbyChainId } from "../../../../../utils/solana.commands.helpers";
+import { getSuiRpcByChainId } from "../../../../../utils/sui";
 import { fetchAllChainData } from "./list";
 
 type ChainsShowOptions = z.infer<typeof chainsShowOptionsSchema>;
@@ -39,6 +40,10 @@ const getFieldValue = (
   if (field === "rpc") {
     if (chain.chain_id === "900" || chain.chain_id === "901") {
       return getAPIbyChainId(chain.chain_id);
+    }
+
+    if (chain.chain_id === "101" || chain.chain_id === "103") {
+      return getSuiRpcByChainId(chain.chain_id);
     }
     return viemChain?.rpcUrls?.default?.http?.[0] || "";
   }
@@ -118,6 +123,14 @@ const formatChainDetails = (
     // Check if this is a Solana chain and use getAPIbyChainId
     if (chain.chain_id === "900" || chain.chain_id === "901") {
       rpcUrl = getAPIbyChainId(chain.chain_id);
+    }
+    // Check if this is a Sui chain and use getSuiRpcByChainId
+    if (
+      chain.chain_id === "101" ||
+      chain.chain_id === "103" ||
+      chain.chain_id === "104"
+    ) {
+      rpcUrl = getSuiRpcByChainId(chain.chain_id);
     }
 
     baseDetails.push(
