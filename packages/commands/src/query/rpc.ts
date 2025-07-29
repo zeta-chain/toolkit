@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import { Command, Option } from "commander";
+import type { Chain } from "viem";
 import * as viemChains from "viem/chains";
 import { z } from "zod";
 
@@ -16,21 +17,16 @@ type RpcOptions = z.infer<typeof rpcOptionsSchema>;
  * Throws if the chain cannot be found or has no default HTTP RPC URL.
  */
 export const getRpcUrl = (chainId: number): string => {
-  const chain = Object.values(viemChains).find(
-    // Every chain export is an object with an `id` property. Filter out other
-    // unrelated exports (if any).
-    (c: unknown): c is { id: number; rpcUrls?: any } =>
-      typeof c === "object" &&
-      c !== null &&
-      "id" in c &&
-      (c as any).id === chainId
+  const chain = (Object.values(viemChains) as Chain[]).find(
+    (c): c is Chain =>
+      typeof c === "object" && c !== null && "id" in c && c.id === chainId
   );
 
   if (!chain) {
     throw new Error(`Chain with id ${chainId} not found in viem\x2fchains`);
   }
 
-  const urls: string[] | undefined = (chain as any).rpcUrls?.default?.http;
+  const urls = chain.rpcUrls?.default?.http;
   if (!urls || urls.length === 0) {
     throw new Error(`No default HTTP RPC URL defined for chain ${chainId}`);
   }
