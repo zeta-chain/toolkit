@@ -11,5 +11,4 @@ updates:
     allow:
       - dependency-name: "@zetachain/networks"
       - dependency-name: "@zetachain/protocol-contracts"
-      - dependency-name: "@zetachain/faucet-cli"
       - dependency-name: "@zetachain/addresses"
