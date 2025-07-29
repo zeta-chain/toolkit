@@ -16,25 +16,8 @@ import { fetchAllChainData } from "./list";
 
 type ChainsShowOptions = z.infer<typeof chainsShowOptionsSchema>;
 
-// Helper function to convert field names to lowercase with underscores
 const toFieldName = (str: string): string => {
   return str.toLowerCase().replace(/[^a-z0-9]/g, "_");
-};
-
-// Helper function to safely get RPC URL from viem chain
-const getRpcUrl = (viemChain: Chain | undefined): string => {
-  if (!viemChain?.rpcUrls?.default?.http?.[0]) {
-    return "";
-  }
-  return viemChain.rpcUrls.default.http[0];
-};
-
-// Helper function to safely get explorer URL from viem chain
-const getExplorerUrl = (viemChain: Chain | undefined): string => {
-  if (!viemChain?.blockExplorers?.default?.url) {
-    return "";
-  }
-  return viemChain.blockExplorers.default.url;
 };
 
 // Helper function to get field value from chain or derived data
@@ -53,10 +36,10 @@ const getFieldValue = (
     return confirmations || "";
   }
   if (field === "rpc") {
-    return getRpcUrl(viemChain);
+    return viemChain?.rpcUrls?.default?.http?.[0] || "";
   }
   if (field === "explorer") {
-    return getExplorerUrl(viemChain);
+    return viemChain?.blockExplorers?.default?.url || "";
   }
 
   // Handle chain properties
@@ -128,8 +111,8 @@ const formatChainDetails = (
   // Add viem chain information if available
   if (viemChain) {
     baseDetails.push(
-      ["RPC URL", getRpcUrl(viemChain) || "-"],
-      ["Explorer", getExplorerUrl(viemChain) || "-"]
+      ["RPC URL", viemChain.rpcUrls?.default?.http?.[0] || "-"],
+      ["Explorer", viemChain.blockExplorers?.default?.url || "-"]
     );
   }
 
