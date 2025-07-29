@@ -4,7 +4,10 @@ import ora from "ora";
 import { getBorderCharacters, table } from "table";
 import { z } from "zod";
 
-import { DEFAULT_API_URL } from "../../../../../src/constants/api";
+import {
+  DEFAULT_API_MAINNET_URL,
+  DEFAULT_API_TESTNET_URL,
+} from "../../../../../src/constants/api";
 import { chainsShowOptionsSchema } from "../../../../../src/schemas/commands/chains";
 import { ObserverSupportedChain } from "../../../../../types/supportedChains.types";
 import { fetchAllChainData } from "./list";
@@ -76,14 +79,23 @@ const main = async (options: ChainsShowOptions) => {
       : ora("Fetching supported chains, tokens, and chain params...").start();
 
   try {
-    const {
-      chains,
-      tokens: allTokens,
-      chainParams,
-    } = await fetchAllChainData(options.api);
+    // Fetch data for both networks in parallel
+    const [testnetData, mainnetData] = await Promise.all([
+      fetchAllChainData(options.apiTestnet),
+      fetchAllChainData(options.apiMainnet),
+    ]);
+
+    // Merge results (simple concatenation – duplicates are unlikely across networks)
+    const chains = [...testnetData.chains, ...mainnetData.chains];
+    const allTokens = [...testnetData.tokens, ...mainnetData.tokens];
+    const chainParams = [
+      ...testnetData.chainParams,
+      ...mainnetData.chainParams,
+    ];
+
     if (!options.json && !options.field) {
       spinner?.succeed(
-        `Successfully fetched ${chains.length} supported chains, ${allTokens.length} tokens, and ${chainParams.length} chain params`
+        `Successfully fetched ${chains.length} supported chains, ${allTokens.length} tokens, and ${chainParams.length} chain params (testnet + mainnet)`
       );
     }
 
@@ -175,7 +187,14 @@ export const showCommand = new Command("show")
     "Show detailed information for a specific chain (by chain_id or chain_name)"
   )
   .addOption(
-    new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
+    new Option("--api-testnet <url>", "Testnet API endpoint URL").default(
+      DEFAULT_API_TESTNET_URL
+    )
+  )
+  .addOption(
+    new Option("--api-mainnet <url>", "Mainnet API endpoint URL").default(
+      DEFAULT_API_MAINNET_URL
+    )
   )
   .addOption(
     new Option(
