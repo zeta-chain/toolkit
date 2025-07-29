@@ -11,13 +11,23 @@ export const chainsListOptionsSchema = z.object({
   json: z.boolean().default(false),
 });
 
-// For backwards-compatibility we still allow `--api`, but prefer the explicit
-// network-specific flags.
-export const chainsShowOptionsSchema = z.object({
-  api: z.string().default(DEFAULT_API_URL).optional(),
-  apiMainnet: z.string().default(DEFAULT_API_MAINNET_URL),
-  apiTestnet: z.string().default(DEFAULT_API_TESTNET_URL),
-  chain: z.string(),
-  field: z.string().optional(),
-  json: z.boolean().default(false), // can be chain_id or chain_name
-});
+export const chainsShowOptionsSchema = z
+  .object({
+    apiMainnet: z.string().default(DEFAULT_API_MAINNET_URL),
+    apiTestnet: z.string().default(DEFAULT_API_TESTNET_URL),
+    chainName: z.string().optional(),
+    chainId: z.string().optional(),
+    field: z.string().optional(),
+    json: z.boolean().default(false),
+  })
+  .refine(
+    (data) => {
+      const hasChain = !!data.chainName;
+      const hasChainId = !!data.chainId;
+      return (hasChain || hasChainId) && !(hasChain && hasChainId);
+    },
+    {
+      message:
+        "Either --chain-name or --chain-id must be provided, but not both",
+    }
+  );

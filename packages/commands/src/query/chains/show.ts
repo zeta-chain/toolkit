@@ -144,24 +144,42 @@ const main = async (options: ChainsShowOptions) => {
       );
     }
 
-    const chain = chains.find(
-      (c) => c.name.toLowerCase() === options.chain.toLowerCase()
-    );
+    let searchValue: string;
+    let searchByChainId = false;
+
+    if (options.chainId) {
+      searchValue = options.chainId;
+      searchByChainId = true;
+    } else if (options.chainName) {
+      searchValue = options.chainName;
+      searchByChainId = false;
+    } else {
+      throw new Error("Either --chain-name or --chain-id must be provided");
+    }
+
+    // Find chain by the appropriate criteria
+    const chain = chains.find((c) => {
+      if (searchByChainId) {
+        return c.chain_id === searchValue;
+      } else {
+        return c.name.toLowerCase() === searchValue.toLowerCase();
+      }
+    });
 
     if (!chain) {
       if (options.field) {
-        console.error(chalk.red(`Chain '${options.chain}' not found`));
+        console.error(chalk.red(`Chain '${searchValue}' not found`));
         console.log(chalk.yellow("Available chains:"));
         const available = chains
-          .map((c: ObserverSupportedChain) => c.name)
+          .map((c: ObserverSupportedChain) => `${c.name} (ID: ${c.chain_id})`)
           .sort();
         console.log(available.join(", "));
         process.exit(1);
       } else if (!options.json) {
-        spinner?.fail(`Chain '${options.chain}' not found`);
+        spinner?.fail(`Chain '${searchValue}' not found`);
         console.log(chalk.yellow("Available chains:"));
         const available = chains
-          .map((c: ObserverSupportedChain) => c.name)
+          .map((c: ObserverSupportedChain) => `${c.name} (ID: ${c.chain_id})`)
           .sort();
         console.log(available.join(", "));
       }
@@ -237,7 +255,7 @@ const main = async (options: ChainsShowOptions) => {
 export const showCommand = new Command("show")
   .alias("s")
   .description(
-    "Show detailed information for a specific chain (by chain_id or chain_name)"
+    "Show detailed information for a specific chain (by chain name or chain ID)"
   )
   .addOption(
     new Option("--api-testnet <url>", "Testnet API endpoint URL").default(
@@ -250,10 +268,10 @@ export const showCommand = new Command("show")
     )
   )
   .addOption(
-    new Option(
-      "--chain -c <chain>",
-      "Chain Name (case-insensitive)"
-    ).makeOptionMandatory()
+    new Option("--chain -c <chain>", "Chain name").conflicts(["chain-id"])
+  )
+  .addOption(
+    new Option("--chain-id <chain-id>", "Chain ID").conflicts(["chain"])
   )
   .addOption(
     new Option(
