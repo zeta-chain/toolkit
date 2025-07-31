@@ -39,9 +39,10 @@ export const getPools = async function (
 
   // Step 6: Format pools with token details
   const foreignCoins = await this.getForeignCoins();
-  return formatPoolsWithTokenDetails(
+  return await formatPoolsWithTokenDetails(
     pools,
     foreignCoins,
-    addresses.zetaTokenAddress
+    addresses.zetaTokenAddress,
+    provider
   );
 };
