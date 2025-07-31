@@ -10,7 +10,6 @@ export const contractsListOptionsSchema = z.object({
 
 export const contractsShowOptionsSchema = z.object({
   chainId: z.string(),
-  json: z.boolean().default(false),
   rpc: z.string().default(DEFAULT_EVM_RPC_URL),
   type: z.string(),
 });
