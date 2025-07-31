@@ -7,6 +7,12 @@ import { z } from "zod";
 import { DEFAULT_API_URL } from "../../../../../src/constants/api";
 import { chainsListOptionsSchema } from "../../../../../src/schemas/commands/chains";
 import {
+  ChainConfirmationMap,
+  ChainData,
+  ChainParams,
+  ChainTokenMap,
+} from "../../../../../types/chains.types";
+import {
   ForeignCoin,
   ForeignCoinsResponse,
 } from "../../../../../types/foreignCoins.types";
@@ -16,12 +22,18 @@ import {
 } from "../../../../../types/supportedChains.types";
 import { fetchFromApi } from "../../../../../utils/api";
 
-interface ChainParams {
-  chain_id: string;
-  confirmation_count: string;
-}
+const TABLE_CONFIG = {
+  border: getBorderCharacters("norc"),
+  columns: {
+    3: {
+      // Tokens column
+      width: 32,
+      wrapWord: true,
+    },
+  },
+} as const;
 
-export const fetchAllChainData = async (api: string) => {
+export const fetchAllChainData = async (api: string): Promise<ChainData> => {
   const [chainsData, tokensData, chainParamsData] = await Promise.all([
     fetchFromApi<ObserverSupportedChainsResponse>(
       api,
@@ -52,19 +64,22 @@ const formatChainsTable = (
   const headers = ["Chain ID", "Chain Name", "Count", "Tokens"];
 
   // Group tokens by foreign_chain_id
-  const tokensByChain: Record<string, string[]> = {};
-  for (const token of tokens) {
-    if (!tokensByChain[token.foreign_chain_id]) {
-      tokensByChain[token.foreign_chain_id] = [];
+  const tokensByChain: ChainTokenMap = tokens.reduce((acc, token) => {
+    if (!acc[token.foreign_chain_id]) {
+      acc[token.foreign_chain_id] = [];
     }
-    tokensByChain[token.foreign_chain_id].push(token.symbol);
-  }
+    acc[token.foreign_chain_id].push(token.symbol);
+    return acc;
+  }, {} as ChainTokenMap);
 
   // Map chain_id to confirmation_count
-  const confirmationByChain: Record<string, string> = {};
-  for (const param of chainParams) {
-    confirmationByChain[param.chain_id] = param.confirmation_count;
-  }
+  const confirmationByChain: ChainConfirmationMap = chainParams.reduce(
+    (acc, param) => {
+      acc[param.chain_id] = param.confirmation_count;
+      return acc;
+    },
+    {} as ChainConfirmationMap
+  );
 
   const rows = chains.map((chain) => [
     chain.chain_id,
@@ -106,26 +121,18 @@ const main = async (options: ChainsListOptions) => {
     }
 
     const tableData = formatChainsTable(chains, tokens, chainParams);
-    const tableOutput = table(tableData, {
-      border: getBorderCharacters("norc"),
-      columns: {
-        3: {
-          width: 32,
-          wrapWord: true,
-        },
-      },
-    });
+    const tableOutput = table(tableData, TABLE_CONFIG);
 
     console.log(tableOutput);
     console.log(`Note: Count refers to the number of confirmations required for a transaction
 from that connected chain to be observed`);
   } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     if (!options.json) {
-      spinner?.fail(
-        "Failed to fetch supported chains, tokens, or chain params"
-      );
+      spinner?.fail(`Failed to fetch chain data: ${errorMessage}`);
     }
-    console.error(chalk.red("Error details:"), error);
+    console.error(chalk.red("Error details:"), errorMessage);
   }
 };
 

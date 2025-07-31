@@ -11,6 +11,12 @@ import {
   DEFAULT_API_TESTNET_URL,
 } from "../../../../../src/constants/api";
 import { chainsShowOptionsSchema } from "../../../../../src/schemas/commands/chains";
+import {
+  SOLANA_CHAIN_IDS,
+  SolanaChainId,
+  SUI_CHAIN_IDS,
+  SuiChainId,
+} from "../../../../../types/chains.types";
 import { ObserverSupportedChain } from "../../../../../types/supportedChains.types";
 import { getAPIbyChainId } from "../../../../../utils/solana.commands.helpers";
 import { getSuiRpcByChainId } from "../../../../../utils/sui";
@@ -22,49 +28,80 @@ const toFieldName = (str: string): string => {
   return str.toLowerCase().replace(/[^a-z0-9]/g, "_");
 };
 
-// Helper function to get field value from chain or derived data
-const getFieldValue = (
+interface ChainInfo {
+  confirmations: string | undefined;
+  tokens: string[];
+  viemChain: Chain | undefined;
+}
+
+const isSolanaChainId = (chainId: string): chainId is SolanaChainId => {
+  return SOLANA_CHAIN_IDS.includes(chainId as SolanaChainId);
+};
+
+const isSuiChainId = (chainId: string): chainId is SuiChainId => {
+  return SUI_CHAIN_IDS.includes(chainId as SuiChainId);
+};
+
+const getRpcUrl = (
   chain: ObserverSupportedChain,
+  viemChain: Chain | undefined
+): string => {
+  if (isSolanaChainId(chain.chain_id)) {
+    return getAPIbyChainId(chain.chain_id);
+  }
+  if (isSuiChainId(chain.chain_id)) {
+    return getSuiRpcByChainId(chain.chain_id);
+  }
+  return viemChain?.rpcUrls?.default?.http?.[0] || "";
+};
+
+const getDerivedFieldValue = (
   field: string,
+  chain: ObserverSupportedChain,
   tokens: string[],
   confirmations: string | undefined,
   viemChain: Chain | undefined
+): string | null => {
+  switch (field) {
+    case "tokens":
+      return tokens.join(", ");
+    case "confirmations":
+      return confirmations || "";
+    case "rpc":
+      return getRpcUrl(chain, viemChain);
+    case "explorer":
+      return viemChain?.blockExplorers?.default?.url || "";
+    default:
+      return null;
+  }
+};
+
+const validateFieldValue = (
+  value: unknown,
+  field: string,
+  chainName: string
 ): string => {
-  // Handle special derived fields
-  if (field === "tokens") {
-    return tokens.join(", ");
+  const stringValue = String(value);
+  if (
+    !stringValue ||
+    stringValue.trim() === "" ||
+    stringValue === "null" ||
+    stringValue === "undefined" ||
+    stringValue === "N/A"
+  ) {
+    throw new Error(`Field '${field}' is empty for chain '${chainName}'`);
   }
-  if (field === "confirmations") {
-    return confirmations || "";
-  }
-  if (field === "rpc") {
-    if (chain.chain_id === "900" || chain.chain_id === "901") {
-      return getAPIbyChainId(chain.chain_id);
-    }
+  return stringValue;
+};
 
-    if (chain.chain_id === "101" || chain.chain_id === "103") {
-      return getSuiRpcByChainId(chain.chain_id);
-    }
-    return viemChain?.rpcUrls?.default?.http?.[0] || "";
-  }
-  if (field === "explorer") {
-    return viemChain?.blockExplorers?.default?.url || "";
-  }
-
-  // Handle chain properties
+const getChainPropertyValue = (
+  chain: ObserverSupportedChain,
+  field: string
+): string => {
+  // Handle direct chain properties
   if (field in chain) {
     const value = chain[field as keyof ObserverSupportedChain];
-    const stringValue = String(value);
-    if (
-      !stringValue ||
-      stringValue.trim() === "" ||
-      stringValue === "null" ||
-      stringValue === "undefined" ||
-      stringValue === "N/A"
-    ) {
-      throw new Error(`Field '${field}' is empty for chain '${chain.name}'`);
-    }
-    return stringValue;
+    return validateFieldValue(value, field, chain.name);
   }
 
   // Try to match field name using the conversion function
@@ -73,17 +110,7 @@ const getFieldValue = (
 
   if (matchingKey) {
     const value = chain[matchingKey as keyof ObserverSupportedChain];
-    const stringValue = String(value);
-    if (
-      !stringValue ||
-      stringValue.trim() === "" ||
-      stringValue === "null" ||
-      stringValue === "undefined" ||
-      stringValue === "N/A"
-    ) {
-      throw new Error(`Field '${field}' is empty for chain '${chain.name}'`);
-    }
-    return stringValue;
+    return validateFieldValue(value, field, chain.name);
   }
 
   throw new Error(
@@ -95,6 +122,49 @@ const getFieldValue = (
       "explorer",
     ].join(", ")}`
   );
+};
+
+// Helper function to get field value from chain or derived data
+const getFieldValue = (
+  chain: ObserverSupportedChain,
+  field: string,
+  tokens: string[],
+  confirmations: string | undefined,
+  viemChain: Chain | undefined
+): string => {
+  // Try derived fields first
+  const derivedValue = getDerivedFieldValue(
+    field,
+    chain,
+    tokens,
+    confirmations,
+    viemChain
+  );
+  if (derivedValue !== null) return derivedValue;
+
+  // Handle chain properties
+  return getChainPropertyValue(chain, field);
+};
+
+const getChainInfo = (
+  chain: ObserverSupportedChain,
+  allTokens: Array<{ foreign_chain_id: string; symbol: string }>,
+  chainParams: Array<{ chain_id: string; confirmation_count: string }>
+): ChainInfo => {
+  const tokens = allTokens
+    .filter((t) => t.foreign_chain_id === chain.chain_id)
+    .map((t) => t.symbol);
+
+  const confirmations = chainParams.find(
+    (p) => p.chain_id === chain.chain_id
+  )?.confirmation_count;
+
+  const numericChainId = parseInt(chain.chain_id);
+  const viemChain = Object.values(viemChains).find(
+    (c: Chain) => c.id === numericChainId
+  );
+
+  return { confirmations, tokens, viemChain };
 };
 
 const formatChainDetails = (
@@ -119,27 +189,36 @@ const formatChainDetails = (
 
   // Add viem chain information if available
   if (viemChain) {
-    let rpcUrl = viemChain.rpcUrls?.default?.http?.[0] || "-";
-    // Check if this is a Solana chain and use getAPIbyChainId
-    if (chain.chain_id === "900" || chain.chain_id === "901") {
-      rpcUrl = getAPIbyChainId(chain.chain_id);
-    }
-    // Check if this is a Sui chain and use getSuiRpcByChainId
-    if (
-      chain.chain_id === "101" ||
-      chain.chain_id === "103" ||
-      chain.chain_id === "104"
-    ) {
-      rpcUrl = getSuiRpcByChainId(chain.chain_id);
-    }
-
+    const rpcUrl = getRpcUrl(chain, viemChain);
     baseDetails.push(
-      ["RPC URL", rpcUrl],
+      ["RPC URL", rpcUrl || "-"],
       ["Explorer", viemChain.blockExplorers?.default?.url || "-"]
     );
   }
 
   return baseDetails;
+};
+
+const handleChainNotFound = (
+  searchValue: string,
+  chains: ObserverSupportedChain[],
+  options: ChainsShowOptions,
+  spinner: ReturnType<typeof ora> | null
+): void => {
+  const availableChains = chains
+    .map((c) => `${c.name} (ID: ${c.chain_id})`)
+    .sort();
+
+  if (options.field) {
+    console.error(chalk.red(`Chain '${searchValue}' not found`));
+    console.log(chalk.yellow("Available chains:"));
+    console.log(availableChains.join(", "));
+    process.exit(1);
+  } else if (!options.json) {
+    spinner?.fail(`Chain '${searchValue}' not found`);
+    console.log(chalk.yellow("Available chains:"));
+    console.log(availableChains.join(", "));
+  }
 };
 
 const main = async (options: ChainsShowOptions) => {
@@ -190,38 +269,14 @@ const main = async (options: ChainsShowOptions) => {
     });
 
     if (!chain) {
-      if (options.field) {
-        console.error(chalk.red(`Chain '${searchValue}' not found`));
-        console.log(chalk.yellow("Available chains:"));
-        const available = chains
-          .map((c: ObserverSupportedChain) => `${c.name} (ID: ${c.chain_id})`)
-          .sort();
-        console.log(available.join(", "));
-        process.exit(1);
-      } else if (!options.json) {
-        spinner?.fail(`Chain '${searchValue}' not found`);
-        console.log(chalk.yellow("Available chains:"));
-        const available = chains
-          .map((c: ObserverSupportedChain) => `${c.name} (ID: ${c.chain_id})`)
-          .sort();
-        console.log(available.join(", "));
-      }
+      handleChainNotFound(searchValue, chains, options, spinner);
       return;
     }
 
-    const tokens = allTokens
-      .filter(
-        (t: { foreign_chain_id: string }) =>
-          t.foreign_chain_id === chain.chain_id
-      )
-      .map((t: { symbol: string }) => t.symbol);
-    const confirmations = chainParams.find(
-      (p: { chain_id: string }) => p.chain_id === chain.chain_id
-    )?.confirmation_count;
-
-    const numericChainId = parseInt(chain.chain_id);
-    const viemChain = Object.values(viemChains).find(
-      (chain: Chain) => chain.id === numericChainId
+    const { tokens, confirmations, viemChain } = getChainInfo(
+      chain,
+      allTokens,
+      chainParams
     );
 
     if (options.field) {
@@ -266,12 +321,12 @@ const main = async (options: ChainsShowOptions) => {
 
     console.log(tableOutput);
   } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     if (!options.json && !options.field) {
-      spinner?.fail(
-        "Failed to fetch supported chains, tokens, or chain params"
-      );
-      console.error(chalk.red("Error details:"), error);
+      spinner?.fail(`Failed to fetch chain data: ${errorMessage}`);
     }
+    console.error(chalk.red("Error details:"), errorMessage);
   }
 };
 
