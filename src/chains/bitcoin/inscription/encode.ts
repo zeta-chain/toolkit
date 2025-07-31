@@ -1,13 +1,10 @@
 import { ethers } from "ethers";
 
-// Define types
 export type Address = string;
 export type BtcAddress = string;
 
-// Memo identifier byte
 const MemoIdentifier = 0x5a;
 
-// Enums
 export enum OpCode {
   Call = 0b0010,
   Deposit = 0b0000,
@@ -21,7 +18,6 @@ export enum EncodingFormat {
   CompactShort = 0b0001,
 }
 
-// Header Class
 class Header {
   encodingFmt: EncodingFormat;
   opCode: OpCode;
@@ -32,7 +28,6 @@ class Header {
   }
 }
 
-// FieldsV0 Class
 class FieldsV0 {
   receiver: Address;
   payload: Buffer;

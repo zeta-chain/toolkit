@@ -36,7 +36,9 @@ export const getAddress = (
   return address.address;
 };
 
-export const getGatewayAddressFromSigner = async (signer: ethers.Wallet) => {
+export const getGatewayAddressFromSigner = async (
+  signer: ethers.AbstractSigner
+) => {
   const provider = signer.provider;
   if (!provider) {
     throw new Error("Signer does not have a valid provider");

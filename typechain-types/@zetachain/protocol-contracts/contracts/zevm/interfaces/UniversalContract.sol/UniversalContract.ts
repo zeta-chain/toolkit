@@ -34,14 +34,35 @@ export type MessageContextStructOutput = [
 ] & { sender: string; senderEVM: string; chainID: bigint };
 
 export interface UniversalContractInterface extends Interface {
-  getFunction(nameOrSignature: "onCall"): FunctionFragment;
+  getFunction(
+    nameOrSignature:
+      | "gateway"
+      | "onCall((bytes,address,uint256),address,uint256,bytes)"
+      | "onCall((bytes,address,uint256),bytes)"
+      | "registry"
+  ): FunctionFragment;
 
+  encodeFunctionData(functionFragment: "gateway", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "onCall",
+    functionFragment: "onCall((bytes,address,uint256),address,uint256,bytes)",
     values: [MessageContextStruct, AddressLike, BigNumberish, BytesLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "onCall((bytes,address,uint256),bytes)",
+    values: [MessageContextStruct, BytesLike]
+  ): string;
+  encodeFunctionData(functionFragment: "registry", values?: undefined): string;
 
-  decodeFunctionResult(functionFragment: "onCall", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "gateway", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "onCall((bytes,address,uint256),address,uint256,bytes)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "onCall((bytes,address,uint256),bytes)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "registry", data: BytesLike): Result;
 }
 
 export interface UniversalContract extends BaseContract {
@@ -87,7 +108,9 @@ export interface UniversalContract extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  onCall: TypedContractMethod<
+  gateway: TypedContractMethod<[], [string], "view">;
+
+  "onCall((bytes,address,uint256),address,uint256,bytes)": TypedContractMethod<
     [
       context: MessageContextStruct,
       zrc20: AddressLike,
@@ -98,12 +121,23 @@ export interface UniversalContract extends BaseContract {
     "nonpayable"
   >;
 
+  "onCall((bytes,address,uint256),bytes)": TypedContractMethod<
+    [context: MessageContextStruct, message: BytesLike],
+    [void],
+    "payable"
+  >;
+
+  registry: TypedContractMethod<[], [string], "view">;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
   getFunction(
-    nameOrSignature: "onCall"
+    nameOrSignature: "gateway"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "onCall((bytes,address,uint256),address,uint256,bytes)"
   ): TypedContractMethod<
     [
       context: MessageContextStruct,
@@ -114,6 +148,16 @@ export interface UniversalContract extends BaseContract {
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "onCall((bytes,address,uint256),bytes)"
+  ): TypedContractMethod<
+    [context: MessageContextStruct, message: BytesLike],
+    [void],
+    "payable"
+  >;
+  getFunction(
+    nameOrSignature: "registry"
+  ): TypedContractMethod<[], [string], "view">;
 
   filters: {};
 }

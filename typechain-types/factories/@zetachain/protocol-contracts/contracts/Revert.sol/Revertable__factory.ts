@@ -41,7 +41,7 @@ const _abi = [
     ],
     name: "onRevert",
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
     type: "function",
   },
 ] as const;
