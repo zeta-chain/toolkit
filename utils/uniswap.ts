@@ -304,8 +304,6 @@ export const formatPoolsWithTokenDetails = async (
     return acc;
   }, {} as Zrc20Details);
 
-  const zetaAddressLower = zetaTokenAddress.toLowerCase();
-
   const poolsWithBasicDetails = pools.map((pool) => {
     const t0AddressLower = pool.t0.address.toLowerCase();
     const t1AddressLower = pool.t1.address.toLowerCase();

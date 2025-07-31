@@ -1,7 +1,7 @@
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import { Command } from "commander";
-import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
+import { Contract, JsonRpcProvider, Wallet } from "ethers";
 
 import {
   DEFAULT_FACTORY,
@@ -31,7 +31,7 @@ const main = async (raw: ShowLiquidityOptions) => {
     const fac = new Contract(DEFAULT_FACTORY, UniswapV3Factory.abi, provider);
 
     /* ─── 3. Enumerate NFTs ──────────────────────────────────────────────── */
-    const bal = await pm.balanceOf(addr);
+    const bal = (await pm.balanceOf(addr)) as bigint;
     if (bal === 0n) {
       console.log("No liquidity positions found for", addr);
       return;
@@ -39,8 +39,17 @@ const main = async (raw: ShowLiquidityOptions) => {
     console.log(`\n${bal.toString()} Uniswap V3 position(s) for ${addr}\n`);
 
     for (let i = 0n; i < bal; i++) {
-      const id = await pm.tokenOfOwnerByIndex(addr, i);
-      const pos = await pm.positions(id);
+      const id = (await pm.tokenOfOwnerByIndex(addr, i)) as bigint;
+      const pos = (await pm.positions(id)) as {
+        fee: bigint;
+        liquidity: bigint;
+        tickLower: bigint;
+        tickUpper: bigint;
+        token0: string;
+        token1: string;
+        tokensOwed0: bigint;
+        tokensOwed1: bigint;
+      };
 
       const [
         token0,
@@ -64,7 +73,7 @@ const main = async (raw: ShowLiquidityOptions) => {
 
       /* symbols (fail-safe to address if call reverts) */
       const [sym0, sym1] = await Promise.all(
-        [token0, token1].map(async (t) => {
+        [token0, token1].map(async (t: string) => {
           try {
             return await IERC20Metadata__factory.connect(t, provider).symbol();
           } catch {
@@ -74,15 +83,19 @@ const main = async (raw: ShowLiquidityOptions) => {
       );
 
       /* derive pool address (handy for UI links / debugging) */
-      const pool = await fac.getPool(token0, token1, fee);
+      const pool = (await fac.getPool(token0, token1, fee)) as string;
 
       console.log(`• NFT #${id.toString()}`);
       console.log(`  Pool      : ${pool}`);
       console.log(`  Pair      : ${sym0}/${sym1}`);
       console.log(`  Fee Tier  : ${Number(fee) / 1e4}%`);
-      console.log(`  Ticks     : [${tickLower}, ${tickUpper}]`);
+      console.log(
+        `  Ticks     : [${tickLower.toString()}, ${tickUpper.toString()}]`
+      );
       console.log(`  Liquidity : ${liquidity.toString()}`);
-      console.log(`  Owed0/Owed1: ${tokensOwed0} / ${tokensOwed1}`);
+      console.log(
+        `  Owed0/Owed1: ${tokensOwed0.toString()} / ${tokensOwed1.toString()}`
+      );
       console.log("");
     }
   } catch (e) {

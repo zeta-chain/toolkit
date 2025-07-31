@@ -4,7 +4,13 @@
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as UniswapV3Pool from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json";
 import { Command } from "commander";
-import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
+import {
+  Contract,
+  ContractTransactionResponse,
+  ethers,
+  JsonRpcProvider,
+  Wallet,
+} from "ethers";
 
 import {
   DEFAULT_FACTORY,
@@ -19,9 +25,7 @@ import {
 } from "../../../../../types/pools";
 
 /* ─── helpers ---------------------------------------------------- */
-const SCALE = 1_000_000_000_000_000_000n; // 1e18
-const TWO_192 = 1n << 192n;
-function sqrtBig(n: bigint): bigint {
+const sqrtBig = (n: bigint): bigint => {
   // integer √
   if (n < 2n) return n;
   let x = n,
@@ -31,15 +35,16 @@ function sqrtBig(n: bigint): bigint {
     y = (x + n / x) >> 1n;
   }
   return x;
-}
+};
+
 /** sqrtPriceX96 = √(price₁ / price₀) × 2⁹⁶   (token1/token0) */
-function buildSqrtPriceX96(
+const buildSqrtPriceX96 = (
   usd0: number,
   usd1: number,
   dec0: number,
   dec1: number,
   cliToken0: boolean
-): bigint {
+): bigint => {
   // USD prices mapped to factory order
   const pTok0 = BigInt(Math.round((cliToken0 ? usd0 : usd1) * 1e18));
   const pTok1 = BigInt(Math.round((cliToken0 ? usd1 : usd0) * 1e18));
@@ -52,7 +57,7 @@ function buildSqrtPriceX96(
 
   /* integer √ → Q64.96 */
   return sqrtBig(ratioX192);
-}
+};
 
 /* ─── main ------------------------------------------------------- */
 const main = async (raw: CreatePoolOptions) => {
@@ -70,25 +75,25 @@ const main = async (raw: CreatePoolOptions) => {
       signer
     );
 
-    let poolAddr = await factory.getPool(
+    let poolAddr = (await factory.getPool(
       o.tokens[0],
       o.tokens[1],
       o.fee ?? DEFAULT_FEE
-    );
+    )) as string;
 
     if (poolAddr === ethers.ZeroAddress) {
       console.log("Creating pool …");
-      const tx = await factory.createPool(
+      const tx = (await factory.createPool(
         o.tokens[0],
         o.tokens[1],
         o.fee ?? DEFAULT_FEE
-      );
+      )) as ContractTransactionResponse;
       await tx.wait();
-      poolAddr = await factory.getPool(
+      poolAddr = (await factory.getPool(
         o.tokens[0],
         o.tokens[1],
         o.fee ?? DEFAULT_FEE
-      );
+      )) as string;
       console.log("✦ createPool tx:", tx.hash);
     } else {
       console.log("Pool already exists:", poolAddr);
@@ -96,7 +101,10 @@ const main = async (raw: CreatePoolOptions) => {
 
     /* pool contract -------------------------------------------- */
     const pool = new Contract(poolAddr, UniswapV3Pool.abi, signer);
-    const [token0, token1] = await Promise.all([pool.token0(), pool.token1()]);
+    const [token0, token1] = await Promise.all([
+      pool.token0() as Promise<string>,
+      pool.token1() as Promise<string>,
+    ]);
     const [dec0, dec1] = await Promise.all([
       IERC20Metadata__factory.connect(token0, provider).decimals(),
       IERC20Metadata__factory.connect(token1, provider).decimals(),
@@ -115,7 +123,7 @@ const main = async (raw: CreatePoolOptions) => {
     /* check if initialised ------------------------------------- */
     let needInit = false;
     try {
-      const slot0 = await pool.slot0();
+      const slot0 = (await pool.slot0()) as { sqrtPriceX96: bigint };
       needInit = slot0.sqrtPriceX96 === 0n;
     } catch {
       needInit = true; // slot0() reverted → not initialised
@@ -123,7 +131,9 @@ const main = async (raw: CreatePoolOptions) => {
 
     if (needInit) {
       console.log("Initialising pool …");
-      const tx = await pool.initialize(sqrtPriceX96);
+      const tx = (await pool.initialize(
+        sqrtPriceX96
+      )) as ContractTransactionResponse;
       await tx.wait();
       console.log("✓ Pool initialised (tx:", tx.hash, ")");
     } else {
