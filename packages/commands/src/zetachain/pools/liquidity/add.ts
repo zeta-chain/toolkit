@@ -1,8 +1,27 @@
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import { Command } from "commander";
-import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
+import {
+  Contract,
+  ContractTransactionReceipt,
+  ContractTransactionResponse,
+  ethers,
+  JsonRpcProvider,
+  Log,
+  Wallet,
+} from "ethers";
 import inquirer from "inquirer";
+
+// Type definitions for better type safety
+type Slot0Result = {
+  feeProtocol: number;
+  observationCardinality: number;
+  observationCardinalityNext: number;
+  observationIndex: number;
+  sqrtPriceX96: bigint;
+  tick: bigint;
+  unlocked: boolean;
+};
 
 import {
   DEFAULT_FACTORY,
@@ -39,7 +58,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     );
 
     /**
-     * 4. Locate (or verify) the pool — order agnostic
+     * 4. Locate (or verify) the pool — order agnostic
      */
     const factory = new Contract(
       DEFAULT_FACTORY,
@@ -60,7 +79,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     }
 
     /**
-     * 5. Read canonical token ordering from the pool
+     * 5. Read canonical token ordering and current state from the pool
      */
     const pool = new Contract(
       poolAddress,
@@ -68,12 +87,17 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
         "function token0() view returns (address)",
         "function token1() view returns (address)",
         "function tickSpacing() view returns (int24)",
+        "function liquidity() view returns (uint128)",
+        "function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)",
       ],
       provider
     );
-    const poolToken0 = ethers.getAddress(await pool.token0());
-    const poolToken1 = ethers.getAddress(await pool.token1());
-    const tickSpacing = Number(await pool.tickSpacing());
+
+    const poolToken0 = ethers.getAddress((await pool.token0()) as string);
+    const poolToken1 = ethers.getAddress((await pool.token1()) as string);
+    const tickSpacing = Number((await pool.tickSpacing()) as bigint);
+    const slot0 = (await pool.slot0()) as Slot0Result;
+    const currentTick = Number(slot0.tick);
 
     /**
      * 6. Build token helpers (decimals, symbol, balances, approve)
@@ -97,14 +121,14 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     };
 
     const [decA, symA] = await Promise.all([
-      getTokenContract(inputTokenA).decimals(),
-      getTokenContract(inputTokenA).symbol(),
-    ]).then(([d, s]) => [Number(d), s as string]);
+      getTokenContract(inputTokenA).decimals() as Promise<bigint>,
+      getTokenContract(inputTokenA).symbol() as Promise<string>,
+    ]).then(([d, s]) => [Number(d), s]);
 
     const [decB, symB] = await Promise.all([
-      getTokenContract(inputTokenB).decimals(),
-      getTokenContract(inputTokenB).symbol(),
-    ]).then(([d, s]) => [Number(d), s as string]);
+      getTokenContract(inputTokenB).decimals() as Promise<bigint>,
+      getTokenContract(inputTokenB).symbol() as Promise<string>,
+    ]).then(([d, s]) => [Number(d), s]);
 
     /**
      * 7. Parse user-entered amounts (aligned with the order the user typed)
@@ -158,20 +182,91 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     }
 
     /**
-     * 10. Tick range sanity & alignment
+     * 10. Smart tick range calculation and validation
      */
+    let tickLower: number;
+    let tickUpper: number;
+
     if (!validatedOptions.tickLower || !validatedOptions.tickUpper) {
-      throw new Error("tickLower and tickUpper must be provided");
+      console.log(
+        "\n⚠️  No tick range specified. Calculating default range..."
+      );
+
+      // Use a moderate range around current price
+      const rangeWidth = 600; // Reasonable default range
+      const rawLower = currentTick - rangeWidth;
+      const rawUpper = currentTick + rangeWidth;
+
+      tickLower = Math.floor(rawLower / tickSpacing) * tickSpacing;
+      tickUpper = Math.ceil(rawUpper / tickSpacing) * tickSpacing;
+
+      console.log(
+        `✅ Using range: [${tickLower}, ${tickUpper}] (${
+          tickUpper - tickLower
+        } ticks)`
+      );
+      console.log(`   Current tick: ${currentTick}`);
+    } else {
+      const rawLower = Number(validatedOptions.tickLower);
+      const rawUpper = Number(validatedOptions.tickUpper);
+
+      tickLower = Math.floor(rawLower / tickSpacing) * tickSpacing;
+      tickUpper = Math.floor(rawUpper / tickSpacing) * tickSpacing;
+
+      // Validate user-provided range
+      const rangeTicks = tickUpper - tickLower;
+      const priceRangeFactor = Math.pow(1.0001, rangeTicks);
+
+      if (priceRangeFactor > 10) {
+        console.log(`\n🚨 WARNING: Extremely wide tick range detected!`);
+        console.log(
+          `   Range: [${tickLower}, ${tickUpper}] (${rangeTicks} ticks)`
+        );
+        console.log(`   Price range factor: ${priceRangeFactor.toFixed(2)}x`);
+        console.log(`   This will heavily favor one token over the other!`);
+        console.log(
+          `   Consider using a smaller range around current tick: ${currentTick}\n`
+        );
+
+        if (validatedOptions.yes) {
+          console.log("Proceeding with wide range (--yes flag set)");
+        } else {
+          const { continueAnyway } = (await inquirer.prompt([
+            {
+              default: false,
+              message: "Continue with this wide range anyway?",
+              name: "continueAnyway",
+              type: "confirm",
+            },
+          ])) as { continueAnyway: boolean };
+
+          if (!continueAnyway) {
+            console.log("Cancelled. Please specify a narrower tick range.");
+            return;
+          }
+        }
+      }
     }
-
-    const rawLower = Number(validatedOptions.tickLower);
-    const rawUpper = Number(validatedOptions.tickUpper);
-
-    const tickLower = Math.floor(rawLower / tickSpacing) * tickSpacing;
-    const tickUpper = Math.floor(rawUpper / tickSpacing) * tickSpacing;
 
     if (tickLower >= tickUpper) {
       throw new Error("tickLower must be smaller than tickUpper");
+    }
+
+    // Check for low liquidity and warn user
+    const poolLiquidity = (await pool.liquidity()) as bigint;
+    const liquidityAmount = Number(poolLiquidity);
+
+    if (liquidityAmount < 1000) {
+      console.log(
+        `\n⚠️  WARNING: This pool has very low liquidity (${liquidityAmount} units)`
+      );
+      console.log(
+        `   • Token ratios may be heavily skewed until more liquidity is added`
+      );
+      console.log(
+        `   • Your position will still earn fees and can be withdrawn later`
+      );
+      console.log(`   • Consider this normal for new/empty pools\n`);
     }
 
     /**
@@ -197,42 +292,49 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log(`Tick range:  [${tickLower}, ${tickUpper}]`);
     console.log(`Recipient:   ${recipient}`);
 
-    const { confirm } = await inquirer.prompt([
-      { message: "Proceed?", name: "confirm", type: "confirm" },
-    ]);
-    if (!confirm) {
-      console.log("Cancelled by user");
-      return;
+    if (validatedOptions.yes) {
+      console.log("Proceeding with transaction (--yes flag set)");
+    } else {
+      const { confirm } = (await inquirer.prompt([
+        { message: "Proceed?", name: "confirm", type: "confirm" },
+      ])) as { confirm: boolean };
+      if (!confirm) {
+        console.log("Cancelled by user");
+        return;
+      }
     }
 
     /**
      * 12. Approvals
      */
     console.log("Approving tokens...");
-    const approve0Tx = await getTokenContract(finalToken0).approve(
+    const approve0Tx = (await getTokenContract(finalToken0).approve(
       DEFAULT_POSITION_MANAGER,
       finalAmount0
-    );
-    const approve1Tx = await getTokenContract(finalToken1).approve(
+    )) as ContractTransactionResponse;
+    const approve1Tx = (await getTokenContract(finalToken1).approve(
       DEFAULT_POSITION_MANAGER,
       finalAmount1
-    );
+    )) as ContractTransactionResponse;
     await Promise.all([approve0Tx.wait(), approve1Tx.wait()]);
     console.log("Tokens approved");
 
     /**
-     * 13. Mint
+     * 13. Set minimum amounts and mint position
      */
+    const amount0Min = 1n; // Minimal slippage protection
+    const amount1Min = 1n; // Minimal slippage protection
+
     const params: MintParams = {
       amount0Desired: finalAmount0,
-      amount0Min: 0n,
+      amount0Min,
       amount1Desired: finalAmount1,
-      amount1Min: 0n,
+      amount1Min,
       deadline: Math.floor(Date.now() / 1000) + 60 * 20,
-      fee,
+      fee: BigInt(fee),
       recipient,
-      tickLower,
-      tickUpper,
+      tickLower: BigInt(tickLower),
+      tickUpper: BigInt(tickUpper),
       token0: finalToken0,
       token1: finalToken1,
     };
@@ -244,8 +346,10 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     );
 
     console.log("Minting position...");
-    const mintTx = await positionManager.mint(params);
-    const receipt = await mintTx.wait();
+    const mintTx = (await positionManager.mint(
+      params
+    )) as ContractTransactionResponse;
+    const receipt = (await mintTx.wait()) as ContractTransactionReceipt;
 
     /**
      * 14. Extract NFT token ID from Transfer event
@@ -261,7 +365,8 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     });
 
     const tokenId = transferLog
-      ? iface.parseLog(transferLog)?.args[2] ?? "<unknown>"
+      ? (iface.parseLog(transferLog as Log)?.args?.[2] as bigint)?.toString() ??
+        "<unknown>"
       : "<unknown>";
 
     console.log("\nLiquidity added successfully!");
@@ -275,12 +380,22 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
 
 export const addCommand = new Command("add")
   .summary("Add liquidity to a Uniswap V3 pool")
+  .description(
+    "Add liquidity to a Uniswap V3 pool. If tick range is not specified, a reasonable default range around the current price will be calculated automatically."
+  )
   .requiredOption("--private-key <pk>", "Private key")
   .requiredOption("--tokens <tokens...>", "Token addresses (2)")
   .requiredOption("--amounts <amounts...>", "Token amounts (2)")
   .option("--rpc <url>", "JSON-RPC endpoint", DEFAULT_RPC)
-  .option("--tick-lower <tick>", "Lower tick")
-  .option("--tick-upper <tick>", "Upper tick")
+  .option(
+    "--tick-lower <tick>",
+    "Lower tick (optional, auto-calculated if not provided)"
+  )
+  .option(
+    "--tick-upper <tick>",
+    "Upper tick (optional, auto-calculated if not provided)"
+  )
   .option("--fee <fee>", "Fee tier", "3000")
   .option("--recipient <address>", "Recipient address")
+  .option("--yes", "Skip confirmation prompts", false)
   .action(main);

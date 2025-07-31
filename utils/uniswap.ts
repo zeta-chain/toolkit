@@ -304,24 +304,15 @@ export const formatPoolsWithTokenDetails = async (
     return acc;
   }, {} as Zrc20Details);
 
-  // ZETA token details
-  const zetaDetails = { decimals: 18, symbol: "WZETA" };
   const zetaAddressLower = zetaTokenAddress.toLowerCase();
 
   const poolsWithBasicDetails = pools.map((pool) => {
     const t0AddressLower = pool.t0.address.toLowerCase();
     const t1AddressLower = pool.t1.address.toLowerCase();
 
-    // Get token details, prioritizing ZRC20 details and falling back to ZETA if it's the ZETA token
-    const t0Details =
-      t0AddressLower === zetaAddressLower
-        ? zetaDetails
-        : zrc20Details[t0AddressLower];
-
-    const t1Details =
-      t1AddressLower === zetaAddressLower
-        ? zetaDetails
-        : zrc20Details[t1AddressLower];
+    // Get token details from the ZRC20 details mapping
+    const t0Details = zrc20Details[t0AddressLower];
+    const t1Details = zrc20Details[t1AddressLower];
 
     return {
       ...pool,

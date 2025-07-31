@@ -14,10 +14,10 @@ export interface MintParams {
   amount1Desired: bigint;
   amount1Min: bigint;
   deadline: number;
-  fee: number;
+  fee: bigint;
   recipient: string;
-  tickLower: number;
-  tickUpper: number;
+  tickLower: bigint;
+  tickUpper: bigint;
   token0: string;
   token1: string;
 }
@@ -59,19 +59,20 @@ export const showPoolOptionsSchema = z.object({
 
 export const addLiquidityOptionsSchema = z.object({
   amounts: z.array(z.string()).min(2).max(2),
-  fee: z.string().default("500"),
+  fee: z.string().default("3000"),
   privateKey: z.string(),
   recipient: z.string().optional(),
   rpc: z.string().default(DEFAULT_RPC),
   tickLower: z
     .string()
     .transform((val) => Number(val))
-    .default("361450"),
+    .optional(),
   tickUpper: z
     .string()
     .transform((val) => Number(val))
-    .default("361550"),
+    .optional(),
   tokens: z.array(z.string()).min(2).max(2),
+  yes: z.boolean().default(false),
 });
 
 export const removeLiquidityOptionsSchema = z.object({

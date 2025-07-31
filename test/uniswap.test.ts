@@ -1,3 +1,5 @@
+import { ethers } from "ethers";
+
 import { ForeignCoin } from "../types/foreignCoins.types";
 import { Pool } from "../types/pools.types";
 import {
@@ -63,6 +65,7 @@ describe("generateUniquePairs", () => {
 
 describe("formatPoolsWithTokenDetails", () => {
   const mockZetaTokenAddress = "0xZETA";
+  const mockProvider = new ethers.JsonRpcProvider("http://localhost:8545");
 
   const mockForeignCoins: ForeignCoin[] = [
     {
@@ -88,6 +91,18 @@ describe("formatPoolsWithTokenDetails", () => {
       paused: false,
       symbol: "TOKB",
       zrc20_contract_address: "0xB",
+    },
+    {
+      asset: "wzeta",
+      coin_type: "ERC20",
+      decimals: 18,
+      foreign_chain_id: "zetachain",
+      gas_limit: "100000",
+      liquidity_cap: "1000000",
+      name: "Wrapped Zeta",
+      paused: false,
+      symbol: "WZETA",
+      zrc20_contract_address: mockZetaTokenAddress,
     },
   ];
 
@@ -116,11 +131,12 @@ describe("formatPoolsWithTokenDetails", () => {
     },
   ];
 
-  it("should format pools with token details", () => {
-    const result = formatPoolsWithTokenDetails(
+  it("should format pools with token details", async () => {
+    const result = await formatPoolsWithTokenDetails(
       mockPools,
       mockForeignCoins,
-      mockZetaTokenAddress
+      mockZetaTokenAddress,
+      mockProvider
     );
 
     // Check that token details are added for all tokens
@@ -145,7 +161,7 @@ describe("formatPoolsWithTokenDetails", () => {
     expect(result[1].t1.reserve).toBe(BigInt(4000000));
   });
 
-  it("should handle unknown tokens without crashing", () => {
+  it("should handle unknown tokens without crashing", async () => {
     const poolsWithUnknownToken: Pool[] = [
       {
         pair: "0xPAIR3",
@@ -160,25 +176,26 @@ describe("formatPoolsWithTokenDetails", () => {
       },
     ];
 
-    const result = formatPoolsWithTokenDetails(
+    const result = await formatPoolsWithTokenDetails(
       poolsWithUnknownToken,
       mockForeignCoins,
-      mockZetaTokenAddress
+      mockZetaTokenAddress,
+      mockProvider
     );
 
     // Should still return a result
     expect(result).toHaveLength(1);
 
-    // Unknown token should have empty details
-    expect(result[0].t0.symbol).toBeUndefined();
-    expect(result[0].t0.decimals).toBeUndefined();
+    // Unknown token should have fallback details
+    expect(result[0].t0.symbol).toBe("UNKNOWN");
+    expect(result[0].t0.decimals).toBe(18); // Default fallback
 
     // Known token should have details
     expect(result[0].t1.symbol).toBe("TOKA");
     expect(result[0].t1.decimals).toBe(6);
   });
 
-  it("should handle case sensitivity in addresses", () => {
+  it("should handle case sensitivity in addresses", async () => {
     const poolsWithMixedCaseAddresses: Pool[] = [
       {
         pair: "0xPAIR4",
@@ -193,10 +210,11 @@ describe("formatPoolsWithTokenDetails", () => {
       },
     ];
 
-    const result = formatPoolsWithTokenDetails(
+    const result = await formatPoolsWithTokenDetails(
       poolsWithMixedCaseAddresses,
       mockForeignCoins,
-      mockZetaTokenAddress
+      mockZetaTokenAddress,
+      mockProvider
     );
 
     // Should correctly match tokens despite case differences
