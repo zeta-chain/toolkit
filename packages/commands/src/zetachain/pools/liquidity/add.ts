@@ -1,7 +1,7 @@
 import * as UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json";
 import * as NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import { Command } from "commander";
-import { Contract, ethers, JsonRpcProvider, Wallet, Log } from "ethers";
+import { Contract, ethers, JsonRpcProvider, Log, Wallet } from "ethers";
 import inquirer from "inquirer";
 
 import {
@@ -34,7 +34,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
       throw new Error("Exactly 2 token addresses must be provided");
     }
 
-    let [inputTokenA, inputTokenB] = validatedOptions.tokens.map((addr) =>
+    const [inputTokenA, inputTokenB] = validatedOptions.tokens.map((addr) =>
       ethers.getAddress(addr)
     );
 
@@ -118,8 +118,8 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     /**
      * 8. Ensure we pass token0/token1 in *pool* order. Swap amounts if needed.
      */
-    let finalToken0 = poolToken0;
-    let finalToken1 = poolToken1;
+    const finalToken0 = poolToken0;
+    const finalToken1 = poolToken1;
 
     let finalAmount0: bigint;
     let finalAmount1: bigint;
@@ -198,7 +198,7 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
     console.log(`Recipient:   ${recipient}`);
 
     const { confirm } = await inquirer.prompt([
-      { type: "confirm", name: "confirm", message: "Proceed?" },
+      { message: "Proceed?", name: "confirm", type: "confirm" },
     ]);
     if (!confirm) {
       console.log("Cancelled by user");
@@ -224,17 +224,17 @@ const main = async (options: AddLiquidityOptions): Promise<void> => {
      * 13. Mint
      */
     const params: MintParams = {
-      token0: finalToken0,
-      token1: finalToken1,
+      amount0Desired: finalAmount0,
+      amount0Min: 0n,
+      amount1Desired: finalAmount1,
+      amount1Min: 0n,
+      deadline: Math.floor(Date.now() / 1000) + 60 * 20,
       fee,
+      recipient,
       tickLower,
       tickUpper,
-      amount0Desired: finalAmount0,
-      amount1Desired: finalAmount1,
-      amount0Min: 0n,
-      amount1Min: 0n,
-      recipient,
-      deadline: Math.floor(Date.now() / 1000) + 60 * 20,
+      token0: finalToken0,
+      token1: finalToken1,
     };
 
     const positionManager = new Contract(

@@ -235,13 +235,65 @@ export const getPoolData = async (
 };
 
 /**
+ * Fetch missing token details from contracts
+ */
+const fetchMissingTokenDetails = async (
+  provider: ethers.JsonRpcProvider,
+  pools: Pool[]
+): Promise<Pool[]> => {
+  const IERC20 = [
+    "function symbol() view returns (string)",
+    "function decimals() view returns (uint8)",
+  ];
+
+  const poolsWithDetails = await Promise.all(
+    pools.map(async (pool) => {
+      const t0NeedsDetails = !pool.t0.symbol || pool.t0.decimals === undefined;
+      const t1NeedsDetails = !pool.t1.symbol || pool.t1.decimals === undefined;
+
+      if (!t0NeedsDetails && !t1NeedsDetails) {
+        return pool;
+      }
+
+      const fetchDetails = async (address: string) => {
+        try {
+          const contract = new ethers.Contract(address, IERC20, provider);
+          const [symbol, decimals] = await Promise.all([
+            contract.symbol() as Promise<string>,
+            contract.decimals() as Promise<number>,
+          ]);
+          return { decimals: Number(decimals), symbol };
+        } catch (error) {
+          console.warn(`Failed to fetch details for token ${address}:`, error);
+          return { decimals: 18, symbol: "UNKNOWN" };
+        }
+      };
+
+      const [t0Details, t1Details] = await Promise.all([
+        t0NeedsDetails ? fetchDetails(pool.t0.address) : Promise.resolve({}),
+        t1NeedsDetails ? fetchDetails(pool.t1.address) : Promise.resolve({}),
+      ]);
+
+      return {
+        ...pool,
+        t0: { ...pool.t0, ...t0Details },
+        t1: { ...pool.t1, ...t1Details },
+      };
+    })
+  );
+
+  return poolsWithDetails;
+};
+
+/**
  * Format pools with token details (symbols and decimals)
  */
-export const formatPoolsWithTokenDetails = (
+export const formatPoolsWithTokenDetails = async (
   pools: Pool[],
   foreignCoins: ForeignCoin[],
-  zetaTokenAddress: string
-): Pool[] => {
+  zetaTokenAddress: string,
+  provider: ethers.JsonRpcProvider
+): Promise<Pool[]> => {
   // Create a mapping of ZRC20 details for quick lookup
   const zrc20Details = foreignCoins.reduce((acc: Zrc20Details, coin) => {
     const address = coin.zrc20_contract_address.toLowerCase();
@@ -256,7 +308,7 @@ export const formatPoolsWithTokenDetails = (
   const zetaDetails = { decimals: 18, symbol: "WZETA" };
   const zetaAddressLower = zetaTokenAddress.toLowerCase();
 
-  return pools.map((pool) => {
+  const poolsWithBasicDetails = pools.map((pool) => {
     const t0AddressLower = pool.t0.address.toLowerCase();
     const t1AddressLower = pool.t1.address.toLowerCase();
 
@@ -264,12 +316,12 @@ export const formatPoolsWithTokenDetails = (
     const t0Details =
       t0AddressLower === zetaAddressLower
         ? zetaDetails
-        : zrc20Details[t0AddressLower] || {};
+        : zrc20Details[t0AddressLower];
 
     const t1Details =
       t1AddressLower === zetaAddressLower
         ? zetaDetails
-        : zrc20Details[t1AddressLower] || {};
+        : zrc20Details[t1AddressLower];
 
     return {
       ...pool,
@@ -283,4 +335,11 @@ export const formatPoolsWithTokenDetails = (
       },
     };
   });
+
+  // Fetch missing details from contracts for any tokens not found in foreignCoins
+  const poolsWithCompleteDetails = await fetchMissingTokenDetails(
+    provider,
+    poolsWithBasicDetails
+  );
+  return poolsWithCompleteDetails;
 };

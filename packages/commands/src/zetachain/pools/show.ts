@@ -91,14 +91,29 @@ const main = async (options: ShowPoolOptions): Promise<void> => {
 
     // Calculate price from sqrtPriceX96 accounting for token decimals
     const sqrtPriceX96 = slot0.sqrtPriceX96;
-    const sqrtPrice = Number(sqrtPriceX96) / 2 ** 96;
-    const priceUnits = sqrtPrice ** 2; // price in base-unit ratio (token1 base units / token0 base units)
+
+    // Use BigInt arithmetic to avoid precision loss for large sqrtPriceX96 values
+    // sqrtPrice = sqrtPriceX96 / 2^96, price = sqrtPrice^2
+    // We'll work with scaled integers throughout to maintain precision
+    const SCALE_FACTOR = 10n ** 18n; // Scale factor for calculations
+
+    // Calculate (sqrtPriceX96)^2 / (2^96)^2 * SCALE_FACTOR
+    const priceScaled =
+      (sqrtPriceX96 * sqrtPriceX96 * SCALE_FACTOR) / 2n ** 192n;
 
     // Adjust for token decimals to get token-level price
     const decDiff = Number(dec0) - Number(dec1);
-    const priceToken1PerToken0 =
-      decDiff >= 0 ? priceUnits / 10 ** decDiff : priceUnits * 10 ** -decDiff;
+    const decimalAdjustment =
+      decDiff >= 0 ? 10n ** BigInt(decDiff) : 10n ** BigInt(-decDiff);
 
+    const priceToken1PerToken0Scaled =
+      decDiff >= 0
+        ? priceScaled / decimalAdjustment
+        : priceScaled * decimalAdjustment;
+
+    // Convert to number for display (safe now since we've maintained precision through calculations)
+    const priceToken1PerToken0 =
+      Number(priceToken1PerToken0Scaled) / Number(SCALE_FACTOR);
     const priceToken0PerToken1 = 1 / priceToken1PerToken0;
 
     console.log("\nPool Information:");

@@ -15,10 +15,10 @@ import {
 import { IERC20Metadata__factory } from "../../../../../typechain-types";
 
 const DEFAULT_SWAP_ROUTER = "0x42F98DfA0Bcca632b5e979E766331E7599b83686";
-const TWO_192 = 1n << 192n;
+// const TWO_192 = 1n << 192n; // Removed as it's not used
 
 /* √(bigint) ------------------------------------------------------ */
-function sqrtBig(n: bigint): bigint {
+const sqrtBig = (n: bigint): bigint => {
   if (n < 2n) return n;
   let x = n,
     y = (x + 1n) >> 1n;
@@ -27,19 +27,29 @@ function sqrtBig(n: bigint): bigint {
     y = (x + n / x) >> 1n;
   }
   return x;
-}
+};
 
 /* exact sqrtPriceX96 from USD prices ----------------------------- */
-function calcSqrtPriceX96(
+const calcSqrtPriceX96 = (
   usd0: number,
   usd1: number,
   dec0: number,
   dec1: number,
   cliIsTok0: boolean
-): bigint {
-  const FIX = 1e18; // 18-dp fixed USD
-  const p0 = BigInt(Math.round((cliIsTok0 ? usd0 : usd1) * FIX)); // token0 USD*1e18
-  const p1 = BigInt(Math.round((cliIsTok0 ? usd1 : usd0) * FIX)); // token1 USD*1e18
+): bigint => {
+  // Use proper decimal handling to avoid floating point precision errors
+  const FIX_SCALE = 18;
+
+  // Helper function to convert decimal to BigInt with proper scaling
+  const decimalToBigInt = (value: number): bigint => {
+    const str = value.toFixed(FIX_SCALE);
+    const [whole, fraction = ""] = str.split(".");
+    const paddedFraction = fraction.padEnd(FIX_SCALE, "0");
+    return BigInt(whole + paddedFraction);
+  };
+
+  const p0 = decimalToBigInt(cliIsTok0 ? usd0 : usd1); // token0 USD * 10^18
+  const p1 = decimalToBigInt(cliIsTok0 ? usd1 : usd0); // token1 USD * 10^18
 
   // token1/token0 ratio in base-units, scaled by 2^192 for Q64.96
   const num = p1 * 10n ** BigInt(dec0); // p1 × 10^dec0
@@ -48,7 +58,7 @@ function calcSqrtPriceX96(
 
   const ratioX192 = (num << 192n) / den; // (token1/token0) × 2^192
   return sqrtBig(ratioX192);
-}
+};
 
 /* ------------- CLI schema -------------------------------------- */
 const swapOpts = z.object({
@@ -72,15 +82,18 @@ const main = async (raw: SwapOpts) => {
 
   /* factory / pool */
   const factory = new Contract(DEFAULT_FACTORY, UniswapV3Factory.abi, provider);
-  const poolAddr = await factory.getPool(
+  const poolAddr = (await factory.getPool(
     o.tokens[0],
     o.tokens[1],
     Number(o.fee)
-  );
+  )) as string;
   if (poolAddr === ethers.ZeroAddress) throw new Error("Pool not found");
 
   const pool = new Contract(poolAddr, UniswapV3Pool.abi, provider);
-  const [token0, token1] = await Promise.all([pool.token0(), pool.token1()]);
+  const [token0, token1] = (await Promise.all([
+    pool.token0(),
+    pool.token1(),
+  ])) as [string, string];
   const [dec0Big, dec1Big] = await Promise.all([
     IERC20Metadata__factory.connect(token0, provider).decimals(),
     IERC20Metadata__factory.connect(token1, provider).decimals(),
@@ -91,7 +104,7 @@ const main = async (raw: SwapOpts) => {
   const cliIsTok0 = token0.toLowerCase() === o.tokens[0].toLowerCase();
   const sqrtLimit = calcSqrtPriceX96(usdA, usdB, dec0, dec1, cliIsTok0);
 
-  const slot0 = await pool.slot0();
+  const slot0 = (await pool.slot0()) as { sqrtPriceX96: bigint };
   const current = slot0.sqrtPriceX96;
   const zeroForOne = sqrtLimit < current; // direction
 
@@ -131,7 +144,10 @@ const main = async (raw: SwapOpts) => {
     tokenOut: zeroForOne ? token0 : token1,
   } as const;
 
-  const tx = await router.exactInputSingle(params, { gasLimit: 900_000 });
+  const tx = (await router.exactInputSingle(params, { gasLimit: 900_000 })) as {
+    hash: string;
+    wait: () => Promise<void>;
+  };
   console.log("tx:", tx.hash, "– waiting…");
   await tx.wait();
   console.log("✓ Done.  Verify with `pools show`.");
