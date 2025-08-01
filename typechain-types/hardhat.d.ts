@@ -234,18 +234,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZetaConnectorNonNative__factory>;
     getContractFactory(
-      name: "IBaseRegistry",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IBaseRegistry__factory>;
-    getContractFactory(
-      name: "IBaseRegistryErrors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IBaseRegistryErrors__factory>;
-    getContractFactory(
-      name: "IBaseRegistryEvents",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IBaseRegistryEvents__factory>;
-    getContractFactory(
       name: "Abortable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Abortable__factory>;
@@ -257,10 +245,6 @@ declare module "hardhat/types/runtime" {
       name: "GatewayZEVM",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.GatewayZEVM__factory>;
-    getContractFactory(
-      name: "ICoreRegistry",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ICoreRegistry__factory>;
     getContractFactory(
       name: "IGatewayZEVM",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -301,10 +285,6 @@ declare module "hardhat/types/runtime" {
       name: "ZContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZContract__factory>;
-    getContractFactory(
-      name: "GatewayZEVMValidations",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.GatewayZEVMValidations__factory>;
     getContractFactory(
       name: "SystemContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -794,21 +774,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ZetaConnectorNonNative>;
     getContractAt(
-      name: "IBaseRegistry",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IBaseRegistry>;
-    getContractAt(
-      name: "IBaseRegistryErrors",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IBaseRegistryErrors>;
-    getContractAt(
-      name: "IBaseRegistryEvents",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IBaseRegistryEvents>;
-    getContractAt(
       name: "Abortable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -823,11 +788,6 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.GatewayZEVM>;
-    getContractAt(
-      name: "ICoreRegistry",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ICoreRegistry>;
     getContractAt(
       name: "IGatewayZEVM",
       address: string | ethers.Addressable,
@@ -878,11 +838,6 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ZContract>;
-    getContractAt(
-      name: "GatewayZEVMValidations",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.GatewayZEVMValidations>;
     getContractAt(
       name: "SystemContract",
       address: string | ethers.Addressable,
@@ -1370,18 +1325,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ZetaConnectorNonNative>;
     deployContract(
-      name: "IBaseRegistry",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBaseRegistry>;
-    deployContract(
-      name: "IBaseRegistryErrors",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBaseRegistryErrors>;
-    deployContract(
-      name: "IBaseRegistryEvents",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBaseRegistryEvents>;
-    deployContract(
       name: "Abortable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Abortable>;
@@ -1393,10 +1336,6 @@ declare module "hardhat/types/runtime" {
       name: "GatewayZEVM",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GatewayZEVM>;
-    deployContract(
-      name: "ICoreRegistry",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ICoreRegistry>;
     deployContract(
       name: "IGatewayZEVM",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1437,10 +1376,6 @@ declare module "hardhat/types/runtime" {
       name: "ZContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ZContract>;
-    deployContract(
-      name: "GatewayZEVMValidations",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.GatewayZEVMValidations>;
     deployContract(
       name: "SystemContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1930,21 +1865,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ZetaConnectorNonNative>;
     deployContract(
-      name: "IBaseRegistry",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBaseRegistry>;
-    deployContract(
-      name: "IBaseRegistryErrors",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBaseRegistryErrors>;
-    deployContract(
-      name: "IBaseRegistryEvents",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBaseRegistryEvents>;
-    deployContract(
       name: "Abortable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1959,11 +1879,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GatewayZEVM>;
-    deployContract(
-      name: "ICoreRegistry",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ICoreRegistry>;
     deployContract(
       name: "IGatewayZEVM",
       args: any[],
@@ -2014,11 +1929,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ZContract>;
-    deployContract(
-      name: "GatewayZEVMValidations",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.GatewayZEVMValidations>;
     deployContract(
       name: "SystemContract",
       args: any[],

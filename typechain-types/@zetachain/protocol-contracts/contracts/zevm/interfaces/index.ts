@@ -9,5 +9,4 @@ import type * as izrc20Sol from "./IZRC20.sol";
 export type { izrc20Sol };
 import type * as universalContractSol from "./UniversalContract.sol";
 export type { universalContractSol };
-export type { ICoreRegistry } from "./ICoreRegistry";
 export type { ISystem } from "./ISystem";

@@ -85,9 +85,8 @@ export interface IGatewayZEVMInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "call"
-      | "deposit(address)"
-      | "deposit(address,uint256,address)"
-      | "depositAndCall((bytes,address,uint256),address,bytes)"
+      | "deposit"
+      | "depositAndCall((bytes,address,uint256),uint256,address,bytes)"
       | "depositAndCall((bytes,address,uint256),address,uint256,address,bytes)"
       | "depositAndRevert"
       | "execute"
@@ -113,16 +112,12 @@ export interface IGatewayZEVMInterface extends Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "deposit(address)",
-    values: [AddressLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "deposit(address,uint256,address)",
+    functionFragment: "deposit",
     values: [AddressLike, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "depositAndCall((bytes,address,uint256),address,bytes)",
-    values: [MessageContextStruct, AddressLike, BytesLike]
+    functionFragment: "depositAndCall((bytes,address,uint256),uint256,address,bytes)",
+    values: [MessageContextStruct, BigNumberish, AddressLike, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "depositAndCall((bytes,address,uint256),address,uint256,address,bytes)",
@@ -184,16 +179,9 @@ export interface IGatewayZEVMInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "call", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "deposit(address)",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "deposit(address,uint256,address)",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "depositAndCall((bytes,address,uint256),address,bytes)",
+    functionFragment: "depositAndCall((bytes,address,uint256),uint256,address,bytes)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -399,22 +387,21 @@ export interface IGatewayZEVM extends BaseContract {
     "nonpayable"
   >;
 
-  "deposit(address)": TypedContractMethod<
-    [target: AddressLike],
-    [void],
-    "payable"
-  >;
-
-  "deposit(address,uint256,address)": TypedContractMethod<
+  deposit: TypedContractMethod<
     [zrc20: AddressLike, amount: BigNumberish, target: AddressLike],
     [void],
     "nonpayable"
   >;
 
-  "depositAndCall((bytes,address,uint256),address,bytes)": TypedContractMethod<
-    [context: MessageContextStruct, target: AddressLike, message: BytesLike],
+  "depositAndCall((bytes,address,uint256),uint256,address,bytes)": TypedContractMethod<
+    [
+      context: MessageContextStruct,
+      amount: BigNumberish,
+      target: AddressLike,
+      message: BytesLike
+    ],
     [void],
-    "payable"
+    "nonpayable"
   >;
 
   "depositAndCall((bytes,address,uint256),address,uint256,address,bytes)": TypedContractMethod<
@@ -524,21 +511,23 @@ export interface IGatewayZEVM extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "deposit(address)"
-  ): TypedContractMethod<[target: AddressLike], [void], "payable">;
-  getFunction(
-    nameOrSignature: "deposit(address,uint256,address)"
+    nameOrSignature: "deposit"
   ): TypedContractMethod<
     [zrc20: AddressLike, amount: BigNumberish, target: AddressLike],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "depositAndCall((bytes,address,uint256),address,bytes)"
+    nameOrSignature: "depositAndCall((bytes,address,uint256),uint256,address,bytes)"
   ): TypedContractMethod<
-    [context: MessageContextStruct, target: AddressLike, message: BytesLike],
+    [
+      context: MessageContextStruct,
+      amount: BigNumberish,
+      target: AddressLike,
+      message: BytesLike
+    ],
     [void],
-    "payable"
+    "nonpayable"
   >;
   getFunction(
     nameOrSignature: "depositAndCall((bytes,address,uint256),address,uint256,address,bytes)"

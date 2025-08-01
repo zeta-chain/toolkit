@@ -10,24 +10,6 @@ import type {
 
 const _abi = [
   {
-    inputs: [],
-    name: "Unauthorized",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "gateway",
-    outputs: [
-      {
-        internalType: "contract IGatewayZEVM",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
         components: [
@@ -70,54 +52,6 @@ const _abi = [
     name: "onCall",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        components: [
-          {
-            internalType: "bytes",
-            name: "sender",
-            type: "bytes",
-          },
-          {
-            internalType: "address",
-            name: "senderEVM",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "chainID",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct MessageContext",
-        name: "context",
-        type: "tuple",
-      },
-      {
-        internalType: "bytes",
-        name: "message",
-        type: "bytes",
-      },
-    ],
-    name: "onCall",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "registry",
-    outputs: [
-      {
-        internalType: "contract ICoreRegistry",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
 ] as const;
