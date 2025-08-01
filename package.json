@@ -31,6 +31,16 @@
       "require": "./dist/packages/test/src/index.js",
       "types": "./dist/packages/test/src/index.d.ts"
     },
+    "./chains": {
+      "import": "./dist/src/chains/index.js",
+      "require": "./dist/src/chains/index.js",
+      "types": "./dist/src/chains/index.d.ts"
+    },
+    "./query": {
+      "import": "./dist/src/query/index.js",
+      "require": "./dist/src/query/index.js",
+      "types": "./dist/src/query/index.d.ts"
+    },
     "./typechain-types": {
       "types": "./dist/typechain-types/index.ts"
     }
