@@ -2,8 +2,8 @@ import { Command } from "commander";
 
 import { balancesCommand } from "./balances";
 import { cctxCommand } from "./cctx";
-import { contractsCommand } from "./contracts";
 import { chainsCommand } from "./chains";
+import { contractsCommand } from "./contracts";
 import { feesCommand } from "./fees";
 import { tokensCommand } from "./tokens";
 
