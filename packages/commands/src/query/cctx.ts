@@ -4,6 +4,11 @@ import EventEmitter from "eventemitter3";
 import { z } from "zod";
 
 import { DEFAULT_API_URL } from "../../../../src/constants/api";
+import {
+  DEFAULT_DELAY,
+  DEFAULT_TIMEOUT,
+} from "../../../../src/constants/commands/cctx";
+import { cctxOptionsSchema } from "../../../../src/schemas/commands/cctx";
 import type { CrossChainTx } from "../../../../types/trackCCTX.types";
 import { fetchFromApi, sleep } from "../../../../utils";
 
@@ -16,13 +21,6 @@ interface CctxEvents {
 }
 
 export const cctxEmitter = new EventEmitter<CctxEvents>();
-
-const cctxOptionsSchema = z.object({
-  delay: z.coerce.number().int().positive().default(2000),
-  hash: z.string(),
-  rpc: z.string(),
-  timeout: z.coerce.number().int().min(0).default(0),
-});
 
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
 
@@ -181,16 +179,22 @@ Receiver: ${receiver}
 
   output += mainTx;
 
-  if (outbound_params[1]) {
-    let revertStatusIcon = "🔄";
-    if (status === "Reverted") {
-      revertStatusIcon = "✅";
-    }
-    let revertStatusMessage = "";
-    if (status === "Reverted") {
-      revertStatusMessage = "Revert executed";
-    } else if (status === "PendingRevert") {
-      revertStatusMessage = "Revert pending";
+  if (
+    outbound_params[1] &&
+    ["Reverted", "PendingRevert", "Aborted"].includes(status)
+  ) {
+    const isReverted = status === "Reverted";
+    const isPendingRevert = status === "PendingRevert";
+    const isAborted = status === "Aborted";
+
+    const statusIcon = isPendingRevert ? "🔄" : "✅";
+    let statusMessage = "Unknown";
+    if (isReverted) {
+      statusMessage = "Revert executed";
+    } else if (isPendingRevert) {
+      statusMessage = "Revert pending";
+    } else if (isAborted) {
+      statusMessage = "Abort executed";
     }
 
     const revertAddress =
@@ -199,11 +203,18 @@ Receiver: ${receiver}
         : revert_address;
 
     const revertMessage = revert_message
-      ? Buffer.from(revert_message, "base64").toString()
+      ? Buffer.from(revert_message, "base64").toString("hex")
       : "null";
 
-    const revertTx = `
-${receiver_chainId} → ${outbound_params[1].receiver_chainId} ${revertStatusIcon} ${revertStatusMessage}
+    let chainDetails = "Unknown";
+    if (isReverted || isPendingRevert) {
+      chainDetails = `${receiver_chainId} → ${outbound_params[1].receiver_chainId} ${statusIcon} ${statusMessage}`;
+    } else if (isAborted) {
+      chainDetails = `${receiver_chainId} ${statusIcon} ${statusMessage}`;
+    }
+
+    let revertOrAbortTx = `
+${chainDetails}
 Revert Address:   ${revertAddress}
 Call on Revert:   ${call_on_revert}
 Abort Address:    ${abort_address}
@@ -211,7 +222,12 @@ Revert Message:   ${revertMessage}
 Revert Gas Limit: ${revert_gas_limit}
 `;
 
-    output += revertTx;
+    if (isReverted && outbound_params[1].hash !== "") {
+      revertOrAbortTx += `Tx Hash:          ${outbound_params[1].hash} (on chain ${outbound_params[1].receiver_chainId})
+`;
+    }
+
+    output += revertOrAbortTx;
   }
 
   return output;
@@ -221,8 +237,7 @@ Revert Gas Limit: ${revert_gas_limit}
  * CLI entry – clears screen and prints the list of indexes each round.
  */
 const main = async (options: CctxOptions) => {
-  const { hash, rpc, delay, timeout } = cctxOptionsSchema.parse(options);
-
+  const { hash, rpc, delay, timeout } = options;
   cctxEmitter.on("cctx", (all) => {
     console.clear();
     all.forEach((cctx) => {
@@ -240,13 +255,14 @@ export const cctxCommand = new Command("cctx")
   .option(
     "-d, --delay <ms>",
     "Delay between polling rounds in milliseconds",
-    "2000"
+    DEFAULT_DELAY.toString()
   )
   .option(
     "-t, --timeout <ms>",
     "Timeout duration in milliseconds (default: indefinite)",
-    "0"
+    DEFAULT_TIMEOUT.toString()
   )
   .action(async (opts) => {
-    await main(opts as CctxOptions);
+    const validatedOptions = cctxOptionsSchema.parse(opts);
+    await main(validatedOptions);
   });
