@@ -49,6 +49,7 @@ export interface ZetaConnectorNativeInterface extends Interface {
       | "TSS_ROLE"
       | "UPGRADE_INTERFACE_VERSION"
       | "WITHDRAWER_ROLE"
+      | "deposit"
       | "gateway"
       | "getRoleAdmin"
       | "grantRole"
@@ -57,7 +58,6 @@ export interface ZetaConnectorNativeInterface extends Interface {
       | "pause"
       | "paused"
       | "proxiableUUID"
-      | "receiveTokens"
       | "renounceRole"
       | "revokeRole"
       | "supportsInterface"
@@ -103,6 +103,10 @@ export interface ZetaConnectorNativeInterface extends Interface {
     functionFragment: "WITHDRAWER_ROLE",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "deposit",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "gateway", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getRoleAdmin",
@@ -125,10 +129,6 @@ export interface ZetaConnectorNativeInterface extends Interface {
   encodeFunctionData(
     functionFragment: "proxiableUUID",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "receiveTokens",
-    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceRole",
@@ -157,27 +157,15 @@ export interface ZetaConnectorNativeInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [AddressLike, BigNumberish, BytesLike]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawAndCall",
-    values: [
-      MessageContextStruct,
-      AddressLike,
-      BigNumberish,
-      BytesLike,
-      BytesLike
-    ]
+    values: [MessageContextStruct, AddressLike, BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawAndRevert",
-    values: [
-      AddressLike,
-      BigNumberish,
-      BytesLike,
-      BytesLike,
-      RevertContextStruct
-    ]
+    values: [AddressLike, BigNumberish, BytesLike, RevertContextStruct]
   ): string;
   encodeFunctionData(functionFragment: "zetaToken", values?: undefined): string;
 
@@ -198,6 +186,7 @@ export interface ZetaConnectorNativeInterface extends Interface {
     functionFragment: "WITHDRAWER_ROLE",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "gateway", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getRoleAdmin",
@@ -210,10 +199,6 @@ export interface ZetaConnectorNativeInterface extends Interface {
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "proxiableUUID",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "receiveTokens",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -478,6 +463,8 @@ export interface ZetaConnectorNative extends BaseContract {
 
   WITHDRAWER_ROLE: TypedContractMethod<[], [string], "view">;
 
+  deposit: TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+
   gateway: TypedContractMethod<[], [string], "view">;
 
   getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], "view">;
@@ -510,12 +497,6 @@ export interface ZetaConnectorNative extends BaseContract {
   paused: TypedContractMethod<[], [boolean], "view">;
 
   proxiableUUID: TypedContractMethod<[], [string], "view">;
-
-  receiveTokens: TypedContractMethod<
-    [amount: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
 
   renounceRole: TypedContractMethod<
     [role: BytesLike, callerConfirmation: AddressLike],
@@ -552,7 +533,7 @@ export interface ZetaConnectorNative extends BaseContract {
   >;
 
   withdraw: TypedContractMethod<
-    [to: AddressLike, amount: BigNumberish, arg2: BytesLike],
+    [to: AddressLike, amount: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -562,8 +543,7 @@ export interface ZetaConnectorNative extends BaseContract {
       messageContext: MessageContextStruct,
       to: AddressLike,
       amount: BigNumberish,
-      data: BytesLike,
-      arg4: BytesLike
+      data: BytesLike
     ],
     [void],
     "nonpayable"
@@ -574,7 +554,6 @@ export interface ZetaConnectorNative extends BaseContract {
       to: AddressLike,
       amount: BigNumberish,
       data: BytesLike,
-      arg3: BytesLike,
       revertContext: RevertContextStruct
     ],
     [void],
@@ -602,6 +581,9 @@ export interface ZetaConnectorNative extends BaseContract {
   getFunction(
     nameOrSignature: "WITHDRAWER_ROLE"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "deposit"
+  ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "gateway"
   ): TypedContractMethod<[], [string], "view">;
@@ -644,9 +626,6 @@ export interface ZetaConnectorNative extends BaseContract {
     nameOrSignature: "proxiableUUID"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "receiveTokens"
-  ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "renounceRole"
   ): TypedContractMethod<
     [role: BytesLike, callerConfirmation: AddressLike],
@@ -682,7 +661,7 @@ export interface ZetaConnectorNative extends BaseContract {
   getFunction(
     nameOrSignature: "withdraw"
   ): TypedContractMethod<
-    [to: AddressLike, amount: BigNumberish, arg2: BytesLike],
+    [to: AddressLike, amount: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -693,8 +672,7 @@ export interface ZetaConnectorNative extends BaseContract {
       messageContext: MessageContextStruct,
       to: AddressLike,
       amount: BigNumberish,
-      data: BytesLike,
-      arg4: BytesLike
+      data: BytesLike
     ],
     [void],
     "nonpayable"
@@ -706,7 +684,6 @@ export interface ZetaConnectorNative extends BaseContract {
       to: AddressLike,
       amount: BigNumberish,
       data: BytesLike,
-      arg3: BytesLike,
       revertContext: RevertContextStruct
     ],
     [void],
