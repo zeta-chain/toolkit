@@ -42,12 +42,11 @@ const buildSqrtPriceX96 = (
   usd0: number,
   usd1: number,
   dec0: number,
-  dec1: number,
-  cliToken0: boolean
+  dec1: number
 ): bigint => {
   // USD prices mapped to factory order
-  const pTok0 = BigInt(Math.round((cliToken0 ? usd0 : usd1) * 1e18));
-  const pTok1 = BigInt(Math.round((cliToken0 ? usd1 : usd0) * 1e18));
+  const pTok0 = BigInt(Math.round(usd0 * 1e18));
+  const pTok1 = BigInt(Math.round(usd1 * 1e18));
 
   // token1/token0 ratio in base-units, scaled by 2¹⁹²
   const num = pTok1 * 10n ** BigInt(dec0); // p₁ × 10^dec₀
@@ -63,7 +62,7 @@ const buildSqrtPriceX96 = (
 const main = async (raw: CreatePoolOptions) => {
   try {
     const o = createPoolOptionsSchema.parse(raw);
-    const [usdB, usdA] = o.prices.map(Number);
+    const [usdA, usdB] = o.prices.map(Number);
 
     const provider = new JsonRpcProvider(o.rpc ?? DEFAULT_RPC);
     const signer = new Wallet(o.privateKey, provider);
@@ -111,13 +110,17 @@ const main = async (raw: CreatePoolOptions) => {
     ]);
 
     /* compute initial sqrtPriceX96 ----------------------------- */
-    const cliToken0 = token0.toLowerCase() === o.tokens[0].toLowerCase();
+    const isUserToken0EqualPoolToken0 =
+      token0.toLowerCase() === o.tokens[0].toLowerCase();
+    const [priceToken0, priceToken1] = isUserToken0EqualPoolToken0
+      ? [usdA, usdB] // matches pool order already
+      : [usdB, usdA]; // swap
+
     const sqrtPriceX96 = buildSqrtPriceX96(
-      usdA,
-      usdB,
+      priceToken0,
+      priceToken1,
       Number(dec0),
-      Number(dec1),
-      cliToken0
+      Number(dec1)
     );
 
     /* check if initialised ------------------------------------- */
