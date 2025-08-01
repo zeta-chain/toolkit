@@ -1,13 +1,13 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/" 
+    directory: "/"
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "dependabot: " 
+      prefix: "chore(deps): "
     labels:
-      - "dependencies" 
+      - "dependencies"
     allow:
       - dependency-name: "@zetachain/networks"
       - dependency-name: "@zetachain/protocol-contracts"
