@@ -4,4 +4,5 @@
 export * as errorsSol from "./Errors.sol";
 export * as revertSol from "./Revert.sol";
 export * as evm from "./evm";
+export * as helpers from "./helpers";
 export * as zevm from "./zevm";
