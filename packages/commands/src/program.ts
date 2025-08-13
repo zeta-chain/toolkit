@@ -14,6 +14,9 @@ import { zetachainCommand } from "./zetachain";
 
 export const toolkitCommand = new Command("toolkit")
   .summary("Local development environment")
+  .description(
+    "ZetaChain Toolkit CLI for local development and cross-chain operations"
+  )
   .helpCommand(false);
 
 toolkitCommand.addCommand(accountsCommand);

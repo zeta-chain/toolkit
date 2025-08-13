@@ -69,7 +69,8 @@ const main = async (options: DepositOptions) => {
 };
 
 export const depositCommand = createTonCommandWithCommonOptions("deposit")
-  .description("Deposit TON to an EOA or a contract on ZetaChain")
+  .summary("Deposit tokens from TON")
+  .description("Deposit tokens to an EOA or a contract on ZetaChain")
   .requiredOption("--amount <amount>", "Amount in TON")
   .action(async (raw) => {
     const options = validateAndParseSchema(raw, depositOptionsSchema, {

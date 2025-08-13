@@ -138,10 +138,8 @@ from that connected chain to be observed`);
 
 export const listCommand = new Command("list")
   .alias("l")
-  .summary("List all connected chains.")
-  .description(
-    "Retrieves a list of all supported chains connected to ZetaChain."
-  )
+  .summary("List all connected chains")
+  .description("Retrieve a list of all supported chains connected to ZetaChain")
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )

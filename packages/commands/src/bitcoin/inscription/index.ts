@@ -7,6 +7,9 @@ import { encodeCommand } from "./encode";
 
 export const inscriptionCommand = new Command("inscription")
   .summary("Make a transaction using inscriptions")
+  .description(
+    "Use Bitcoin inscriptions to deposit BTC to ZetaChain or call contracts"
+  )
   .alias("i")
   .addCommand(callCommand)
   .addCommand(depositAndCallCommand)

@@ -85,9 +85,9 @@ const main = async (options: DepositOptions) => {
   }
 };
 
-export const depositCommand = new Command("deposit").summary(
-  "Deposit tokens to ZetaChain from an EVM-compatible chain"
-);
+export const depositCommand = new Command("deposit")
+  .summary("Deposit tokens to ZetaChain from an EVM-compatible chain")
+  .description("Deposit tokens to ZetaChain from an EVM-compatible chain");
 
 addCommonEvmCommandOptions(depositCommand)
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")

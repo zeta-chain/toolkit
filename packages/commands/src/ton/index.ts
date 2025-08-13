@@ -4,7 +4,10 @@ import { depositCommand } from "./deposit";
 import { depositAndCallCommand } from "./depositAndCall";
 
 export const tonCommand = new Command("ton")
-  .description("TON commands")
+  .summary("TON commands")
+  .description(
+    "Interact from TON: deposit TON to ZetaChain or deposit and call contracts"
+  )
   .addCommand(depositAndCallCommand)
   .addCommand(depositCommand)
   .helpCommand(false);

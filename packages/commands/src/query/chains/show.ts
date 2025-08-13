@@ -332,7 +332,7 @@ const main = async (options: ChainsShowOptions) => {
 
 export const showCommand = new Command("show")
   .alias("s")
-  .summary("Show details for a connected chain.")
+  .summary("Show details for a connected chain")
   .description(
     "Fetches detailed information about a connected chain by name or chain ID. You can query both testnet and mainnet endpoints, and optionally return only a specific field for scripting."
   )

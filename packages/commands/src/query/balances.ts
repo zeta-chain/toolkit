@@ -173,8 +173,8 @@ const main = async (options: BalancesOptions) => {
 };
 
 export const balancesCommand = new Command("balances")
-  .summary("Fetch native and ZRC-20 token balances.")
-  .description("Retrieves token balances on all connected chains.")
+  .summary("Fetch native and ZRC-20 token balances")
+  .description("Retrieve token balances on all connected chains")
   .option("--evm <address>", "Address on EVM chains")
   .option("--solana <address>", "Address on Solana")
   .option("--bitcoin <address>", "Address on Bitcoin")

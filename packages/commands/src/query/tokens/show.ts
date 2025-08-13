@@ -143,9 +143,9 @@ const main = async (options: TokensShowOptions) => {
 
 export const showCommand = new Command("show")
   .alias("s")
-  .summary("Show details for a ZRC-20 token.")
+  .summary("Show details for a ZRC-20 token")
   .description(
-    "Displays detailed information about a specific ZRC-20 token by symbol. You can also return only a specific field, which is useful for scripting."
+    "Display detailed information about a specific ZRC-20 token by symbol; supports returning a single field for scripting"
   )
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)

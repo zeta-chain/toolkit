@@ -5,7 +5,7 @@ import { showCommand } from "./show";
 
 export const tokensCommand = new Command("tokens")
   .alias("t")
-  .summary("Work with tokens on ZetaChain.")
+  .summary("Work with tokens on ZetaChain")
   .description(
     "Provides commands to list all available ZRC-20 tokens or view detailed information about a specific token. Useful for discovering token metadata, contract addresses, and supported chains."
   )

@@ -77,8 +77,8 @@ const main = async (params: FeesParams, options: FeesCLIOptions) => {
 };
 
 export const feesCommand = new Command("fees")
-  .summary("Get cross-chain fees.")
-  .description("Get estimated fees for cross-chain transactions.")
+  .summary("Get cross-chain fees")
+  .description("Estimate fees for cross-chain transactions")
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
