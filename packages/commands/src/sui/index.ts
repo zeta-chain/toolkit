@@ -5,7 +5,7 @@ import { depositAndCallCommand } from "./depositAndCall";
 import { encodeCommand } from "./encode";
 
 export const suiCommand = new Command("sui")
-  .summary("Sui commands")
+  .summary("Deposit tokens and call universal contracts from Sui")
   .description(
     "Interact from Sui: deposit tokens to ZetaChain or deposit and call contracts"
   )
