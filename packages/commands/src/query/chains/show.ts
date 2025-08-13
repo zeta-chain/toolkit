@@ -332,8 +332,9 @@ const main = async (options: ChainsShowOptions) => {
 
 export const showCommand = new Command("show")
   .alias("s")
+  .summary("Show details for a connected chain.")
   .description(
-    "Show detailed information for a specific chain (by chain name or chain ID)"
+    "Fetches detailed information about a connected chain by name or chain ID. You can query both testnet and mainnet endpoints, and optionally return only a specific field for scripting."
   )
   .addOption(
     new Option("--api-testnet <url>", "Testnet API endpoint URL").default(
@@ -352,12 +353,9 @@ export const showCommand = new Command("show")
     new Option("-c, --chain-id <chain-id>", "Chain ID").conflicts(["chain"])
   )
   .addOption(
-    new Option(
-      "--field -f <field>",
-      "Return specific field value (for scripting)"
-    )
+    new Option("--field -f <field>", "Return only a specific field value")
   )
-  .option("--json", "Output chain as JSON")
+  .option("--json", "Output in JSON format")
   .action(async (options: ChainsShowOptions) => {
     const validatedOptions = chainsShowOptionsSchema.parse(options);
     await main(validatedOptions);

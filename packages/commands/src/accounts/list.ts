@@ -32,7 +32,10 @@ const main = (options: ListAccountsOptions): void => {
 };
 
 export const listAccountsCommand = new Command("list")
-  .summary("List all available accounts")
+  .summary("List all stored accounts")
+  .description(
+    `Displays all accounts currently stored locally in the CLI's key store.`
+  )
   .option("--json", "Output in JSON format")
   .action((opts) => {
     const validated = validateAndParseSchema(opts, listAccountsOptionsSchema, {

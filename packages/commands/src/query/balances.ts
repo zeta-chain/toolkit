@@ -173,15 +173,13 @@ const main = async (options: BalancesOptions) => {
 };
 
 export const balancesCommand = new Command("balances")
-  .summary("Fetch native and ZETA token balances")
-  .option("--evm <address>", "Fetch balances for a specific EVM address")
-  .option("--solana <address>", "Fetch balances for a specific Solana address")
-  .option(
-    "--bitcoin <address>",
-    "Fetch balances for a specific Bitcoin address"
-  )
-  .option("--sui <address>", "Fetch balances for a specific Sui address")
-  .option("--ton <address>", "Fetch balances for a specific TON address")
+  .summary("Fetch native and ZRC-20 token balances.")
+  .description("Retrieves token balances on all connected chains.")
+  .option("--evm <address>", "Address on EVM chains")
+  .option("--solana <address>", "Address on Solana")
+  .option("--bitcoin <address>", "Address on Bitcoin")
+  .option("--sui <address>", "Address on Sui")
+  .option("--ton <address>", "Address on TON")
   .option("--name <name>", "Account name")
   .addOption(
     new Option("--network <network>", "Network to use")
@@ -189,7 +187,7 @@ export const balancesCommand = new Command("balances")
       .default("testnet")
   )
   .option("--json", "Output balances as JSON")
-  .option("--show-zero", "Include zero balances", false)
+  .option("--show-zero", "Include zero balances in output", false)
   .action(async (options: BalancesOptions) => {
     const validatedOptions = balancesOptionsSchema.parse(options);
     await main(validatedOptions);

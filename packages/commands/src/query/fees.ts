@@ -77,7 +77,8 @@ const main = async (params: FeesParams, options: FeesCLIOptions) => {
 };
 
 export const feesCommand = new Command("fees")
-  .description("Fetch omnichain and cross-chain messaging fees")
+  .summary("Get cross-chain fees.")
+  .description("Get estimated fees for cross-chain transactions.")
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
@@ -85,9 +86,12 @@ export const feesCommand = new Command("fees")
     new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_EVM_RPC_URL)
   )
   .addOption(
-    new Option("--gas-limit <limit>", "Gas limit for withdraw and call")
+    new Option(
+      "--gas-limit <limit>",
+      "Gas limit for withdraw and call transactions"
+    )
   )
-  .addOption(new Option("--json", "Output results in JSON format"))
+  .addOption(new Option("--json", "Output in JSON format"))
   .action(async (options) => {
     const params = feesParamsSchema.parse(options);
     const validatedOptions = feesCLIOptionsSchema.parse(options);

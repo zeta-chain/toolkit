@@ -143,7 +143,10 @@ const main = async (options: TokensShowOptions) => {
 
 export const showCommand = new Command("show")
   .alias("s")
-  .description("Show detailed information for a specific ZRC-20 token")
+  .summary("Show details for a ZRC-20 token.")
+  .description(
+    "Displays detailed information about a specific ZRC-20 token by symbol. You can also return only a specific field, which is useful for scripting."
+  )
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
@@ -156,10 +159,10 @@ export const showCommand = new Command("show")
   .addOption(
     new Option(
       "--field -f <field>",
-      "Return specific field value (for scripting). Use 'zrc20' as shorthand for 'zrc20_contract_address'"
+      "Return only a specific field value. Use 'zrc20' as shorthand for 'zrc20_contract_address'"
     )
   )
-  .option("--json", "Output token as JSON")
+  .option("--json", "Output in JSON format")
   .action(async (options: TokensShowOptions) => {
     const validatedOptions = tokensShowOptionsSchema.parse(options);
     await main(validatedOptions);
