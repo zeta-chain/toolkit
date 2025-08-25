@@ -125,7 +125,7 @@ const formatCCTX = (cctx: CrossChainTx) => {
   } = cctx;
   const { sender_chain_id, sender, amount, coin_type } = inbound_params;
   const { receiver_chainId, receiver } = outbound_params[0];
-  const { status, status_message, error_message } = cctx_status;
+  const { status, status_message, error_message = "" } = cctx_status;
   const {
     revert_address,
     call_on_revert,
