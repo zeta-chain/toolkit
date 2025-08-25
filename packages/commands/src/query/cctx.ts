@@ -177,8 +177,11 @@ Receiver: ${receiver}
     mainTx += `Status:   ${status}, ${status_message}\n`;
   }
 
-  if (error_message !== "") {
-    mainTx += `Error:    ${error_message}\n`;
+  // Prevents blank or whitespace-only entries and keeps console output clean
+  const trimmedErrorMessage = error_message.trim();
+
+  if (trimmedErrorMessage) {
+    mainTx += `Error:    ${trimmedErrorMessage}\n`;
   }
 
   output += mainTx;
