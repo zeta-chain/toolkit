@@ -10,7 +10,11 @@ import {
 } from "../../../../src/constants/commands/cctx";
 import { cctxOptionsSchema } from "../../../../src/schemas/commands/cctx";
 import type { CrossChainTx } from "../../../../types/trackCCTX.types";
-import { fetchFromApi, sleep } from "../../../../utils";
+import {
+  getCctxByHash,
+  getCctxDataByInboundHash,
+  sleep,
+} from "../../../../utils";
 
 /**
  * Event map:
@@ -23,14 +27,6 @@ interface CctxEvents {
 export const cctxEmitter = new EventEmitter<CctxEvents>();
 
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
-
-interface CctxListResponse {
-  CrossChainTxs: CrossChainTx[];
-}
-
-interface CctxResponse {
-  CrossChainTx: CrossChainTx;
-}
 
 /**
  * True if the CCTX is still in-flight and may mutate on‑chain.
@@ -83,34 +79,15 @@ const gatherCctxs = async (
             let discovered: CrossChainTx[] = [];
 
             // Try cctx single endpoint FIRST
-            let foundViaCctx = false;
-            try {
-              const cctxEndpoint = `/zeta-chain/crosschain/cctx/${hash}`;
-              const oneResp = await fetchFromApi<CctxResponse>(
-                rpc,
-                cctxEndpoint
-              );
-              if (oneResp && oneResp.CrossChainTx) {
-                discovered.push(oneResp.CrossChainTx);
-                foundViaCctx = true;
+            const single = await getCctxByHash(rpc, hash);
+            if (single) {
+              discovered.push(single);
+            } else {
+              // If not found via cctx, fall back to inboundHashToCctxData
+              const byInbound = await getCctxDataByInboundHash(rpc, hash);
+              if (byInbound.length > 0) {
+                discovered = discovered.concat(byInbound);
               }
-            } catch {}
-
-            // If not found via cctx, fall back to inboundHashToCctxData
-            if (!foundViaCctx) {
-              try {
-                const inbEndpoint = `/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
-                const inbResp = await fetchFromApi<CctxListResponse>(
-                  rpc,
-                  inbEndpoint
-                );
-                if (
-                  Array.isArray(inbResp.CrossChainTxs) &&
-                  inbResp.CrossChainTxs.length > 0
-                ) {
-                  discovered = discovered.concat(inbResp.CrossChainTxs);
-                }
-              } catch {}
             }
 
             if (discovered.length === 0) {
@@ -133,12 +110,7 @@ const gatherCctxs = async (
               queriedOnce.add(tx.index);
             }
           } else {
-            const endpoint = `/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
-            const response = await fetchFromApi<CctxListResponse>(
-              rpc,
-              endpoint
-            );
-            const cctxs = response.CrossChainTxs;
+            const cctxs = await getCctxDataByInboundHash(rpc, hash);
 
             if (cctxs.length === 0) {
               // Still 404 – keep trying

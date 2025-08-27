@@ -3,6 +3,7 @@ import axios, { AxiosRequestConfig, isAxiosError } from "axios";
 import {
   CrossChainTxResponse,
   InboundHashToCctxResponseReturnType,
+  CrossChainTx,
   PendingNonce,
   PendingNoncesResponse,
   TssResponse,
@@ -83,6 +84,35 @@ export const getCctxByInboundHash = async (
 
     // Only log unexpected errors
     handleError({ context: "Failed to fetch CCTX by inbound hash", error });
+    return [];
+  }
+};
+
+/**
+ * Fetch full CCTX objects by inbound transaction hash.
+ * Returns [] on 404/400, logs only unexpected errors.
+ */
+export const getCctxDataByInboundHash = async (
+  api: string,
+  hash: string
+): Promise<CrossChainTx[]> => {
+  try {
+    const data = await fetchFromApi<{ CrossChainTxs: CrossChainTx[] }>(
+      api,
+      `/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
+    );
+    return Array.isArray(data.CrossChainTxs) ? data.CrossChainTxs : [];
+  } catch (error) {
+    if (
+      isAxiosError(error) &&
+      (error.response?.status === 404 || error.response?.status === 400)
+    ) {
+      return [];
+    }
+    handleError({
+      context: "Failed to fetch CCTX data by inbound hash",
+      error,
+    });
     return [];
   }
 };
