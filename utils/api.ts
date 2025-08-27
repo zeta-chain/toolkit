@@ -1,9 +1,9 @@
 import axios, { AxiosRequestConfig, isAxiosError } from "axios";
 
 import {
+  CrossChainTx,
   CrossChainTxResponse,
   InboundHashToCctxResponseReturnType,
-  CrossChainTx,
   PendingNonce,
   PendingNoncesResponse,
   TssResponse,
