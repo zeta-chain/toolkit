@@ -10,7 +10,11 @@ import {
 } from "../../../../src/constants/commands/cctx";
 import { cctxOptionsSchema } from "../../../../src/schemas/commands/cctx";
 import type { CrossChainTx } from "../../../../types/trackCCTX.types";
-import { fetchFromApi, sleep } from "../../../../utils";
+import {
+  getCctxByHash,
+  getCctxDataByInboundHash,
+  sleep,
+} from "../../../../utils";
 
 /**
  * Event map:
@@ -23,10 +27,6 @@ interface CctxEvents {
 export const cctxEmitter = new EventEmitter<CctxEvents>();
 
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
-
-interface CctxResponse {
-  CrossChainTxs: CrossChainTx[];
-}
 
 /**
  * True if the CCTX is still in-flight and may mutate on‑chain.
@@ -57,6 +57,9 @@ const gatherCctxs = async (
   // Track which indexes we've *ever* queried so we still fetch each once
   const queriedOnce = new Set<string>();
 
+  // Stay in discovery mode until the first CCTX is found
+  let awaitingRootDiscovery = true;
+
   // eslint-disable-next-line no-constant-condition
   while (true) {
     // Check if we've exceeded the timeout (skip if timeout is 0)
@@ -70,31 +73,61 @@ const gatherCctxs = async (
     await Promise.all(
       [...frontier].map(async (hash) => {
         try {
-          const endpoint = `/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
-          const response = await fetchFromApi<CctxResponse>(rpc, endpoint);
-          const cctxs = response.CrossChainTxs;
+          // In the very first round, try both endpoints so the root hash
+          // can be either an inbound tx hash or a CCTX index/hash.
+          if (awaitingRootDiscovery) {
+            let discovered: CrossChainTx[] = [];
 
-          if (cctxs.length === 0) {
-            // Still 404 – keep trying
-            nextFrontier.add(hash);
-            return;
-          }
-
-          for (const tx of cctxs) {
-            // Store latest version
-            results.set(tx.index, tx);
-
-            // Always query this index at least once
-            if (!queriedOnce.has(tx.index)) {
-              nextFrontier.add(tx.index);
+            // Try cctx single endpoint FIRST
+            const single = await getCctxByHash(rpc, hash);
+            if (single) {
+              discovered.push(single);
+            } else {
+              // If not found via cctx, fall back to inboundHashToCctxData
+              const byInbound = await getCctxDataByInboundHash(rpc, hash);
+              if (byInbound.length > 0) {
+                discovered = discovered.concat(byInbound);
+              }
             }
 
-            // Keep querying while pending
-            if (isPending(tx)) {
-              nextFrontier.add(tx.inbound_params.observed_hash);
+            if (discovered.length === 0) {
+              // Still not found – keep retrying the root hash
+              nextFrontier.add(hash);
+              return;
             }
 
-            queriedOnce.add(tx.index);
+            // We discovered at least one CCTX; switch to inbound-only mode next rounds
+            awaitingRootDiscovery = false;
+
+            for (const tx of discovered) {
+              results.set(tx.index, tx);
+              if (!queriedOnce.has(tx.index)) {
+                nextFrontier.add(tx.index);
+              }
+              if (isPending(tx)) {
+                nextFrontier.add(tx.inbound_params.observed_hash);
+              }
+              queriedOnce.add(tx.index);
+            }
+          } else {
+            const cctxs = await getCctxDataByInboundHash(rpc, hash);
+
+            if (cctxs.length === 0) {
+              // Still 404 – keep trying
+              nextFrontier.add(hash);
+              return;
+            }
+
+            for (const tx of cctxs) {
+              results.set(tx.index, tx);
+              if (!queriedOnce.has(tx.index)) {
+                nextFrontier.add(tx.index);
+              }
+              if (isPending(tx)) {
+                nextFrontier.add(tx.inbound_params.observed_hash);
+              }
+              queriedOnce.add(tx.index);
+            }
           }
         } catch (err) {
           nextFrontier.add(hash); // retry on error
@@ -257,7 +290,7 @@ const main = async (options: CctxOptions) => {
 
 export const cctxCommand = new Command("cctx")
   .description("Query cross-chain transaction data in real-time")
-  .requiredOption("-h, --hash <hash>", "Inbound transaction hash")
+  .requiredOption("-h, --hash <hash>", "Inbound tx hash or CCTX hash")
   .option("-r, --rpc <rpc>", "RPC endpoint", DEFAULT_API_URL)
   .option(
     "-d, --delay <ms>",
