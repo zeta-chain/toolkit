@@ -24,11 +24,11 @@ export const cctxEmitter = new EventEmitter<CctxEvents>();
 
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
 
-interface CctxResponse {
+interface CctxListResponse {
   CrossChainTxs: CrossChainTx[];
 }
 
-interface CctxSingleResponse {
+interface CctxResponse {
   CrossChainTx: CrossChainTx;
 }
 
@@ -86,7 +86,7 @@ const gatherCctxs = async (
             let foundViaCctx = false;
             try {
               const cctxEndpoint = `/zeta-chain/crosschain/cctx/${hash}`;
-              const oneResp = await fetchFromApi<CctxSingleResponse>(
+              const oneResp = await fetchFromApi<CctxResponse>(
                 rpc,
                 cctxEndpoint
               );
@@ -100,7 +100,7 @@ const gatherCctxs = async (
             if (!foundViaCctx) {
               try {
                 const inbEndpoint = `/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
-                const inbResp = await fetchFromApi<CctxResponse>(
+                const inbResp = await fetchFromApi<CctxListResponse>(
                   rpc,
                   inbEndpoint
                 );
@@ -134,7 +134,10 @@ const gatherCctxs = async (
             }
           } else {
             const endpoint = `/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
-            const response = await fetchFromApi<CctxResponse>(rpc, endpoint);
+            const response = await fetchFromApi<CctxListResponse>(
+              rpc,
+              endpoint
+            );
             const cctxs = response.CrossChainTxs;
 
             if (cctxs.length === 0) {
