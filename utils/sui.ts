@@ -171,7 +171,7 @@ export const signAndExecuteTransaction = async ({
   return result;
 };
 
-export const chainIds = ["101", "103", "104"] as const;
+export const chainIds = ["105", "103", "104"] as const;
 export const networks = ["mainnet", "testnet", "localnet"] as const;
 
 export type SuiNetwork = (typeof networks)[number];
