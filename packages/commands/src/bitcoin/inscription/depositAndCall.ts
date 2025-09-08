@@ -48,6 +48,7 @@ const main = async (options: DepositAndCallOptions) => {
     );
 
     const revertAddress = options.revertAddress || address;
+    const revertOptions = { revertAddress };
 
     let encodedMessage: string | undefined;
     let data: Buffer;
@@ -61,7 +62,7 @@ const main = async (options: DepositAndCallOptions) => {
         bitcoinEncode(
           options.receiver,
           Buffer.from(trim0x(encodedMessage), "hex"),
-          revertAddress,
+          revertOptions,
           OpCode.DepositAndCall,
           options.format
         ),

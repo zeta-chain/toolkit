@@ -2,6 +2,12 @@ import { ethers } from "ethers";
 
 export type Address = string;
 export type BtcAddress = string;
+export type RevertOptions = {
+  abortAddress?: Address;
+  callOnRevert?: boolean;
+  revertAddress?: BtcAddress;
+  revertMessage?: Buffer | Uint8Array;
+};
 
 const MemoIdentifier = 0x5a;
 
@@ -31,12 +37,16 @@ class Header {
 class FieldsV0 {
   receiver: Address;
   payload: Buffer;
-  revertAddress: BtcAddress;
+  revertOptions: RevertOptions;
 
-  constructor(receiver: Address, payload: Buffer, revertAddress: BtcAddress) {
+  constructor(
+    receiver: Address,
+    payload: Buffer,
+    revertOptions: RevertOptions
+  ) {
     this.receiver = receiver;
     this.payload = payload;
-    this.revertAddress = revertAddress;
+    this.revertOptions = revertOptions;
   }
 }
 
@@ -44,7 +54,7 @@ class FieldsV0 {
  * Encodes data for a Bitcoin transaction
  * @param receiver - The address of the receiver
  * @param payload - The payload to be sent
- * @param revertAddress - Bitcoin address to revert funds to in case of failure
+ * @param revertOptions - Revert options
  * @param opCode - The operation code (defaults to DepositAndCall)
  * @param encodingFormat - The encoding format (defaults to ABI)
  * @returns The encoded data as a hex string
@@ -52,15 +62,18 @@ class FieldsV0 {
 export const bitcoinEncode = (
   receiver: Address,
   payload: Buffer,
-  revertAddress: BtcAddress,
+  revertOptions: RevertOptions,
   opCode: OpCode = OpCode.DepositAndCall,
   encodingFormat: EncodingFormat = EncodingFormat.ABI
 ): string => {
-  // Create memo header
+  // Validation: Deposit must not carry non-empty payload
+  if (opCode === OpCode.Deposit && payload && payload.length > 0) {
+    throw new Error("payload is not allowed for deposit operation");
+  }
+
   const header = new Header(encodingFormat, opCode);
 
-  // Create memo fields
-  const fields = new FieldsV0(receiver, payload, revertAddress);
+  const fields = new FieldsV0(receiver, payload, revertOptions);
 
   return bytesToHex(encodeToBytes(header, fields));
 };
@@ -76,7 +89,27 @@ export const encodeToBytes = (header: Header, fields: FieldsV0): Uint8Array => {
   headerBytes[0] = MemoIdentifier;
   headerBytes[1] = (0x00 << 4) | (header.encodingFmt & 0x0f);
   headerBytes[2] = ((header.opCode & 0x0f) << 4) | 0x00;
-  headerBytes[3] = 0b00000111;
+
+  // Data flags (bit layout v0):
+  // bit0: receiver, bit1: payload, bit2: revertAddress, bit3: abortAddress, bit4: revertMessage present (only when callOnRevert=true)
+  let flags = 0;
+  if (isNonZeroAddress(fields.receiver)) {
+    flags |= 1 << 0;
+  }
+  if (fields.payload && fields.payload.length > 0) {
+    flags |= 1 << 1;
+  }
+  if (fields.revertOptions?.revertAddress) {
+    flags |= 1 << 2;
+  }
+  if (fields.revertOptions?.abortAddress) {
+    flags |= 1 << 3;
+  }
+  if (fields.revertOptions?.callOnRevert) {
+    // bit4 marks presence of revert message argument; empty allowed
+    flags |= 1 << 4;
+  }
+  headerBytes[3] = flags & 0xff;
 
   // Encode Fields
   let encodedFields: Uint8Array;
@@ -92,35 +125,79 @@ export const encodeToBytes = (header: Header, fields: FieldsV0): Uint8Array => {
       throw new Error("Unsupported encoding format");
   }
 
-  // Combine Header and Fields
   return new Uint8Array(
     Buffer.concat([Buffer.from(headerBytes), Buffer.from(encodedFields)])
   );
 };
 
-// Helper: ABI Encoding
 const encodeFieldsABI = (fields: FieldsV0): Uint8Array => {
-  const types = ["address", "bytes", "string"];
-  const values = [fields.receiver, fields.payload, fields.revertAddress];
+  const types: string[] = [];
+  const values = [];
+
+  if (isNonZeroAddress(fields.receiver)) {
+    types.push("address");
+    values.push(fields.receiver);
+  }
+  if (fields.payload && fields.payload.length > 0) {
+    types.push("bytes");
+    values.push(fields.payload);
+  }
+  if (fields.revertOptions?.revertAddress) {
+    types.push("string");
+    values.push(fields.revertOptions.revertAddress);
+  }
+  if (fields.revertOptions?.abortAddress) {
+    types.push("address");
+    values.push(fields.revertOptions.abortAddress);
+  }
+  if (fields.revertOptions?.callOnRevert) {
+    types.push("bytes");
+    const msg = fields.revertOptions.revertMessage || Buffer.from([]);
+    values.push(msg);
+  }
+
   const encodedData = new ethers.AbiCoder().encode(types, values);
   return Uint8Array.from(Buffer.from(encodedData.slice(2), "hex"));
 };
 
-// Helper: Compact Encoding
 const encodeFieldsCompact = (
   compactFmt: EncodingFormat,
   fields: FieldsV0
 ): Uint8Array => {
-  const encodedReceiver = Buffer.from(hexStringToBytes(fields.receiver));
-  const encodedPayload = encodeDataCompact(compactFmt, fields.payload);
-  const encodedRevertAddress = encodeDataCompact(
-    compactFmt,
-    new TextEncoder().encode(fields.revertAddress)
-  );
+  const parts: Buffer[] = [];
 
-  return new Uint8Array(
-    Buffer.concat([encodedReceiver, encodedPayload, encodedRevertAddress])
-  );
+  if (isNonZeroAddress(fields.receiver)) {
+    const encodedReceiver = Buffer.from(addressToBytes(fields.receiver));
+    parts.push(Buffer.from(encodedReceiver));
+  }
+
+  if (fields.payload && fields.payload.length > 0) {
+    const encodedPayload = encodeDataCompact(compactFmt, fields.payload);
+    parts.push(Buffer.from(encodedPayload));
+  }
+
+  if (fields.revertOptions?.revertAddress) {
+    const encodedRevertAddress = encodeDataCompact(
+      compactFmt,
+      new TextEncoder().encode(fields.revertOptions.revertAddress)
+    );
+    parts.push(Buffer.from(encodedRevertAddress));
+  }
+
+  if (fields.revertOptions?.abortAddress) {
+    const encodedAbort = Buffer.from(
+      addressToBytes(fields.revertOptions.abortAddress)
+    );
+    parts.push(encodedAbort);
+  }
+
+  if (fields.revertOptions?.callOnRevert) {
+    const msg = fields.revertOptions.revertMessage || Buffer.from([]);
+    const encodedMsg = encodeDataCompact(compactFmt, msg);
+    parts.push(Buffer.from(encodedMsg));
+  }
+
+  return new Uint8Array(Buffer.concat(parts));
 };
 
 // Helper: Compact Data Encoding
@@ -157,15 +234,30 @@ const encodeDataCompact = (
 };
 
 const hexStringToBytes = (hexString: string): Uint8Array => {
-  if (hexString.length % 2 !== 0) {
+  const clean = hexString.startsWith("0x") ? hexString.slice(2) : hexString;
+  if (clean.length % 2 !== 0) {
     throw new Error("Hex string must have an even length");
   }
-
-  const bytes = new Uint8Array(hexString.length / 2);
-  for (let i = 0; i < hexString.length; i += 2) {
-    bytes[i / 2] = parseInt(hexString.substr(i, 2), 16);
+  const bytes = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < clean.length; i += 2) {
+    bytes[i / 2] = parseInt(clean.substr(i, 2), 16);
   }
   return bytes;
+};
+
+const addressToBytes = (addr: string): Uint8Array => {
+  const s = addr.startsWith("0x") ? addr.slice(2) : addr;
+  if (s.length !== 40) {
+    throw new Error("address must be 20 bytes");
+  }
+  return hexStringToBytes(s);
+};
+
+const isNonZeroAddress = (addr?: string): boolean => {
+  if (!addr) return false;
+  const s = addr.startsWith("0x") ? addr.slice(2) : addr;
+  if (s.length !== 40) return false;
+  return !/^0{40}$/i.test(s);
 };
 
 const bytesToHex = (bytes: Uint8Array): string => {

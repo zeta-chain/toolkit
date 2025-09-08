@@ -44,6 +44,7 @@ const main = async (options: DepositOptions) => {
     );
 
     const revertAddress = options.revertAddress || address;
+    const revertOptions = { revertAddress };
 
     let data: Buffer;
     if (options.receiver) {
@@ -51,7 +52,7 @@ const main = async (options: DepositOptions) => {
         bitcoinEncode(
           options.receiver,
           Buffer.from(""), // empty payload for deposit
-          revertAddress,
+          revertOptions,
           OpCode.Deposit,
           options.format
         ),
