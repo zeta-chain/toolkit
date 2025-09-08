@@ -211,6 +211,7 @@ export const createBitcoinInscriptionCommandWithCommonOptions = (
   return createBitcoinCommandWithCommonOptions(name)
     .option("--revert-address <address>", "Revert address")
     .option("--abort-address <address>", "Abort address")
+    .option("--revert-message <message>", "Revert message")
     .addOption(
       new Option("--network <network>", "Network")
         .choices(["signet", "mainnet"])

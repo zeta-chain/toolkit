@@ -47,7 +47,14 @@ const main = async (options: CallOptions) => {
 
     const revertAddress = options.revertAddress || address;
     const abortAddress = options.abortAddress;
-    const revertOptions = { abortAddress, revertAddress };
+    const revertMessage = Buffer.from(options.revertMessage || "", "utf8");
+
+    const revertOptions = {
+      abortAddress,
+      callOnRevert: true,
+      revertAddress,
+      revertMessage,
+    };
 
     let encodedMessage: string | undefined;
     let data: Buffer;
