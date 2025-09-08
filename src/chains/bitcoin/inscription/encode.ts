@@ -24,31 +24,16 @@ export enum EncodingFormat {
   CompactShort = 0b0001,
 }
 
-class Header {
+type Header = {
   encodingFmt: EncodingFormat;
   opCode: OpCode;
+};
 
-  constructor(encodingFmt: EncodingFormat, opCode: OpCode) {
-    this.encodingFmt = encodingFmt;
-    this.opCode = opCode;
-  }
-}
-
-class FieldsV0 {
-  receiver: Address;
+type FieldsV0 = {
   payload: Buffer;
+  receiver: Address;
   revertOptions: RevertOptions;
-
-  constructor(
-    receiver: Address,
-    payload: Buffer,
-    revertOptions: RevertOptions
-  ) {
-    this.receiver = receiver;
-    this.payload = payload;
-    this.revertOptions = revertOptions;
-  }
-}
+};
 
 /**
  * Encodes data for a Bitcoin transaction
@@ -71,9 +56,9 @@ export const bitcoinEncode = (
     throw new Error("payload is not allowed for deposit operation");
   }
 
-  const header = new Header(encodingFormat, opCode);
+  const header = { encodingFmt: encodingFormat, opCode };
 
-  const fields = new FieldsV0(receiver, payload, revertOptions);
+  const fields = { payload, receiver, revertOptions };
 
   return bytesToHex(encodeToBytes(header, fields));
 };
