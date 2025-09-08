@@ -44,7 +44,8 @@ const main = async (options: DepositOptions) => {
     );
 
     const revertAddress = options.revertAddress || address;
-    const revertOptions = { revertAddress };
+    const abortAddress = options.abortAddress;
+    const revertOptions = { abortAddress, revertAddress };
 
     let data: Buffer;
     if (options.receiver) {
@@ -94,7 +95,7 @@ const main = async (options: DepositOptions) => {
       operation: "Deposit",
       rawInscriptionData: data.toString("hex"),
       revealFee,
-      revertAddress,
+      revertOptions,
       sender: address,
     });
 

@@ -48,7 +48,8 @@ const main = async (options: DepositAndCallOptions) => {
     );
 
     const revertAddress = options.revertAddress || address;
-    const revertOptions = { revertAddress };
+    const abortAddress = options.abortAddress;
+    const revertOptions = { abortAddress, revertAddress };
 
     let encodedMessage: string | undefined;
     let data: Buffer;
@@ -110,7 +111,7 @@ const main = async (options: DepositAndCallOptions) => {
       operation: "DepositAndCall",
       rawInscriptionData: data.toString("hex"),
       revealFee,
-      revertAddress,
+      revertOptions,
       sender: address,
     });
 

@@ -94,6 +94,7 @@ export const baseBitcoinOptionsSchema = z.object({
 
 export const baseBitcoinInscriptionOptionsSchema =
   baseBitcoinOptionsSchema.extend({
+    abortAddress: z.string().optional(),
     commitFee: z
       .string()
       .optional()

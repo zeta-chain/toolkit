@@ -6,7 +6,10 @@ import ECPairFactory, { ECPairInterface } from "ecpair";
 import { ethers } from "ethers";
 import * as ecc from "tiny-secp256k1";
 
-import { EncodingFormat } from "../src/chains/bitcoin/inscription/encode";
+import {
+  EncodingFormat,
+  RevertOptions,
+} from "../src/chains/bitcoin/inscription/encode";
 import { BitcoinAccountData } from "../types/accounts.types";
 import {
   DEFAULT_BITCOIN_API,
@@ -17,7 +20,6 @@ import { type BtcUtxo, formatEncodingChoices } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { getAccountData } from "./accounts";
 import { handleError } from "./handleError";
-
 export interface BitcoinKeyPair {
   address: string;
   key: ECPairInterface;
@@ -35,7 +37,7 @@ export interface TransactionInfo {
   rawInscriptionData: string;
   receiver?: string;
   revealFee: number;
-  revertAddress?: string;
+  revertOptions: RevertOptions;
   sender: string;
 }
 
@@ -111,7 +113,8 @@ Total: ${totalSats} sats (${formatBTC(totalSats)} BTC)
 Gateway: ${info.gateway}
 Sender: ${info.sender}
 Receiver: ${info.receiver || notApplicable}
-Revert Address: ${info.revertAddress || notApplicable}
+Revert Address: ${info.revertOptions.revertAddress || notApplicable}
+Abort Address: ${info.revertOptions.abortAddress || notApplicable}
 Operation: ${info.operation}
 ${info.encodedMessage ? `Encoded Message: ${info.encodedMessage}` : ""}
 Encoding Format: ${info.format}
@@ -207,6 +210,7 @@ export const createBitcoinInscriptionCommandWithCommonOptions = (
 ): Command => {
   return createBitcoinCommandWithCommonOptions(name)
     .option("--revert-address <address>", "Revert address")
+    .option("--abort-address <address>", "Abort address")
     .addOption(
       new Option("--network <network>", "Network")
         .choices(["signet", "mainnet"])
