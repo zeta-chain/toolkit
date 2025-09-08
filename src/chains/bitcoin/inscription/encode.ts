@@ -1,5 +1,4 @@
 import { ethers } from "ethers";
-
 export type Address = string;
 export type BtcAddress = string;
 export type RevertOptions = {
@@ -230,7 +229,10 @@ const hexStringToBytes = (hexString: string): Uint8Array => {
   return bytes;
 };
 
-const addressToBytes = (addr: string): Uint8Array => {
+const addressToBytes = (addr: ethers.AddressLike): Uint8Array => {
+  if (typeof addr !== "string") {
+    throw new Error("address must be a 20-byte hex string");
+  }
   const s = addr.startsWith("0x") ? addr.slice(2) : addr;
   if (s.length !== 40) {
     throw new Error("address must be 20 bytes");
@@ -238,8 +240,8 @@ const addressToBytes = (addr: string): Uint8Array => {
   return hexStringToBytes(s);
 };
 
-const isNonZeroAddress = (addr?: string): boolean => {
-  if (!addr) return false;
+const isNonZeroAddress = (addr?: ethers.AddressLike): boolean => {
+  if (!addr || typeof addr !== "string") return false;
   const s = addr.startsWith("0x") ? addr.slice(2) : addr;
   if (s.length !== 40) return false;
   return !/^0{40}$/i.test(s);
