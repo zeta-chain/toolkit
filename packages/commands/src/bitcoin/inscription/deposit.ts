@@ -45,13 +45,16 @@ const main = async (options: DepositOptions) => {
 
     const revertAddress = options.revertAddress || address;
     const abortAddress = options.abortAddress;
-    const revertMessage = Buffer.from(options.revertMessage || "", "utf8");
+    const revertMessage =
+      options.revertMessage !== undefined
+        ? Buffer.from(options.revertMessage, "utf8")
+        : undefined;
 
     const revertOptions = {
       abortAddress,
       callOnRevert: true,
       revertAddress,
-      revertMessage,
+      ...(revertMessage !== undefined ? { revertMessage } : {}),
     };
 
     let data: Buffer;

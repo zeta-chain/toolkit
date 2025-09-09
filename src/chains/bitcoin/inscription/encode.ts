@@ -74,8 +74,6 @@ export const encodeToBytes = (header: Header, fields: FieldsV0): Uint8Array => {
   headerBytes[1] = (0x00 << 4) | (header.encodingFmt & 0x0f);
   headerBytes[2] = ((header.opCode & 0x0f) << 4) | 0x00;
 
-  // Data flags (bit layout v0):
-  // bit0: receiver, bit1: payload, bit2: revertAddress, bit3: abortAddress, bit4: revertMessage present (only when callOnRevert=true)
   let flags = 0;
   if (isNonZeroAddress(fields.receiver)) {
     flags |= 1 << 0;
@@ -89,8 +87,7 @@ export const encodeToBytes = (header: Header, fields: FieldsV0): Uint8Array => {
   if (fields.revertOptions?.abortAddress) {
     flags |= 1 << 3;
   }
-  if (fields.revertOptions?.callOnRevert) {
-    // bit4 marks presence of revert message argument; empty allowed
+  if (fields.revertOptions && fields.revertOptions.revertMessage) {
     flags |= 1 << 4;
   }
   headerBytes[3] = flags & 0xff;
@@ -134,9 +131,9 @@ const encodeFieldsABI = (fields: FieldsV0): Uint8Array => {
     types.push("address");
     values.push(fields.revertOptions.abortAddress);
   }
-  if (fields.revertOptions?.callOnRevert) {
+  if (fields.revertOptions?.revertMessage) {
     types.push("bytes");
-    const msg = fields.revertOptions.revertMessage || Buffer.from([]);
+    const msg = fields.revertOptions.revertMessage;
     values.push(msg);
   }
 
@@ -175,8 +172,11 @@ const encodeFieldsCompact = (
     parts.push(encodedAbort);
   }
 
-  if (fields.revertOptions?.callOnRevert) {
-    const msg = fields.revertOptions.revertMessage || Buffer.from([]);
+  if (
+    fields.revertOptions &&
+    fields.revertOptions.revertMessage !== undefined
+  ) {
+    const msg = fields.revertOptions.revertMessage;
     const encodedMsg = encodeDataCompact(compactFmt, msg);
     parts.push(Buffer.from(encodedMsg));
   }
