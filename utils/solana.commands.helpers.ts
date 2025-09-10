@@ -296,7 +296,7 @@ export const confirmSolanaTx = async (options: {
   console.log(`
 Network: ${options.api}
 Sender: ${options.sender}
-Recipient: ${options.receiver}
+receiver: ${options.receiver}
 Revert options: ${JSON.stringify(options.revertOptions)}${
     options.message ? `\nMessage: ${options.message}` : ""
   }${options.amount ? `\nAmount: ${options.amount}` : ""}${

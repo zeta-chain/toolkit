@@ -27,21 +27,21 @@ export const solanaDeposit = async (args: SolanaDepositArgs) => {
     network: parsedArgs.solanaNetwork,
     solanaWallet: wallet,
   });
-  let recipient: string;
+  let receiver: string;
   try {
     if (bech32.decode(parsedArgs.receiver)) {
-      recipient = ethers.solidityPacked(
+      receiver = ethers.solidityPacked(
         ["bytes"],
         [ethers.toUtf8Bytes(parsedArgs.receiver)]
       );
     } else {
-      recipient = parsedArgs.receiver;
+      receiver = parsedArgs.receiver;
     }
   } catch {
-    recipient = parsedArgs.receiver;
+    receiver = parsedArgs.receiver;
   }
   const { amount } = args;
-  const res = await client.solanaDeposit({ amount: Number(amount), recipient });
+  const res = await client.solanaDeposit({ amount: Number(amount), receiver });
   console.log(`Transaction hash: ${res}`);
 };
 

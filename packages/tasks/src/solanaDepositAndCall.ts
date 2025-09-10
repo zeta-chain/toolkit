@@ -40,26 +40,26 @@ export const solanaDepositAndCall = async (args: SolanaDepositAndCallArgs) => {
     solanaWallet: wallet,
   });
 
-  let recipient: string;
+  let receiver: string;
 
   try {
     if (bech32.decode(parsedArgs.receiver)) {
-      recipient = ethers.solidityPacked(
+      receiver = ethers.solidityPacked(
         ["bytes"],
         [ethers.toUtf8Bytes(parsedArgs.receiver)]
       );
     } else {
-      recipient = parsedArgs.receiver;
+      receiver = parsedArgs.receiver;
     }
   } catch {
-    recipient = parsedArgs.receiver;
+    receiver = parsedArgs.receiver;
   }
 
   const paramTypes = parseJson(parsedArgs.types, stringArraySchema);
 
   const res = await client.solanaDepositAndCall({
     amount: Number(parsedArgs.amount),
-    recipient,
+    receiver,
     types: paramTypes,
     values,
   });

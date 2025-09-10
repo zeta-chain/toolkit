@@ -84,9 +84,9 @@ export const solanaDeposit = async function (
 
   try {
     const tx = new anchor.web3.Transaction();
-    const recipient = Buffer.from(ethers.getBytes(args.receiver));
+    const receiver = Buffer.from(ethers.getBytes(args.receiver));
     const depositInstruction = await gatewayProgram.methods
-      .deposit(depositAmount, recipient)
+      .deposit(depositAmount, receiver)
       .accounts({
         pda: pdaAccount,
         signer: this.solanaAdapter
