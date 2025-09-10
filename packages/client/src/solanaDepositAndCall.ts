@@ -19,7 +19,7 @@ export const solanaDepositAndCall = async function (
   this: ZetaChainClient,
   args: {
     amount: number;
-    recipient: string;
+    receiver: string;
     types: string[];
     values: ParseAbiValuesReturnType;
   }
@@ -87,7 +87,7 @@ export const solanaDepositAndCall = async function (
 
   try {
     const tx = new anchor.web3.Transaction();
-    const recipient = Buffer.from(ethers.getBytes(args.recipient));
+    const recipient = Buffer.from(ethers.getBytes(args.receiver));
 
     if (!Array.isArray(args.types) || !Array.isArray(args.values)) {
       throw new Error(

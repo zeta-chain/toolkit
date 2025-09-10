@@ -30,7 +30,7 @@ const main = async (options: DepositOptions) => {
     amount: options.amount,
     api: API,
     mint: options.mint,
-    recipient: options.recipient,
+    receiver: options.receiver,
     revertOptions: createRevertOptions(revertOptions, keypair.publicKey),
     sender: keypair.publicKey.toBase58(),
   });
@@ -39,7 +39,7 @@ const main = async (options: DepositOptions) => {
     const tx = await solanaDeposit(
       {
         amount: options.amount,
-        receiver: options.recipient,
+        receiver: options.receiver,
         revertOptions,
         token: options.mint,
       },

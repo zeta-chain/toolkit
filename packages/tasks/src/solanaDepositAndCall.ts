@@ -16,7 +16,7 @@ import { ZetaChainClient } from "../../client/src";
 const solanaDepositAndCallArgsSchema = z.object({
   amount: z.string(),
   idPath: z.string(),
-  recipient: z.string(),
+  receiver: z.string(),
   solanaNetwork: z.string(),
   types: validJsonStringSchema,
   values: z.array(z.string()).min(1, "At least one value is required"),
@@ -43,16 +43,16 @@ export const solanaDepositAndCall = async (args: SolanaDepositAndCallArgs) => {
   let recipient: string;
 
   try {
-    if (bech32.decode(parsedArgs.recipient)) {
+    if (bech32.decode(parsedArgs.receiver)) {
       recipient = ethers.solidityPacked(
         ["bytes"],
-        [ethers.toUtf8Bytes(parsedArgs.recipient)]
+        [ethers.toUtf8Bytes(parsedArgs.receiver)]
       );
     } else {
-      recipient = parsedArgs.recipient;
+      recipient = parsedArgs.receiver;
     }
   } catch {
-    recipient = parsedArgs.recipient;
+    recipient = parsedArgs.receiver;
   }
 
   const paramTypes = parseJson(parsedArgs.types, stringArraySchema);
@@ -109,7 +109,7 @@ export const getKeypairFromFile = async (filepath: string) => {
 
 task("solana-deposit-and-call", "Solana deposit and call", solanaDepositAndCall)
   .addParam("amount", "Amount of SOL to deposit")
-  .addParam("recipient", "Universal contract address")
+  .addParam("receiver", "Universal contract address")
   .addOptionalParam("solanaNetwork", "Solana Network", "devnet")
   .addOptionalParam("idPath", "Path to id.json", "~/.config/solana/id.json")
   .addParam("types", "The types of the parameters (example: ['string'])")
