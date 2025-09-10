@@ -31,11 +31,14 @@ const main = async (options: ImportAccountOptions) => {
 };
 
 export const importAccountsCommand = new Command("import")
+  .summary("Import an existing account")
   .description(
-    "Import an existing account using either a private key or a mnemonic"
+    `Adds an account to the local key store using a private key or mnemonic phrase.
+
+You can choose the chain type and give the account a name.`
   )
   .addOption(
-    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
+    new Option("--type <type>", "Chain type").choices(AvailableAccountTypes)
   )
   .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
   .addOption(
