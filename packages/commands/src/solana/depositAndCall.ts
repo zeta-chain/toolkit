@@ -35,7 +35,7 @@ const main = async (options: DepositAndCallOptions) => {
     api: API,
     message: values.join(", "),
     mint: options.mint,
-    recipient: options.recipient,
+    receiver: options.receiver,
     revertOptions: createRevertOptions(revertOptions, keypair.publicKey),
     sender: keypair.publicKey.toBase58(),
   });
@@ -44,7 +44,7 @@ const main = async (options: DepositAndCallOptions) => {
     const tx = await solanaDepositAndCall(
       {
         amount: options.amount,
-        receiver: options.recipient,
+        receiver: options.receiver,
         revertOptions,
         token: options.mint,
         types: options.types,

@@ -32,7 +32,7 @@ const main = async (options: CallOptions) => {
   await confirmSolanaTx({
     api: API,
     message: values.join(", "),
-    recipient: options.recipient,
+    receiver: options.receiver,
     revertOptions: createRevertOptions(revertOptions, keypair.publicKey),
     sender: keypair.publicKey.toBase58(),
   });
@@ -40,7 +40,7 @@ const main = async (options: CallOptions) => {
   try {
     const tx = await solanaCall(
       {
-        receiver: options.recipient,
+        receiver: options.receiver,
         revertOptions,
         types: options.types,
         values,
