@@ -2907,10 +2907,10 @@
   dependencies:
     "@wallet-standard/base" "^1.1.0"
 
-"@zetachain/networks@14.0.0-rc1":
-  version "14.0.0-rc1"
-  resolved "https://registry.npmjs.org/@zetachain/networks/-/networks-14.0.0-rc1.tgz#b1085778136d0cdeea6a707e38869efadc0ab204"
-  integrity sha512-glTskelKYgeVaj7lKsWQLqO1LrTZ57Akep6bsJsdZNN9jsLZRYiWR6BMdR70BUZZLh8VwV5mLb8+fgEueVdPnQ==
+"@zetachain/networks@15.0.0":
+  version "15.0.0"
+  resolved "https://registry.yarnpkg.com/@zetachain/networks/-/networks-15.0.0.tgz#2e70d1931d20e39faeb31a849833e17b29b01aeb"
+  integrity sha512-XixaZiVhE8aNcDtaYHlgulkCvCCOYjV6h3t5ZVp7VLrzIjXc2KpDtlcicsIyyb9nJ0WfD1I8gD5BZ2crL8ExIA==
   dependencies:
     dotenv "^16.1.4"
 
