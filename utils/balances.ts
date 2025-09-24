@@ -3,6 +3,10 @@ import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import {
+  CoinType,
+  coinTypeToJSON,
+} from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
 import axios, { AxiosError } from "axios";
 import { AbiCoder, ethers } from "ethers";
 
@@ -47,12 +51,12 @@ export const collectTokensFromForeignCoins = (
   zetaChainId: string
 ): Token[] => {
   const mappedTokens = foreignCoins.flatMap((foreignCoin) => {
-    if (String(foreignCoin.coin_type) === "Gas") {
+    if (String(foreignCoin.coin_type) === coinTypeToJSON(CoinType.Gas)) {
       // Return an array of two tokens for Gas coin type
       return [
         {
-          chain_id: foreignCoin.foreign_chain_id,
-          coin_type: foreignCoin.coin_type,
+          chain_id: String(foreignCoin.foreign_chain_id),
+          coin_type: String(foreignCoin.coin_type),
           decimals: foreignCoin.decimals,
           symbol: foreignCoin.symbol,
           zrc20: foreignCoin.zrc20_contract_address,
@@ -65,7 +69,9 @@ export const collectTokensFromForeignCoins = (
           symbol: foreignCoin.symbol,
         },
       ];
-    } else if (String(foreignCoin.coin_type) === "ERC20") {
+    } else if (
+      String(foreignCoin.coin_type) === coinTypeToJSON(CoinType.ERC20)
+    ) {
       const supportedChain = supportedChains.find(
         (sc) => sc.chain_id === String(foreignCoin.foreign_chain_id)
       );
