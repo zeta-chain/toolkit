@@ -4,6 +4,11 @@ import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
 import {
+  ChainSDKType,
+  Vm,
+  vmToJSON,
+} from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
+import {
   CoinType,
   coinTypeToJSON,
 } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
@@ -20,11 +25,6 @@ import {
   TokenBalance,
   TokenContract,
 } from "../types/balances.types";
-import {
-  ChainSDKType,
-  Vm,
-  vmToJSON,
-} from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import { handleError } from "./handleError";
 
 export const TON_MAINNET_API = "https://tonapi.io/v2/accounts";

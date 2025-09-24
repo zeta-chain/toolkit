@@ -1,9 +1,10 @@
-import { TokenBalance } from "../../../types/balances.types";
 import {
   ChainSDKType,
   Vm,
   vmToJSON,
 } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
+
+import { TokenBalance } from "../../../types/balances.types";
 import {
   addZetaTokens,
   collectTokensFromForeignCoins,

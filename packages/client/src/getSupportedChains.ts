@@ -1,5 +1,5 @@
-import axios from "axios";
 import { QuerySupportedChainsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/query";
+import axios from "axios";
 
 import { ZetaChainClient } from "./client";
 

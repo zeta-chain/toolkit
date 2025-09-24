@@ -1,6 +1,7 @@
 import { mainnet, testnet } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import { CoinType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
 import axios from "axios";
 import { BigNumberish, ethers } from "ethers";
@@ -12,7 +13,6 @@ import {
 } from "../../../types/getFees.types";
 import { handleError } from "../../../utils/handleError";
 import { ZetaChainClient } from "./client";
-import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 
 const fetchZEVMFees = async (
   zrc20: (typeof mainnet)[number],

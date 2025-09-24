@@ -1,5 +1,7 @@
 import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
 import { QueryAllForeignCoinsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/query";
+import type { QuerySupportedChainsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/query";
+import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
@@ -14,9 +16,7 @@ import {
   ChainParams,
   ChainTokenMap,
 } from "../../../../../types/chains.types";
-import type { QuerySupportedChainsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/query";
 import { fetchFromApi } from "../../../../../utils/api";
-import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 
 const TABLE_CONFIG = {
   border: getBorderCharacters("norc"),
