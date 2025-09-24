@@ -20,7 +20,11 @@ import {
   TokenBalance,
   TokenContract,
 } from "../types/balances.types";
-import { ObserverSupportedChain } from "../types/supportedChains.types";
+import {
+  ChainSDKType,
+  Vm,
+  vmToJSON,
+} from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import { handleError } from "./handleError";
 
 export const TON_MAINNET_API = "https://tonapi.io/v2/accounts";
@@ -47,7 +51,7 @@ export const parseTokenId = (
  */
 export const collectTokensFromForeignCoins = (
   foreignCoins: ForeignCoinsSDKType[],
-  supportedChains: ObserverSupportedChain[],
+  supportedChains: ChainSDKType[],
   zetaChainId: string
 ): Token[] => {
   const mappedTokens = foreignCoins.flatMap((foreignCoin) => {
@@ -73,7 +77,7 @@ export const collectTokensFromForeignCoins = (
       String(foreignCoin.coin_type) === coinTypeToJSON(CoinType.ERC20)
     ) {
       const supportedChain = supportedChains.find(
-        (sc) => sc.chain_id === String(foreignCoin.foreign_chain_id)
+        (sc) => sc.chain_id === foreignCoin.foreign_chain_id
       );
 
       // Create tokens based on VM type
@@ -86,7 +90,7 @@ export const collectTokensFromForeignCoins = (
       };
 
       // Only add the original token if we have a supported chain
-      if (supportedChain?.vm === "evm") {
+      if (String(supportedChain?.vm) === vmToJSON(Vm.evm)) {
         const evmToken: Token = {
           chain_id: String(foreignCoin.foreign_chain_id),
           coin_type: "ERC20",
@@ -96,7 +100,7 @@ export const collectTokensFromForeignCoins = (
           zrc20: foreignCoin.zrc20_contract_address,
         };
         return [evmToken, zrc20Token];
-      } else if (supportedChain?.vm === "svm") {
+      } else if (String(supportedChain?.vm) === vmToJSON(Vm.svm)) {
         const svmToken: Token = {
           chain_id: String(foreignCoin.foreign_chain_id),
           coin_type: "SPL",
@@ -106,7 +110,7 @@ export const collectTokensFromForeignCoins = (
           zrc20: foreignCoin.zrc20_contract_address,
         };
         return [svmToken, zrc20Token];
-      } else if (supportedChain?.vm === "mvm_sui") {
+      } else if (String(supportedChain?.vm) === vmToJSON(Vm.mvm_sui)) {
         const svmToken: Token = {
           chain_id: String(foreignCoin.foreign_chain_id),
           coin_type: "SUI",
@@ -141,7 +145,7 @@ export const collectTokensFromForeignCoins = (
  * Adds ZETA tokens to the tokens list
  */
 export const addZetaTokens = (
-  supportedChains: ObserverSupportedChain[],
+  supportedChains: ChainSDKType[],
   chains: Record<string, { chain_id: number }>,
   zetaChainId: string
 ): Token[] => {
@@ -149,24 +153,24 @@ export const addZetaTokens = (
   const wzetaTokens = supportedChains
     .map((chain) => {
       const chainLabel = Object.keys(chains).find(
-        (key) => chains[key].chain_id === parseInt(chain.chain_id)
+        (key) => chains[key].chain_id === Number(chain.chain_id)
       );
 
       if (chainLabel) {
         const contract = getAddress("zetaToken", chainLabel as ParamChainName);
         if (contract) {
           return {
-            chain_id: chain.chain_id,
+            chain_id: String(chain.chain_id),
             coin_type: "ERC20",
             contract,
             decimals: 18,
             symbol: "WZETA",
-          } as Token;
+          };
         }
       }
       return null;
     })
-    .filter((token): token is Token => token !== null);
+    .filter((token) => token !== null) as Token[];
 
   // Add ZETA token for ZetaChain
   const zetaToken: Token = {
@@ -175,7 +179,6 @@ export const addZetaTokens = (
     decimals: 18,
     symbol: "ZETA",
   };
-
   return [...wzetaTokens, zetaToken];
 };
 
@@ -184,13 +187,13 @@ export const addZetaTokens = (
  */
 export const enrichTokens = (
   tokens: Token[],
-  supportedChains: ObserverSupportedChain[]
+  supportedChains: ChainSDKType[]
 ): Token[] => {
   return tokens
     .map((token) => {
       const ticker = token.symbol.split("-")[0];
       const chain_name = supportedChains.find(
-        (c) => c.chain_id === token.chain_id?.toString()
+        (c) => c.chain_id === token.chain_id
       )?.name;
 
       // Skip tokens without a chain name

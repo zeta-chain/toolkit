@@ -12,6 +12,7 @@ import {
 } from "../../../types/getFees.types";
 import { handleError } from "../../../utils/handleError";
 import { ZetaChainClient } from "./client";
+import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 
 const fetchZEVMFees = async (
   zrc20: (typeof mainnet)[number],
@@ -120,9 +121,9 @@ export const getFees = async function (this: ZetaChainClient, gas: number) {
   const zrc20Addresses = addresses.filter((a) => a.type === "zrc20");
 
   await Promise.all(
-    supportedChains.map(async (n: { chain_id: string; chain_name: string }) => {
+    supportedChains.map(async (n: ChainSDKType) => {
       try {
-        const fee = await fetchCCMFees.call(this, n.chain_id, gas);
+        const fee = await fetchCCMFees.call(this, String(n.chain_id), gas);
         if (fee) fees.messaging.push(fee);
       } catch (error: unknown) {
         handleError({

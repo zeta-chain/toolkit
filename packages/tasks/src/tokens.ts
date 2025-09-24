@@ -21,9 +21,9 @@ const main = async (args: TokensArgs) => {
 
   const tableData = tokens.map((token) => {
     const chain = chains.find(
-      (chain) => chain.chain_id === String(token.foreign_chain_id)
+      (chain) => chain.chain_id === token.foreign_chain_id
     );
-    const name = chain ? chain.chain_name : "Unsupported Chain";
+    const name = chain ? chain.name : "Unsupported Chain";
     return {
       Chain: name,
       "ERC-20 on Connected Chain": token.asset || "",

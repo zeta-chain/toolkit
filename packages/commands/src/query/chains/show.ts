@@ -18,7 +18,7 @@ import {
   SUI_CHAIN_IDS,
   SuiChainId,
 } from "../../../../../types/chains.types";
-import { ObserverSupportedChain } from "../../../../../types/supportedChains.types";
+import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import { getAPIbyChainId } from "../../../../../utils/solana.commands.helpers";
 import { getSuiRpcByChainId } from "../../../../../utils/sui";
 import { fetchAllChainData } from "./list";
@@ -44,21 +44,21 @@ const isSuiChainId = (chainId: string): chainId is SuiChainId => {
 };
 
 const getRpcUrl = (
-  chain: ObserverSupportedChain,
+  chain: ChainSDKType,
   viemChain: Chain | undefined
 ): string => {
-  if (isSolanaChainId(chain.chain_id)) {
-    return getAPIbyChainId(chain.chain_id);
+  if (isSolanaChainId(String(chain.chain_id))) {
+    return getAPIbyChainId(String(chain.chain_id));
   }
-  if (isSuiChainId(chain.chain_id)) {
-    return getSuiRpcByChainId(chain.chain_id);
+  if (isSuiChainId(String(chain.chain_id))) {
+    return getSuiRpcByChainId(Number(chain.chain_id));
   }
   return viemChain?.rpcUrls?.default?.http?.[0] || "";
 };
 
 const getDerivedFieldValue = (
   field: string,
-  chain: ObserverSupportedChain,
+  chain: ChainSDKType,
   tokens: string[],
   confirmations: string | undefined,
   viemChain: Chain | undefined
@@ -95,13 +95,10 @@ const validateFieldValue = (
   return stringValue;
 };
 
-const getChainPropertyValue = (
-  chain: ObserverSupportedChain,
-  field: string
-): string => {
+const getChainPropertyValue = (chain: ChainSDKType, field: string): string => {
   // Handle direct chain properties
   if (field in chain) {
-    const value = chain[field as keyof ObserverSupportedChain];
+    const value = chain[field as keyof ChainSDKType];
     return validateFieldValue(value, field, chain.name);
   }
 
@@ -110,7 +107,7 @@ const getChainPropertyValue = (
   const matchingKey = chainKeys.find((key) => toFieldName(key) === field);
 
   if (matchingKey) {
-    const value = chain[matchingKey as keyof ObserverSupportedChain];
+    const value = chain[matchingKey as keyof ChainSDKType];
     return validateFieldValue(value, field, chain.name);
   }
 
@@ -127,7 +124,7 @@ const getChainPropertyValue = (
 
 // Helper function to get field value from chain or derived data
 const getFieldValue = (
-  chain: ObserverSupportedChain,
+  chain: ChainSDKType,
   field: string,
   tokens: string[],
   confirmations: string | undefined,
@@ -148,7 +145,7 @@ const getFieldValue = (
 };
 
 const getChainInfo = (
-  chain: ObserverSupportedChain,
+  chain: ChainSDKType,
   allTokens: ForeignCoinsSDKType[],
   chainParams: Array<{ chain_id: string; confirmation_count: string }>
 ): ChainInfo => {
@@ -157,10 +154,10 @@ const getChainInfo = (
     .map((t) => t.symbol);
 
   const confirmations = chainParams.find(
-    (p) => p.chain_id === chain.chain_id
+    (p) => p.chain_id === String(chain.chain_id)
   )?.confirmation_count;
 
-  const numericChainId = parseInt(chain.chain_id);
+  const numericChainId = Number(chain.chain_id);
   const viemChain = Object.values(viemChains).find(
     (c: Chain) => c.id === numericChainId
   );
@@ -169,7 +166,7 @@ const getChainInfo = (
 };
 
 const formatChainDetails = (
-  chain: ObserverSupportedChain,
+  chain: ChainSDKType,
   tokens: string[],
   confirmations: string | undefined,
   viemChain: Chain | undefined
@@ -197,12 +194,12 @@ const formatChainDetails = (
     );
   }
 
-  return baseDetails;
+  return baseDetails.map((row) => row.map(String));
 };
 
 const handleChainNotFound = (
   searchValue: string,
-  chains: ObserverSupportedChain[],
+  chains: ChainSDKType[],
   options: ChainsShowOptions,
   spinner: ReturnType<typeof ora> | null
 ): void => {
@@ -263,7 +260,7 @@ const main = async (options: ChainsShowOptions) => {
     // Find chain by the appropriate criteria
     const chain = chains.find((c) => {
       if (searchByChainId) {
-        return c.chain_id === searchValue;
+        return c.chain_id === BigInt(searchValue);
       } else {
         return c.name.toLowerCase() === searchValue.toLowerCase();
       }

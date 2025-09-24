@@ -4,7 +4,7 @@ import { OmitIndexSignature } from "./shared.types";
 
 export interface TokenBalance {
   balance: string;
-  chain_id: number | string | null;
+  chain_id: bigint | string | null;
   chain_name?: string;
   coin_type: string;
   contract?: string;
@@ -16,7 +16,7 @@ export interface TokenBalance {
 }
 
 export interface Token {
-  chain_id: number | string | null;
+  chain_id: bigint | string | null;
   chain_name?: string;
   coin_type: string;
   contract?: string;
