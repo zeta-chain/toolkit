@@ -2,6 +2,7 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
 import axios, { AxiosError } from "axios";
 import { AbiCoder, ethers } from "ethers";
 
@@ -15,7 +16,6 @@ import {
   TokenBalance,
   TokenContract,
 } from "../types/balances.types";
-import { ForeignCoin } from "../types/foreignCoins.types";
 import { ObserverSupportedChain } from "../types/supportedChains.types";
 import { handleError } from "./handleError";
 
@@ -42,12 +42,12 @@ export const parseTokenId = (
  * Collects tokens from foreign coins data
  */
 export const collectTokensFromForeignCoins = (
-  foreignCoins: ForeignCoin[],
+  foreignCoins: ForeignCoinsSDKType[],
   supportedChains: ObserverSupportedChain[],
   zetaChainId: string
 ): Token[] => {
   const mappedTokens = foreignCoins.flatMap((foreignCoin) => {
-    if (foreignCoin.coin_type === "Gas") {
+    if (String(foreignCoin.coin_type) === "Gas") {
       // Return an array of two tokens for Gas coin type
       return [
         {
@@ -65,9 +65,9 @@ export const collectTokensFromForeignCoins = (
           symbol: foreignCoin.symbol,
         },
       ];
-    } else if (foreignCoin.coin_type === "ERC20") {
+    } else if (String(foreignCoin.coin_type) === "ERC20") {
       const supportedChain = supportedChains.find(
-        (sc) => sc.chain_id === foreignCoin.foreign_chain_id
+        (sc) => sc.chain_id === String(foreignCoin.foreign_chain_id)
       );
 
       // Create tokens based on VM type
@@ -82,7 +82,7 @@ export const collectTokensFromForeignCoins = (
       // Only add the original token if we have a supported chain
       if (supportedChain?.vm === "evm") {
         const evmToken: Token = {
-          chain_id: foreignCoin.foreign_chain_id,
+          chain_id: String(foreignCoin.foreign_chain_id),
           coin_type: "ERC20",
           contract: foreignCoin.asset,
           decimals: foreignCoin.decimals,
@@ -92,7 +92,7 @@ export const collectTokensFromForeignCoins = (
         return [evmToken, zrc20Token];
       } else if (supportedChain?.vm === "svm") {
         const svmToken: Token = {
-          chain_id: foreignCoin.foreign_chain_id,
+          chain_id: String(foreignCoin.foreign_chain_id),
           coin_type: "SPL",
           contract: foreignCoin.asset,
           decimals: foreignCoin.decimals,
@@ -102,7 +102,7 @@ export const collectTokensFromForeignCoins = (
         return [svmToken, zrc20Token];
       } else if (supportedChain?.vm === "mvm_sui") {
         const svmToken: Token = {
-          chain_id: foreignCoin.foreign_chain_id,
+          chain_id: String(foreignCoin.foreign_chain_id),
           coin_type: "SUI",
           contract: foreignCoin.asset,
           decimals: foreignCoin.decimals,
@@ -114,7 +114,7 @@ export const collectTokensFromForeignCoins = (
 
       // If no matching chain type, just return the ZRC20 token
       return [zrc20Token];
-    } else if (foreignCoin.coin_type === "ZRC20") {
+    } else {
       // Handle ZRC20 tokens
       return [
         {
@@ -126,9 +126,6 @@ export const collectTokensFromForeignCoins = (
         },
       ];
     }
-
-    // In case the coin_type is something else
-    return [];
   });
 
   return mappedTokens;

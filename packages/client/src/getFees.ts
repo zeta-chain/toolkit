@@ -1,10 +1,11 @@
 import { mainnet, testnet } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import { CoinType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
 import axios from "axios";
 import { BigNumberish, ethers } from "ethers";
 
 import { ZRC20Contract } from "../../../types/contracts.types";
-import { ForeignCoin } from "../../../types/foreignCoins.types";
 import {
   ConvertGasToZetaResponse,
   FeeItem,
@@ -15,7 +16,7 @@ import { ZetaChainClient } from "./client";
 const fetchZEVMFees = async (
   zrc20: (typeof mainnet)[number],
   rpcUrl: string,
-  foreignCoins: ForeignCoin[]
+  foreignCoins: ForeignCoinsSDKType[]
 ): Promise<FeeItem | undefined> => {
   const provider = new ethers.JsonRpcProvider(rpcUrl);
   const contract = new ethers.Contract(
@@ -40,8 +41,8 @@ const fetchZEVMFees = async (
   const protocolFee = ethers.toBigInt(rawProtocolFlatFee);
   const gasToken = foreignCoins.find((foreignCoin) => {
     return (
-      foreignCoin.foreign_chain_id === zrc20.foreign_chain_id &&
-      foreignCoin.coin_type === "Gas"
+      String(foreignCoin.foreign_chain_id) === zrc20.foreign_chain_id &&
+      foreignCoin.coin_type === CoinType.Gas
     );
   });
 

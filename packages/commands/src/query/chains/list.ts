@@ -1,3 +1,5 @@
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import { QueryAllForeignCoinsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/query";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
@@ -12,10 +14,6 @@ import {
   ChainParams,
   ChainTokenMap,
 } from "../../../../../types/chains.types";
-import {
-  ForeignCoin,
-  ForeignCoinsResponse,
-} from "../../../../../types/foreignCoins.types";
 import {
   ObserverSupportedChain,
   ObserverSupportedChainsResponse,
@@ -39,7 +37,7 @@ export const fetchAllChainData = async (api: string): Promise<ChainData> => {
       api,
       "/zeta-chain/observer/supportedChains"
     ),
-    fetchFromApi<ForeignCoinsResponse>(
+    fetchFromApi<QueryAllForeignCoinsResponseSDKType>(
       api,
       "/zeta-chain/fungible/foreign_coins"
     ),
@@ -58,17 +56,18 @@ export const fetchAllChainData = async (api: string): Promise<ChainData> => {
 
 const formatChainsTable = (
   chains: ObserverSupportedChain[],
-  tokens: ForeignCoin[],
+  tokens: ForeignCoinsSDKType[],
   chainParams: ChainParams[]
 ): string[][] => {
   const headers = ["Chain ID", "Chain Name", "Count", "Tokens"];
 
   // Group tokens by foreign_chain_id
   const tokensByChain: ChainTokenMap = tokens.reduce((acc, token) => {
-    if (!acc[token.foreign_chain_id]) {
-      acc[token.foreign_chain_id] = [];
+    const foreign_chain_id = String(token.foreign_chain_id);
+    if (!acc[foreign_chain_id]) {
+      acc[foreign_chain_id] = [];
     }
-    acc[token.foreign_chain_id].push(token.symbol);
+    acc[foreign_chain_id].push(token.symbol);
     return acc;
   }, {} as ChainTokenMap);
 

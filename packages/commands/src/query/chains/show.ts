@@ -1,3 +1,4 @@
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
@@ -148,11 +149,11 @@ const getFieldValue = (
 
 const getChainInfo = (
   chain: ObserverSupportedChain,
-  allTokens: Array<{ foreign_chain_id: string; symbol: string }>,
+  allTokens: ForeignCoinsSDKType[],
   chainParams: Array<{ chain_id: string; confirmation_count: string }>
 ): ChainInfo => {
   const tokens = allTokens
-    .filter((t) => t.foreign_chain_id === chain.chain_id)
+    .filter((t) => t.foreign_chain_id === BigInt(chain.chain_id))
     .map((t) => t.symbol);
 
   const confirmations = chainParams.find(

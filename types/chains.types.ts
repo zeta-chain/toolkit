@@ -1,3 +1,5 @@
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+
 export interface ChainParams {
   chain_id: string;
   confirmation_count: string;
@@ -14,7 +16,7 @@ export interface ChainConfirmationMap {
 export interface ChainData {
   chainParams: ChainParams[];
   chains: import("./supportedChains.types").ObserverSupportedChain[];
-  tokens: import("./foreignCoins.types").ForeignCoin[];
+  tokens: ForeignCoinsSDKType[];
 }
 
 export const SOLANA_CHAIN_IDS = ["900", "901"] as const;

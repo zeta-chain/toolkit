@@ -1,4 +1,6 @@
-import { ForeignCoin } from "../types/foreignCoins.types";
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import { CoinType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
+
 import { Pool } from "../types/pools.types";
 import {
   formatPoolsWithTokenDetails,
@@ -64,13 +66,13 @@ describe("generateUniquePairs", () => {
 describe("formatPoolsWithTokenDetails", () => {
   const mockZetaTokenAddress = "0xZETA";
 
-  const mockForeignCoins: ForeignCoin[] = [
+  const mockForeignCoins: ForeignCoinsSDKType[] = [
     {
       asset: "toka",
-      coin_type: "ERC20",
+      coin_type: CoinType.ERC20,
       decimals: 6,
-      foreign_chain_id: "eth",
-      gas_limit: "100000",
+      foreign_chain_id: BigInt(1),
+      gas_limit: BigInt(100000),
       liquidity_cap: "1000000",
       name: "Token A",
       paused: false,
@@ -79,10 +81,10 @@ describe("formatPoolsWithTokenDetails", () => {
     },
     {
       asset: "tokb",
-      coin_type: "ERC20",
+      coin_type: CoinType.ERC20,
       decimals: 18,
-      foreign_chain_id: "bsc",
-      gas_limit: "100000",
+      foreign_chain_id: BigInt(2),
+      gas_limit: BigInt(100000),
       liquidity_cap: "1000000",
       name: "Token B",
       paused: false,
