@@ -1,10 +1,10 @@
 import { QueryGetCctxResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/crosschain/query";
+import { PendingNoncesSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/pending_nonces";
+import { QueryAllPendingNoncesResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/query";
 import axios, { AxiosRequestConfig, isAxiosError } from "axios";
 
 import {
   InboundHashToCctxResponseReturnType,
-  PendingNonce,
-  PendingNoncesResponse,
   TssResponse,
 } from "../types/trackCCTX.types";
 import { handleError } from "./handleError";
@@ -93,9 +93,9 @@ export const getCctxByInboundHash = async (
 export const getPendingNoncesForTss = async (
   api: string,
   tss: string
-): Promise<PendingNonce[]> => {
+): Promise<PendingNoncesSDKType[]> => {
   try {
-    const data = await fetchFromApi<PendingNoncesResponse>(
+    const data = await fetchFromApi<QueryAllPendingNoncesResponseSDKType>(
       api,
       `/zeta-chain/observer/pendingNonces`
     );

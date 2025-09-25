@@ -26,23 +26,6 @@ export type CCTXs = Record<string, CCTX[]>;
 
 export type Spinners = Record<string, boolean>;
 
-export interface PendingNonce {
-  chain_id: string;
-  nonce_high: string;
-  nonce_low: string;
-  tss: string;
-}
-
-interface Pagination {
-  next_key: null | string;
-  total: string;
-}
-
-export interface PendingNoncesResponse {
-  pagination: Pagination;
-  pending_nonces: PendingNonce[];
-}
-
 const InboundHashToCctxResponseSchema = z.object({
   inboundHashToCctx: z.object({
     cctx_index: z.array(z.string()),

@@ -1,15 +1,10 @@
 import { isValidTransactionDigest as isValidSuiTransactionDigest } from "@mysten/sui/utils";
+import { PendingNoncesSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/pending_nonces";
 import bs58 from "bs58";
 import { ethers } from "ethers";
 import { isString } from "lodash";
 
-import {
-  CCTX,
-  CCTXs,
-  Emitter,
-  PendingNonce,
-  Spinners,
-} from "../types/trackCCTX.types";
+import { CCTX, CCTXs, Emitter, Spinners } from "../types/trackCCTX.types";
 import { getCctxByHash } from "./api";
 import { formatStatusText, shortenHash } from "./formatting";
 
@@ -85,7 +80,7 @@ export const updateEmitter = (
   tx: CCTX,
   cctxs: CCTXs,
   spinners: Spinners,
-  pendingNonces: PendingNonce[],
+  pendingNonces: PendingNoncesSDKType[],
   emitter: Emitter | null,
   json: boolean
 ): Spinners => {
@@ -99,7 +94,7 @@ export const updateEmitter = (
   // Calculate queue position if applicable
   let queue = "";
   const pendingNonce = pendingNonces.find(
-    (n) => n.chain_id === tx.receiver_chainId
+    (n) => String(n.chain_id) === tx.receiver_chainId
   );
 
   if (pendingNonce) {

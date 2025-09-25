@@ -1,9 +1,6 @@
-import {
-  CCTXs,
-  Emitter,
-  PendingNonce,
-  Spinners,
-} from "../types/trackCCTX.types";
+import { PendingNoncesSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/pending_nonces";
+
+import { CCTXs, Emitter, Spinners } from "../types/trackCCTX.types";
 import {
   getCctxByHash,
   getCctxByInboundHash,
@@ -19,7 +16,7 @@ import {
 
 export interface TransactionState {
   cctxs: CCTXs;
-  pendingNonces: PendingNonce[];
+  pendingNonces: PendingNoncesSDKType[];
   pollCount: number;
   spinners: Spinners;
 }
@@ -201,7 +198,7 @@ export const pollTransactions = async ({
   }
 
   // Update pending nonces
-  let pendingNonces: PendingNonce[] = [];
+  let pendingNonces: PendingNoncesSDKType[] = [];
   try {
     pendingNonces = await getPendingNoncesForTss(api, tss);
   } catch {
