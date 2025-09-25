@@ -1,10 +1,6 @@
 import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
 import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
-
-export interface ChainParams {
-  chain_id: string;
-  confirmation_count: string;
-}
+import { ChainParamsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/params";
 
 export interface ChainTokenMap {
   [chainId: string]: string[];
@@ -15,7 +11,7 @@ export interface ChainConfirmationMap {
 }
 
 export interface ChainData {
-  chainParams: ChainParams[];
+  chainParams: ChainParamsSDKType[];
   chains: ChainSDKType[];
   tokens: ForeignCoinsSDKType[];
 }

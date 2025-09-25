@@ -1,5 +1,6 @@
 import { mainnet, testnet } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
+import { QueryConvertGasToZetaResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/crosschain/query";
 import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
 import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import { CoinType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
@@ -7,10 +8,7 @@ import axios from "axios";
 import { BigNumberish, ethers } from "ethers";
 
 import { ZRC20Contract } from "../../../types/contracts.types";
-import {
-  ConvertGasToZetaResponse,
-  FeeItem,
-} from "../../../types/getFees.types";
+import { FeeItem } from "../../../types/getFees.types";
 import { handleError } from "../../../utils/handleError";
 import { ZetaChainClient } from "./client";
 
@@ -79,7 +77,7 @@ const fetchCCMFees = async function (
 
   try {
     const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
-    const response = await axios.get<ConvertGasToZetaResponse>(url);
+    const response = await axios.get<QueryConvertGasToZetaResponseSDKType>(url);
     const isResponseOk = response.status >= 200 && response.status < 300;
 
     if (!isResponseOk) {

@@ -22,6 +22,7 @@ import {
 import { getAPIbyChainId } from "../../../../../utils/solana.commands.helpers";
 import { getSuiRpcByChainId } from "../../../../../utils/sui";
 import { fetchAllChainData } from "./list";
+import { ChainParamsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/params";
 
 type ChainsShowOptions = z.infer<typeof chainsShowOptionsSchema>;
 
@@ -147,15 +148,15 @@ const getFieldValue = (
 const getChainInfo = (
   chain: ChainSDKType,
   allTokens: ForeignCoinsSDKType[],
-  chainParams: Array<{ chain_id: string; confirmation_count: string }>
+  chainParams: ChainParamsSDKType[]
 ): ChainInfo => {
   const tokens = allTokens
     .filter((t) => t.foreign_chain_id === BigInt(chain.chain_id))
     .map((t) => t.symbol);
 
-  const confirmations = chainParams.find(
-    (p) => p.chain_id === String(chain.chain_id)
-  )?.confirmation_count;
+  const confirmations = chainParams
+    .find((p) => p.chain_id === BigInt(chain.chain_id))
+    ?.confirmation_count.toString();
 
   const numericChainId = Number(chain.chain_id);
   const viemChain = Object.values(viemChains).find(
@@ -260,7 +261,7 @@ const main = async (options: ChainsShowOptions) => {
     // Find chain by the appropriate criteria
     const chain = chains.find((c) => {
       if (searchByChainId) {
-        return c.chain_id === BigInt(searchValue);
+        return String(c.chain_id) === searchValue;
       } else {
         return c.name.toLowerCase() === searchValue.toLowerCase();
       }

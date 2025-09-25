@@ -13,9 +13,9 @@ import { chainsListOptionsSchema } from "../../../../../src/schemas/commands/cha
 import {
   ChainConfirmationMap,
   ChainData,
-  ChainParams,
   ChainTokenMap,
 } from "../../../../../types/chains.types";
+import { ChainParamsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/params";
 import { fetchFromApi } from "../../../../../utils/api";
 
 const TABLE_CONFIG = {
@@ -41,7 +41,7 @@ export const fetchAllChainData = async (api: string): Promise<ChainData> => {
     ),
     fetchFromApi<{
       chain_params: {
-        chain_params: { chain_id: string; confirmation_count: string }[];
+        chain_params: ChainParamsSDKType[];
       };
     }>(api, "/zeta-chain/observer/get_chain_params"),
   ]);
@@ -55,7 +55,7 @@ export const fetchAllChainData = async (api: string): Promise<ChainData> => {
 const formatChainsTable = (
   chains: ChainSDKType[],
   tokens: ForeignCoinsSDKType[],
-  chainParams: ChainParams[]
+  chainParams: ChainParamsSDKType[]
 ): string[][] => {
   const headers = ["Chain ID", "Chain Name", "Count", "Tokens"];
 
@@ -72,7 +72,7 @@ const formatChainsTable = (
   // Map chain_id to confirmation_count
   const confirmationByChain: ChainConfirmationMap = chainParams.reduce(
     (acc, param) => {
-      acc[param.chain_id] = param.confirmation_count;
+      acc[String(param.chain_id)] = String(param.confirmation_count);
       return acc;
     },
     {} as ChainConfirmationMap
