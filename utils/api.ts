@@ -1,7 +1,7 @@
+import { QueryGetCctxResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/crosschain/query";
 import axios, { AxiosRequestConfig, isAxiosError } from "axios";
 
 import {
-  CrossChainTxResponse,
   InboundHashToCctxResponseReturnType,
   PendingNonce,
   PendingNoncesResponse,
@@ -38,9 +38,9 @@ export const fetchFromApi = async <T>(
 export const getCctxByHash = async (
   api: string,
   hash: string
-): Promise<CrossChainTxResponse["CrossChainTx"] | undefined> => {
+): Promise<QueryGetCctxResponseSDKType["CrossChainTx"] | undefined> => {
   try {
-    const data = await fetchFromApi<CrossChainTxResponse>(
+    const data = await fetchFromApi<QueryGetCctxResponseSDKType>(
       api,
       `/zeta-chain/crosschain/cctx/${hash}`
     );

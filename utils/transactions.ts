@@ -55,10 +55,10 @@ export const updateTransactionStatus = async (
       confirmed_on_destination: false,
       outbound_tx_hash: cctx.outbound_params[0].hash,
       outbound_tx_tss_nonce: Number(cctx.outbound_params[0].tss_nonce),
-      receiver_chainId: cctx.outbound_params[0].receiver_chainId,
-      sender_chain_id: cctx.inbound_params.sender_chain_id,
-      status: cctx.cctx_status.status,
-      status_message: cctx.cctx_status.status_message,
+      receiver_chainId: String(cctx.outbound_params[0].receiver_chainId),
+      sender_chain_id: String(cctx?.inbound_params?.sender_chain_id),
+      status: String(cctx?.cctx_status?.status),
+      status_message: String(cctx?.cctx_status?.status_message),
     };
 
     const lastCCTX = cctxs[hash][cctxs[hash].length - 1];
