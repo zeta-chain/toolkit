@@ -1,6 +1,6 @@
 import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
-import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import { ChainParamsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/params";
+import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 
 export interface ChainTokenMap {
   [chainId: string]: string[];

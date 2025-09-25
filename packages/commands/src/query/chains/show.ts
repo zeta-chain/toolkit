@@ -1,4 +1,5 @@
 import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import { ChainParamsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/params";
 import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import chalk from "chalk";
 import { Command, Option } from "commander";
@@ -22,7 +23,6 @@ import {
 import { getAPIbyChainId } from "../../../../../utils/solana.commands.helpers";
 import { getSuiRpcByChainId } from "../../../../../utils/sui";
 import { fetchAllChainData } from "./list";
-import { ChainParamsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/params";
 
 type ChainsShowOptions = z.infer<typeof chainsShowOptionsSchema>;
 

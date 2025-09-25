@@ -1,5 +1,6 @@
 import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
 import { QueryAllForeignCoinsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/query";
+import { ChainParamsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/params";
 import type { QuerySupportedChainsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/query";
 import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import chalk from "chalk";
@@ -15,7 +16,6 @@ import {
   ChainData,
   ChainTokenMap,
 } from "../../../../../types/chains.types";
-import { ChainParamsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/params";
 import { fetchFromApi } from "../../../../../utils/api";
 
 const TABLE_CONFIG = {
