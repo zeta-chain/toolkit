@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { describe, expect, it } from "@jest/globals";
+import { PendingNoncesSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/pending_nonces";
 
-import {
-  CCTX,
-  CCTXs,
-  Emitter,
-  PendingNonce,
-  Spinners,
-} from "../types/trackCCTX.types";
+import { CCTX, CCTXs, Emitter, Spinners } from "../types/trackCCTX.types";
 import {
   checkCompletionStatus,
   isValidBitcoinTxHash,
@@ -132,7 +127,7 @@ describe("updateEmitter", () => {
       ],
     };
     const spinners: Spinners = { hash1: true };
-    const pendingNonces: PendingNonce[] = [];
+    const pendingNonces: PendingNoncesSDKType[] = [];
     const emitter: Emitter = {
       emit: jest.fn(),
     };
@@ -181,7 +176,7 @@ describe("updateEmitter", () => {
       ],
     };
     const spinners: Spinners = { hash1: true };
-    const pendingNonces: PendingNonce[] = [];
+    const pendingNonces: PendingNoncesSDKType[] = [];
     const emitter: Emitter = {
       emit: jest.fn(),
     };
@@ -230,7 +225,7 @@ describe("updateEmitter", () => {
       ],
     };
     const spinners: Spinners = { hash1: true };
-    const pendingNonces: PendingNonce[] = [];
+    const pendingNonces: PendingNoncesSDKType[] = [];
     const emitter: Emitter = {
       emit: jest.fn(),
     };

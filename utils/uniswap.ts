@@ -1,12 +1,12 @@
 import UniswapV2Pair from "@uniswap/v2-core/build/UniswapV2Pair.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import SystemContract from "@zetachain/protocol-contracts/abi/SystemContract.sol/SystemContract.json";
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
 import { ethers } from "ethers";
 
 import { ZetaChainClient } from "../packages/client/src/client";
 import { MULTICALL_ADDRESS } from "../src/constants/addresses";
 import { MulticallContract } from "../types/balances.types";
-import { ForeignCoin } from "../types/foreignCoins.types";
 import { Pair, Pool, Reserves, Zrc20Details } from "../types/pools.types";
 import MULTICALL3_ABI from "./multicall3.json";
 
@@ -239,7 +239,7 @@ export const getPoolData = async (
  */
 export const formatPoolsWithTokenDetails = (
   pools: Pool[],
-  foreignCoins: ForeignCoin[],
+  foreignCoins: ForeignCoinsSDKType[],
   zetaTokenAddress: string
 ): Pool[] => {
   // Create a mapping of ZRC20 details for quick lookup

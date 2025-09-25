@@ -1,3 +1,8 @@
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import { QueryAllForeignCoinsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/query";
+import { ChainParamsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/params";
+import type { QuerySupportedChainsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/query";
+import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
@@ -9,17 +14,8 @@ import { chainsListOptionsSchema } from "../../../../../src/schemas/commands/cha
 import {
   ChainConfirmationMap,
   ChainData,
-  ChainParams,
   ChainTokenMap,
 } from "../../../../../types/chains.types";
-import {
-  ForeignCoin,
-  ForeignCoinsResponse,
-} from "../../../../../types/foreignCoins.types";
-import {
-  ObserverSupportedChain,
-  ObserverSupportedChainsResponse,
-} from "../../../../../types/supportedChains.types";
 import { fetchFromApi } from "../../../../../utils/api";
 
 const TABLE_CONFIG = {
@@ -35,17 +31,17 @@ const TABLE_CONFIG = {
 
 export const fetchAllChainData = async (api: string): Promise<ChainData> => {
   const [chainsData, tokensData, chainParamsData] = await Promise.all([
-    fetchFromApi<ObserverSupportedChainsResponse>(
+    fetchFromApi<QuerySupportedChainsResponseSDKType>(
       api,
       "/zeta-chain/observer/supportedChains"
     ),
-    fetchFromApi<ForeignCoinsResponse>(
+    fetchFromApi<QueryAllForeignCoinsResponseSDKType>(
       api,
       "/zeta-chain/fungible/foreign_coins"
     ),
     fetchFromApi<{
       chain_params: {
-        chain_params: { chain_id: string; confirmation_count: string }[];
+        chain_params: ChainParamsSDKType[];
       };
     }>(api, "/zeta-chain/observer/get_chain_params"),
   ]);
@@ -57,25 +53,26 @@ export const fetchAllChainData = async (api: string): Promise<ChainData> => {
 };
 
 const formatChainsTable = (
-  chains: ObserverSupportedChain[],
-  tokens: ForeignCoin[],
-  chainParams: ChainParams[]
+  chains: ChainSDKType[],
+  tokens: ForeignCoinsSDKType[],
+  chainParams: ChainParamsSDKType[]
 ): string[][] => {
   const headers = ["Chain ID", "Chain Name", "Count", "Tokens"];
 
   // Group tokens by foreign_chain_id
   const tokensByChain: ChainTokenMap = tokens.reduce((acc, token) => {
-    if (!acc[token.foreign_chain_id]) {
-      acc[token.foreign_chain_id] = [];
+    const foreign_chain_id = String(token.foreign_chain_id);
+    if (!acc[foreign_chain_id]) {
+      acc[foreign_chain_id] = [];
     }
-    acc[token.foreign_chain_id].push(token.symbol);
+    acc[foreign_chain_id].push(token.symbol);
     return acc;
   }, {} as ChainTokenMap);
 
   // Map chain_id to confirmation_count
   const confirmationByChain: ChainConfirmationMap = chainParams.reduce(
     (acc, param) => {
-      acc[param.chain_id] = param.confirmation_count;
+      acc[String(param.chain_id)] = String(param.confirmation_count);
       return acc;
     },
     {} as ChainConfirmationMap
@@ -84,11 +81,11 @@ const formatChainsTable = (
   const rows = chains.map((chain) => [
     chain.chain_id,
     chain.name,
-    confirmationByChain[chain.chain_id] || "-",
-    (tokensByChain[chain.chain_id] || []).join(", ") || "-",
+    confirmationByChain[String(chain.chain_id)] || "-",
+    (tokensByChain[String(chain.chain_id)] || []).join(", ") || "-",
   ]);
 
-  return [headers, ...rows];
+  return [headers, ...rows.map((row) => row.map(String))];
 };
 
 type ChainsListOptions = z.infer<typeof chainsListOptionsSchema>;
