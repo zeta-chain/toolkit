@@ -1,6 +1,7 @@
 export * from "./accounts";
 export * from "./bitcoin";
 export * from "./evm";
+export * from "./faucet";
 export * from "./query";
 export * from "./solana";
 export * from "./sui";

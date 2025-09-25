@@ -18,7 +18,7 @@ export const solanaDeposit = async function (
   this: ZetaChainClient,
   args: {
     amount: number;
-    recipient: string;
+    receiver: string;
   }
 ) {
   if (!this.isSolanaWalletConnected()) {
@@ -84,9 +84,9 @@ export const solanaDeposit = async function (
 
   try {
     const tx = new anchor.web3.Transaction();
-    const recipient = Buffer.from(ethers.getBytes(args.recipient));
+    const receiver = Buffer.from(ethers.getBytes(args.receiver));
     const depositInstruction = await gatewayProgram.methods
-      .deposit(depositAmount, recipient)
+      .deposit(depositAmount, receiver)
       .accounts({
         pda: pdaAccount,
         signer: this.solanaAdapter
