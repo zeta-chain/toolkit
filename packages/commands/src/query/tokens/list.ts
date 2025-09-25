@@ -94,13 +94,14 @@ const main = async (options: TokensListOptions) => {
 
 export const listCommand = new Command("list")
   .alias("l")
-  .description("List all ZRC-20 tokens")
+  .summary("List all ZRC-20 tokens")
+  .description("Fetch and display all registered ZRC-20 tokens on ZetaChain")
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
-  .option("--json", "Output tokens as JSON")
+  .option("--json", "Output in JSON format")
   .addOption(
-    new Option("--columns <values...>", "Additional columns to show")
+    new Option("--columns <values...>", "Additional columns to display")
       .choices(["asset", "type", "decimals"])
       .default([])
   )
