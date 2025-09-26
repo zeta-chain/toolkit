@@ -170,7 +170,8 @@ const main = async (options: {
     let chosenStatus: string | null = null;
     let lastError: unknown = null;
 
-    while (true) {
+    let hasMore = true;
+    while (hasMore) {
       const pagination = {
         countTotal: totalValidators === undefined,
         key: nextKey || "0x",
@@ -241,14 +242,16 @@ const main = async (options: {
         const maybe = pageResponse["nextKey"];
         nk = typeof maybe === "string" ? maybe : undefined;
       } else if (Array.isArray(pageResponse)) {
-        const maybe = pageResponse[0];
+        const arr = pageResponse as unknown[];
+        const maybe = arr[0];
         nk = typeof maybe === "string" ? maybe : undefined;
       }
       // Stop if no next key or empty
       if (!nk || nk === "0x" || nk === "0x00" || pageValidators.length === 0) {
-        break;
+        hasMore = false;
+      } else {
+        nextKey = nk;
       }
-      nextKey = nk;
     }
 
     if (!options.json) {
