@@ -160,7 +160,9 @@ const main = async (options: {
     }
 
     if (options.json) {
-      console.log(JSON.stringify({ validators, pageResponse }, null, 2));
+      const bigintSafe = (_key: string, value: unknown) =>
+        typeof value === "bigint" ? value.toString() : value;
+      console.log(JSON.stringify({ validators, pageResponse }, bigintSafe, 2));
       return;
     }
 
@@ -173,9 +175,14 @@ const main = async (options: {
     const tableOutput = table(tableData, {
       border: getBorderCharacters("norc"),
       columns: {
-        0: { width: 20, wrapWord: true }, // Moniker
-        1: { width: 46, wrapWord: true }, // Operator
+        0: { width: 21, truncate: 20 },
+        1: {},
+        2: {},
+        3: {},
+        4: {},
+        5: {},
       },
+      columnDefault: { wrapWord: true },
     });
 
     console.log(tableOutput);
