@@ -12,9 +12,47 @@ const STAKING_PRECOMPILE = "0x0000000000000000000000000000000000000800";
 const STAKING_ABI = [
   // Match the posted artifact types for compatibility
   "function validators(string status, (bytes key, uint64 offset, uint64 limit, bool countTotal, bool reverse) pageRequest) view returns ((string operatorAddress, string consensusPubkey, bool jailed, uint8 status, uint256 tokens, uint256 delegatorShares, string description, int64 unbondingHeight, int64 unbondingTime, uint256 commission, uint256 minSelfDelegation)[] validators, (bytes nextKey, uint64 total) pageResponse)",
-] as const;
+];
 
-const formatValidatorsTable = (validators: any[], tokenDecimals: number) => {
+type ValidatorRowInput = {
+  commission?: unknown;
+  consensusPubkey?: string;
+  delegatorShares?: unknown;
+  description?: string | { moniker?: string };
+  jailed?: boolean;
+  minSelfDelegation?: unknown;
+  operatorAddress?: string;
+  status?: number;
+  tokens?: unknown;
+  unbondingHeight?: unknown;
+  unbondingTime?: unknown;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null;
+};
+
+const extractCommissionRate = (value: unknown): string | undefined => {
+  if (!isRecord(value)) return undefined;
+  const cr = value["commissionRates"];
+  if (!isRecord(cr)) return undefined;
+  const rate = cr["rate"];
+  return rate === undefined ? undefined : String(rate);
+};
+
+const formatUnitsSafe = (value: unknown, decimals: number): string => {
+  try {
+    const asBig = BigInt(String(value));
+    return ethers.formatUnits(asBig, decimals);
+  } catch {
+    return "-";
+  }
+};
+
+const formatValidatorsTable = (
+  validators: ValidatorRowInput[],
+  tokenDecimals: number
+): string[][] => {
   const headers = [
     "Moniker",
     "Operator",
@@ -34,8 +72,9 @@ const formatValidatorsTable = (validators: any[], tokenDecimals: number) => {
   const formatCommissionPercent = (val: unknown): string => {
     if (val == null) return "-";
     // If nested struct -> string rate in [0,1]
-    if (typeof val === "object" && (val as any)?.commissionRates?.rate) {
-      const rateStr = String((val as any).commissionRates.rate);
+    const rateStrFromNested = extractCommissionRate(val);
+    if (rateStrFromNested !== undefined) {
+      const rateStr = rateStrFromNested;
       const n = Number(rateStr);
       if (Number.isFinite(n)) return `${toRounded2(String(n * 100))}%`;
       return `${rateStr}%`;
@@ -57,9 +96,10 @@ const formatValidatorsTable = (validators: any[], tokenDecimals: number) => {
   };
 
   const rows = validators.map((v) => {
-    const votingPower = v.tokens
-      ? toRounded2(ethers.formatUnits(v.tokens, tokenDecimals))
-      : "-";
+    const votingPower =
+      v.tokens != null
+        ? toRounded2(formatUnitsSafe(v.tokens, tokenDecimals))
+        : "-";
     const commissionPct = formatCommissionPercent(v.commission);
 
     const statusMap: Record<number, string> = {
@@ -77,8 +117,8 @@ const formatValidatorsTable = (validators: any[], tokenDecimals: number) => {
 
     return [
       moniker,
-      v.operatorAddress,
-      statusMap[v.status] ?? String(v.status),
+      v.operatorAddress ?? "-",
+      v.status == null ? "-" : statusMap[v.status] ?? String(v.status),
       v.jailed ? "true" : "false",
       votingPower,
       commissionPct,
@@ -124,7 +164,7 @@ const main = async (options: {
     const candidates = buildStatusCandidates(options.status);
 
     // Auto-paginate until all validators are fetched
-    const validators: any[] = [];
+    const validators: ValidatorRowInput[] = [];
     let totalValidators: number | undefined = undefined;
     let nextKey: string | undefined = "0x";
     let chosenStatus: string | null = null;
@@ -139,7 +179,7 @@ const main = async (options: {
         reverse: false,
       };
 
-      let pageResult: any = null;
+      let pageResult: unknown = null;
 
       if (chosenStatus) {
         pageResult = await contract.validators(chosenStatus, pagination);
@@ -160,29 +200,50 @@ const main = async (options: {
 
       if (!pageResult && lastError) throw lastError;
 
-      const pageValidators = pageResult.validators ?? pageResult[0] ?? [];
-      const pageResponse = pageResult.pageResponse ?? pageResult[1] ?? {};
+      let pageValidators: ValidatorRowInput[] = [];
+      let pageResponse: unknown = {};
+
+      if (Array.isArray(pageResult)) {
+        pageValidators = (pageResult[0] ?? []) as ValidatorRowInput[];
+        pageResponse = pageResult[1] ?? {};
+      } else if (isRecord(pageResult)) {
+        const validatorsField = pageResult["validators"];
+        if (Array.isArray(validatorsField)) {
+          pageValidators = validatorsField as ValidatorRowInput[];
+        }
+        pageResponse = pageResult["pageResponse"] ?? {};
+      }
 
       // total may be string/BigInt/number; normalize once
       if (totalValidators === undefined) {
-        const totalRaw =
-          pageResponse?.total ??
-          (Array.isArray(pageResponse) ? pageResponse[1] : undefined);
+        let totalRaw: unknown = undefined;
+        if (isRecord(pageResponse) && "total" in pageResponse) {
+          totalRaw = pageResponse["total"];
+        } else if (Array.isArray(pageResponse)) {
+          totalRaw = pageResponse[1];
+        }
         if (totalRaw !== undefined) {
           try {
-            totalValidators = Number(totalRaw.toString());
+            const toStr = (
+              totalRaw as { toString?: () => string }
+            )?.toString?.();
+            totalValidators = Number(toStr ?? totalRaw);
           } catch {
-            totalValidators = Number(totalRaw);
+            totalValidators = Number(totalRaw as number);
           }
         }
       }
 
       validators.push(...pageValidators);
 
-      const nk = (pageResponse?.nextKey ??
-        (Array.isArray(pageResponse) ? pageResponse[0] : undefined)) as
-        | string
-        | undefined;
+      let nk: string | undefined = undefined;
+      if (isRecord(pageResponse) && "nextKey" in pageResponse) {
+        const maybe = pageResponse["nextKey"];
+        nk = typeof maybe === "string" ? maybe : undefined;
+      } else if (Array.isArray(pageResponse)) {
+        const maybe = pageResponse[0];
+        nk = typeof maybe === "string" ? maybe : undefined;
+      }
       // Stop if no next key or empty
       if (!nk || nk === "0x" || nk === "0x00" || pageValidators.length === 0) {
         break;
@@ -247,7 +308,7 @@ export const listCommand = new Command("list")
   .addOption(
     new Option("--status <status>", "Validator status filter")
       .choices(["Bonded", "Unbonding", "Unbonded", "Unspecified"])
-      .default("Bonded") as any
+      .default("Bonded")
   )
   .addOption(new Option("--json", "Output as JSON"))
   .action(async (rawOptions) => {
