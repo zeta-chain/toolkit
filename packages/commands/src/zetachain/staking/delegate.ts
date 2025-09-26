@@ -2,6 +2,7 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
+import { STAKING_PRECOMPILE } from "../../../../../src/constants/addresses";
 import {
   namePkRefineRule,
   rpcOrChainIdRefineRule,
@@ -17,7 +18,6 @@ import {
 } from "../../../../../utils/zetachain.command.helpers";
 import stakingArtifact from "../../query/validators/staking.json";
 
-const STAKING_PRECOMPILE = "0x0000000000000000000000000000000000000800";
 const STAKING_ABI = (stakingArtifact as { abi: unknown })
   .abi as ethers.InterfaceAbi;
 

@@ -5,11 +5,10 @@ import { ethers } from "ethers";
 import ora from "ora";
 import { getBorderCharacters, table } from "table";
 
+import { STAKING_PRECOMPILE } from "../../../../../src/constants/addresses";
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 import { validatorsListOptionsSchema } from "../../../../../src/schemas/commands/validators";
 import stakingArtifact from "./staking.json";
-
-const STAKING_PRECOMPILE = "0x0000000000000000000000000000000000000800";
 
 const STAKING_ABI = (stakingArtifact as { abi: unknown })
   .abi as ethers.InterfaceAbi;
