@@ -53,9 +53,15 @@ export const baseZetachainOptionsRefined = baseZetachainOptionsSchema.refine(
   }
 );
 
-type BaseZetachainOptions = z.infer<typeof baseZetachainOptionsRefined>;
+export type BaseZetachainOptions = z.infer<typeof baseZetachainOptionsRefined>;
 
-export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
+export type SetupTxOptionsSubset = Pick<
+  BaseZetachainOptions,
+  "name" | "privateKey" | "rpc" | "chainId"
+>;
+export type ConfirmTxOptionsSubset = Pick<BaseZetachainOptions, "yes">;
+
+export const setupZetachainTransaction = (options: SetupTxOptionsSubset) => {
   const privateKey =
     options.privateKey ||
     getAccountData<EVMAccountData>("evm", options.name)?.privateKey;
@@ -92,7 +98,7 @@ export const setupZetachainTransaction = (options: BaseZetachainOptions) => {
 };
 
 export const confirmZetachainTransaction = async (
-  options: BaseZetachainOptions
+  options: ConfirmTxOptionsSubset
 ) => {
   if (options.yes) {
     console.log("Proceeding with transaction (--yes flag set)");

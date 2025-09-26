@@ -7,6 +7,10 @@ import {
   rpcOrChainIdRefineRule,
 } from "../../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../../utils";
+import type {
+  ConfirmTxOptionsSubset,
+  SetupTxOptionsSubset,
+} from "../../../../../utils/zetachain.command.helpers";
 import {
   confirmZetachainTransaction,
   setupZetachainTransaction,
@@ -36,7 +40,12 @@ type DelegateOptions = z.infer<typeof delegateOptionsSchema>;
 
 const main = async (options: DelegateOptions) => {
   try {
-    const { signer } = setupZetachainTransaction(options as any);
+    const { signer } = setupZetachainTransaction({
+      chainId: options.chainId,
+      name: options.name,
+      privateKey: options.privateKey,
+      rpc: options.rpc,
+    } satisfies SetupTxOptionsSubset);
 
     const delegatorAddress = await signer.getAddress();
     const amountWei = ethers.parseEther(options.amount);
@@ -47,24 +56,26 @@ Validator: ${options.validator}
 Amount:    ${options.amount} ZETA
 `);
 
-    const isConfirmed = await confirmZetachainTransaction(options as any);
+    const isConfirmed = await confirmZetachainTransaction({
+      yes: options.yes,
+    } satisfies ConfirmTxOptionsSubset);
     if (!isConfirmed) return;
 
-    const contract = new ethers.Contract(
-      STAKING_PRECOMPILE,
-      STAKING_ABI,
-      signer
-    );
-
-    const tx = await contract.delegate(
+    const iface = new ethers.Interface(STAKING_ABI);
+    const data = iface.encodeFunctionData("delegate", [
       delegatorAddress,
       options.validator,
       amountWei,
-      { value: amountWei }
-    );
+    ]);
+
+    const tx = await signer.sendTransaction({
+      data,
+      to: STAKING_PRECOMPILE,
+      value: amountWei,
+    });
 
     const receipt = await tx.wait();
-    console.log("Transaction hash:", receipt?.hash);
+    console.log("Transaction hash:", tx.hash ?? receipt?.hash);
   } catch (error) {
     handleError({
       context: "Error during staking delegation",
