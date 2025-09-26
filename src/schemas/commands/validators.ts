@@ -7,12 +7,6 @@ export const validatorsListOptionsSchema = z.object({
   status: z
     .enum(["Bonded", "Unbonding", "Unbonded", "Unspecified"])
     .default("Bonded"),
-  limit: z
-    .preprocess(
-      (v) => (typeof v === "string" ? parseInt(v, 10) : v),
-      z.number().int().positive()
-    )
-    .default(50),
   json: z.boolean().default(false),
   decimals: z
     .preprocess(

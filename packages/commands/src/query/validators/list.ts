@@ -91,7 +91,6 @@ const formatValidatorsTable = (validators: any[], tokenDecimals: number) => {
 const main = async (options: {
   rpc: string;
   status: "Bonded" | "Unbonding" | "Unbonded" | "Unspecified";
-  limit: number;
   json: boolean;
   decimals: number;
 }) => {
@@ -104,14 +103,6 @@ const main = async (options: {
       STAKING_ABI,
       provider
     );
-
-    const pagination = {
-      key: "0x",
-      offset: 0,
-      limit: options.limit,
-      countTotal: true,
-      reverse: false,
-    };
 
     // Try Cosmos enum-style values first (BOND_STATUS_*), then other variants.
     const buildStatusCandidates = (
@@ -133,36 +124,89 @@ const main = async (options: {
 
     const candidates = buildStatusCandidates(options.status);
 
-    let result: any;
+    // Auto-paginate until all validators are fetched
+    const validators: any[] = [];
+    let totalValidators: number | undefined = undefined;
+    let nextKey: string | undefined = "0x";
+    let chosenStatus: string | null = null;
     let lastError: unknown = null;
-    for (const candidate of candidates) {
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        result = await contract.validators(candidate, pagination);
-        lastError = null;
-        break;
-      } catch (err) {
-        lastError = err;
-        continue;
+
+    while (true) {
+      const pagination = {
+        key: nextKey || "0x",
+        offset: 0,
+        limit: 100,
+        countTotal: totalValidators === undefined, // only request count on first page
+        reverse: false,
+      };
+
+      let pageResult: any = null;
+
+      if (chosenStatus) {
+        pageResult = await contract.validators(chosenStatus, pagination);
+      } else {
+        for (const candidate of candidates) {
+          try {
+            // eslint-disable-next-line no-await-in-loop
+            pageResult = await contract.validators(candidate, pagination);
+            chosenStatus = candidate;
+            lastError = null;
+            break;
+          } catch (err) {
+            lastError = err;
+            continue;
+          }
+        }
       }
+
+      if (!pageResult && lastError) throw lastError;
+
+      const pageValidators = pageResult.validators ?? pageResult[0] ?? [];
+      const pageResponse = pageResult.pageResponse ?? pageResult[1] ?? {};
+
+      // total may be string/BigInt/number; normalize once
+      if (totalValidators === undefined) {
+        const totalRaw = (pageResponse?.total ??
+          (Array.isArray(pageResponse) ? pageResponse[1] : undefined)) as any;
+        if (totalRaw !== undefined) {
+          try {
+            totalValidators = Number(totalRaw.toString());
+          } catch {
+            totalValidators = Number(totalRaw);
+          }
+        }
+      }
+
+      validators.push(...pageValidators);
+
+      const nk = (pageResponse?.nextKey ??
+        (Array.isArray(pageResponse) ? pageResponse[0] : undefined)) as
+        | string
+        | undefined;
+      // Stop if no next key or empty
+      if (!nk || nk === "0x" || nk === "0x00" || pageValidators.length === 0) {
+        break;
+      }
+      nextKey = nk;
     }
-
-    if (!result && lastError) throw lastError;
-
-    const validators = result.validators ?? result[0] ?? [];
-    const pageResponse = result.pageResponse ?? result[1] ?? {};
 
     if (!options.json) {
       spinner?.succeed(
         `Fetched ${validators.length} validators` +
-          (pageResponse?.total ? ` of ${pageResponse.total}` : "")
+          (totalValidators !== undefined ? ` of ${totalValidators}` : "")
       );
     }
 
     if (options.json) {
       const bigintSafe = (_key: string, value: unknown) =>
         typeof value === "bigint" ? value.toString() : value;
-      console.log(JSON.stringify({ validators, pageResponse }, bigintSafe, 2));
+      console.log(
+        JSON.stringify(
+          { validators, pageResponse: { total: totalValidators } },
+          bigintSafe,
+          2
+        )
+      );
       return;
     }
 
@@ -196,7 +240,7 @@ const main = async (options: {
 
 export const listCommand = new Command("list")
   .alias("l")
-  .description("List validators from staking precompile")
+  .description("List of validators")
   .addOption(new Option("--rpc <url>", "RPC endpoint URL"))
   .addOption(
     new Option("--status <status>", "Validator status filter").choices([
@@ -206,7 +250,6 @@ export const listCommand = new Command("list")
       "Unspecified",
     ]) as any
   )
-  .addOption(new Option("--limit <n>", "Pagination limit"))
   .addOption(new Option("--json", "Output as JSON"))
   .addOption(
     new Option("--decimals <n>", "Token decimals for voting power formatting")
