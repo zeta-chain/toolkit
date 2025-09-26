@@ -283,11 +283,6 @@ const main = async (options: {
       columnDefault: { wrapWord: true },
       columns: {
         0: { truncate: 20, width: 21 },
-        1: {},
-        2: {},
-        3: {},
-        4: {},
-        5: {},
       },
     });
 
