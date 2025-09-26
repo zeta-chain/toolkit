@@ -1,9 +1,9 @@
 import { Command } from "commander";
 
 import { callCommand } from "./call";
+import { stakingCommand } from "./staking";
 import { withdrawCommand } from "./withdraw";
 import { withdrawAndCallCommand } from "./withdrawAndCall";
-import { stakingCommand } from "./staking";
 
 export const zetachainCommand = new Command("zetachain")
   .summary("ZetaChain commands")

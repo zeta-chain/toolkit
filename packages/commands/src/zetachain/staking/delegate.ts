@@ -2,16 +2,16 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import stakingArtifact from "../../query/validators/staking.json";
-import { handleError, validateAndParseSchema } from "../../../../../utils";
 import {
   namePkRefineRule,
   rpcOrChainIdRefineRule,
 } from "../../../../../types/shared.schema";
+import { handleError, validateAndParseSchema } from "../../../../../utils";
 import {
   confirmZetachainTransaction,
   setupZetachainTransaction,
 } from "../../../../../utils/zetachain.command.helpers";
+import stakingArtifact from "../../query/validators/staking.json";
 
 const STAKING_PRECOMPILE = "0x0000000000000000000000000000000000000800";
 const STAKING_ABI = (stakingArtifact as { abi: unknown })
@@ -38,7 +38,7 @@ const main = async (options: DelegateOptions) => {
   try {
     const { signer } = setupZetachainTransaction(options as any);
 
-    const delegatorAddress = await (signer as ethers.Wallet).getAddress();
+    const delegatorAddress = await signer.getAddress();
     const amountWei = ethers.parseEther(options.amount);
 
     console.log(`Staking delegation details:
@@ -83,7 +83,7 @@ delegateCommand
   .addOption(
     new Option(
       "--validator <valoper>",
-      "Validator operator address (cosmosvaloper…)"
+      "Validator operator address (zetavaloper...)"
     ).makeOptionMandatory()
   )
   .addOption(

@@ -1,7 +1,7 @@
+import { bech32 } from "bech32";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
-import { bech32 } from "bech32";
 import ora from "ora";
 import { getBorderCharacters, table } from "table";
 
