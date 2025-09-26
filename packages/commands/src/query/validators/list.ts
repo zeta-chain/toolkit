@@ -187,7 +187,6 @@ const main = async (options: {
       } else {
         for (const candidate of candidates) {
           try {
-            // eslint-disable-next-line no-await-in-loop
             pageResult = await contract.validators(candidate, pagination);
             chosenStatus = candidate;
             lastError = null;
