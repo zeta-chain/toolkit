@@ -4,10 +4,10 @@ import { ethers } from "ethers";
 import ora from "ora";
 import { getBorderCharacters, table } from "table";
 
+import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 import { validatorsListOptionsSchema } from "../../../../../src/schemas/commands/validators";
 
-const STAKING_PRECOMPILE =
-  "0x0000000000000000000000000000000000000800" as const;
+const STAKING_PRECOMPILE = "0x0000000000000000000000000000000000000800";
 
 const STAKING_ABI = [
   // Match the posted artifact types for compatibility
@@ -89,10 +89,9 @@ const formatValidatorsTable = (validators: any[], tokenDecimals: number) => {
 };
 
 const main = async (options: {
+  json?: boolean;
   rpc: string;
   status: "Bonded" | "Unbonding" | "Unbonded" | "Unspecified";
-  json: boolean;
-  decimals: number;
 }) => {
   const spinner = options.json ? null : ora("Fetching validators...").start();
 
@@ -110,8 +109,8 @@ const main = async (options: {
     ): string[] => {
       const map: Record<string, string> = {
         Bonded: "BOND_STATUS_BONDED",
-        Unbonding: "BOND_STATUS_UNBONDING",
         Unbonded: "BOND_STATUS_UNBONDED",
+        Unbonding: "BOND_STATUS_UNBONDING",
         Unspecified: "BOND_STATUS_UNSPECIFIED",
       };
       if (status === "Unspecified") {
@@ -133,10 +132,10 @@ const main = async (options: {
 
     while (true) {
       const pagination = {
+        countTotal: totalValidators === undefined,
         key: nextKey || "0x",
-        offset: 0,
         limit: 100,
-        countTotal: totalValidators === undefined, // only request count on first page
+        offset: 0, // only request count on first page
         reverse: false,
       };
 
@@ -166,8 +165,9 @@ const main = async (options: {
 
       // total may be string/BigInt/number; normalize once
       if (totalValidators === undefined) {
-        const totalRaw = (pageResponse?.total ??
-          (Array.isArray(pageResponse) ? pageResponse[1] : undefined)) as any;
+        const totalRaw =
+          pageResponse?.total ??
+          (Array.isArray(pageResponse) ? pageResponse[1] : undefined);
         if (totalRaw !== undefined) {
           try {
             totalValidators = Number(totalRaw.toString());
@@ -202,7 +202,7 @@ const main = async (options: {
         typeof value === "bigint" ? value.toString() : value;
       console.log(
         JSON.stringify(
-          { validators, pageResponse: { total: totalValidators } },
+          { pageResponse: { total: totalValidators }, validators },
           bigintSafe,
           2
         )
@@ -215,18 +215,18 @@ const main = async (options: {
       return;
     }
 
-    const tableData = formatValidatorsTable(validators, options.decimals);
+    const tableData = formatValidatorsTable(validators, 18);
     const tableOutput = table(tableData, {
       border: getBorderCharacters("norc"),
+      columnDefault: { wrapWord: true },
       columns: {
-        0: { width: 21, truncate: 20 },
+        0: { truncate: 20, width: 21 },
         1: {},
         2: {},
         3: {},
         4: {},
         5: {},
       },
-      columnDefault: { wrapWord: true },
     });
 
     console.log(tableOutput);
@@ -241,19 +241,15 @@ const main = async (options: {
 export const listCommand = new Command("list")
   .alias("l")
   .description("List of validators")
-  .addOption(new Option("--rpc <url>", "RPC endpoint URL"))
   .addOption(
-    new Option("--status <status>", "Validator status filter").choices([
-      "Bonded",
-      "Unbonding",
-      "Unbonded",
-      "Unspecified",
-    ]) as any
+    new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_EVM_RPC_URL)
+  )
+  .addOption(
+    new Option("--status <status>", "Validator status filter")
+      .choices(["Bonded", "Unbonding", "Unbonded", "Unspecified"])
+      .default("Bonded") as any
   )
   .addOption(new Option("--json", "Output as JSON"))
-  .addOption(
-    new Option("--decimals <n>", "Token decimals for voting power formatting")
-  )
   .action(async (rawOptions) => {
     const options = validatorsListOptionsSchema.parse(rawOptions);
     await main(options);
