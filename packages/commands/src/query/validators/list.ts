@@ -6,13 +6,12 @@ import { getBorderCharacters, table } from "table";
 
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 import { validatorsListOptionsSchema } from "../../../../../src/schemas/commands/validators";
+import stakingArtifact from "./staking.json";
 
 const STAKING_PRECOMPILE = "0x0000000000000000000000000000000000000800";
 
-const STAKING_ABI = [
-  // Match the posted artifact types for compatibility
-  "function validators(string status, (bytes key, uint64 offset, uint64 limit, bool countTotal, bool reverse) pageRequest) view returns ((string operatorAddress, string consensusPubkey, bool jailed, uint8 status, uint256 tokens, uint256 delegatorShares, string description, int64 unbondingHeight, int64 unbondingTime, uint256 commission, uint256 minSelfDelegation)[] validators, (bytes nextKey, uint64 total) pageResponse)",
-];
+const STAKING_ABI = (stakingArtifact as { abi: unknown })
+  .abi as ethers.InterfaceAbi;
 
 type ValidatorRowInput = {
   commission?: unknown;
