@@ -3,10 +3,7 @@ import { ethers } from "ethers";
 import { z } from "zod";
 
 import { STAKING_PRECOMPILE } from "../../../../../src/constants/addresses";
-import {
-  namePkRefineRule,
-  rpcOrChainIdRefineRule,
-} from "../../../../../types/shared.schema";
+import { namePkRefineRule } from "../../../../../types/shared.schema";
 import { handleError, validateAndParseSchema } from "../../../../../utils";
 import type {
   ConfirmTxOptionsSubset,
@@ -31,10 +28,7 @@ const delegateOptionsSchema = z
     validator: z.string(),
     yes: z.boolean().default(false),
   })
-  .refine(namePkRefineRule)
-  .refine(rpcOrChainIdRefineRule.rule, {
-    message: rpcOrChainIdRefineRule.message,
-  });
+  .refine(namePkRefineRule);
 
 type DelegateOptions = z.infer<typeof delegateOptionsSchema>;
 
