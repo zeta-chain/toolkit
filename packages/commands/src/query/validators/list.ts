@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
+import { bech32 } from "bech32";
 import ora from "ora";
 import { getBorderCharacters, table } from "table";
 
@@ -58,7 +59,7 @@ const formatValidatorsTable = (
     "Status",
     "Jailed",
     "Voting Power",
-    "Commission",
+    "Comm",
   ];
 
   const toRounded2 = (val: string): string => {
@@ -114,9 +115,35 @@ const formatValidatorsTable = (
         ? v.description
         : v.description?.moniker || "-";
 
+    const toBech32OrUndefined = (
+      prefix: string,
+      hex: string | undefined
+    ): string | undefined => {
+      if (!hex || typeof hex !== "string") return undefined;
+      const isHex20 = /^0x[0-9a-fA-F]{40}$/.test(hex);
+      if (!isHex20) return undefined;
+      try {
+        const clean = hex.slice(2);
+        const bytes = Buffer.from(clean, "hex");
+        const words = bech32.toWords(bytes);
+        return bech32.encode(prefix, words);
+      } catch {
+        return undefined;
+      }
+    };
+
+    const operatorHex = v.operatorAddress ?? "-";
+    const operatorBech32 = toBech32OrUndefined(
+      "zetavaloper",
+      v.operatorAddress
+    );
+    const operatorDisplay = operatorBech32
+      ? `${operatorHex}\n${operatorBech32}`
+      : operatorHex;
+
     return [
       moniker,
-      v.operatorAddress ?? "-",
+      operatorDisplay,
       v.status == null ? "-" : statusMap[v.status] ?? String(v.status),
       v.jailed ? "true" : "false",
       votingPower,
@@ -282,7 +309,7 @@ const main = async (options: {
       border: getBorderCharacters("norc"),
       columnDefault: { wrapWord: true },
       columns: {
-        0: { truncate: 20, width: 21 },
+        0: { width: 25 },
       },
     });
 
