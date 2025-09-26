@@ -78,7 +78,9 @@ export const setupZetachainTransaction = (options: SetupTxOptionsSubset) => {
 
   let signer: ethers.Wallet;
 
-  const rpc = options.rpc || getRpcUrl(parseInt(options.chainId!));
+  // Default chain id to 7001 (ZetaChain testnet) when neither rpc nor chainId provided
+  const resolvedChainId = options.chainId || "7001";
+  const rpc = options.rpc || getRpcUrl(parseInt(resolvedChainId));
 
   const provider = new ethers.JsonRpcProvider(rpc);
 

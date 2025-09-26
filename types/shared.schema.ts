@@ -131,9 +131,10 @@ export const functionTypesValuesConsistencyRule = {
 };
 
 export const rpcOrChainIdRefineRule = {
-  message: "Either 'rpc' or 'chainId' must be provided",
-  rule: (data: { chainId?: string; rpc?: string }) => {
-    return !!(data.rpc || data.chainId);
+  message: "",
+  rule: (_data: { chainId?: string; rpc?: string }) => {
+    // Allow both missing to enable defaulting logic downstream
+    return true;
   },
 };
 
