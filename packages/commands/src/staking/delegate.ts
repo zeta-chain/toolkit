@@ -2,18 +2,18 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import { z } from "zod";
 
-import { STAKING_PRECOMPILE } from "../../../../../src/constants/addresses";
-import { namePkRefineRule } from "../../../../../types/shared.schema";
-import { handleError, validateAndParseSchema } from "../../../../../utils";
+import { STAKING_PRECOMPILE } from "../../../../src/constants/addresses";
+import { namePkRefineRule } from "../../../../types/shared.schema";
+import { handleError, validateAndParseSchema } from "../../../../utils";
 import type {
   ConfirmTxOptionsSubset,
   SetupTxOptionsSubset,
-} from "../../../../../utils/zetachain.command.helpers";
+} from "../../../../utils/zetachain.command.helpers";
 import {
   confirmZetachainTransaction,
   setupZetachainTransaction,
-} from "../../../../../utils/zetachain.command.helpers";
-import stakingArtifact from "../../query/validators/staking.json";
+} from "../../../../utils/zetachain.command.helpers";
+import stakingArtifact from "./validators/staking.json";
 
 const STAKING_ABI = (stakingArtifact as { abi: unknown })
   .abi as ethers.InterfaceAbi;
