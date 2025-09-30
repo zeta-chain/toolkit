@@ -6,13 +6,17 @@ import ora from "ora";
 import { getBorderCharacters, table } from "table";
 import { z } from "zod";
 
-import { STAKING_PRECOMPILE } from "../../../../src/constants/addresses";
+import {
+  MULTICALL_ADDRESS,
+  STAKING_PRECOMPILE,
+} from "../../../../src/constants/addresses";
 import { DEFAULT_EVM_RPC_URL } from "../../../../src/constants/api";
 import {
   evmAddressSchema,
   rpcOrChainIdRefineRule,
 } from "../../../../types/shared.schema";
 import { validateAndParseSchema } from "../../../../utils";
+import MULTICALL3_ABI from "../../../../utils/multicall3.json";
 import { getRpcUrl } from "../../../../utils/chains";
 import stakingArtifact from "./staking.json";
 
@@ -210,27 +214,72 @@ const main = async (rawOptions: unknown) => {
 
     const validators = Array.from(validatorSet);
 
-    // For each validator, query delegation
+    // Batch query delegations via Multicall3
     const rows: DelegationRow[] = [];
-    for (const operator of validators) {
-      const operatorBech32 = toBech32OrUndefined("zetavaloper", operator);
-      const validatorAddress = operatorBech32 || operator;
-      try {
-        const [shares, balance] = (await contract.delegation(
-          delegator,
-          validatorAddress
-        )) as [bigint, { amount: bigint; denom: string }];
+    const iface = new ethers.Interface(STAKING_ABI);
+    const multicall = new ethers.Contract(
+      MULTICALL_ADDRESS,
+      MULTICALL3_ABI,
+      provider
+    );
 
-        const balanceAmount = balance?.amount ?? 0n;
-        if (shares > 0n || balanceAmount > 0n) {
-          rows.push({
-            balance: balanceAmount,
-            shares,
-            validator: validatorAddress,
-          });
+    const validatorAddresses = validators.map((op) => {
+      const b32 = toBech32OrUndefined("zetavaloper", op);
+      return b32 || op;
+    });
+
+    const calls = validatorAddresses.map((va) => ({
+      target: STAKING_PRECOMPILE,
+      callData: iface.encodeFunctionData("delegation", [delegator, va]),
+    }));
+
+    const chunkSize = 100;
+    for (let i = 0; i < calls.length; i += chunkSize) {
+      const chunk = calls.slice(i, i + chunkSize);
+      try {
+        const result = (await multicall.aggregate(chunk)) as [bigint, string[]];
+        const returnData = result[1];
+        for (let j = 0; j < returnData.length; j++) {
+          const data = returnData[j];
+          try {
+            const decoded = iface.decodeFunctionResult("delegation", data);
+            const shares = decoded[0] as bigint;
+            const balance = decoded[1] as { amount: bigint; denom: string };
+            const balanceAmount = balance?.amount ?? 0n;
+            if (shares > 0n || balanceAmount > 0n) {
+              const idx = i + j;
+              rows.push({
+                validator: validatorAddresses[idx],
+                shares,
+                balance: balanceAmount,
+              });
+            }
+          } catch {
+            continue;
+          }
         }
-      } catch {
-        continue;
+      } catch (err) {
+        // Fallback: in rare case of aggregate failure, try single calls for this chunk
+        for (let j = 0; j < chunk.length; j++) {
+          const idx = i + j;
+          const validatorAddress = validatorAddresses[idx];
+          try {
+            const [shares, balance] = (await contract.delegation(
+              delegator,
+              validatorAddress
+            )) as [bigint, { amount: bigint; denom: string }];
+            const balanceAmount = balance?.amount ?? 0n;
+            if (shares > 0n || balanceAmount > 0n) {
+              rows.push({
+                validator: validatorAddress,
+                shares,
+                balance: balanceAmount,
+              });
+            }
+          } catch {
+            continue;
+          }
+        }
       }
     }
 
