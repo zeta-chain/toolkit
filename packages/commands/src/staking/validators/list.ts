@@ -8,7 +8,7 @@ import { getBorderCharacters, table } from "table";
 import { STAKING_PRECOMPILE } from "../../../../../src/constants/addresses";
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 import { validatorsListOptionsSchema } from "../../../../../src/schemas/commands/validators";
-import stakingArtifact from "./staking.json";
+import stakingArtifact from "../staking.json";
 
 const STAKING_ABI = (stakingArtifact as { abi: unknown })
   .abi as ethers.InterfaceAbi;

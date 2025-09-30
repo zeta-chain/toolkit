@@ -13,7 +13,7 @@ import {
   confirmZetachainTransaction,
   setupZetachainTransaction,
 } from "../../../../utils/zetachain.command.helpers";
-import stakingArtifact from "./validators/staking.json";
+import stakingArtifact from "./staking.json";
 
 const STAKING_ABI = (stakingArtifact as { abi: unknown })
   .abi as ethers.InterfaceAbi;
