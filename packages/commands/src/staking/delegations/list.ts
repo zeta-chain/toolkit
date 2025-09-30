@@ -9,16 +9,16 @@ import { z } from "zod";
 import {
   MULTICALL_ADDRESS,
   STAKING_PRECOMPILE,
-} from "../../../../src/constants/addresses";
-import { DEFAULT_EVM_RPC_URL } from "../../../../src/constants/api";
+} from "../../../../../src/constants/addresses";
+import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 import {
   evmAddressSchema,
   rpcOrChainIdRefineRule,
-} from "../../../../types/shared.schema";
-import { validateAndParseSchema } from "../../../../utils";
-import MULTICALL3_ABI from "../../../../utils/multicall3.json";
-import { getRpcUrl } from "../../../../utils/chains";
-import stakingArtifact from "./staking.json";
+} from "../../../../../types/shared.schema";
+import { validateAndParseSchema } from "../../../../../utils";
+import { getRpcUrl } from "../../../../../utils/chains";
+import MULTICALL3_ABI from "../../../../../utils/multicall3.json";
+import stakingArtifact from "../staking.json";
 
 const STAKING_ABI = (stakingArtifact as { abi: unknown })
   .abi as ethers.InterfaceAbi;
@@ -229,8 +229,8 @@ const main = async (rawOptions: unknown) => {
     });
 
     const calls = validatorAddresses.map((va) => ({
-      target: STAKING_PRECOMPILE,
       callData: iface.encodeFunctionData("delegation", [delegator, va]),
+      target: STAKING_PRECOMPILE,
     }));
 
     const chunkSize = 100;
@@ -249,9 +249,9 @@ const main = async (rawOptions: unknown) => {
             if (shares > 0n || balanceAmount > 0n) {
               const idx = i + j;
               rows.push({
-                validator: validatorAddresses[idx],
-                shares,
                 balance: balanceAmount,
+                shares,
+                validator: validatorAddresses[idx],
               });
             }
           } catch {
@@ -271,9 +271,9 @@ const main = async (rawOptions: unknown) => {
             const balanceAmount = balance?.amount ?? 0n;
             if (shares > 0n || balanceAmount > 0n) {
               rows.push({
-                validator: validatorAddress,
-                shares,
                 balance: balanceAmount,
+                shares,
+                validator: validatorAddress,
               });
             }
           } catch {
@@ -333,9 +333,9 @@ const main = async (rawOptions: unknown) => {
   }
 };
 
-export const delegationsCommand = new Command("delegations")
-  .alias("d")
-  .description("List all delegations for the current user")
+export const listCommand = new Command("list")
+  .alias("l")
+  .description("List delegations for a delegator")
   .addOption(
     new Option(
       "--address <address>",
