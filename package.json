@@ -16,6 +16,11 @@
       "import": "./dist/esm/src/chains/evm/index.js",
       "default": "./dist/cjs/src/chains/evm/index.js"
     },
+    "./chains/solana": {
+      "types": "./dist/types/src/chains/solana/index.d.ts",
+      "import": "./dist/esm/src/chains/solana/index.js",
+      "default": "./dist/cjs/src/chains/solana/index.js"
+    },
     "./tasks": {
       "types": "./dist/types/packages/tasks/src/index.d.ts",
       "import": "./dist/esm/packages/tasks/src/index.js",
