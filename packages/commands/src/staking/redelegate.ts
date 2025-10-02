@@ -22,11 +22,11 @@ const redelegateOptionsSchema = z
   .object({
     amount: z.string(),
     chainId: z.string().optional(),
-    dstValidator: z.string(),
+    toValidator: z.string(),
     name: z.string().default("default"),
     privateKey: z.string().optional(),
     rpc: z.string().optional(),
-    srcValidator: z.string(),
+    fromValidator: z.string(),
     yes: z.boolean().default(false),
   })
   .refine(namePkRefineRule);
@@ -47,8 +47,8 @@ const main = async (options: RedelegateOptions) => {
 
     console.log(`Staking redelegation details:
 Delegator:   ${delegatorAddress}
-From (src):  ${options.srcValidator}
-To (dst):    ${options.dstValidator}
+From (src):  ${options.fromValidator}
+To (dst):    ${options.toValidator}
 Amount:      ${options.amount} ZETA
 `);
 
@@ -60,8 +60,8 @@ Amount:      ${options.amount} ZETA
     const iface = new ethers.Interface(STAKING_ABI);
     const data = iface.encodeFunctionData("redelegate", [
       delegatorAddress,
-      options.srcValidator,
-      options.dstValidator,
+      options.fromValidator,
+      options.toValidator,
       amountWei,
     ]);
 
@@ -89,13 +89,13 @@ export const redelegateCommand = new Command("redelegate").summary(
 redelegateCommand
   .addOption(
     new Option(
-      "--src-validator <valoper>",
+      "--from-validator <valoper>",
       "Source validator operator address (zetavaloper...)"
     ).makeOptionMandatory()
   )
   .addOption(
     new Option(
-      "--dst-validator <valoper>",
+      "--to-validator <valoper>",
       "Destination validator operator address (zetavaloper...)"
     ).makeOptionMandatory()
   )
