@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import { Keypair } from "@solana/web3.js";
 import { z } from "zod";
 
 export const revertOptionsSchema = z.object({
@@ -11,7 +11,7 @@ export const revertOptionsSchema = z.object({
 
 export const solanaOptionsSchema = z.object({
   chainId: z.string(),
-  signer: z.instanceof(anchor.web3.Keypair),
+  signer: z.instanceof(Keypair),
 });
 
 export const solanaCallParamsSchema = z.object({

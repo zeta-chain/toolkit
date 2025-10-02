@@ -4,11 +4,13 @@ import { solanaDeposit } from "../../../../src/chains/solana/deposit";
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import {
+  getAPIbyChainId,
+  getBrowserSafeKeypair,
+} from "../../../../utils/solana.browser.helpers";
+import {
   confirmSolanaTx,
   createRevertOptions,
   createSolanaCommandWithCommonOptions,
-  getAPIbyChainId,
-  getKeypair,
   prepareRevertOptions,
   solanaDepositOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
@@ -16,7 +18,7 @@ import {
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
 
 const main = async (options: DepositOptions) => {
-  const keypair = await getKeypair({
+  const keypair = await getBrowserSafeKeypair({
     mnemonic: options.mnemonic,
     name: options.name,
     privateKey: options.privateKey,
@@ -26,12 +28,17 @@ const main = async (options: DepositOptions) => {
 
   const revertOptions = prepareRevertOptions(options);
 
+  // Create an Anchor PublicKey for CLI confirmation (which expects Anchor types)
+  const anchorPublicKey = new (
+    await import("@coral-xyz/anchor")
+  ).web3.PublicKey(keypair.publicKey.toBase58());
+
   await confirmSolanaTx({
     amount: options.amount,
     api: API,
     mint: options.mint,
     receiver: options.receiver,
-    revertOptions: createRevertOptions(revertOptions, keypair.publicKey),
+    revertOptions: createRevertOptions(revertOptions, anchorPublicKey),
     sender: keypair.publicKey.toBase58(),
   });
 

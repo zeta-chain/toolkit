@@ -1,18 +1,21 @@
-import * as anchor from "@coral-xyz/anchor";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
+  AccountMeta,
+  PublicKey,
+  sendAndConfirmTransaction,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import { ethers } from "ethers";
 import { z } from "zod";
 
 import {
+  createBrowserSolanaGateway,
   createRevertOptions,
-  createSolanaGatewayProgram,
-  getSPLToken,
-  isSOLBalanceSufficient,
-} from "../../../utils/solana.commands.helpers";
+  getBrowserSafeSPLToken,
+  isBrowserSafeSOLBalanceSufficient,
+} from "../../../utils/solana.browser.helpers";
 import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
   solanaDepositParamsSchema,
@@ -36,16 +39,15 @@ type solanaOptions = z.infer<typeof solanaOptionsSchema>;
 export const solanaDeposit = async (
   params: solanaDepositParams,
   options: solanaOptions
-) => {
+): Promise<string> => {
   const validatedParams = validateAndParseSchema(
     params,
     solanaDepositParamsSchema
   );
   const validatedOptions = validateAndParseSchema(options, solanaOptionsSchema);
 
-  const { gatewayProgram, provider } = createSolanaGatewayProgram(
-    validatedOptions.chainId,
-    validatedOptions.signer
+  const { gateway, connection } = createBrowserSolanaGateway(
+    validatedOptions.chainId
   );
 
   const receiverBytes = ethers.getBytes(validatedParams.receiver);
@@ -56,8 +58,10 @@ export const solanaDeposit = async (
   );
 
   if (validatedParams.token) {
-    const { from, decimals } = await getSPLToken(
-      provider,
+    // SPL Token deposit
+    const { from, decimals } = await getBrowserSafeSPLToken(
+      connection,
+      validatedOptions.signer,
       validatedParams.token,
       validatedParams.amount
     );
@@ -65,51 +69,192 @@ export const solanaDeposit = async (
     // Find the TSS PDA (meta)
     const [tssPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("meta", "utf-8")],
-      gatewayProgram.programId
+      gateway.programId
     );
 
     // Find the TSS's ATA for the mint
-    const tssAta = await PublicKey.findProgramAddress(
-      [
-        tssPda.toBuffer(),
-        TOKEN_PROGRAM_ID.toBuffer(),
-        new PublicKey(validatedParams.token).toBuffer(),
-      ],
-      ASSOCIATED_TOKEN_PROGRAM_ID
+    const tssAta = await getAssociatedTokenAddress(
+      new PublicKey(validatedParams.token),
+      tssPda,
+      true // allowOwnerOffCurve
     );
 
-    const to = tssAta[0].toBase58();
+    // Create deposit SPL token instruction
+    const depositAmount = ethers.parseUnits(validatedParams.amount, decimals);
 
-    const tx = await gatewayProgram.methods
-      .depositSplToken(
-        new anchor.BN(
-          ethers.parseUnits(validatedParams.amount, decimals).toString()
-        ),
-        receiverBytes,
-        revertOptions
-      )
-      .accounts({
-        from,
-        mintAccount: validatedParams.token,
-        signer: validatedOptions.signer.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
-        to,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .rpc();
-    return tx;
+    // Create instruction data for depositSplToken
+    const discriminator = Buffer.from([86, 172, 212, 121, 63, 233, 96, 144]); // deposit_spl_token discriminator
+    const amountBuffer = Buffer.alloc(8);
+    amountBuffer.writeBigUInt64LE(BigInt(depositAmount.toString()), 0);
+
+    const receiverBuffer = Buffer.from(receiverBytes);
+
+    // Serialize revert options
+    const revertOptionsPresent = Buffer.from([1]); // Option::Some
+    const revertAddressBuffer = Buffer.from(
+      revertOptions.revertAddress.toBytes()
+    );
+    const abortAddressBuffer = Buffer.from(revertOptions.abortAddress);
+    const callOnRevertBuffer = Buffer.from([
+      revertOptions.callOnRevert ? 1 : 0,
+    ]);
+    const revertMessageLength = Buffer.alloc(4);
+    revertMessageLength.writeUInt32LE(revertOptions.revertMessage.length, 0);
+    const revertMessageBuffer = Buffer.from(revertOptions.revertMessage);
+    const gasLimitBuffer = Buffer.alloc(8);
+    gasLimitBuffer.writeBigUInt64LE(revertOptions.onRevertGasLimit, 0);
+
+    const instructionData = Buffer.concat([
+      discriminator,
+      amountBuffer,
+      receiverBuffer,
+      revertOptionsPresent,
+      revertAddressBuffer,
+      abortAddressBuffer,
+      callOnRevertBuffer,
+      revertMessageLength,
+      revertMessageBuffer,
+      gasLimitBuffer,
+    ]);
+
+    // Find whitelist entry PDA
+    const [whitelistEntry] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("whitelist", "utf-8"),
+        new PublicKey(validatedParams.token).toBytes(),
+      ],
+      gateway.programId
+    );
+
+    const keys: AccountMeta[] = [
+      {
+        isSigner: true,
+        isWritable: true,
+        pubkey: validatedOptions.signer.publicKey,
+      },
+      { isSigner: false, isWritable: true, pubkey: tssPda },
+      { isSigner: false, isWritable: false, pubkey: whitelistEntry },
+      {
+        isSigner: false,
+        isWritable: false,
+        pubkey: new PublicKey(validatedParams.token),
+      },
+      { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+      { isSigner: false, isWritable: true, pubkey: from },
+      { isSigner: false, isWritable: true, pubkey: tssAta },
+      { isSigner: false, isWritable: false, pubkey: SystemProgram.programId },
+    ];
+
+    const instruction = new TransactionInstruction({
+      data: instructionData,
+      keys,
+      programId: gateway.programId,
+    });
+
+    const transaction = new Transaction();
+    transaction.add(instruction);
+
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = validatedOptions.signer.publicKey;
+
+    const signature = await sendAndConfirmTransaction(
+      connection,
+      transaction,
+      [validatedOptions.signer],
+      {
+        commitment: "confirmed",
+        preflightCommitment: "confirmed",
+      }
+    );
+
+    return signature;
   } else {
-    // Check SOL balance
-    await isSOLBalanceSufficient(provider, validatedParams.amount);
+    // SOL deposit
+    await isBrowserSafeSOLBalanceSufficient(
+      connection,
+      validatedOptions.signer,
+      validatedParams.amount
+    );
 
-    const tx = await gatewayProgram.methods
-      .deposit(
-        new anchor.BN(ethers.parseUnits(validatedParams.amount, 9).toString()),
-        receiverBytes,
-        revertOptions
-      )
-      .accounts({})
-      .rpc();
-    return tx;
+    // Create deposit SOL instruction
+    const depositAmount = ethers.parseUnits(validatedParams.amount, 9);
+
+    // Create instruction data for deposit
+    const discriminator = Buffer.from([242, 35, 198, 137, 82, 225, 242, 182]); // deposit discriminator
+    const amountBuffer = Buffer.alloc(8);
+    amountBuffer.writeBigUInt64LE(BigInt(depositAmount.toString()), 0);
+
+    const receiverBuffer = Buffer.from(receiverBytes);
+
+    // Serialize revert options
+    const revertOptionsPresent = Buffer.from([1]); // Option::Some
+    const revertAddressBuffer = Buffer.from(
+      revertOptions.revertAddress.toBytes()
+    );
+    const abortAddressBuffer = Buffer.from(revertOptions.abortAddress);
+    const callOnRevertBuffer = Buffer.from([
+      revertOptions.callOnRevert ? 1 : 0,
+    ]);
+    const revertMessageLength = Buffer.alloc(4);
+    revertMessageLength.writeUInt32LE(revertOptions.revertMessage.length, 0);
+    const revertMessageBuffer = Buffer.from(revertOptions.revertMessage);
+    const gasLimitBuffer = Buffer.alloc(8);
+    gasLimitBuffer.writeBigUInt64LE(revertOptions.onRevertGasLimit, 0);
+
+    const instructionData = Buffer.concat([
+      discriminator,
+      amountBuffer,
+      receiverBuffer,
+      revertOptionsPresent,
+      revertAddressBuffer,
+      abortAddressBuffer,
+      callOnRevertBuffer,
+      revertMessageLength,
+      revertMessageBuffer,
+      gasLimitBuffer,
+    ]);
+
+    // Find PDA account
+    const seeds = [Buffer.from("meta", "utf-8")];
+    const [pdaAccount] = PublicKey.findProgramAddressSync(
+      seeds,
+      gateway.programId
+    );
+
+    const keys: AccountMeta[] = [
+      {
+        isSigner: true,
+        isWritable: true,
+        pubkey: validatedOptions.signer.publicKey,
+      },
+      { isSigner: false, isWritable: true, pubkey: pdaAccount },
+      { isSigner: false, isWritable: false, pubkey: SystemProgram.programId },
+    ];
+
+    const instruction = new TransactionInstruction({
+      data: instructionData,
+      keys,
+      programId: gateway.programId,
+    });
+
+    const transaction = new Transaction();
+    transaction.add(instruction);
+
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = validatedOptions.signer.publicKey;
+
+    const signature = await sendAndConfirmTransaction(
+      connection,
+      transaction,
+      [validatedOptions.signer],
+      {
+        commitment: "confirmed",
+        preflightCommitment: "confirmed",
+      }
+    );
+
+    return signature;
   }
 };
