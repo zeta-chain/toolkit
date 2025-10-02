@@ -393,7 +393,7 @@ Configuration options including chain ID and signer keypair
 
 ###### signer
 
-`Keypair` = `...`
+`Keypair` \| `WalletAdapter` = `solanaSignerSchema`
 
 #### Returns
 
@@ -465,7 +465,7 @@ Configuration options including chain ID and signer keypair
 
 ###### signer
 
-`Keypair` = `...`
+`Keypair` \| `WalletAdapter` = `solanaSignerSchema`
 
 #### Returns
 
@@ -546,7 +546,7 @@ Configuration options including chain ID and signer keypair
 
 ###### signer
 
-`Keypair` = `...`
+`Keypair` \| `WalletAdapter` = `solanaSignerSchema`
 
 #### Returns
 
@@ -590,7 +590,7 @@ Configuration options including chain ID, gas limit, gateway settings, and signe
 
 ###### chainId
 
-`"103"` \| `"101"` \| `"104"` = `...`
+`"101"` \| `"103"` \| `"104"` = `...`
 
 ###### gasLimit?
 
@@ -659,7 +659,7 @@ Configuration options including chain ID, gas limit, gateway settings, and signe
 
 ###### chainId
 
-`"103"` \| `"101"` \| `"104"` = `...`
+`"101"` \| `"103"` \| `"104"` = `...`
 
 ###### gasLimit?
 
