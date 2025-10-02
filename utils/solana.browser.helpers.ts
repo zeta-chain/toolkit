@@ -12,7 +12,27 @@ import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gatewa
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
 import { ethers } from "ethers";
 
+import { WalletAdapter } from "../src/schemas/solana";
 import { RevertOptions } from "../types/contracts.types";
+
+/**
+ * Type for flexible signer - can be Keypair or wallet adapter
+ */
+export type FlexibleSigner = Keypair | WalletAdapter;
+
+/**
+ * Check if signer is a Keypair
+ */
+const isKeypair = (signer: FlexibleSigner): signer is Keypair => {
+  return signer instanceof Keypair;
+};
+
+/**
+ * Get PublicKey from flexible signer
+ */
+const getPublicKey = (signer: FlexibleSigner): PublicKey => {
+  return isKeypair(signer) ? signer.publicKey : signer.publicKey;
+};
 
 /**
  * Serialize instruction data using Borsh format
@@ -243,23 +263,62 @@ export const createBrowserSolanaGateway = (
 };
 
 /**
+ * Sign and send a transaction with flexible signer support
+ */
+export const signAndSendTransaction = async (
+  connection: Connection,
+  transaction: Transaction,
+  signer: FlexibleSigner
+): Promise<string> => {
+  // Handle signing based on signer type
+  if (isKeypair(signer)) {
+    // Direct signing with Keypair (CLI/server usage)
+    const signature = await sendAndConfirmTransaction(
+      connection,
+      transaction,
+      [signer],
+      {
+        commitment: "confirmed",
+        preflightCommitment: "confirmed",
+      }
+    );
+    return signature;
+  } else {
+    // Wallet adapter signing (browser usage)
+    if (!signer.signTransaction) {
+      throw new Error("Wallet does not support transaction signing");
+    }
+
+    const signedTransaction = await signer.signTransaction(transaction);
+    const signature = await connection.sendRawTransaction(
+      signedTransaction.serialize()
+    );
+
+    // Wait for confirmation
+    await connection.confirmTransaction(signature, "confirmed");
+    return signature;
+  }
+};
+
+/**
  * Execute a cross-chain call using browser-compatible methods
- * This provides a simpler interface for browser environments
+ * Supports both Keypair and wallet adapter signers
  */
 export const executeBrowserSolanaCall = async (
   chainId: string,
-  signer: Keypair,
+  signer: FlexibleSigner,
   receiverBytes: Uint8Array,
   message: Buffer,
   revertOptions: ReturnType<typeof createRevertOptions>
 ): Promise<string> => {
   const { gateway, connection } = createBrowserSolanaGateway(chainId);
 
+  const signerPublicKey = getPublicKey(signer);
   const instructionResult = gateway.createCallInstruction(
     receiverBytes,
     message,
     revertOptions,
-    signer.publicKey
+    signerPublicKey
   );
 
   // Create a new transaction
@@ -271,20 +330,10 @@ export const executeBrowserSolanaCall = async (
   // Get recent blockhash for the transaction
   const { blockhash } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
-  transaction.feePayer = signer.publicKey;
+  transaction.feePayer = signerPublicKey;
 
-  // Sign and send the transaction
-  const signature = await sendAndConfirmTransaction(
-    connection,
-    transaction,
-    [signer],
-    {
-      commitment: "confirmed",
-      preflightCommitment: "confirmed",
-    }
-  );
-
-  return signature;
+  // Use the unified signing function
+  return await signAndSendTransaction(connection, transaction, signer);
 };
 
 /**
@@ -307,15 +356,16 @@ export interface BrowserSolanaCallParams {
  */
 export const getBrowserSafeSPLToken = async (
   connection: Connection,
-  signer: Keypair,
+  signer: FlexibleSigner,
   mint: string,
   amount: string
 ): Promise<{ decimals: number; from: PublicKey }> => {
+  const signerPublicKey = getPublicKey(signer);
   const mintPublicKey = new PublicKey(mint);
 
   // Get token accounts owned by the signer
   const tokenAccounts = await connection.getTokenAccountsByOwner(
-    signer.publicKey,
+    signerPublicKey,
     { programId: TOKEN_PROGRAM_ID }
   );
 
@@ -359,10 +409,11 @@ export const getBrowserSafeSPLToken = async (
  */
 export const isBrowserSafeSOLBalanceSufficient = async (
   connection: Connection,
-  signer: Keypair,
+  signer: FlexibleSigner,
   amount: string
 ): Promise<void> => {
-  const balance = await connection.getBalance(signer.publicKey);
+  const signerPublicKey = getPublicKey(signer);
+  const balance = await connection.getBalance(signerPublicKey);
   const lamportsNeeded = BigInt(ethers.parseUnits(amount, 9).toString());
 
   if (BigInt(balance) < lamportsNeeded) {

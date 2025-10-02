@@ -2,7 +2,6 @@ import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   AccountMeta,
   PublicKey,
-  sendAndConfirmTransaction,
   SystemProgram,
   Transaction,
   TransactionInstruction,
@@ -15,6 +14,7 @@ import {
   createRevertOptions,
   getBrowserSafeSPLToken,
   isBrowserSafeSOLBalanceSufficient,
+  signAndSendTransaction,
 } from "../../../utils/solana.browser.helpers";
 import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
@@ -158,14 +158,10 @@ export const solanaDeposit = async (
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = validatedOptions.signer.publicKey;
 
-    const signature = await sendAndConfirmTransaction(
+    const signature = await signAndSendTransaction(
       connection,
       transaction,
-      [validatedOptions.signer],
-      {
-        commitment: "confirmed",
-        preflightCommitment: "confirmed",
-      }
+      validatedOptions.signer
     );
 
     return signature;
@@ -245,14 +241,10 @@ export const solanaDeposit = async (
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = validatedOptions.signer.publicKey;
 
-    const signature = await sendAndConfirmTransaction(
+    const signature = await signAndSendTransaction(
       connection,
       transaction,
-      [validatedOptions.signer],
-      {
-        commitment: "confirmed",
-        preflightCommitment: "confirmed",
-      }
+      validatedOptions.signer
     );
 
     return signature;
