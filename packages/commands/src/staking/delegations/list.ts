@@ -108,12 +108,16 @@ const main = async (rawOptions: unknown) => {
 
     const validatorSet = new Set<string>();
 
-    for (const status of statusSets) {
+    const fetchValidatorsForStatus = async (
+      status: "Bonded" | "Unbonding" | "Unbonded" | "Unspecified"
+    ): Promise<string[]> => {
       let totalValidators: number | undefined = undefined;
       let nextKey: string | undefined = "0x";
       let chosenStatus: string | null = null;
       let lastError: unknown = null;
       let hasMore = true;
+      const localSet = new Set<string>();
+      const candidates = buildStatusCandidates(status);
 
       while (hasMore) {
         const pagination = {
@@ -123,8 +127,6 @@ const main = async (rawOptions: unknown) => {
           offset: 0,
           reverse: false,
         };
-
-        const candidates = buildStatusCandidates(status);
 
         let pageResult: unknown = null;
         if (chosenStatus) {
@@ -166,7 +168,7 @@ const main = async (rawOptions: unknown) => {
         for (const v of pageValidators) {
           const operator = (v as { operatorAddress?: string })?.operatorAddress;
           if (typeof operator === "string" && operator.length > 0) {
-            validatorSet.add(operator);
+            localSet.add(operator);
           }
         }
 
@@ -209,6 +211,17 @@ const main = async (rawOptions: unknown) => {
         } else {
           nextKey = nk;
         }
+      }
+
+      return Array.from(localSet);
+    };
+
+    const results = await Promise.all(
+      statusSets.map((status) => fetchValidatorsForStatus(status))
+    );
+    for (const arr of results) {
+      for (const op of arr) {
+        validatorSet.add(op);
       }
     }
 
