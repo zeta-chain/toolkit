@@ -22,11 +22,11 @@ const redelegateOptionsSchema = z
   .object({
     amount: z.string(),
     chainId: z.string().optional(),
-    toValidator: z.string(),
+    fromValidator: z.string(),
     name: z.string().default("default"),
     privateKey: z.string().optional(),
     rpc: z.string().optional(),
-    fromValidator: z.string(),
+    toValidator: z.string(),
     yes: z.boolean().default(false),
   })
   .refine(namePkRefineRule);

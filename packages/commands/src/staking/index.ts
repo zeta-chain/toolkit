@@ -2,9 +2,9 @@ import { Command } from "commander";
 
 import { delegateCommand } from "./delegate";
 import { delegationsCommand } from "./delegations";
-import { validatorsCommand } from "./validators";
-import { undelegateCommand } from "./undelegate";
 import { redelegateCommand } from "./redelegate";
+import { undelegateCommand } from "./undelegate";
+import { validatorsCommand } from "./validators";
 
 export const stakingCommand = new Command("staking")
   .summary("Staking commands")

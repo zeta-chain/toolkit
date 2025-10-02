@@ -37,6 +37,12 @@ const formatUnitsSafe = (value: bigint, decimals: number): string => {
   }
 };
 
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isUnknownArray = (value: unknown): value is unknown[] =>
+  Array.isArray(value);
+
 const toBech32OrUndefined = (
   prefix: string,
   hex: string | undefined
@@ -149,20 +155,20 @@ const main = async (rawOptions: unknown) => {
 
         let pageValidators: unknown[] = [];
         let pageResponse: unknown = {};
-        if (Array.isArray(pageResult)) {
-          pageValidators = (pageResult[0] ?? []) as unknown[];
-          pageResponse = pageResult[1] ?? {};
-        } else if (
-          pageResult &&
-          typeof pageResult === "object" &&
-          ("validators" in (pageResult as any) ||
-            "pageResponse" in (pageResult as any))
-        ) {
-          const pr = pageResult as any;
-          if (Array.isArray(pr.validators)) {
-            pageValidators = pr.validators as unknown[];
+        if (isUnknownArray(pageResult)) {
+          const maybeValidators: unknown = pageResult[0];
+          const maybeResponse: unknown = pageResult[1];
+          if (Array.isArray(maybeValidators)) {
+            pageValidators = maybeValidators;
           }
-          pageResponse = pr.pageResponse ?? {};
+          pageResponse = maybeResponse ?? {};
+        } else if (isObject(pageResult)) {
+          const maybeValidators = pageResult.validators;
+          const maybeResponse = pageResult.pageResponse;
+          if (Array.isArray(maybeValidators)) {
+            pageValidators = maybeValidators;
+          }
+          pageResponse = maybeResponse ?? {};
         }
 
         for (const v of pageValidators) {
@@ -174,8 +180,10 @@ const main = async (rawOptions: unknown) => {
 
         if (totalValidators === undefined) {
           try {
-            const totalRaw = (pageResponse as { total?: unknown } as any)
-              ?.total;
+            const responseObject = isObject(pageResponse)
+              ? (pageResponse as { total?: unknown })
+              : undefined;
+            const totalRaw = responseObject?.total;
             if (totalRaw !== undefined) {
               const str = (
                 totalRaw as { toString?: () => string }
@@ -188,12 +196,8 @@ const main = async (rawOptions: unknown) => {
         }
 
         let nk: string | undefined = undefined;
-        if (
-          pageResponse &&
-          typeof pageResponse === "object" &&
-          "nextKey" in (pageResponse as any)
-        ) {
-          const maybe = (pageResponse as any).nextKey;
+        if (isObject(pageResponse)) {
+          const maybe = (pageResponse as { nextKey?: unknown }).nextKey;
           nk = typeof maybe === "string" ? maybe : undefined;
         } else if (Array.isArray(pageResponse)) {
           const arr = pageResponse as unknown[];
@@ -252,12 +256,12 @@ const main = async (rawOptions: unknown) => {
       limit: number,
       fn: (item: T, index: number) => Promise<R>
     ): Promise<R[]> => {
-      const results: R[] = new Array(items.length);
+      const results: R[] = new Array<R>(items.length);
       let cursor = 0;
       const workers = new Array(Math.min(limit, items.length))
         .fill(0)
         .map(async () => {
-          while (true) {
+          while (cursor < items.length) {
             const index = cursor++;
             if (index >= items.length) break;
             try {
@@ -275,16 +279,16 @@ const main = async (rawOptions: unknown) => {
     // Process multicall chunks in parallel with a safe concurrency limit
     const chunkSize = 100;
     const chunks: {
-      start: number;
       items: { callData: string; target: string }[];
+      start: number;
     }[] = [];
     for (let i = 0; i < calls.length; i += chunkSize) {
-      chunks.push({ start: i, items: calls.slice(i, i + chunkSize) });
+      chunks.push({ items: calls.slice(i, i + chunkSize), start: i });
     }
 
     const processChunk = async (chunk: {
-      start: number;
       items: { callData: string; target: string }[];
+      start: number;
     }): Promise<DelegationRow[]> => {
       const localRows: DelegationRow[] = [];
       try {

@@ -72,6 +72,13 @@ export const showCommand = new Command("show")
     new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_EVM_RPC_URL)
   )
   .addOption(new Option("--json", "Output as JSON"))
-  .action(async (raw) => {
-    await main(raw);
-  });
+  .action(
+    async (raw: {
+      address: string;
+      json?: boolean;
+      rpc: string;
+      validator: string;
+    }) => {
+      await main(raw);
+    }
+  );
