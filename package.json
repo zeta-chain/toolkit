@@ -6,6 +6,11 @@
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
   "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/cjs/index.js"
+    },
     "./chains": {
       "types": "./dist/types/src/chains/index.d.ts",
       "import": "./dist/esm/src/chains/index.js",
