@@ -3,10 +3,7 @@ import { z } from "zod";
 import { solanaCall } from "../../../../src/chains/solana/call";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
-import {
-  getAPIbyChainId,
-  getBrowserSafeKeypair,
-} from "../../../../utils/solana.browser.helpers";
+import { getAPIbyChainId } from "../../../../utils/solana.browser.helpers";
 import {
   confirmSolanaTx,
   createRevertOptions as createCliRevertOptions,
@@ -14,6 +11,7 @@ import {
   prepareRevertOptions,
   solanaCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
+import { getBrowserSafeKeypair } from "../../../../utils/solana.keypair.helpers";
 
 type CallOptions = z.infer<typeof solanaCallOptionsSchema>;
 

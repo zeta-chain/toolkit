@@ -3,10 +3,7 @@ import { z } from "zod";
 import { solanaDeposit } from "../../../../src/chains/solana/deposit";
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
-import {
-  getAPIbyChainId,
-  getBrowserSafeKeypair,
-} from "../../../../utils/solana.browser.helpers";
+import { getAPIbyChainId } from "../../../../utils/solana.browser.helpers";
 import {
   confirmSolanaTx,
   createRevertOptions,
@@ -14,6 +11,7 @@ import {
   prepareRevertOptions,
   solanaDepositOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
+import { getBrowserSafeKeypair } from "../../../../utils/solana.keypair.helpers";
 
 type DepositOptions = z.infer<typeof solanaDepositOptionsSchema>;
 

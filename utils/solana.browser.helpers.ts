@@ -10,16 +10,9 @@ import {
 } from "@solana/web3.js";
 import GATEWAY_DEV_IDL from "@zetachain/protocol-contracts-solana/dev/idl/gateway.json";
 import GATEWAY_PROD_IDL from "@zetachain/protocol-contracts-solana/prod/idl/gateway.json";
-import * as bip39 from "bip39";
-import bs58 from "bs58";
 import { ethers } from "ethers";
 
-import { SolanaAccountData } from "../types/accounts.types";
 import { RevertOptions } from "../types/contracts.types";
-import { hexStringSchema } from "../types/shared.schema";
-import { getAccountData } from "./accounts";
-import { handleError } from "./handleError";
-import { trim0x } from "./trim0x";
 
 /**
  * Serialize instruction data using Borsh format
@@ -133,83 +126,6 @@ export interface CallInstructionResult {
   };
   instruction: TransactionInstruction;
 }
-
-/**
- * Browser-safe keypair creation from mnemonic without Anchor dependencies
- */
-const keypairFromMnemonic = async (mnemonic: string): Promise<Keypair> => {
-  if (!bip39.validateMnemonic(mnemonic)) {
-    throw new Error("Invalid mnemonic phrase");
-  }
-  const seed = await bip39.mnemonicToSeed(mnemonic);
-  const seedSlice = new Uint8Array(seed).slice(0, 32);
-  return Keypair.fromSeed(seedSlice);
-};
-
-/**
- * Browser-safe keypair creation from private key without Anchor dependencies
- */
-const keypairFromPrivateKey = (privateKey: string): Keypair => {
-  try {
-    // First try base58 decoding (original format)
-    const decodedKey = bs58.decode(privateKey);
-    return Keypair.fromSecretKey(decodedKey);
-  } catch (error) {
-    // If base58 fails, validate and try hex format
-    const hexValidation = hexStringSchema.safeParse(privateKey);
-    if (!hexValidation.success) {
-      throw new Error(
-        "Invalid private key format. Must be either base58 or valid hex (with optional 0x prefix)."
-      );
-    }
-
-    try {
-      const cleanKey = trim0x(privateKey);
-      return Keypair.fromSecretKey(Buffer.from(cleanKey, "hex"));
-    } catch (hexError) {
-      throw new Error(
-        `Invalid hex private key: ${
-          hexError instanceof Error ? hexError.message : "Unknown error"
-        }`
-      );
-    }
-  }
-};
-
-/**
- * Browser-safe version of getKeypair that returns @solana/web3.js Keypair
- * Pure browser implementation without any Anchor dependencies
- */
-export const getBrowserSafeKeypair = async ({
-  name,
-  mnemonic,
-  privateKey,
-}: {
-  mnemonic: string | undefined;
-  name: string | undefined;
-  privateKey: string | undefined;
-}): Promise<Keypair> => {
-  let keypair: Keypair;
-  if (privateKey) {
-    keypair = keypairFromPrivateKey(privateKey);
-  } else if (mnemonic) {
-    keypair = await keypairFromMnemonic(mnemonic);
-  } else if (name) {
-    const accountData = getAccountData<SolanaAccountData>("solana", name);
-    if (!accountData) {
-      const errorMessage = handleError({
-        context: "Failed to retrieve private key",
-        error: new Error("Private key not found"),
-        shouldThrow: false,
-      });
-      throw new Error(errorMessage);
-    }
-    keypair = keypairFromPrivateKey(accountData.privateKey);
-  } else {
-    throw new Error("No account provided");
-  }
-  return keypair;
-};
 
 /**
  * Get Solana RPC API URL by chain ID

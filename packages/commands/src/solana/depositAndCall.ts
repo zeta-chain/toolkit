@@ -4,10 +4,7 @@ import { solanaDepositAndCall } from "../../../../src/chains/solana/depositAndCa
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
-import {
-  getAPIbyChainId,
-  getBrowserSafeKeypair,
-} from "../../../../utils/solana.browser.helpers";
+import { getAPIbyChainId } from "../../../../utils/solana.browser.helpers";
 import {
   confirmSolanaTx,
   createRevertOptions,
@@ -15,6 +12,7 @@ import {
   prepareRevertOptions,
   solanaDepositAndCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
+import { getBrowserSafeKeypair } from "../../../../utils/solana.keypair.helpers";
 
 type DepositAndCallOptions = z.infer<typeof solanaDepositAndCallOptionsSchema>;
 
