@@ -246,12 +246,52 @@ const main = async (rawOptions: unknown) => {
       target: STAKING_PRECOMPILE,
     }));
 
+    // Small utility to run tasks with bounded concurrency
+    const mapWithConcurrency = async <T, R>(
+      items: T[],
+      limit: number,
+      fn: (item: T, index: number) => Promise<R>
+    ): Promise<R[]> => {
+      const results: R[] = new Array(items.length);
+      let cursor = 0;
+      const workers = new Array(Math.min(limit, items.length))
+        .fill(0)
+        .map(async () => {
+          while (true) {
+            const index = cursor++;
+            if (index >= items.length) break;
+            try {
+              results[index] = await fn(items[index], index);
+            } catch (e) {
+              // @ts-expect-error allow sparse result on error
+              results[index] = undefined;
+            }
+          }
+        });
+      await Promise.all(workers);
+      return results;
+    };
+
+    // Process multicall chunks in parallel with a safe concurrency limit
     const chunkSize = 100;
+    const chunks: {
+      start: number;
+      items: { callData: string; target: string }[];
+    }[] = [];
     for (let i = 0; i < calls.length; i += chunkSize) {
-      const chunk = calls.slice(i, i + chunkSize);
+      chunks.push({ start: i, items: calls.slice(i, i + chunkSize) });
+    }
+
+    const processChunk = async (chunk: {
+      start: number;
+      items: { callData: string; target: string }[];
+    }): Promise<DelegationRow[]> => {
+      const localRows: DelegationRow[] = [];
       try {
-        const result = (await multicall.aggregate(chunk)) as [bigint, string[]];
-        const returnData = result[1];
+        const [, returnData] = (await multicall.aggregate(chunk.items)) as [
+          bigint,
+          string[]
+        ];
         for (let j = 0; j < returnData.length; j++) {
           const data = returnData[j];
           try {
@@ -260,8 +300,8 @@ const main = async (rawOptions: unknown) => {
             const balance = decoded[1] as { amount: bigint; denom: string };
             const balanceAmount = balance?.amount ?? 0n;
             if (shares > 0n || balanceAmount > 0n) {
-              const idx = i + j;
-              rows.push({
+              const idx = chunk.start + j;
+              localRows.push({
                 balance: balanceAmount,
                 shares,
                 validator: validatorAddresses[idx],
@@ -271,29 +311,48 @@ const main = async (rawOptions: unknown) => {
             continue;
           }
         }
-      } catch (err) {
-        // Fallback: in rare case of aggregate failure, try single calls for this chunk
-        for (let j = 0; j < chunk.length; j++) {
-          const idx = i + j;
-          const validatorAddress = validatorAddresses[idx];
-          try {
-            const [shares, balance] = (await contract.delegation(
-              delegator,
-              validatorAddress
-            )) as [bigint, { amount: bigint; denom: string }];
-            const balanceAmount = balance?.amount ?? 0n;
-            if (shares > 0n || balanceAmount > 0n) {
-              rows.push({
-                balance: balanceAmount,
-                shares,
-                validator: validatorAddress,
-              });
+        return localRows;
+      } catch {
+        // Fallback: parallelize single calls with smaller concurrency
+        const indices = Array.from(
+          { length: chunk.items.length },
+          (_, j) => chunk.start + j
+        );
+        const perValidatorRows = await mapWithConcurrency(
+          indices,
+          10,
+          async (idx) => {
+            const validatorAddress = validatorAddresses[idx];
+            try {
+              const [shares, balance] = (await contract.delegation(
+                delegator,
+                validatorAddress
+              )) as [bigint, { amount: bigint; denom: string }];
+              const balanceAmount = balance?.amount ?? 0n;
+              if (shares > 0n || balanceAmount > 0n) {
+                return {
+                  balance: balanceAmount,
+                  shares,
+                  validator: validatorAddress,
+                } as DelegationRow;
+              }
+            } catch {
+              // ignore individual failures
             }
-          } catch {
-            continue;
+            // return empty marker
+            return undefined as unknown as DelegationRow;
           }
+        );
+        for (const r of perValidatorRows) {
+          if (r && typeof r.validator === "string") localRows.push(r);
         }
+        return localRows;
       }
+    };
+
+    const chunkResults = await mapWithConcurrency(chunks, 5, processChunk);
+    for (const cr of chunkResults) {
+      if (Array.isArray(cr)) rows.push(...cr);
     }
 
     if (!options.json) {
