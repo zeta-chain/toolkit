@@ -385,7 +385,7 @@ const main = async (rawOptions: unknown) => {
     }
 
     const tableData = [
-      ["Validator", "Shares", "Balance (ZETA)"],
+      ["Validator", "Shares", "Staked (ZETA)"],
       ...rows.map((r) => [
         r.validator,
         r.shares.toString(),
