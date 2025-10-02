@@ -63,6 +63,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "npx hardhat clean && yarn copy-templates && npx hardhat compile --force && yarn build:types && yarn copy-types",
+    "prepublishOnly": "yarn build",
     "build:types": "tsc --outDir dist/esm --module esnext && tsc --outDir dist/cjs --module commonjs && tsc --declarationDir dist/types --emitDeclarationOnly",
     "lint:fix": "yarn lint:js:fix && yarn lint:sol:fix",
     "lint:js:fix": "eslint --ext .js,.ts . --fix",
