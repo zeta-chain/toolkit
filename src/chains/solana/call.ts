@@ -3,8 +3,8 @@ import { z } from "zod";
 
 import {
   createRevertOptions,
-  createSolanaGatewayProgram,
-} from "../../../utils/solana.commands.helpers";
+  executeBrowserSolanaCall,
+} from "../../../utils/solana.browser.helpers";
 import { validateAndParseSchema } from "../../../utils/validateAndParseSchema";
 import {
   solanaCallParamsSchema,
@@ -35,11 +35,6 @@ export const solanaCall = async (
   );
   const validatedOptions = validateAndParseSchema(options, solanaOptionsSchema);
 
-  const { gatewayProgram } = createSolanaGatewayProgram(
-    validatedOptions.chainId,
-    validatedOptions.signer
-  );
-
   const receiverBytes = ethers.getBytes(validatedParams.receiver);
   const abiCoder = ethers.AbiCoder.defaultAbiCoder();
   const encodedParameters = abiCoder.encode(
@@ -53,9 +48,13 @@ export const solanaCall = async (
     validatedOptions.signer.publicKey
   );
 
-  const tx = await gatewayProgram.methods
-    .call(receiverBytes, message, revertOptions)
-    .accounts({})
-    .rpc();
+  const tx = await executeBrowserSolanaCall(
+    validatedOptions.chainId,
+    validatedOptions.signer,
+    receiverBytes,
+    message,
+    revertOptions
+  );
+
   return tx;
 };
