@@ -6,4 +6,5 @@ export * from "./query";
 export * from "./solana";
 export * from "./sui";
 export * from "./ton";
+export * from "./utils";
 export * from "./zetachain";
