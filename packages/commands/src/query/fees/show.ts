@@ -75,7 +75,7 @@ export const fetchShowFeesData = async (
   };
 
   const result: ShowFeesData = {
-    gas: {
+    target: {
       chain: getChainMetaByAddress(gasZRC20),
       decimals: gasDecimals,
       fee: gasFee.toString(),
@@ -144,8 +144,8 @@ export const fetchShowFeesData = async (
 const main = async (options: unknown) => {
   const showFeesOptionsSchema = z.object({
     api: z.string(),
-    json: z.boolean().optional(),
     gasLimit: z.union([z.string(), z.number()]).optional(),
+    json: z.boolean().optional(),
     router: evmAddressSchema,
     rpc: z.string(),
     source: evmAddressSchema.optional(),
@@ -276,12 +276,12 @@ const main = async (options: unknown) => {
     };
 
     // Target section
-    const targetChainName = data.gas.chain.name || "Unknown";
-    const targetChainId = data.gas.chain.id || "-";
-    const gasTokenLabel = getTokenLabel(data.gas.zrc20, data.gas.symbol);
+    const targetChainName = data.target.chain.name || "Unknown";
+    const targetChainId = data.target.chain.id || "-";
+    const gasTokenLabel = getTokenLabel(data.target.zrc20, data.target.symbol);
     const targetFeeFormatted = ethers.formatUnits(
-      data.gas.fee,
-      data.gas.decimals
+      data.target.fee,
+      data.target.decimals
     );
 
     const labelPad = (s: string) => s.padEnd(16, " ");
@@ -289,14 +289,14 @@ const main = async (options: unknown) => {
       `${labelPad("Target Chain")} ${targetChainName} (${targetChainId})`
     );
     console.log(
-      `${labelPad("Gas Token")} ${gasTokenLabel} (${data.gas.zrc20})`
+      `${labelPad("Gas Token")} ${gasTokenLabel} (${data.target.zrc20})`
     );
     if (gasLimit !== undefined && gasLimit !== null) {
       console.log(`${labelPad("Gas Limit")} ${gasLimit}`);
     }
     console.log(
       `${labelPad("Target Fee")} ${targetFeeFormatted} ${gasTokenLabel} (${
-        data.gas.fee
+        data.target.fee
       } wei)`
     );
 
@@ -310,11 +310,11 @@ const main = async (options: unknown) => {
         data.source.symbol
       );
       const requiredAmountFormatted = ethers.formatUnits(
-        data.source.equalsGas ? data.gas.fee : data.source.amount,
-        data.source.equalsGas ? data.gas.decimals : data.source.decimals
+        data.source.equalsGas ? data.target.fee : data.source.amount,
+        data.source.equalsGas ? data.target.decimals : data.source.decimals
       );
       const requiredAmountRaw = data.source.equalsGas
-        ? data.gas.fee
+        ? data.target.fee
         : data.source.amount;
 
       console.log(

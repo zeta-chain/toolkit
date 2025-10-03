@@ -7,7 +7,7 @@ const chainMetaSchema = z.object({
   name: z.string().optional(),
 });
 
-const gasSchema = z.object({
+const targetSchema = z.object({
   chain: chainMetaSchema,
   decimals: z.number(),
   fee: z.string(),
@@ -25,6 +25,6 @@ const sourceSchema = z.object({
 });
 
 export const showFeesDataSchema = z.object({
-  gas: gasSchema,
   source: sourceSchema.optional(),
+  target: targetSchema,
 });
