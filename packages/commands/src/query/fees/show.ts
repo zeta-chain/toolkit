@@ -12,7 +12,6 @@ import {
   DEFAULT_API_URL,
   DEFAULT_EVM_RPC_URL,
 } from "../../../../../src/constants/api";
-import { fetchForeignCoins } from "../tokens/list";
 import { fetchAllChainData } from "../chains/list";
 
 const main = async (
@@ -43,18 +42,16 @@ const main = async (
     const gasSymbol = await gasTokenContract.symbol();
     const gasDecimals: number = Number(await gasTokenContract.decimals());
 
-    // Resolve chain meta (name + id) via foreign coins and supportedChains
-    const [foreignCoins, chainData] = await Promise.all([
-      fetchForeignCoins(api),
-      fetchAllChainData(api),
-    ]);
+    // Resolve chain meta (name + id) via tokens and supported chains (single fetch)
+    const chainData = await fetchAllChainData(api);
+    const tokens = chainData.tokens;
     const getChainMetaByAddress = (
       addr: string
     ): {
       id?: string;
       name?: string;
     } => {
-      const token = foreignCoins.find(
+      const token = tokens.find(
         (c) => c.zrc20_contract_address.toLowerCase() === addr.toLowerCase()
       );
       if (!token) return {};
@@ -67,6 +64,52 @@ const main = async (
       };
     };
     const gasChainMeta = getChainMetaByAddress(gasZRC20);
+
+    const printGasSection = () => {
+      console.log(chalk.blue("\nWithdraw Gas Fee"));
+      console.log(
+        `Chain: ${gasChainMeta.name || "Unknown"} (${gasChainMeta.id || "-"})`
+      );
+      console.log(`Gas token: ${gasSymbol} (${gasZRC20})`);
+      console.log(
+        `Gas fee: ${ethers.formatUnits(
+          gasFee,
+          gasDecimals
+        )} (${gasFee.toString()})`
+      );
+    };
+
+    const printSourceEqualsGas = () => {
+      console.log(chalk.blue("\nSource Requirement"));
+      console.log(
+        `Source token equals gas token; required amount: ${ethers.formatUnits(
+          gasFee,
+          gasDecimals
+        )} (${gasFee.toString()})`
+      );
+    };
+
+    const printSourceRequirement = (
+      sourceChainMeta: { id?: string; name?: string },
+      sourceSymbolText: string,
+      sourceAddress: string,
+      requiredAmount: bigint,
+      requiredDecimals: number
+    ) => {
+      console.log(chalk.blue("\nSource Requirement"));
+      console.log(
+        `Chain: ${sourceChainMeta.name || "Unknown"} (${
+          sourceChainMeta.id || "-"
+        })`
+      );
+      console.log(`Source token: ${sourceSymbolText} (${sourceAddress})`);
+      console.log(
+        `Required source amount: ${ethers.formatUnits(
+          requiredAmount,
+          requiredDecimals
+        )} (${requiredAmount.toString()})`
+      );
+    };
 
     // If no source provided, just print the gas token and gas fee
     if (!source) {
@@ -81,17 +124,7 @@ const main = async (
       if (json) {
         console.log(JSON.stringify(out, null, 2));
       } else {
-        console.log(chalk.blue("\nWithdraw Gas Fee"));
-        console.log(`Gas token: ${gasSymbol} (${gasZRC20})`);
-        console.log(
-          `(${gasChainMeta.name || "Unknown"} ${gasChainMeta.id || "-"})`
-        );
-        console.log(
-          `Gas fee: ${ethers.formatUnits(
-            gasFee,
-            gasDecimals
-          )} (${gasFee.toString()})`
-        );
+        printGasSection();
       }
       return;
     }
@@ -111,24 +144,8 @@ const main = async (
       if (json) {
         console.log(JSON.stringify(out, null, 2));
       } else {
-        console.log(chalk.blue("\nWithdraw Gas Fee"));
-        console.log(`Gas token: ${gasSymbol} (${gasZRC20})`);
-        console.log(
-          `(${gasChainMeta.name || "Unknown"} ${gasChainMeta.id || "-"})`
-        );
-        console.log(
-          `Gas fee: ${ethers.formatUnits(
-            gasFee,
-            gasDecimals
-          )} (${gasFee.toString()})`
-        );
-        console.log(chalk.blue("\nSource Requirement"));
-        console.log(
-          `Source token equals gas token; required amount: ${ethers.formatUnits(
-            gasFee,
-            gasDecimals
-          )} (${gasFee.toString()})`
-        );
+        printGasSection();
+        printSourceEqualsGas();
       }
       return;
     }
@@ -184,29 +201,13 @@ const main = async (
     if (json) {
       console.log(JSON.stringify(out, null, 2));
     } else {
-      console.log(chalk.blue("\nWithdraw Gas Fee"));
-      console.log(
-        `Chain: ${gasChainMeta.name || "Unknown"} (${gasChainMeta.id || "-"}))`
-      );
-      console.log(`Gas token: ${gasSymbol} (${gasZRC20})`);
-      console.log(
-        `Gas fee: ${ethers.formatUnits(
-          gasFee,
-          gasDecimals
-        )} (${gasFee.toString()})`
-      );
-      console.log(chalk.blue("\nSource Requirement"));
-      console.log(
-        `Chain: ${sourceChainMeta.name || "Unknown"} (${
-          sourceChainMeta.id || "-"
-        })`
-      );
-      console.log(`Source token: ${sourceSymbol} (${source})`);
-      console.log(
-        `Required source amount: ${ethers.formatUnits(
-          sourceNeeded,
-          sourceDecimals
-        )} (${sourceNeeded.toString()})`
+      printGasSection();
+      printSourceRequirement(
+        sourceChainMeta,
+        sourceSymbol,
+        source,
+        sourceNeeded,
+        sourceDecimals
       );
     }
   } catch (error) {
@@ -246,22 +247,22 @@ export const showCommand = new Command("show")
   .addOption(new Option("--json", "Output results in JSON format"))
   .action(async (options) => {
     const { target, targetChain, source, rpc, router, json, api } = options as {
-      source?: string;
+      api: string;
       json?: boolean;
       router: string;
       rpc: string;
+      source?: string;
       target?: string;
       targetChain?: string | number;
-      api: string;
     };
     let resolvedTarget = target;
 
     if (!resolvedTarget && targetChain) {
       try {
-        const foreignCoins = await fetchForeignCoins(api);
+        const chainData = await fetchAllChainData(api);
         const chainId = String(targetChain);
-        const gasToken = foreignCoins.find(
-          (c) => c.coin_type === "Gas" && c.foreign_chain_id === chainId
+        const gasToken = chainData.tokens.find(
+          (tok) => tok.coin_type === "Gas" && tok.foreign_chain_id === chainId
         );
 
         if (!gasToken) {
