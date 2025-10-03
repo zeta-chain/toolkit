@@ -13,13 +13,15 @@ import {
   DEFAULT_EVM_RPC_URL,
 } from "../../../../../src/constants/api";
 import { fetchForeignCoins } from "../tokens/list";
+import { fetchAllChainData } from "../chains/list";
 
 const main = async (
   target: string,
   source: string | undefined,
   rpc: string,
   routerAddress: string,
-  json: boolean
+  json: boolean,
+  api: string
 ) => {
   const spinner = json ? null : ora("Querying withdraw gas fee...").start();
 
@@ -33,6 +35,38 @@ const main = async (
     ) as unknown as IZRC20;
 
     const [gasZRC20, gasFee] = await targetContract.withdrawGasFee();
+    const gasTokenContract = new ethers.Contract(
+      gasZRC20,
+      ZRC20ABI.abi,
+      provider
+    ) as unknown as IZRC20Metadata;
+    const gasSymbol = await gasTokenContract.symbol();
+    const gasDecimals: number = Number(await gasTokenContract.decimals());
+
+    // Resolve chain meta (name + id) via foreign coins and supportedChains
+    const [foreignCoins, chainData] = await Promise.all([
+      fetchForeignCoins(api),
+      fetchAllChainData(api),
+    ]);
+    const getChainMetaByAddress = (
+      addr: string
+    ): {
+      id?: string;
+      name?: string;
+    } => {
+      const token = foreignCoins.find(
+        (c) => c.zrc20_contract_address.toLowerCase() === addr.toLowerCase()
+      );
+      if (!token) return {};
+      const chain = chainData.chains.find(
+        (ch) => ch.chain_id === token.foreign_chain_id
+      );
+      return {
+        id: token.foreign_chain_id,
+        name: chain?.name || chain?.chain_name,
+      };
+    };
+    const gasChainMeta = getChainMetaByAddress(gasZRC20);
 
     // If no source provided, just print the gas token and gas fee
     if (!source) {
@@ -48,8 +82,16 @@ const main = async (
         console.log(JSON.stringify(out, null, 2));
       } else {
         console.log(chalk.blue("\nWithdraw Gas Fee"));
-        console.log(`Gas token: ${gasZRC20}`);
-        console.log(`Gas fee: ${gasFee.toString()}`);
+        console.log(`Gas token: ${gasSymbol} (${gasZRC20})`);
+        console.log(
+          `(${gasChainMeta.name || "Unknown"} ${gasChainMeta.id || "-"})`
+        );
+        console.log(
+          `Gas fee: ${ethers.formatUnits(
+            gasFee,
+            gasDecimals
+          )} (${gasFee.toString()})`
+        );
       }
       return;
     }
@@ -70,11 +112,22 @@ const main = async (
         console.log(JSON.stringify(out, null, 2));
       } else {
         console.log(chalk.blue("\nWithdraw Gas Fee"));
-        console.log(`Gas token: ${gasZRC20}`);
-        console.log(`Gas fee: ${gasFee.toString()}`);
+        console.log(`Gas token: ${gasSymbol} (${gasZRC20})`);
+        console.log(
+          `(${gasChainMeta.name || "Unknown"} ${gasChainMeta.id || "-"})`
+        );
+        console.log(
+          `Gas fee: ${ethers.formatUnits(
+            gasFee,
+            gasDecimals
+          )} (${gasFee.toString()})`
+        );
         console.log(chalk.blue("\nSource Requirement"));
         console.log(
-          `Source token equals gas token; required amount: ${gasFee.toString()}`
+          `Source token equals gas token; required amount: ${ethers.formatUnits(
+            gasFee,
+            gasDecimals
+          )} (${gasFee.toString()})`
         );
       }
       return;
@@ -113,6 +166,7 @@ const main = async (
     const sourceNeeded = amountsInForSource[0];
 
     const sourceDecimals: number = Number(await sourceContract.decimals());
+    const sourceSymbol: string = await sourceContract.symbol();
 
     const out = {
       gasFee: gasFee.toString(),
@@ -125,15 +179,35 @@ const main = async (
     spinner?.stop();
     spinner?.clear();
 
+    const sourceChainMeta = getChainMetaByAddress(source);
+
     if (json) {
       console.log(JSON.stringify(out, null, 2));
     } else {
       console.log(chalk.blue("\nWithdraw Gas Fee"));
-      console.log(`Gas token: ${gasZRC20}`);
-      console.log(`Gas fee: ${gasFee.toString()}`);
+      console.log(
+        `Chain: ${gasChainMeta.name || "Unknown"} (${gasChainMeta.id || "-"}))`
+      );
+      console.log(`Gas token: ${gasSymbol} (${gasZRC20})`);
+      console.log(
+        `Gas fee: ${ethers.formatUnits(
+          gasFee,
+          gasDecimals
+        )} (${gasFee.toString()})`
+      );
       console.log(chalk.blue("\nSource Requirement"));
-      console.log(`Source token: ${source}`);
-      console.log(`Required source amount (raw): ${sourceNeeded.toString()}`);
+      console.log(
+        `Chain: ${sourceChainMeta.name || "Unknown"} (${
+          sourceChainMeta.id || "-"
+        })`
+      );
+      console.log(`Source token: ${sourceSymbol} (${source})`);
+      console.log(
+        `Required source amount: ${ethers.formatUnits(
+          sourceNeeded,
+          sourceDecimals
+        )} (${sourceNeeded.toString()})`
+      );
     }
   } catch (error) {
     spinner?.stop();
@@ -225,5 +299,5 @@ export const showCommand = new Command("show")
       return;
     }
 
-    await main(resolvedTarget, source, rpc, router, Boolean(json));
+    await main(resolvedTarget, source, rpc, router, Boolean(json), api);
   });
