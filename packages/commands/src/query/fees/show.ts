@@ -234,6 +234,12 @@ export const showCommand = new Command("show")
   )
   .addOption(new Option("--source <address>", "Source ZRC-20 token address"))
   .addOption(
+    new Option(
+      "--source-chain <id>",
+      "Source chain ID to auto-resolve source ZRC-20"
+    )
+  )
+  .addOption(
     new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_EVM_RPC_URL)
   )
   .addOption(
@@ -246,16 +252,19 @@ export const showCommand = new Command("show")
   )
   .addOption(new Option("--json", "Output results in JSON format"))
   .action(async (options) => {
-    const { target, targetChain, source, rpc, router, json, api } = options as {
-      api: string;
-      json?: boolean;
-      router: string;
-      rpc: string;
-      source?: string;
-      target?: string;
-      targetChain?: string | number;
-    };
+    const { target, targetChain, source, sourceChain, rpc, router, json, api } =
+      options as {
+        api: string;
+        json?: boolean;
+        router: string;
+        rpc: string;
+        source?: string;
+        sourceChain?: string | number;
+        target?: string;
+        targetChain?: string | number;
+      };
     let resolvedTarget = target;
+    let resolvedSource = source;
 
     if (!resolvedTarget && targetChain) {
       try {
@@ -300,5 +309,39 @@ export const showCommand = new Command("show")
       return;
     }
 
-    await main(resolvedTarget, source, rpc, router, Boolean(json), api);
+    // Resolve source by chain ID if not explicitly provided
+    if (!resolvedSource && sourceChain) {
+      try {
+        const chainData = await fetchAllChainData(api);
+        const chainId = String(sourceChain);
+        const gasToken = chainData.tokens.find(
+          (tok) => tok.coin_type === "Gas" && tok.foreign_chain_id === chainId
+        );
+
+        if (!gasToken) {
+          const msg = `Source gas token not found for chain ID: ${chainId}`;
+          if (json) {
+            console.log(JSON.stringify({ error: msg }, null, 2));
+          } else {
+            console.error(msg);
+          }
+          return;
+        }
+
+        resolvedSource = gasToken.zrc20_contract_address;
+      } catch (e) {
+        const msg =
+          e instanceof Error
+            ? e.message
+            : "Failed to resolve source by chain ID";
+        if (json) {
+          console.log(JSON.stringify({ error: msg }, null, 2));
+        } else {
+          console.error(msg);
+        }
+        return;
+      }
+    }
+
+    await main(resolvedTarget, resolvedSource, rpc, router, Boolean(json), api);
   });
