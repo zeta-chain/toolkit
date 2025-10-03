@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import ora from "ora";
 
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
+import UniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
 
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 
@@ -11,6 +12,7 @@ const main = async (
   target: string,
   input: string | undefined,
   rpc: string,
+  routerAddress: string,
   json: boolean
 ) => {
   const spinner = json ? null : ora("Querying withdraw gas fee...").start();
@@ -67,27 +69,14 @@ const main = async (
     // Otherwise, compute how many input tokens are required by routing gasFee(gasZRC20) -> ZETA -> input
     const inputContract = new ethers.Contract(input, ZRC20ABI.abi, provider);
 
-    // We need ZETA token address on testnet
-    const zetaTokenAddress = (
-      await import("@zetachain/protocol-contracts")
-    ).getAddress("zetaToken", "zeta_testnet");
-    if (!zetaTokenAddress) {
-      throw new Error("Cannot get ZETA token address");
-    }
-
-    // Reuse Uniswap V2 Router via packages/client getQuote util style
-    const { default: UniswapV2RouterABI } = await import(
-      "@uniswap/v2-periphery/build/IUniswapV2Router02.json"
-    );
-    const { getAddress } = await import("@zetachain/protocol-contracts");
-    const routerAddress = getAddress("uniswapV2Router02", "zeta_testnet");
-    if (!routerAddress) throw new Error("Cannot get uniswapV2Router02 address");
-
     const router = new ethers.Contract(
       routerAddress,
       UniswapV2RouterABI.abi,
       provider
     );
+
+    // Derive ZETA token address via router's WETH() (WZETA on ZetaChain)
+    const zetaTokenAddress = await router.WETH();
 
     // First hop: gasZRC20 fee -> ZETA (amountsIn for gasFee)
     const path1 = [zetaTokenAddress, gasZRC20];
@@ -145,13 +134,19 @@ export const showCommand = new Command("show")
   .addOption(
     new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_EVM_RPC_URL)
   )
+  .addOption(
+    new Option("--router <address>", "UniswapV2 router address").default(
+      "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
+    )
+  )
   .addOption(new Option("--json", "Output results in JSON format"))
   .action(async (options) => {
-    const { target, input, rpc, json } = options as {
+    const { target, input, rpc, router, json } = options as {
       target: string;
       input?: string;
       rpc: string;
+      router: string;
       json?: boolean;
     };
-    await main(target, input, rpc, Boolean(json));
+    await main(target, input, rpc, router, Boolean(json));
   });
