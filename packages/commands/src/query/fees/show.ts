@@ -14,202 +14,287 @@ import {
 } from "../../../../../src/constants/api";
 import { fetchAllChainData } from "../chains/list";
 
-const main = async (
+export type ShowFeesData = {
+  gas: {
+    chain: { id?: string; name?: string };
+    decimals: number;
+    fee: string;
+    symbol: string;
+    zrc20: string;
+  };
+  source?: {
+    amount: string;
+    chain: { id?: string; name?: string };
+    decimals: number;
+    equalsGas?: boolean;
+    symbol: string;
+    zrc20: string;
+  };
+};
+
+export const fetchShowFeesData = async (
   target: string,
   source: string | undefined,
   rpc: string,
   routerAddress: string,
-  json: boolean,
   api: string
-) => {
+): Promise<ShowFeesData> => {
+  const provider = new ethers.JsonRpcProvider(rpc);
+
+  const targetContract = new ethers.Contract(
+    target,
+    ZRC20ABI.abi,
+    provider
+  ) as unknown as IZRC20;
+
+  const [gasZRC20, gasFee] = await targetContract.withdrawGasFee();
+  const gasTokenContract = new ethers.Contract(
+    gasZRC20,
+    ZRC20ABI.abi,
+    provider
+  ) as unknown as IZRC20Metadata;
+  const gasSymbol = await gasTokenContract.symbol();
+  const gasDecimals: number = Number(await gasTokenContract.decimals());
+
+  const chainData = await fetchAllChainData(api);
+  const tokens = chainData.tokens;
+  const getChainMetaByAddress = (
+    addr: string
+  ): {
+    id?: string;
+    name?: string;
+  } => {
+    const token = tokens.find(
+      (c) => c.zrc20_contract_address.toLowerCase() === addr.toLowerCase()
+    );
+    if (!token) return {};
+    const chain = chainData.chains.find(
+      (ch) => ch.chain_id === token.foreign_chain_id
+    );
+    return {
+      id: token.foreign_chain_id,
+      name: chain?.name || chain?.chain_name,
+    };
+  };
+
+  const result: ShowFeesData = {
+    gas: {
+      chain: getChainMetaByAddress(gasZRC20),
+      decimals: gasDecimals,
+      fee: gasFee.toString(),
+      symbol: gasSymbol,
+      zrc20: gasZRC20,
+    },
+  };
+
+  if (!source) return result;
+
+  if (source.toLowerCase() === gasZRC20.toLowerCase()) {
+    result.source = {
+      amount: gasFee.toString(),
+      chain: getChainMetaByAddress(source),
+      decimals: gasDecimals,
+      equalsGas: true,
+      symbol: gasSymbol,
+      zrc20: source,
+    };
+    return result;
+  }
+
+  const sourceContract = new ethers.Contract(
+    source,
+    ZRC20ABI.abi,
+    provider
+  ) as unknown as IZRC20Metadata;
+
+  const router = new ethers.Contract(
+    routerAddress,
+    UniswapV2RouterABI.abi,
+    provider
+  ) as unknown as UniswapV2Router02;
+
+  const zetaTokenAddress = await router.WETH();
+
+  const path1 = [zetaTokenAddress, gasZRC20];
+  const amountsInForZeta = (await router.getAmountsIn(
+    gasFee,
+    path1
+  )) as unknown as [bigint, bigint];
+  const zetaNeeded = amountsInForZeta[0];
+
+  const path2 = [source, zetaTokenAddress];
+  const amountsInForSource = (await router.getAmountsIn(
+    zetaNeeded,
+    path2
+  )) as unknown as [bigint, bigint];
+  const sourceNeeded = amountsInForSource[0];
+
+  const sourceDecimals: number = Number(await sourceContract.decimals());
+  const sourceSymbol: string = await sourceContract.symbol();
+
+  result.source = {
+    amount: sourceNeeded.toString(),
+    chain: getChainMetaByAddress(source),
+    decimals: sourceDecimals,
+    equalsGas: false,
+    symbol: sourceSymbol,
+    zrc20: source,
+  };
+
+  return result;
+};
+
+const main = async (options: unknown) => {
+  const { target, targetChain, source, sourceChain, rpc, router, json, api } =
+    options as {
+      api: string;
+      json?: boolean;
+      router: string;
+      rpc: string;
+      source?: string;
+      sourceChain?: string | number;
+      target?: string;
+      targetChain?: string | number;
+    };
+
+  let resolvedTarget = target;
+  let resolvedSource = source;
+
+  if (!resolvedTarget && targetChain) {
+    try {
+      const chainData = await fetchAllChainData(api);
+      const chainId = String(targetChain);
+      const gasToken = chainData.tokens.find(
+        (tok) => tok.coin_type === "Gas" && tok.foreign_chain_id === chainId
+      );
+
+      if (!gasToken) {
+        const msg = `Gas token not found for chain ID: ${chainId}`;
+        if (json) {
+          console.log(JSON.stringify({ error: msg }, null, 2));
+        } else {
+          console.error(msg);
+        }
+        return;
+      }
+
+      resolvedTarget = gasToken.zrc20_contract_address;
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "Failed to resolve target by chain ID";
+      if (json) {
+        console.log(JSON.stringify({ error: msg }, null, 2));
+      } else {
+        console.error(msg);
+      }
+      return;
+    }
+  }
+
+  if (!resolvedTarget) {
+    const msg = "Either --target or --target-chain must be provided";
+    if (json) {
+      console.log(JSON.stringify({ error: msg }, null, 2));
+    } else {
+      console.error(msg);
+    }
+    return;
+  }
+
+  // Resolve source by chain ID if not explicitly provided
+  if (!resolvedSource && sourceChain) {
+    try {
+      const chainData = await fetchAllChainData(api);
+      const chainId = String(sourceChain);
+      const gasToken = chainData.tokens.find(
+        (tok) => tok.coin_type === "Gas" && tok.foreign_chain_id === chainId
+      );
+
+      if (!gasToken) {
+        const msg = `Source gas token not found for chain ID: ${chainId}`;
+        if (json) {
+          console.log(JSON.stringify({ error: msg }, null, 2));
+        } else {
+          console.error(msg);
+        }
+        return;
+      }
+
+      resolvedSource = gasToken.zrc20_contract_address;
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "Failed to resolve source by chain ID";
+      if (json) {
+        console.log(JSON.stringify({ error: msg }, null, 2));
+      } else {
+        console.error(msg);
+      }
+      return;
+    }
+  }
+
   const spinner = json ? null : ora("Querying withdraw gas fee...").start();
-
   try {
-    const provider = new ethers.JsonRpcProvider(rpc);
-
-    const targetContract = new ethers.Contract(
-      target,
-      ZRC20ABI.abi,
-      provider
-    ) as unknown as IZRC20;
-
-    const [gasZRC20, gasFee] = await targetContract.withdrawGasFee();
-    const gasTokenContract = new ethers.Contract(
-      gasZRC20,
-      ZRC20ABI.abi,
-      provider
-    ) as unknown as IZRC20Metadata;
-    const gasSymbol = await gasTokenContract.symbol();
-    const gasDecimals: number = Number(await gasTokenContract.decimals());
-
-    // Resolve chain meta (name + id) via tokens and supported chains (single fetch)
-    const chainData = await fetchAllChainData(api);
-    const tokens = chainData.tokens;
-    const getChainMetaByAddress = (
-      addr: string
-    ): {
-      id?: string;
-      name?: string;
-    } => {
-      const token = tokens.find(
-        (c) => c.zrc20_contract_address.toLowerCase() === addr.toLowerCase()
-      );
-      if (!token) return {};
-      const chain = chainData.chains.find(
-        (ch) => ch.chain_id === token.foreign_chain_id
-      );
-      return {
-        id: token.foreign_chain_id,
-        name: chain?.name || chain?.chain_name,
-      };
-    };
-    const gasChainMeta = getChainMetaByAddress(gasZRC20);
-
-    const printGasSection = () => {
-      console.log(chalk.blue("\nWithdraw Gas Fee"));
-      console.log(
-        `Chain: ${gasChainMeta.name || "Unknown"} (${gasChainMeta.id || "-"})`
-      );
-      console.log(`Gas token: ${gasSymbol} (${gasZRC20})`);
-      console.log(
-        `Gas fee: ${ethers.formatUnits(
-          gasFee,
-          gasDecimals
-        )} (${gasFee.toString()})`
-      );
-    };
-
-    const printSourceEqualsGas = () => {
-      console.log(chalk.blue("\nSource Requirement"));
-      console.log(
-        `Source token equals gas token; required amount: ${ethers.formatUnits(
-          gasFee,
-          gasDecimals
-        )} (${gasFee.toString()})`
-      );
-    };
-
-    const printSourceRequirement = (
-      sourceChainMeta: { id?: string; name?: string },
-      sourceSymbolText: string,
-      sourceAddress: string,
-      requiredAmount: bigint,
-      requiredDecimals: number
-    ) => {
-      console.log(chalk.blue("\nSource Requirement"));
-      console.log(
-        `Chain: ${sourceChainMeta.name || "Unknown"} (${
-          sourceChainMeta.id || "-"
-        })`
-      );
-      console.log(`Source token: ${sourceSymbolText} (${sourceAddress})`);
-      console.log(
-        `Required source amount: ${ethers.formatUnits(
-          requiredAmount,
-          requiredDecimals
-        )} (${requiredAmount.toString()})`
-      );
-    };
-
-    // If no source provided, just print the gas token and gas fee
-    if (!source) {
-      const out = {
-        gasFee: gasFee.toString(),
-        gasZRC20,
-      };
-
-      spinner?.stop();
-      spinner?.clear();
-
-      if (json) {
-        console.log(JSON.stringify(out, null, 2));
-      } else {
-        printGasSection();
-      }
-      return;
-    }
-
-    // If source token provided and equals gasZRC20, fee equals gasFee
-    if (source.toLowerCase() === gasZRC20.toLowerCase()) {
-      const out = {
-        gasFee: gasFee.toString(),
-        gasZRC20,
-        sourceAmount: gasFee.toString(),
-        sourceZRC20: source,
-      };
-
-      spinner?.stop();
-      spinner?.clear();
-
-      if (json) {
-        console.log(JSON.stringify(out, null, 2));
-      } else {
-        printGasSection();
-        printSourceEqualsGas();
-      }
-      return;
-    }
-
-    // Otherwise, compute how many source tokens are required by routing gasFee(gasZRC20) -> ZETA -> source
-    const sourceContract = new ethers.Contract(
-      source,
-      ZRC20ABI.abi,
-      provider
-    ) as unknown as IZRC20Metadata;
-
-    const router = new ethers.Contract(
-      routerAddress,
-      UniswapV2RouterABI.abi,
-      provider
-    ) as unknown as UniswapV2Router02;
-
-    // Derive ZETA token address via router's WETH() (WZETA on ZetaChain)
-    const zetaTokenAddress = await router.WETH();
-
-    // First hop: gasZRC20 fee -> ZETA (amountsIn for gasFee)
-    const path1 = [zetaTokenAddress, gasZRC20];
-    const amountsInForZeta = (await router.getAmountsIn(
-      gasFee,
-      path1
-    )) as unknown as [bigint, bigint];
-    const zetaNeeded = amountsInForZeta[0];
-
-    // Second hop: ZETA -> source (amountsIn for zetaNeeded)
-    const path2 = [source, zetaTokenAddress];
-    const amountsInForSource = (await router.getAmountsIn(
-      zetaNeeded,
-      path2
-    )) as unknown as [bigint, bigint];
-    const sourceNeeded = amountsInForSource[0];
-
-    const sourceDecimals: number = Number(await sourceContract.decimals());
-    const sourceSymbol: string = await sourceContract.symbol();
-
-    const out = {
-      gasFee: gasFee.toString(),
-      gasZRC20,
-      sourceAmount: sourceNeeded.toString(),
-      sourceDecimals,
-      sourceZRC20: source,
-    };
+    const data = await fetchShowFeesData(
+      resolvedTarget,
+      resolvedSource,
+      rpc,
+      router,
+      api
+    );
 
     spinner?.stop();
     spinner?.clear();
 
-    const sourceChainMeta = getChainMetaByAddress(source);
-
     if (json) {
-      console.log(JSON.stringify(out, null, 2));
-    } else {
-      printGasSection();
-      printSourceRequirement(
-        sourceChainMeta,
-        sourceSymbol,
-        source,
-        sourceNeeded,
-        sourceDecimals
-      );
+      console.log(JSON.stringify(data, null, 2));
+      return;
     }
+
+    const printGasSection = () => {
+      console.log(chalk.blue("\nWithdraw Gas Fee"));
+      console.log(
+        `Chain: ${data.gas.chain.name || "Unknown"} (${
+          data.gas.chain.id || "-"
+        })`
+      );
+      console.log(`Gas token: ${data.gas.symbol} (${data.gas.zrc20})`);
+      console.log(
+        `Gas fee: ${ethers.formatUnits(data.gas.fee, data.gas.decimals)} (${
+          data.gas.fee
+        })`
+      );
+    };
+
+    const printSourceRequirement = () => {
+      if (!data.source) return;
+      console.log(chalk.blue("\nSource Requirement"));
+      if (data.source.equalsGas) {
+        console.log(
+          `Source token equals gas token; required amount: ${ethers.formatUnits(
+            data.gas.fee,
+            data.gas.decimals
+          )} (${data.gas.fee})`
+        );
+        return;
+      }
+
+      console.log(
+        `Chain: ${data.source.chain.name || "Unknown"} (${
+          data.source.chain.id || "-"
+        })`
+      );
+      console.log(`Source token: ${data.source.symbol} (${data.source.zrc20})`);
+      console.log(
+        `Required source amount: ${ethers.formatUnits(
+          data.source.amount,
+          data.source.decimals
+        )} (${data.source.amount})`
+      );
+    };
+
+    printGasSection();
+    printSourceRequirement();
   } catch (error) {
     spinner?.stop();
     spinner?.clear();
@@ -251,97 +336,4 @@ export const showCommand = new Command("show")
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
   .addOption(new Option("--json", "Output results in JSON format"))
-  .action(async (options) => {
-    const { target, targetChain, source, sourceChain, rpc, router, json, api } =
-      options as {
-        api: string;
-        json?: boolean;
-        router: string;
-        rpc: string;
-        source?: string;
-        sourceChain?: string | number;
-        target?: string;
-        targetChain?: string | number;
-      };
-    let resolvedTarget = target;
-    let resolvedSource = source;
-
-    if (!resolvedTarget && targetChain) {
-      try {
-        const chainData = await fetchAllChainData(api);
-        const chainId = String(targetChain);
-        const gasToken = chainData.tokens.find(
-          (tok) => tok.coin_type === "Gas" && tok.foreign_chain_id === chainId
-        );
-
-        if (!gasToken) {
-          const msg = `Gas token not found for chain ID: ${chainId}`;
-          if (json) {
-            console.log(JSON.stringify({ error: msg }, null, 2));
-          } else {
-            console.error(msg);
-          }
-          return;
-        }
-
-        resolvedTarget = gasToken.zrc20_contract_address;
-      } catch (e) {
-        const msg =
-          e instanceof Error
-            ? e.message
-            : "Failed to resolve target by chain ID";
-        if (json) {
-          console.log(JSON.stringify({ error: msg }, null, 2));
-        } else {
-          console.error(msg);
-        }
-        return;
-      }
-    }
-
-    if (!resolvedTarget) {
-      const msg = "Either --target or --target-chain must be provided";
-      if (json) {
-        console.log(JSON.stringify({ error: msg }, null, 2));
-      } else {
-        console.error(msg);
-      }
-      return;
-    }
-
-    // Resolve source by chain ID if not explicitly provided
-    if (!resolvedSource && sourceChain) {
-      try {
-        const chainData = await fetchAllChainData(api);
-        const chainId = String(sourceChain);
-        const gasToken = chainData.tokens.find(
-          (tok) => tok.coin_type === "Gas" && tok.foreign_chain_id === chainId
-        );
-
-        if (!gasToken) {
-          const msg = `Source gas token not found for chain ID: ${chainId}`;
-          if (json) {
-            console.log(JSON.stringify({ error: msg }, null, 2));
-          } else {
-            console.error(msg);
-          }
-          return;
-        }
-
-        resolvedSource = gasToken.zrc20_contract_address;
-      } catch (e) {
-        const msg =
-          e instanceof Error
-            ? e.message
-            : "Failed to resolve source by chain ID";
-        if (json) {
-          console.log(JSON.stringify({ error: msg }, null, 2));
-        } else {
-          console.error(msg);
-        }
-        return;
-      }
-    }
-
-    await main(resolvedTarget, resolvedSource, rpc, router, Boolean(json), api);
-  });
+  .action(main);
