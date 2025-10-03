@@ -11,9 +11,25 @@ export const addressCommand = new Command("address")
     "<address>",
     "Address in hex (0x... or without 0x), bech32, or [..] bytes"
   )
-  .action((address: string) => {
+  .option("--json", "Output results as JSON")
+  .action((address: string, options: { json?: boolean }) => {
     try {
       const result = convertAddressAll(address);
+      if (options.json) {
+        console.log(
+          JSON.stringify(
+            {
+              bech32Acc: result.bech32Acc,
+              bech32Con: result.bech32Valcons,
+              bech32Val: result.bech32Valoper,
+              hex: result.checksumHex,
+            },
+            null,
+            2
+          )
+        );
+        return;
+      }
       const rows = [
         ["Format", "Address"],
         ["Address (hex)", result.checksumHex],
