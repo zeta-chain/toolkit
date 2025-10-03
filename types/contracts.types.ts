@@ -1,5 +1,5 @@
-import { ContractTransactionResponse, ethers } from "ethers";
 import type { UniswapV2Router02 } from "@zetachain/protocol-contracts/types/UniswapV2Router02";
+import { ContractTransactionResponse, ethers } from "ethers";
 
 export interface RevertOptions {
   abortAddress?: string;

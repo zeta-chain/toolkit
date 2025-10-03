@@ -2,13 +2,13 @@ import UniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.j
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import type { IZRC20 } from "@zetachain/protocol-contracts/types/IZRC20.sol/IZRC20";
 import type { IZRC20Metadata } from "@zetachain/protocol-contracts/types/IZRC20.sol/IZRC20Metadata";
+import type { UniswapV2Router02 } from "@zetachain/protocol-contracts/types/UniswapV2Router02";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import ora from "ora";
 
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
-import type { UniswapV2Router02Contract } from "../../../../../types/contracts.types";
 
 const main = async (
   target: string,
@@ -87,7 +87,7 @@ const main = async (
       routerAddress,
       UniswapV2RouterABI.abi,
       provider
-    ) as unknown as UniswapV2Router02Contract;
+    ) as unknown as UniswapV2Router02;
 
     // Derive ZETA token address via router's WETH() (WZETA on ZetaChain)
     const zetaTokenAddress = await router.WETH();
