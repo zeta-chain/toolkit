@@ -10,6 +10,7 @@ import { queryCommand } from "./query";
 import { solanaCommand } from "./solana";
 import { suiCommand } from "./sui";
 import { tonCommand } from "./ton";
+import { utilsCommand } from "./utils";
 import { zetachainCommand } from "./zetachain";
 
 export const toolkitCommand = new Command("toolkit")
@@ -24,6 +25,7 @@ toolkitCommand.addCommand(queryCommand);
 toolkitCommand.addCommand(solanaCommand);
 toolkitCommand.addCommand(suiCommand);
 toolkitCommand.addCommand(tonCommand);
+toolkitCommand.addCommand(utilsCommand);
 toolkitCommand.addCommand(zetachainCommand);
 
 showRequiredOptions(toolkitCommand);
