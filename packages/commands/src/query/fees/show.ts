@@ -12,7 +12,7 @@ import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 
 const main = async (
   target: string,
-  input: string | undefined,
+  source: string | undefined,
   rpc: string,
   routerAddress: string,
   json: boolean
@@ -30,8 +30,8 @@ const main = async (
 
     const [gasZRC20, gasFee] = await targetContract.withdrawGasFee();
 
-    // If no input provided, just print the gas token and gas fee
-    if (!input) {
+    // If no source provided, just print the gas token and gas fee
+    if (!source) {
       const out = {
         gasFee: gasFee.toString(),
         gasZRC20,
@@ -50,13 +50,13 @@ const main = async (
       return;
     }
 
-    // If input token provided and equals gasZRC20, fee equals gasFee
-    if (input.toLowerCase() === gasZRC20.toLowerCase()) {
+    // If source token provided and equals gasZRC20, fee equals gasFee
+    if (source.toLowerCase() === gasZRC20.toLowerCase()) {
       const out = {
         gasFee: gasFee.toString(),
         gasZRC20,
-        inputAmount: gasFee.toString(),
-        inputZRC20: input,
+        sourceAmount: gasFee.toString(),
+        sourceZRC20: source,
       };
 
       spinner?.stop();
@@ -68,17 +68,17 @@ const main = async (
         console.log(chalk.blue("\nWithdraw Gas Fee"));
         console.log(`Gas token: ${gasZRC20}`);
         console.log(`Gas fee: ${gasFee.toString()}`);
-        console.log(chalk.blue("\nInput Requirement"));
+        console.log(chalk.blue("\nSource Requirement"));
         console.log(
-          `Input token equals gas token; required amount: ${gasFee.toString()}`
+          `Source token equals gas token; required amount: ${gasFee.toString()}`
         );
       }
       return;
     }
 
-    // Otherwise, compute how many input tokens are required by routing gasFee(gasZRC20) -> ZETA -> input
-    const inputContract = new ethers.Contract(
-      input,
+    // Otherwise, compute how many source tokens are required by routing gasFee(gasZRC20) -> ZETA -> source
+    const sourceContract = new ethers.Contract(
+      source,
       ZRC20ABI.abi,
       provider
     ) as unknown as IZRC20Metadata;
@@ -100,22 +100,22 @@ const main = async (
     )) as unknown as [bigint, bigint];
     const zetaNeeded = amountsInForZeta[0];
 
-    // Second hop: ZETA -> input (amountsIn for zetaNeeded)
-    const path2 = [input, zetaTokenAddress];
-    const amountsInForInput = (await router.getAmountsIn(
+    // Second hop: ZETA -> source (amountsIn for zetaNeeded)
+    const path2 = [source, zetaTokenAddress];
+    const amountsInForSource = (await router.getAmountsIn(
       zetaNeeded,
       path2
     )) as unknown as [bigint, bigint];
-    const inputNeeded = amountsInForInput[0];
+    const sourceNeeded = amountsInForSource[0];
 
-    const inputDecimals: number = Number(await inputContract.decimals());
+    const sourceDecimals: number = Number(await sourceContract.decimals());
 
     const out = {
       gasFee: gasFee.toString(),
       gasZRC20,
-      inputAmount: inputNeeded.toString(),
-      inputDecimals,
-      inputZRC20: input,
+      sourceAmount: sourceNeeded.toString(),
+      sourceDecimals,
+      sourceZRC20: source,
     };
 
     spinner?.stop();
@@ -127,9 +127,9 @@ const main = async (
       console.log(chalk.blue("\nWithdraw Gas Fee"));
       console.log(`Gas token: ${gasZRC20}`);
       console.log(`Gas fee: ${gasFee.toString()}`);
-      console.log(chalk.blue("\nInput Requirement"));
-      console.log(`Input token: ${input}`);
-      console.log(`Required input amount (raw): ${inputNeeded.toString()}`);
+      console.log(chalk.blue("\nSource Requirement"));
+      console.log(`Source token: ${source}`);
+      console.log(`Required source amount (raw): ${sourceNeeded.toString()}`);
     }
   } catch (error) {
     spinner?.stop();
@@ -144,7 +144,7 @@ const main = async (
 
 export const showCommand = new Command("show")
   .description(
-    "Show withdraw gas fee for a target ZRC-20, with optional input conversion"
+    "Show withdraw gas fee for a target ZRC-20, with optional source conversion"
   )
   .addOption(
     new Option(
@@ -152,7 +152,7 @@ export const showCommand = new Command("show")
       "Target ZRC-20 token address"
     ).makeOptionMandatory()
   )
-  .addOption(new Option("--input <address>", "Input ZRC-20 token address"))
+  .addOption(new Option("--source <address>", "Source ZRC-20 token address"))
   .addOption(
     new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_EVM_RPC_URL)
   )
@@ -163,12 +163,12 @@ export const showCommand = new Command("show")
   )
   .addOption(new Option("--json", "Output results in JSON format"))
   .action(async (options) => {
-    const { target, input, rpc, router, json } = options as {
-      input?: string;
+    const { target, source, rpc, router, json } = options as {
+      source?: string;
       json?: boolean;
       router: string;
       rpc: string;
       target: string;
     };
-    await main(target, input, rpc, router, Boolean(json));
+    await main(target, source, rpc, router, Boolean(json));
   });

@@ -16,7 +16,7 @@ export const feesCLIOptionsSchema = feesOptionsSchema.extend({
 });
 
 export const feesShowOptionsSchema = z.object({
-  input: z.string().optional(),
+  source: z.string().optional(),
   json: z.boolean().default(false),
   rpc: z.string().default(DEFAULT_EVM_RPC_URL),
   target: z.string(),
