@@ -19,5 +19,7 @@ export const feesShowOptionsSchema = z.object({
   source: z.string().optional(),
   json: z.boolean().default(false),
   rpc: z.string().default(DEFAULT_EVM_RPC_URL),
-  target: z.string(),
+  api: z.string().default(DEFAULT_API_URL),
+  target: z.string().optional(),
+  targetChain: z.string().optional(),
 });

@@ -8,7 +8,11 @@ import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import ora from "ora";
 
-import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
+import {
+  DEFAULT_API_URL,
+  DEFAULT_EVM_RPC_URL,
+} from "../../../../../src/constants/api";
+import { fetchForeignCoins } from "../tokens/list";
 
 const main = async (
   target: string,
@@ -146,11 +150,12 @@ export const showCommand = new Command("show")
   .description(
     "Show withdraw gas fee for a target ZRC-20, with optional source conversion"
   )
+  .addOption(new Option("--target <address>", "Target ZRC-20 token address"))
   .addOption(
     new Option(
-      "--target <address>",
-      "Target ZRC-20 token address"
-    ).makeOptionMandatory()
+      "--target-chain <id>",
+      "Target chain ID to auto-resolve gas token ZRC-20"
+    )
   )
   .addOption(new Option("--source <address>", "Source ZRC-20 token address"))
   .addOption(
@@ -161,14 +166,64 @@ export const showCommand = new Command("show")
       "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
     )
   )
+  .addOption(
+    new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
+  )
   .addOption(new Option("--json", "Output results in JSON format"))
   .action(async (options) => {
-    const { target, source, rpc, router, json } = options as {
+    const { target, targetChain, source, rpc, router, json, api } = options as {
       source?: string;
       json?: boolean;
       router: string;
       rpc: string;
-      target: string;
+      target?: string;
+      targetChain?: string | number;
+      api: string;
     };
-    await main(target, source, rpc, router, Boolean(json));
+    let resolvedTarget = target;
+
+    if (!resolvedTarget && targetChain) {
+      try {
+        const foreignCoins = await fetchForeignCoins(api);
+        const chainId = String(targetChain);
+        const gasToken = foreignCoins.find(
+          (c) => c.coin_type === "Gas" && c.foreign_chain_id === chainId
+        );
+
+        if (!gasToken) {
+          const msg = `Gas token not found for chain ID: ${chainId}`;
+          if (json) {
+            console.log(JSON.stringify({ error: msg }, null, 2));
+          } else {
+            console.error(msg);
+          }
+          return;
+        }
+
+        resolvedTarget = gasToken.zrc20_contract_address;
+      } catch (e) {
+        const msg =
+          e instanceof Error
+            ? e.message
+            : "Failed to resolve target by chain ID";
+        if (json) {
+          console.log(JSON.stringify({ error: msg }, null, 2));
+        } else {
+          console.error(msg);
+        }
+        return;
+      }
+    }
+
+    if (!resolvedTarget) {
+      const msg = "Either --target or --target-chain must be provided";
+      if (json) {
+        console.log(JSON.stringify({ error: msg }, null, 2));
+      } else {
+        console.error(msg);
+      }
+      return;
+    }
+
+    await main(resolvedTarget, source, rpc, router, Boolean(json));
   });
