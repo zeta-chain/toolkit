@@ -264,50 +264,71 @@ const main = async (options: unknown) => {
       return;
     }
 
-    const printGasSection = () => {
-      console.log(chalk.blue("\nWithdraw Gas Fee"));
-      console.log(
-        `Chain: ${data.gas.chain.name || "Unknown"} (${
-          data.gas.chain.id || "-"
-        })`
+    // Fetch tokens metadata to build labels like ASSET.SYMBOL
+    const chainData = await fetchAllChainData(api);
+    const tokens = chainData.tokens;
+    const getTokenLabel = (addr: string, fallbackSymbol: string) => {
+      const tok = tokens.find(
+        (t) => t.zrc20_contract_address.toLowerCase() === addr.toLowerCase()
       );
-      console.log(`Gas token: ${data.gas.symbol} (${data.gas.zrc20})`);
-      console.log(
-        `Gas fee: ${ethers.formatUnits(data.gas.fee, data.gas.decimals)} (${
-          data.gas.fee
-        })`
-      );
+      if (!tok) return fallbackSymbol;
+      return tok.asset ? `${tok.asset}.${tok.symbol}` : tok.symbol;
     };
 
-    const printSourceRequirement = () => {
-      if (!data.source) return;
-      console.log(chalk.blue("\nSource Requirement"));
-      if (data.source.equalsGas) {
-        console.log(
-          `Source token equals gas token; required amount: ${ethers.formatUnits(
-            data.gas.fee,
-            data.gas.decimals
-          )} (${data.gas.fee})`
-        );
-        return;
-      }
+    // Target section
+    const targetChainName = data.gas.chain.name || "Unknown";
+    const targetChainId = data.gas.chain.id || "-";
+    const gasTokenLabel = getTokenLabel(data.gas.zrc20, data.gas.symbol);
+    const targetFeeFormatted = ethers.formatUnits(
+      data.gas.fee,
+      data.gas.decimals
+    );
+
+    const labelPad = (s: string) => s.padEnd(16, " ");
+    console.log(
+      `${labelPad("Target Chain")} ${targetChainName} (${targetChainId})`
+    );
+    console.log(
+      `${labelPad("Gas Token")} ${gasTokenLabel} (${data.gas.zrc20})`
+    );
+    if (gasLimit !== undefined && gasLimit !== null) {
+      console.log(`${labelPad("Gas Limit")} ${gasLimit}`);
+    }
+    console.log(
+      `${labelPad("Target Fee")} ${targetFeeFormatted} ${gasTokenLabel} (${
+        data.gas.fee
+      } wei)`
+    );
+
+    // Source section (if provided)
+    if (data.source) {
+      console.log();
+      const sourceChainName = data.source.chain.name || "Unknown";
+      const sourceChainId = data.source.chain.id || "-";
+      const sourceTokenLabel = getTokenLabel(
+        data.source.zrc20,
+        data.source.symbol
+      );
+      const requiredAmountFormatted = ethers.formatUnits(
+        data.source.equalsGas ? data.gas.fee : data.source.amount,
+        data.source.equalsGas ? data.gas.decimals : data.source.decimals
+      );
+      const requiredAmountRaw = data.source.equalsGas
+        ? data.gas.fee
+        : data.source.amount;
 
       console.log(
-        `Chain: ${data.source.chain.name || "Unknown"} (${
-          data.source.chain.id || "-"
-        })`
+        `${labelPad("Source Chain")} ${sourceChainName} (${sourceChainId})`
       );
-      console.log(`Source token: ${data.source.symbol} (${data.source.zrc20})`);
       console.log(
-        `Required source amount: ${ethers.formatUnits(
-          data.source.amount,
-          data.source.decimals
-        )} (${data.source.amount})`
+        `${labelPad("Source Token")} ${sourceTokenLabel} (${data.source.zrc20})`
       );
-    };
-
-    printGasSection();
-    printSourceRequirement();
+      console.log(
+        `${labelPad(
+          "Required Amount"
+        )} ${requiredAmountFormatted} ${sourceTokenLabel} (${requiredAmountRaw} wei)`
+      );
+    }
   } catch (error) {
     spinner?.stop();
     spinner?.clear();
