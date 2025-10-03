@@ -1,4 +1,5 @@
 import { ContractTransactionResponse, ethers } from "ethers";
+import type { UniswapV2Router02 } from "@zetachain/protocol-contracts/types/UniswapV2Router02";
 
 export interface RevertOptions {
   abortAddress?: string;
@@ -19,17 +20,7 @@ export type CallOptions = {
   isArbitraryCall: boolean;
 };
 
-export type UniswapV2Router02Contract = ethers.Contract & {
-  WETH: () => Promise<string>;
-  getAmountsIn: (
-    amountOut: ethers.BigNumberish,
-    path: string[]
-  ) => Promise<ethers.BigNumberish[]>;
-  getAmountsOut: (
-    amountIn: ethers.BigNumberish,
-    path: string[]
-  ) => Promise<ethers.BigNumberish[]>;
-};
+export type UniswapV2Router02Contract = UniswapV2Router02;
 
 export type ZRC20Contract = ethers.Contract & {
   COIN_TYPE: () => Promise<number>;
