@@ -24,9 +24,8 @@ const main = async (params: FeesParams, options: FeesCLIOptions) => {
     const feesData = await getFees(params, options);
 
     if (!options.json) {
-      spinner?.succeed(
-        `Successfully queried withdrawGasFee for ${feesData.length} ZRC-20 tokens`
-      );
+      spinner?.stop();
+      spinner?.clear();
     }
 
     if (options.json) {
@@ -66,7 +65,8 @@ const main = async (params: FeesParams, options: FeesCLIOptions) => {
     console.log(table(tableData, tableConfig));
   } catch (error) {
     if (!options.json) {
-      spinner?.fail("Failed to fetch data");
+      spinner?.stop();
+      spinner?.clear();
     }
     console.log(
       chalk.yellow(

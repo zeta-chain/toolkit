@@ -1,10 +1,9 @@
+import UniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
+import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import ora from "ora";
-
-import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
-import UniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
 
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 
@@ -28,9 +27,12 @@ const main = async (
     // If no input provided, just print the gas token and gas fee
     if (!input) {
       const out = {
-        gasZRC20,
         gasFee: gasFee.toString(),
+        gasZRC20,
       };
+
+      spinner?.stop();
+      spinner?.clear();
 
       if (json) {
         console.log(JSON.stringify(out, null, 2));
@@ -39,18 +41,21 @@ const main = async (
         console.log(`Gas token: ${gasZRC20}`);
         console.log(`Gas fee: ${gasFee.toString()}`);
       }
-      spinner?.succeed("Done");
       return;
     }
 
     // If input token provided and equals gasZRC20, fee equals gasFee
     if (input.toLowerCase() === gasZRC20.toLowerCase()) {
       const out = {
-        gasZRC20,
         gasFee: gasFee.toString(),
+        gasZRC20,
         inputAmount: gasFee.toString(),
         inputZRC20: input,
       };
+
+      spinner?.stop();
+      spinner?.clear();
+
       if (json) {
         console.log(JSON.stringify(out, null, 2));
       } else {
@@ -62,7 +67,6 @@ const main = async (
           `Input token equals gas token; required amount: ${gasFee.toString()}`
         );
       }
-      spinner?.succeed("Done");
       return;
     }
 
@@ -91,12 +95,15 @@ const main = async (
     const inputDecimals: number = await inputContract.decimals();
 
     const out = {
-      gasZRC20,
       gasFee: gasFee.toString(),
-      inputZRC20: input,
+      gasZRC20,
       inputAmount: inputNeeded.toString(),
       inputDecimals,
+      inputZRC20: input,
     };
+
+    spinner?.stop();
+    spinner?.clear();
 
     if (json) {
       console.log(JSON.stringify(out, null, 2));
@@ -108,10 +115,9 @@ const main = async (
       console.log(`Input token: ${input}`);
       console.log(`Required input amount (raw): ${inputNeeded.toString()}`);
     }
-
-    spinner?.succeed();
   } catch (error) {
-    spinner?.fail("Failed to query fees");
+    spinner?.stop();
+    spinner?.clear();
     console.error(
       chalk.red(
         error instanceof Error ? error.message : "Unknown error occurred"
@@ -142,11 +148,11 @@ export const showCommand = new Command("show")
   .addOption(new Option("--json", "Output results in JSON format"))
   .action(async (options) => {
     const { target, input, rpc, router, json } = options as {
-      target: string;
       input?: string;
-      rpc: string;
-      router: string;
       json?: boolean;
+      router: string;
+      rpc: string;
+      target: string;
     };
     await main(target, input, rpc, router, Boolean(json));
   });
