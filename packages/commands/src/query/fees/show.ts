@@ -25,7 +25,8 @@ export const fetchShowFeesData = async (
   source: string | undefined,
   rpc: string,
   routerAddress: string,
-  api: string
+  api: string,
+  gasLimit?: string | number
 ): Promise<ShowFeesData> => {
   const provider = new ethers.JsonRpcProvider(rpc);
 
@@ -35,7 +36,15 @@ export const fetchShowFeesData = async (
     provider
   ) as unknown as IZRC20;
 
-  const [gasZRC20, gasFee] = await targetContract.withdrawGasFee();
+  let gasZRC20: string;
+  let gasFee: bigint;
+  if (gasLimit !== undefined && gasLimit !== null) {
+    [gasZRC20, gasFee] = await targetContract.withdrawGasFeeWithGasLimit(
+      gasLimit.toString()
+    );
+  } else {
+    [gasZRC20, gasFee] = await targetContract.withdrawGasFee();
+  }
   const gasTokenContract = new ethers.Contract(
     gasZRC20,
     ZRC20ABI.abi,
@@ -136,6 +145,7 @@ const main = async (options: unknown) => {
   const showFeesOptionsSchema = z.object({
     api: z.string(),
     json: z.boolean().optional(),
+    gasLimit: z.union([z.string(), z.number()]).optional(),
     router: evmAddressSchema,
     rpc: z.string(),
     source: evmAddressSchema.optional(),
@@ -144,11 +154,20 @@ const main = async (options: unknown) => {
     targetChain: z.union([z.string(), z.number()]).optional(),
   });
 
-  const { target, targetChain, source, sourceChain, rpc, router, json, api } =
-    validateAndParseSchema(options, showFeesOptionsSchema, {
-      exitOnError: false,
-      shouldLogError: true,
-    });
+  const {
+    target,
+    targetChain,
+    source,
+    sourceChain,
+    rpc,
+    router,
+    json,
+    api,
+    gasLimit,
+  } = validateAndParseSchema(options, showFeesOptionsSchema, {
+    exitOnError: false,
+    shouldLogError: true,
+  });
 
   let resolvedTarget = target;
   let resolvedSource = source;
@@ -233,7 +252,8 @@ const main = async (options: unknown) => {
       resolvedSource,
       rpc,
       router,
-      api
+      api,
+      gasLimit
     );
 
     spinner?.stop();
@@ -304,6 +324,12 @@ export const showCommand = new Command("show")
     "Show withdraw gas fee for a target ZRC-20, with optional source conversion"
   )
   .addOption(new Option("--target <address>", "Target ZRC-20 token address"))
+  .addOption(
+    new Option(
+      "--gas-limit <limit>",
+      "Optional gas limit to compute withdraw fee with"
+    )
+  )
   .addOption(
     new Option(
       "--target-chain <id>",
