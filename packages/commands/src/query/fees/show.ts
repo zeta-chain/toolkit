@@ -1,15 +1,14 @@
 import UniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
+import type { IZRC20 } from "@zetachain/protocol-contracts/types/IZRC20.sol/IZRC20";
+import type { IZRC20Metadata } from "@zetachain/protocol-contracts/types/IZRC20.sol/IZRC20Metadata";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import ora from "ora";
 
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
-import type {
-  UniswapV2Router02Contract,
-  ZRC20Contract,
-} from "../../../../../types/contracts.types";
+import type { UniswapV2Router02Contract } from "../../../../../types/contracts.types";
 
 const main = async (
   target: string,
@@ -27,7 +26,7 @@ const main = async (
       target,
       ZRC20ABI.abi,
       provider
-    ) as unknown as ZRC20Contract;
+    ) as unknown as IZRC20;
 
     const [gasZRC20, gasFee] = await targetContract.withdrawGasFee();
 
@@ -82,7 +81,7 @@ const main = async (
       input,
       ZRC20ABI.abi,
       provider
-    ) as unknown as ZRC20Contract;
+    ) as unknown as IZRC20Metadata;
 
     const router = new ethers.Contract(
       routerAddress,
@@ -109,7 +108,7 @@ const main = async (
     )) as unknown as [bigint, bigint];
     const inputNeeded = amountsInForInput[0];
 
-    const inputDecimals: number = await inputContract.decimals();
+    const inputDecimals: number = Number(await inputContract.decimals());
 
     const out = {
       gasFee: gasFee.toString(),
