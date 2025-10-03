@@ -20,6 +20,7 @@ export type CallOptions = {
 };
 
 export type UniswapV2Router02Contract = ethers.Contract & {
+  WETH: () => Promise<string>;
   getAmountsIn: (
     amountOut: ethers.BigNumberish,
     path: string[]

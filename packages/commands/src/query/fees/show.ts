@@ -6,6 +6,10 @@ import { ethers } from "ethers";
 import ora from "ora";
 
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
+import type {
+  UniswapV2Router02Contract,
+  ZRC20Contract,
+} from "../../../../../types/contracts.types";
 
 const main = async (
   target: string,
@@ -19,10 +23,13 @@ const main = async (
   try {
     const provider = new ethers.JsonRpcProvider(rpc);
 
-    const targetContract = new ethers.Contract(target, ZRC20ABI.abi, provider);
+    const targetContract = new ethers.Contract(
+      target,
+      ZRC20ABI.abi,
+      provider
+    ) as unknown as ZRC20Contract;
 
-    const [gasZRC20, gasFee]: [string, bigint] =
-      await targetContract.withdrawGasFee();
+    const [gasZRC20, gasFee] = await targetContract.withdrawGasFee();
 
     // If no input provided, just print the gas token and gas fee
     if (!input) {
@@ -71,25 +78,35 @@ const main = async (
     }
 
     // Otherwise, compute how many input tokens are required by routing gasFee(gasZRC20) -> ZETA -> input
-    const inputContract = new ethers.Contract(input, ZRC20ABI.abi, provider);
+    const inputContract = new ethers.Contract(
+      input,
+      ZRC20ABI.abi,
+      provider
+    ) as unknown as ZRC20Contract;
 
     const router = new ethers.Contract(
       routerAddress,
       UniswapV2RouterABI.abi,
       provider
-    );
+    ) as unknown as UniswapV2Router02Contract;
 
     // Derive ZETA token address via router's WETH() (WZETA on ZetaChain)
     const zetaTokenAddress = await router.WETH();
 
     // First hop: gasZRC20 fee -> ZETA (amountsIn for gasFee)
     const path1 = [zetaTokenAddress, gasZRC20];
-    const amountsInForZeta = await router.getAmountsIn(gasFee, path1);
+    const amountsInForZeta = (await router.getAmountsIn(
+      gasFee,
+      path1
+    )) as unknown as [bigint, bigint];
     const zetaNeeded = amountsInForZeta[0];
 
     // Second hop: ZETA -> input (amountsIn for zetaNeeded)
     const path2 = [input, zetaTokenAddress];
-    const amountsInForInput = await router.getAmountsIn(zetaNeeded, path2);
+    const amountsInForInput = (await router.getAmountsIn(
+      zetaNeeded,
+      path2
+    )) as unknown as [bigint, bigint];
     const inputNeeded = amountsInForInput[0];
 
     const inputDecimals: number = await inputContract.decimals();
