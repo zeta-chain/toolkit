@@ -7,30 +7,18 @@ import chalk from "chalk";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
 import ora from "ora";
+import { z } from "zod";
 
 import {
   DEFAULT_API_URL,
   DEFAULT_EVM_RPC_URL,
 } from "../../../../../src/constants/api";
+import { showFeesDataSchema } from "../../../../../types/fees.types";
+import { evmAddressSchema } from "../../../../../types/shared.schema";
+import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 import { fetchAllChainData } from "../chains/list";
 
-export type ShowFeesData = {
-  gas: {
-    chain: { id?: string; name?: string };
-    decimals: number;
-    fee: string;
-    symbol: string;
-    zrc20: string;
-  };
-  source?: {
-    amount: string;
-    chain: { id?: string; name?: string };
-    decimals: number;
-    equalsGas?: boolean;
-    symbol: string;
-    zrc20: string;
-  };
-};
+export type ShowFeesData = z.infer<typeof showFeesDataSchema>;
 
 export const fetchShowFeesData = async (
   target: string,
@@ -145,17 +133,22 @@ export const fetchShowFeesData = async (
 };
 
 const main = async (options: unknown) => {
+  const showFeesOptionsSchema = z.object({
+    api: z.string(),
+    json: z.boolean().optional(),
+    router: evmAddressSchema,
+    rpc: z.string(),
+    source: evmAddressSchema.optional(),
+    sourceChain: z.union([z.string(), z.number()]).optional(),
+    target: evmAddressSchema.optional(),
+    targetChain: z.union([z.string(), z.number()]).optional(),
+  });
+
   const { target, targetChain, source, sourceChain, rpc, router, json, api } =
-    options as {
-      api: string;
-      json?: boolean;
-      router: string;
-      rpc: string;
-      source?: string;
-      sourceChain?: string | number;
-      target?: string;
-      targetChain?: string | number;
-    };
+    validateAndParseSchema(options, showFeesOptionsSchema, {
+      exitOnError: false,
+      shouldLogError: true,
+    });
 
   let resolvedTarget = target;
   let resolvedSource = source;
