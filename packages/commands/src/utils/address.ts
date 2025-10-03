@@ -1,34 +1,27 @@
 import { Command } from "commander";
+import { getBorderCharacters, table } from "table";
 
-import {
-  bech32ToHex,
-  hexToBech32,
-  isBech32Address,
-  isHexAddress,
-  ZETA_HRP,
-} from "../../../../utils/address";
+import { convertAddressAll } from "../../../../utils/address";
 
 export const addressCommand = new Command("address")
-  .summary("Convert addresses between hex (0x...) and bech32 (zeta1...)")
-  .argument("<address>", "Address to convert (hex or bech32)")
+  .summary(
+    "Show all address formats (bytes, hex, bech32 acc/valoper/valcons) for any input"
+  )
+  .argument(
+    "<address>",
+    "Address in hex (0x... or without 0x), bech32, or [..] bytes"
+  )
   .action((address: string) => {
     try {
-      if (isHexAddress(address)) {
-        const result = hexToBech32(address, ZETA_HRP);
-        console.log(result);
-        return;
-      }
-
-      if (isBech32Address(address)) {
-        const result = bech32ToHex(address);
-        console.log(result);
-        return;
-      }
-
-      console.error(
-        "Invalid address format. Provide a valid 0x... EVM address or zeta1... bech32 address"
-      );
-      process.exit(1);
+      const result = convertAddressAll(address);
+      const rows = [
+        ["Format", "Address"],
+        ["Address (hex)", result.checksumHex],
+        ["Bech32 Acc", result.bech32Acc],
+        ["Bech32 Val", result.bech32Valoper],
+        ["Bech32 Con", result.bech32Valcons],
+      ];
+      console.log(table(rows, { border: getBorderCharacters("norc") }));
     } catch (error) {
       console.error("Failed to convert address:", error);
       process.exit(1);

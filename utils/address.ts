@@ -46,3 +46,97 @@ export const bech32ToHex = (bech32Addr: string): string => {
   const hex = `0x${bytes.toString("hex")}`;
   return ethers.getAddress(hex);
 };
+
+/**
+ * Try to parse a string that contains a decimal byte array in square brackets
+ * e.g. "[73 85 163 ...]" or "Address: [73, 85, 163, ...]".
+ * Returns an array of numbers if successful, otherwise null.
+ */
+const tryParseByteArrayString = (value: string): number[] | null => {
+  const start = value.indexOf("[");
+  const end = value.lastIndexOf("]");
+  if (start === -1 || end === -1 || end <= start) return null;
+  const inner = value.slice(start + 1, end);
+  const parts = inner
+    .split(/[,\s]+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+  if (parts.length === 0) return null;
+  const numbers: number[] = [];
+  for (const part of parts) {
+    const n = Number(part);
+    if (!Number.isInteger(n) || n < 0 || n > 255) return null;
+    numbers.push(n);
+  }
+  if (numbers.length !== 20) return null;
+  return numbers;
+};
+
+/**
+ * Normalize any supported address input into a 20-byte array.
+ * Supports: 0x hex, hex without 0x, bech32 (any zeta* HRP), and decimal byte array strings.
+ */
+const getAddressBytesFromAny = (input: string): Uint8Array => {
+  const value = input.trim();
+
+  if (isHexAddress(value)) {
+    const checksum = ethers.getAddress(
+      value.startsWith("0x") ? value : `0x${value}`
+    );
+    return Uint8Array.from(ethers.getBytes(checksum));
+  }
+
+  if (isBech32Address(value)) {
+    const hex = bech32ToHex(value);
+    return Uint8Array.from(ethers.getBytes(hex));
+  }
+
+  const bytesArray = tryParseByteArrayString(value);
+  if (bytesArray) {
+    return Uint8Array.from(bytesArray);
+  }
+
+  throw new Error(
+    "Unsupported address format. Provide hex (0x... or without 0x), bech32, or a [..] byte array."
+  );
+};
+
+export interface UnifiedAddressFormats {
+  // EIP-55, with 0x
+  bech32Acc: string;
+  bech32Valcons: string;
+  bech32Valoper: string;
+  bytes: number[];
+  // uppercase, without 0x prefix
+  checksumHex: string;
+  hex: string;
+}
+
+/**
+ * Convert an input address in any supported form into all common representations.
+ */
+export const convertAddressAll = (input: string): UnifiedAddressFormats => {
+  const bytes = getAddressBytesFromAny(input);
+  if (bytes.length !== 20) {
+    throw new Error(
+      `Invalid address length ${bytes.length}, expected 20 bytes`
+    );
+  }
+
+  const hexLower = Buffer.from(bytes).toString("hex");
+  const checksumHex = ethers.getAddress(`0x${hexLower}`);
+
+  const hex = hexLower.toUpperCase();
+  const bech32Acc = hexToBech32(checksumHex, ZETA_HRP);
+  const bech32Valoper = hexToBech32(checksumHex, ZETA_VALOPER_HRP);
+  const bech32Valcons = hexToBech32(checksumHex, ZETA_VALCONS_HRP);
+
+  return {
+    bech32Acc,
+    bech32Valcons,
+    bech32Valoper,
+    bytes: Array.from(bytes),
+    checksumHex,
+    hex,
+  };
+};
