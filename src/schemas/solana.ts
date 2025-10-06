@@ -15,8 +15,8 @@ const walletAdapterSchema = z.custom<WalletAdapter>(
 
     const obj = data as Record<string, unknown>;
 
-    // Must have publicKey that is a PublicKey instance
-    if (!obj.publicKey || !(obj.publicKey instanceof PublicKey)) {
+    // Must have publicKey property
+    if (!obj.publicKey) {
       return false;
     }
 
@@ -37,7 +37,7 @@ const walletAdapterSchema = z.custom<WalletAdapter>(
   },
   {
     message:
-      "Expected wallet adapter with publicKey (PublicKey) and optional signing functions",
+      "Expected wallet adapter with publicKey and optional signing functions",
   }
 );
 
