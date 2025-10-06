@@ -44,6 +44,18 @@ const main = async (options: DepositOptions) => {
     );
 
     const revertAddress = options.revertAddress || address;
+    const abortAddress = options.abortAddress;
+    const revertMessage =
+      options.revertMessage !== undefined
+        ? Buffer.from(options.revertMessage, "utf8")
+        : undefined;
+
+    const revertOptions = {
+      abortAddress,
+      callOnRevert: true,
+      revertAddress,
+      ...(revertMessage !== undefined ? { revertMessage } : {}),
+    };
 
     let data: Buffer;
     if (options.receiver) {
@@ -51,7 +63,7 @@ const main = async (options: DepositOptions) => {
         bitcoinEncode(
           options.receiver,
           Buffer.from(""), // empty payload for deposit
-          revertAddress,
+          revertOptions,
           OpCode.Deposit,
           options.format
         ),
@@ -93,7 +105,7 @@ const main = async (options: DepositOptions) => {
       operation: "Deposit",
       rawInscriptionData: data.toString("hex"),
       revealFee,
-      revertAddress,
+      revertOptions,
       sender: address,
     });
 
