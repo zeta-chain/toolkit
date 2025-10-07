@@ -34,7 +34,8 @@ const main = async (options: FaucetOptions) => {
 
 export const faucetCommand = new Command()
   .name("faucet")
-  .description("Request testnet ZETA tokens from the faucet.")
+  .summary("Request testnet ZETA tokens from the faucet")
+  .description("Request testnet ZETA tokens from the faucet")
   .addOption(
     new Option("--address <address>", "Recipient address.").conflicts(["name"])
   )
