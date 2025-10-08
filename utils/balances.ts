@@ -2,6 +2,16 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import {
+  ChainSDKType,
+  Vm,
+  vmToJSON,
+} from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
+import {
+  CoinType,
+  coinTypeToJSON,
+} from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
 import axios, { AxiosError } from "axios";
 import { AbiCoder, ethers } from "ethers";
 
@@ -15,8 +25,6 @@ import {
   TokenBalance,
   TokenContract,
 } from "../types/balances.types";
-import { ForeignCoin } from "../types/foreignCoins.types";
-import { ObserverSupportedChain } from "../types/supportedChains.types";
 import { handleError } from "./handleError";
 
 export const TON_MAINNET_API = "https://tonapi.io/v2/accounts";
@@ -42,17 +50,17 @@ export const parseTokenId = (
  * Collects tokens from foreign coins data
  */
 export const collectTokensFromForeignCoins = (
-  foreignCoins: ForeignCoin[],
-  supportedChains: ObserverSupportedChain[],
+  foreignCoins: ForeignCoinsSDKType[],
+  supportedChains: ChainSDKType[],
   zetaChainId: string
 ): Token[] => {
   const mappedTokens = foreignCoins.flatMap((foreignCoin) => {
-    if (foreignCoin.coin_type === "Gas") {
+    if (String(foreignCoin.coin_type) === coinTypeToJSON(CoinType.Gas)) {
       // Return an array of two tokens for Gas coin type
       return [
         {
-          chain_id: foreignCoin.foreign_chain_id,
-          coin_type: foreignCoin.coin_type,
+          chain_id: String(foreignCoin.foreign_chain_id),
+          coin_type: String(foreignCoin.coin_type),
           decimals: foreignCoin.decimals,
           symbol: foreignCoin.symbol,
           zrc20: foreignCoin.zrc20_contract_address,
@@ -65,7 +73,9 @@ export const collectTokensFromForeignCoins = (
           symbol: foreignCoin.symbol,
         },
       ];
-    } else if (foreignCoin.coin_type === "ERC20") {
+    } else if (
+      String(foreignCoin.coin_type) === coinTypeToJSON(CoinType.ERC20)
+    ) {
       const supportedChain = supportedChains.find(
         (sc) => sc.chain_id === foreignCoin.foreign_chain_id
       );
@@ -80,9 +90,9 @@ export const collectTokensFromForeignCoins = (
       };
 
       // Only add the original token if we have a supported chain
-      if (supportedChain?.vm === "evm") {
+      if (String(supportedChain?.vm) === vmToJSON(Vm.evm)) {
         const evmToken: Token = {
-          chain_id: foreignCoin.foreign_chain_id,
+          chain_id: String(foreignCoin.foreign_chain_id),
           coin_type: "ERC20",
           contract: foreignCoin.asset,
           decimals: foreignCoin.decimals,
@@ -90,9 +100,9 @@ export const collectTokensFromForeignCoins = (
           zrc20: foreignCoin.zrc20_contract_address,
         };
         return [evmToken, zrc20Token];
-      } else if (supportedChain?.vm === "svm") {
+      } else if (String(supportedChain?.vm) === vmToJSON(Vm.svm)) {
         const svmToken: Token = {
-          chain_id: foreignCoin.foreign_chain_id,
+          chain_id: String(foreignCoin.foreign_chain_id),
           coin_type: "SPL",
           contract: foreignCoin.asset,
           decimals: foreignCoin.decimals,
@@ -100,9 +110,9 @@ export const collectTokensFromForeignCoins = (
           zrc20: foreignCoin.zrc20_contract_address,
         };
         return [svmToken, zrc20Token];
-      } else if (supportedChain?.vm === "mvm_sui") {
+      } else if (String(supportedChain?.vm) === vmToJSON(Vm.mvm_sui)) {
         const svmToken: Token = {
-          chain_id: foreignCoin.foreign_chain_id,
+          chain_id: String(foreignCoin.foreign_chain_id),
           coin_type: "SUI",
           contract: foreignCoin.asset,
           decimals: foreignCoin.decimals,
@@ -114,7 +124,7 @@ export const collectTokensFromForeignCoins = (
 
       // If no matching chain type, just return the ZRC20 token
       return [zrc20Token];
-    } else if (foreignCoin.coin_type === "ZRC20") {
+    } else {
       // Handle ZRC20 tokens
       return [
         {
@@ -126,9 +136,6 @@ export const collectTokensFromForeignCoins = (
         },
       ];
     }
-
-    // In case the coin_type is something else
-    return [];
   });
 
   return mappedTokens;
@@ -138,7 +145,7 @@ export const collectTokensFromForeignCoins = (
  * Adds ZETA tokens to the tokens list
  */
 export const addZetaTokens = (
-  supportedChains: ObserverSupportedChain[],
+  supportedChains: ChainSDKType[],
   chains: Record<string, { chain_id: number }>,
   zetaChainId: string
 ): Token[] => {
@@ -146,24 +153,24 @@ export const addZetaTokens = (
   const wzetaTokens = supportedChains
     .map((chain) => {
       const chainLabel = Object.keys(chains).find(
-        (key) => chains[key].chain_id === parseInt(chain.chain_id)
+        (key) => chains[key].chain_id === Number(chain.chain_id)
       );
 
       if (chainLabel) {
         const contract = getAddress("zetaToken", chainLabel as ParamChainName);
         if (contract) {
           return {
-            chain_id: chain.chain_id,
+            chain_id: String(chain.chain_id),
             coin_type: "ERC20",
             contract,
             decimals: 18,
             symbol: "WZETA",
-          } as Token;
+          };
         }
       }
       return null;
     })
-    .filter((token): token is Token => token !== null);
+    .filter((token) => token !== null) as Token[];
 
   // Add ZETA token for ZetaChain
   const zetaToken: Token = {
@@ -172,7 +179,6 @@ export const addZetaTokens = (
     decimals: 18,
     symbol: "ZETA",
   };
-
   return [...wzetaTokens, zetaToken];
 };
 
@@ -181,13 +187,13 @@ export const addZetaTokens = (
  */
 export const enrichTokens = (
   tokens: Token[],
-  supportedChains: ObserverSupportedChain[]
+  supportedChains: ChainSDKType[]
 ): Token[] => {
   return tokens
     .map((token) => {
       const ticker = token.symbol.split("-")[0];
       const chain_name = supportedChains.find(
-        (c) => c.chain_id === token.chain_id?.toString()
+        (c) => c.chain_id === token.chain_id
       )?.name;
 
       // Skip tokens without a chain name

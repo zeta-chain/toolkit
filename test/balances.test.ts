@@ -5,8 +5,6 @@
 import { jest } from "@jest/globals";
 import axios from "axios";
 
-// Import types
-import { ObserverSupportedChain } from "../types/supportedChains.types";
 import * as balancesUtils from "../utils/balances";
 
 // Mock dependencies
@@ -96,7 +94,7 @@ describe("balances utility functions", () => {
       ];
 
       // Type this correctly to match ObserverSupportedChain
-      const supportedChains: ObserverSupportedChain[] = [
+      const supportedChains: ChainSDKType[] = [
         {
           cctx_gateway: "",
           chain_id: "1",

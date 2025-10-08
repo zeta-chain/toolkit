@@ -32,7 +32,7 @@ const main = async (options: DepositAndCallOptions) => {
     amount: options.amount,
     message,
     receiver: options.receiver,
-    rpc: getSuiRpcByChainId(options.chainId),
+    rpc: getSuiRpcByChainId(Number(options.chainId)),
     sender: keypair.toSuiAddress(),
   });
   if (!isConfirmed) return;

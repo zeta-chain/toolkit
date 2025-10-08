@@ -1,9 +1,3 @@
-export interface ConvertGasToZetaResponse {
-  ZetaBlockHeight: string;
-  outboundGasInZeta: string;
-  protocolFeeInZeta: string;
-}
-
 export type FeeItem = {
   address: string;
   asset?: string;

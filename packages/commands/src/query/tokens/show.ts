@@ -1,3 +1,4 @@
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
@@ -6,15 +7,14 @@ import { z } from "zod";
 
 import { DEFAULT_API_URL } from "../../../../../src/constants/api";
 import { tokensShowOptionsSchema } from "../../../../../src/schemas/commands/tokens";
-import { ForeignCoin } from "../../../../../types/foreignCoins.types";
 import { fetchForeignCoins } from "./list";
 
 type TokensShowOptions = z.infer<typeof tokensShowOptionsSchema>;
 
 const findTokenBySymbol = (
-  tokens: ForeignCoin[],
+  tokens: ForeignCoinsSDKType[],
   symbol: string
-): ForeignCoin | null => {
+): ForeignCoinsSDKType | null => {
   return (
     tokens.find(
       (token) => token.symbol.toLowerCase() === symbol.toLowerCase()
@@ -22,23 +22,23 @@ const findTokenBySymbol = (
   );
 };
 
-const formatTokenDetails = (token: ForeignCoin): string[][] => {
+const formatTokenDetails = (token: ForeignCoinsSDKType): string[][] => {
   return [
     ["Property", "Value"],
     ["Symbol", token.symbol],
     ["Name", token.name],
-    ["Chain ID", token.foreign_chain_id],
+    ["Chain ID", String(token.foreign_chain_id)],
     ["ZRC-20 Contract", token.zrc20_contract_address],
     ["Asset Contract", token.asset || "N/A (Gas token)"],
-    ["Type", token.coin_type],
+    ["Type", String(token.coin_type)],
     ["Decimals", token.decimals.toString()],
-    ["Gas Limit", token.gas_limit],
+    ["Gas Limit", String(token.gas_limit)],
     ["Paused", token.paused ? "Yes" : "No"],
     ["Liquidity Cap", token.liquidity_cap],
   ];
 };
 
-const getFieldValue = (token: ForeignCoin, field: string): string => {
+const getFieldValue = (token: ForeignCoinsSDKType, field: string): string => {
   // Handle shorthand for zrc20_contract_address
   if (field === "zrc20") {
     const value = token.zrc20_contract_address;
@@ -52,7 +52,7 @@ const getFieldValue = (token: ForeignCoin, field: string): string => {
 
   // Check if the field exists on the token
   if (field in token) {
-    const value = token[field as keyof ForeignCoin];
+    const value = token[field as keyof ForeignCoinsSDKType];
     const stringValue = String(value);
 
     // Check for empty values (empty string, null, undefined, "null", "undefined", "N/A")

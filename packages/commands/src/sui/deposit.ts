@@ -16,7 +16,7 @@ const main = async (options: DepositOptions) => {
   const isConfirmed = await confirmTransaction({
     amount: options.amount,
     receiver: options.receiver,
-    rpc: getSuiRpcByChainId(options.chainId),
+    rpc: getSuiRpcByChainId(Number(options.chainId)),
     sender: keypair.toSuiAddress(),
   });
   if (!isConfirmed) return;
