@@ -53,17 +53,12 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InsufficientAmount",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InsufficientGasLimit",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InsufficientZRC20Amount",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InsufficientZetaAmount",
     type: "error",
   },
   {
@@ -174,6 +169,11 @@ const _abi = [
       },
     ],
     name: "ZRC20TransferFailed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ZeroGasPrice",
     type: "error",
   },
   {
@@ -546,6 +546,19 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
+        name: "target",
+        type: "address",
+      },
+    ],
+    name: "deposit",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
         name: "zrc20",
         type: "address",
       },
@@ -590,11 +603,6 @@ const _abi = [
         type: "tuple",
       },
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
         internalType: "address",
         name: "target",
         type: "address",
@@ -607,7 +615,7 @@ const _abi = [
     ],
     name: "depositAndCall",
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
     type: "function",
   },
   {
