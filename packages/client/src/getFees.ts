@@ -1,21 +1,21 @@
 import { mainnet, testnet } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
+import { QueryConvertGasToZetaResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/crosschain/query";
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import { ChainSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
+import { CoinType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
 import axios from "axios";
 import { BigNumberish, ethers } from "ethers";
 
 import { ZRC20Contract } from "../../../types/contracts.types";
-import { ForeignCoin } from "../../../types/foreignCoins.types";
-import {
-  ConvertGasToZetaResponse,
-  FeeItem,
-} from "../../../types/getFees.types";
+import { FeeItem } from "../../../types/getFees.types";
 import { handleError } from "../../../utils/handleError";
 import { ZetaChainClient } from "./client";
 
 const fetchZEVMFees = async (
   zrc20: (typeof mainnet)[number],
   rpcUrl: string,
-  foreignCoins: ForeignCoin[]
+  foreignCoins: ForeignCoinsSDKType[]
 ): Promise<FeeItem | undefined> => {
   const provider = new ethers.JsonRpcProvider(rpcUrl);
   const contract = new ethers.Contract(
@@ -40,8 +40,8 @@ const fetchZEVMFees = async (
   const protocolFee = ethers.toBigInt(rawProtocolFlatFee);
   const gasToken = foreignCoins.find((foreignCoin) => {
     return (
-      foreignCoin.foreign_chain_id === zrc20.foreign_chain_id &&
-      foreignCoin.coin_type === "Gas"
+      String(foreignCoin.foreign_chain_id) === zrc20.foreign_chain_id &&
+      foreignCoin.coin_type === CoinType.Gas
     );
   });
 
@@ -77,7 +77,7 @@ const fetchCCMFees = async function (
 
   try {
     const url = `${API}/zeta-chain/crosschain/convertGasToZeta?chainId=${chainID}&gasLimit=${gas}`;
-    const response = await axios.get<ConvertGasToZetaResponse>(url);
+    const response = await axios.get<QueryConvertGasToZetaResponseSDKType>(url);
     const isResponseOk = response.status >= 200 && response.status < 300;
 
     if (!isResponseOk) {
@@ -119,9 +119,9 @@ export const getFees = async function (this: ZetaChainClient, gas: number) {
   const zrc20Addresses = addresses.filter((a) => a.type === "zrc20");
 
   await Promise.all(
-    supportedChains.map(async (n: { chain_id: string; chain_name: string }) => {
+    supportedChains.map(async (n: ChainSDKType) => {
       try {
-        const fee = await fetchCCMFees.call(this, n.chain_id, gas);
+        const fee = await fetchCCMFees.call(this, String(n.chain_id), gas);
         if (fee) fees.messaging.push(fee);
       } catch (error: unknown) {
         handleError({

@@ -2,6 +2,7 @@ import { parseUnits } from "@ethersproject/units";
 import UniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
 import { getAddress } from "@zetachain/protocol-contracts";
 import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
+import { CoinType } from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
 import { ethers } from "ethers";
 
 import {
@@ -78,8 +79,8 @@ export const getZRC20GasToken = async function (
   const foreignCoins = await this.getForeignCoins();
   const token = foreignCoins.find((foreignCoin) => {
     return (
-      foreignCoin.foreign_chain_id === chainID &&
-      foreignCoin.coin_type === "Gas"
+      String(foreignCoin.foreign_chain_id) === chainID &&
+      foreignCoin.coin_type === CoinType.Gas
     );
   });
   return token?.zrc20_contract_address;

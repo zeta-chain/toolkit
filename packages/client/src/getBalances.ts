@@ -1,5 +1,10 @@
+import {
+  ChainSDKType,
+  Vm,
+  vmToJSON,
+} from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/chains/chains";
+
 import { TokenBalance } from "../../../types/balances.types";
-import { ObserverSupportedChain } from "../../../types/supportedChains.types";
 import {
   addZetaTokens,
   collectTokensFromForeignCoins,
@@ -67,20 +72,19 @@ export const getBalances = async function (
     const evmTokens = allTokens.filter(
       (token) =>
         token.chain_name &&
-        supportedChains.find(
-          (chain: ObserverSupportedChain) => chain.name === token.chain_name
-        )?.vm === "evm"
+        String(
+          supportedChains.find((chain) => chain.name === token.chain_name)?.vm
+        ) === vmToJSON(Vm.evm)
     );
-
     const multicallContexts = prepareMulticallContexts(evmTokens, evmAddress);
 
     for (const [chainName, contexts] of Object.entries(multicallContexts)) {
       const chain = supportedChains.find(
-        (c: ObserverSupportedChain) => c.name === chainName
+        (c: ChainSDKType) => c.name === chainName
       );
       if (!chain) continue;
 
-      const rpc = getRpcUrl(parseInt(chain.chain_id));
+      const rpc = getRpcUrl(Number(chain.chain_id));
       let chainBalances: TokenBalance[];
 
       try {

@@ -1,3 +1,5 @@
+import { ForeignCoinsSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/foreign_coins";
+import { QueryAllForeignCoinsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/query";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import ora from "ora";
@@ -6,28 +8,24 @@ import { z } from "zod";
 
 import { DEFAULT_API_URL } from "../../../../../src/constants/api";
 import { tokensListOptionsSchema } from "../../../../../src/schemas/commands/tokens";
-import {
-  ForeignCoin,
-  ForeignCoinsResponse,
-} from "../../../../../types/foreignCoins.types";
 
 type TokensListOptions = z.infer<typeof tokensListOptionsSchema>;
 
 export const fetchForeignCoins = async (
   apiUrl: string
-): Promise<ForeignCoin[]> => {
+): Promise<ForeignCoinsSDKType[]> => {
   const response = await fetch(`${apiUrl}/zeta-chain/fungible/foreign_coins`);
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  const data = (await response.json()) as ForeignCoinsResponse;
+  const data = (await response.json()) as QueryAllForeignCoinsResponseSDKType;
   return data.foreignCoins;
 };
 
 const formatTokensTable = (
-  tokens: ForeignCoin[],
+  tokens: ForeignCoinsSDKType[],
   columns: ("asset" | "type" | "decimals")[]
 ): string[][] => {
   const headers = ["Chain ID", "Symbol", "ZRC-20"];
@@ -44,13 +42,13 @@ const formatTokensTable = (
     ];
 
     if (columns.includes("asset")) baseRow.push(token.asset || "-");
-    if (columns.includes("type")) baseRow.push(token.coin_type);
-    if (columns.includes("decimals")) baseRow.push(token.decimals.toString());
+    if (columns.includes("type")) baseRow.push(String(token.coin_type));
+    if (columns.includes("decimals")) baseRow.push(String(token.decimals));
 
     return baseRow;
   });
 
-  return [headers, ...rows];
+  return [headers, ...rows.map((row) => row.map(String))];
 };
 
 const main = async (options: TokensListOptions) => {
@@ -65,7 +63,9 @@ const main = async (options: TokensListOptions) => {
     }
 
     const sortedTokens = tokens.sort(
-      (a, b) => parseInt(a.foreign_chain_id) - parseInt(b.foreign_chain_id)
+      (a, b) =>
+        parseInt(String(a.foreign_chain_id)) -
+        parseInt(String(b.foreign_chain_id))
     );
 
     if (options.json) {

@@ -1,4 +1,6 @@
-import { CCTX, CCTXs, PendingNonce } from "../types/trackCCTX.types";
+import { PendingNoncesSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/observer/pending_nonces";
+
+import { CCTX, CCTXs } from "../types/trackCCTX.types";
 import {
   TransactionState,
   updateState,
@@ -158,11 +160,11 @@ describe("state management utilities", () => {
     expect(currentState.pollCount).toBe(1);
 
     // Update 3: Add pending nonces
-    const pendingNonces: PendingNonce[] = [
+    const pendingNonces: PendingNoncesSDKType[] = [
       {
-        chain_id: "1",
-        nonce_high: "0",
-        nonce_low: "0",
+        chain_id: BigInt(1),
+        nonce_high: BigInt(0),
+        nonce_low: BigInt(0),
         tss: "test-tss",
       },
     ];

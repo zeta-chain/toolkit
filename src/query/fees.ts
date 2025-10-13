@@ -1,9 +1,9 @@
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
+import { QueryAllForeignCoinsResponseSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/fungible/query";
 import axios from "axios";
 import { ethers } from "ethers";
 
 import { Call } from "../../types/balances.types";
-import { ForeignCoinsResponse } from "../../types/foreignCoins.types";
 import MULTICALL3_ABI from "../../utils/multicall3.json";
 import { MULTICALL_ADDRESS } from "../constants/addresses";
 import { FeesOptions, FeesParams, WithdrawGasFeeResult } from "../types/fees";
@@ -13,7 +13,7 @@ export const getFees = async (
   options: FeesOptions
 ): Promise<WithdrawGasFeeResult[]> => {
   try {
-    const response = await axios.get<ForeignCoinsResponse>(
+    const response = await axios.get<QueryAllForeignCoinsResponseSDKType>(
       `${options.api}/zeta-chain/fungible/foreign_coins`
     );
 
@@ -84,7 +84,7 @@ export const getFees = async (
         }
 
         results.push({
-          chain_id: contract.foreign_chain_id,
+          chain_id: String(contract.foreign_chain_id),
           gasFeeAmount: gasFee.toString(),
           gasFeeDecimals: gasToken.decimals,
           gasTokenAddress,

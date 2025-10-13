@@ -1,3 +1,12 @@
+import type { CrossChainTxSDKType } from "@zetachain/sdk-cosmos/zetachain/zetacore/crosschain/cross_chain_tx";
+import {
+  CctxStatus,
+  cctxStatusToJSON,
+} from "@zetachain/sdk-cosmos/zetachain/zetacore/crosschain/cross_chain_tx";
+import {
+  CoinType,
+  coinTypeToJSON,
+} from "@zetachain/sdk-cosmos/zetachain/zetacore/pkg/coin/coin";
 import { Command } from "commander";
 import { ethers } from "ethers";
 import EventEmitter from "eventemitter3";
@@ -9,7 +18,6 @@ import {
   DEFAULT_TIMEOUT,
 } from "../../../../src/constants/commands/cctx";
 import { cctxOptionsSchema } from "../../../../src/schemas/commands/cctx";
-import type { CrossChainTx } from "../../../../types/trackCCTX.types";
 import { fetchFromApi, sleep } from "../../../../utils";
 
 /**
@@ -17,7 +25,7 @@ import { fetchFromApi, sleep } from "../../../../utils";
  *  - `cctx` → emitted every polling round with the **entire** array so far.
  */
 interface CctxEvents {
-  cctx: (allSoFar: CrossChainTx[]) => void;
+  cctx: (allSoFar: CrossChainTxSDKType[]) => void;
 }
 
 export const cctxEmitter = new EventEmitter<CctxEvents>();
@@ -25,14 +33,19 @@ export const cctxEmitter = new EventEmitter<CctxEvents>();
 type CctxOptions = z.infer<typeof cctxOptionsSchema>;
 
 interface CctxResponse {
-  CrossChainTxs: CrossChainTx[];
+  CrossChainTxs: CrossChainTxSDKType[];
 }
 
 /**
  * True if the CCTX is still in-flight and may mutate on‑chain.
  */
-const isPending = (tx: CrossChainTx): boolean =>
-  ["PendingOutbound", "PendingRevert"].includes(tx.cctx_status.status);
+const isPending = (tx: CrossChainTxSDKType): boolean => {
+  if (!tx.cctx_status) {
+    return false;
+  }
+  const status = cctxStatusToJSON(tx.cctx_status.status);
+  return ["PendingOutbound", "PendingRevert"].includes(status);
+};
 
 /**
  * Poll indefinitely until user terminates.
@@ -49,7 +62,7 @@ const gatherCctxs = async (
 ): Promise<void> => {
   const startTime = Date.now();
   // Latest copy of each CCTX keyed by index
-  const results = new Map<string, CrossChainTx>();
+  const results = new Map<string, CrossChainTxSDKType>();
 
   // Hashes we need to query in the upcoming round
   const frontier = new Set<string>([rootHash]);
@@ -91,7 +104,9 @@ const gatherCctxs = async (
 
             // Keep querying while pending
             if (isPending(tx)) {
-              nextFrontier.add(tx.inbound_params.observed_hash);
+              if (tx.inbound_params) {
+                nextFrontier.add(tx.inbound_params.observed_hash);
+              }
             }
 
             queriedOnce.add(tx.index);
@@ -113,7 +128,7 @@ const gatherCctxs = async (
   }
 };
 
-const formatCCTX = (cctx: CrossChainTx) => {
+const formatCCTX = (cctx: CrossChainTxSDKType) => {
   let output = "";
   const {
     index,
@@ -123,6 +138,8 @@ const formatCCTX = (cctx: CrossChainTx) => {
     revert_options,
     relayed_message,
   } = cctx;
+  if (!inbound_params || !cctx_status) return "";
+
   const { sender_chain_id, sender, amount, coin_type } = inbound_params;
   const { receiver_chainId, receiver } = outbound_params[0];
   const { status, status_message, error_message = "" } = cctx_status;
@@ -135,18 +152,25 @@ const formatCCTX = (cctx: CrossChainTx) => {
   } = revert_options;
   let mainStatusIcon = "🔄";
   if (
-    status === "OutboundMined" ||
-    (status === "PendingOutbound" && outbound_params[0].hash !== "")
+    String(status) === cctxStatusToJSON(CctxStatus.OutboundMined) ||
+    (String(status) === cctxStatusToJSON(CctxStatus.PendingOutbound) &&
+      outbound_params[0].hash !== "")
   ) {
     mainStatusIcon = "✅";
-  } else if (status === "PendingOutbound" || status === "PendingRevert") {
+  } else if (
+    String(status) === cctxStatusToJSON(CctxStatus.PendingOutbound) ||
+    String(status) === cctxStatusToJSON(CctxStatus.PendingRevert)
+  ) {
     mainStatusIcon = "🔄";
   } else {
     mainStatusIcon = "❌";
   }
 
   let mainStatus;
-  if (status === "PendingOutbound" && outbound_params[0].hash !== "") {
+  if (
+    String(status) === cctxStatusToJSON(CctxStatus.PendingOutbound) &&
+    outbound_params[0].hash !== ""
+  ) {
     mainStatus = "PendingOutbound (transaction broadcasted to target chain)";
   } else {
     mainStatus = status;
@@ -169,7 +193,7 @@ Receiver: ${receiver}
     mainTx += `Message:  ${relayed_message}\n`;
   }
 
-  if (coin_type !== "NoAssetCall") {
+  if (String(coin_type) !== coinTypeToJSON(CoinType.NoAssetCall)) {
     mainTx += `Amount:   ${amount} ${coin_type} tokens\n`;
   }
 
@@ -188,11 +212,12 @@ Receiver: ${receiver}
 
   if (
     outbound_params[1] &&
-    ["Reverted", "PendingRevert", "Aborted"].includes(status)
+    ["Reverted", "PendingRevert", "Aborted"].includes(String(status))
   ) {
-    const isReverted = status === "Reverted";
-    const isPendingRevert = status === "PendingRevert";
-    const isAborted = status === "Aborted";
+    const isReverted = String(status) === cctxStatusToJSON(CctxStatus.Reverted);
+    const isPendingRevert =
+      String(status) === cctxStatusToJSON(CctxStatus.PendingRevert);
+    const isAborted = String(status) === cctxStatusToJSON(CctxStatus.Aborted);
 
     const statusIcon = isPendingRevert ? "🔄" : "✅";
     let statusMessage = "Unknown";
@@ -210,7 +235,7 @@ Receiver: ${receiver}
         : revert_address;
 
     const revertMessage = revert_message
-      ? Buffer.from(revert_message, "base64").toString("hex")
+      ? Buffer.from(String(revert_message), "base64").toString("hex")
       : "null";
 
     let chainDetails = "Unknown";
