@@ -7,13 +7,13 @@ import { getBorderCharacters, table } from "table";
 import {
   DEFAULT_API_URL,
   DEFAULT_EVM_RPC_URL,
-} from "../../../../src/constants/api";
-import { getFees } from "../../../../src/query/fees";
+} from "../../../../../src/constants/api";
+import { getFees } from "../../../../../src/query/fees";
 import {
   feesCLIOptionsSchema,
   feesParamsSchema,
-} from "../../../../src/schemas/commands/fees";
-import { FeesCLIOptions, FeesParams } from "../../../../src/types/fees";
+} from "../../../../../src/schemas/commands/fees";
+import { FeesCLIOptions, FeesParams } from "../../../../../src/types/fees";
 
 const main = async (params: FeesParams, options: FeesCLIOptions) => {
   const spinner = options.json
@@ -24,9 +24,8 @@ const main = async (params: FeesParams, options: FeesCLIOptions) => {
     const feesData = await getFees(params, options);
 
     if (!options.json) {
-      spinner?.succeed(
-        `Successfully queried withdrawGasFee for ${feesData.length} ZRC-20 tokens`
-      );
+      spinner?.stop();
+      spinner?.clear();
     }
 
     if (options.json) {
@@ -66,7 +65,8 @@ const main = async (params: FeesParams, options: FeesCLIOptions) => {
     console.log(table(tableData, tableConfig));
   } catch (error) {
     if (!options.json) {
-      spinner?.fail("Failed to fetch data");
+      spinner?.stop();
+      spinner?.clear();
     }
     console.log(
       chalk.yellow(
@@ -76,8 +76,8 @@ const main = async (params: FeesParams, options: FeesCLIOptions) => {
   }
 };
 
-export const feesCommand = new Command("fees")
-  .description("Fetch omnichain and cross-chain messaging fees")
+export const listCommand = new Command("list")
+  .description("List withdraw gas fees for all ZRC-20 tokens")
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
