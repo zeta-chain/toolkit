@@ -27,7 +27,7 @@ export interface MemoCallParams {
   gasPriceEndpoint?: string;
   /** ZetaChain gateway address to send to */
   gatewayAddress: string;
-  /** Optional network override (defaults to mainnet) */
+  /** Optional network override (defaults to signet) */
   network?: "signet" | "mainnet";
   /** Universal Contract address */
   receiver: string;
