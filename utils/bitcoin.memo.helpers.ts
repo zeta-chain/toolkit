@@ -124,20 +124,34 @@ export const bitcoinSignAndFinalizeTransactionWithMemo = ({
  * @throws Error if the combined length exceeds 80 bytes
  */
 export const constructMemo = (receiver: string, data?: string): string => {
-  const cleanReceiver = receiver.startsWith("0x")
-    ? receiver.slice(2)
-    : receiver;
-  const cleanData = data?.startsWith("0x") ? data.slice(2) : data;
+  const strip0x = (s: string) => (s?.startsWith("0x") ? s.slice(2) : s || "");
+  const isEvenHex = (s: string) =>
+    s.length % 2 === 0 && /^[0-9a-fA-F]*$/.test(s);
 
-  const receiverLength = cleanReceiver.length / 2; // Divide by 2 since it's hex string
-  const dataLength = cleanData ? cleanData.length / 2 : 0;
+  const cleanReceiver = strip0x(receiver);
+  const cleanData = strip0x(data ?? "");
+
+  if (
+    cleanReceiver.length !== EVM_ADDRESS_LENGTH * 2 ||
+    !isEvenHex(cleanReceiver)
+  ) {
+    throw new Error(
+      "Invalid receiver: must be a 20-byte (40-hex) EVM address."
+    );
+  }
+  if (cleanData && !isEvenHex(cleanData)) {
+    throw new Error("Invalid data: must be an even-length hex string.");
+  }
+
+  const receiverLength = cleanReceiver.length / 2;
+  const dataLength = cleanData.length / 2;
   const totalLength = receiverLength + dataLength;
 
-  if (totalLength > 80) {
+  if (totalLength > MAX_MEMO_LENGTH) {
     throw new Error(
-      `Memo too long: ${totalLength} bytes. Maximum allowed length is 80 bytes (including the 20 bytes of the receiver address).`
+      `Memo too long: ${totalLength} bytes. Maximum allowed is ${MAX_MEMO_LENGTH} bytes (receiver + data).`
     );
   }
 
-  return cleanReceiver + (cleanData || "");
+  return cleanReceiver + cleanData;
 };
