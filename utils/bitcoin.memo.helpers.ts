@@ -31,17 +31,21 @@ export const getDepositFee = async (api: string) => {
     const gasPrice = response.data.GasPrice;
     const medianIndex = parseInt(gasPrice.median_index);
     const medianGasPrice = parseInt(gasPrice.prices[medianIndex]);
-    return medianGasPrice * ESTIMATED_VIRTUAL_SIZE;
+    // ZetaChain formula: (txFee / txVsize) * 68 vB * 2
+    return medianGasPrice * ESTIMATED_VIRTUAL_SIZE * 2;
   } catch (error) {
     console.error("Error fetching gas price:", error);
     throw error;
   }
 };
 
-export const bitcoinMakeTransactionWithMemo = async (
+export const bitcoinBuildUnsignedPsbtWithMemo = async (
   params: BitcoinTxParams
 ) => {
-  const TESTNET = bitcoin.networks.testnet;
+  const NETWORK =
+    params.network === "mainnet"
+      ? bitcoin.networks.bitcoin
+      : bitcoin.networks.testnet;
   const memo = Buffer.from(params.memo || "", "hex");
 
   if (memo.length < EVM_ADDRESS_LENGTH) throw new Error(errorNoReceiver);
@@ -66,7 +70,7 @@ export const bitcoinMakeTransactionWithMemo = async (
     )
   );
 
-  const psbt = new bitcoin.Psbt({ network: TESTNET });
+  const psbt = new bitcoin.Psbt({ network: NETWORK });
 
   psbt.addOutput({
     address: params.gateway,
@@ -92,8 +96,49 @@ export const bitcoinMakeTransactionWithMemo = async (
     });
   });
 
-  picked.forEach((_, i) => psbt.signInput(i, params.key));
+  return {
+    pickedUtxos: picked,
+    psbt,
+  };
+};
+
+export const bitcoinSignAndFinalizeTransactionWithMemo = ({
+  psbt,
+  key,
+  pickedUtxos,
+}: {
+  key: bitcoin.Signer;
+  pickedUtxos: BtcUtxo[];
+  psbt: bitcoin.Psbt;
+}) => {
+  pickedUtxos.forEach((_, i) => psbt.signInput(i, key));
   psbt.finalizeAllInputs();
 
   return psbt.extractTransaction().toHex();
+};
+
+/**
+ * Constructs and validates a memo string from receiver address and data
+ * @param receiver - The receiver address (hex string, with or without 0x prefix)
+ * @param data - The data to include in the memo (hex string, with or without 0x prefix)
+ * @returns The constructed memo string
+ * @throws Error if the combined length exceeds 80 bytes
+ */
+export const constructMemo = (receiver: string, data?: string): string => {
+  const cleanReceiver = receiver.startsWith("0x")
+    ? receiver.slice(2)
+    : receiver;
+  const cleanData = data?.startsWith("0x") ? data.slice(2) : data;
+
+  const receiverLength = cleanReceiver.length / 2; // Divide by 2 since it's hex string
+  const dataLength = cleanData ? cleanData.length / 2 : 0;
+  const totalLength = receiverLength + dataLength;
+
+  if (totalLength > 80) {
+    throw new Error(
+      `Memo too long: ${totalLength} bytes. Maximum allowed length is 80 bytes (including the 20 bytes of the receiver address).`
+    );
+  }
+
+  return cleanReceiver + (cleanData || "");
 };

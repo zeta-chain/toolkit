@@ -1,4 +1,4 @@
-import { buildRevealWitness, compactSize } from "../utils/bitcoin.helpers";
+import { buildRevealWitness, compactSize } from "../utils/bitcoin.inscription.helpers";
 
 describe("compactSize", () => {
   it("should encode small numbers as single byte", () => {

@@ -16,6 +16,11 @@
       "import": "./dist/esm/src/chains/index.js",
       "default": "./dist/cjs/src/chains/index.js"
     },
+    "./chains/bitcoin": {
+      "types": "./dist/types/src/chains/bitcoin/index.d.ts",
+      "import": "./dist/esm/src/chains/bitcoin/index.js",
+      "default": "./dist/cjs/src/chains/bitcoin/index.js"
+    },
     "./chains/evm": {
       "types": "./dist/types/src/chains/evm/index.d.ts",
       "import": "./dist/esm/src/chains/evm/index.js",

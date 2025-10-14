@@ -5,17 +5,18 @@ import { memoDepositAndCallOptionsSchema } from "../../../../../types/bitcoin.ty
 import { handleError } from "../../../../../utils";
 import {
   broadcastBtcTransaction,
-  constructMemo,
   createBitcoinMemoCommandWithCommonOptions,
   displayAndConfirmMemoTransaction,
-  fetchUtxos,
   setupBitcoinKeyPair,
 } from "../../../../../utils/bitcoin.command.helpers";
-import { safeParseBitcoinAmount } from "../../../../../utils/bitcoin.helpers";
+import { safeParseBitcoinAmount } from "../../../../../utils/bitcoin.inscription.helpers";
 import {
-  bitcoinMakeTransactionWithMemo,
+  bitcoinBuildUnsignedPsbtWithMemo,
+  bitcoinSignAndFinalizeTransactionWithMemo,
+  constructMemo,
   getDepositFee,
-} from "../../../../../utils/bitcoinMemo.helpers";
+} from "../../../../../utils/bitcoin.memo.helpers";
+import { fetchUtxos } from "../../../../../utils/bitcoin.utxo.helpers";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
 type DepositAndCallOptions = z.infer<typeof memoDepositAndCallOptionsSchema>;
@@ -56,18 +57,22 @@ const main = async (options: DepositAndCallOptions) => {
       options.network
     );
 
-    const tx = await bitcoinMakeTransactionWithMemo({
+    const { psbt, pickedUtxos } = await bitcoinBuildUnsignedPsbtWithMemo({
       address,
       amount,
       api: options.bitcoinApi,
       depositFee,
       gateway: options.gateway,
-      key,
       memo,
       networkFee,
       utxos,
     });
-    const txid = await broadcastBtcTransaction(tx, options.bitcoinApi);
+    const signedPsbt = bitcoinSignAndFinalizeTransactionWithMemo({
+      key,
+      pickedUtxos,
+      psbt,
+    });
+    const txid = await broadcastBtcTransaction(signedPsbt, options.bitcoinApi);
     console.log(`Transaction hash: ${txid}`);
   } catch (error) {
     handleError({
