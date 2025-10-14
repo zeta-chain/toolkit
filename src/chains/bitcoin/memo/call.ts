@@ -60,13 +60,6 @@ export interface BroadcastResult {
 /**
  * Builds an unsigned PSBT for a memo call transaction
  * This PSBT must be signed by the wallet before broadcasting
- *
- * For CALL operations (no BTC deposit):
- * - amount = 0 (no BTC deposit)
- * - gateway receives minimal dust (546 sats)
- * This ensures ZetaChain treats it as "call" not "depositAndCall"
- *
- * Uses the shared buildUnsignedMemoPsbt helper for browser-safe PSBT construction
  */
 export const buildBitcoinMemoCallPsbt = async (
   params: MemoCallParams
