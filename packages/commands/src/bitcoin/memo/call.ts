@@ -63,6 +63,7 @@ const main = async (options: CallOptions) => {
       depositFee,
       gateway: options.gateway,
       memo,
+      network: options.network,
       networkFee,
       utxos,
     });
