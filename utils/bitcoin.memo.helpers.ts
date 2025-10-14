@@ -31,8 +31,7 @@ export const getDepositFee = async (api: string) => {
     const gasPrice = response.data.GasPrice;
     const medianIndex = parseInt(gasPrice.median_index);
     const medianGasPrice = parseInt(gasPrice.prices[medianIndex]);
-    // ZetaChain formula: (txFee / txVsize) * 68 vB * 2
-    return medianGasPrice * ESTIMATED_VIRTUAL_SIZE * 2;
+    return medianGasPrice * ESTIMATED_VIRTUAL_SIZE;
   } catch (error) {
     console.error("Error fetching gas price:", error);
     throw error;
