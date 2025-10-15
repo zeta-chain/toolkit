@@ -41,6 +41,10 @@ export const getDepositFee = async (api: string) => {
 export const bitcoinBuildUnsignedPsbtWithMemo = async (
   params: BitcoinTxParams
 ) => {
+  if (!params.network) {
+    throw new Error("Missing Bitcoin network (mainnet | signet).");
+  }
+
   const NETWORK =
     params.network === "mainnet"
       ? bitcoin.networks.bitcoin
