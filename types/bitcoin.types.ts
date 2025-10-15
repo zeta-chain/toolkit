@@ -34,7 +34,7 @@ export interface BitcoinTxParams {
   depositFee: number;
   gateway: string;
   memo?: string;
-  network?: "signet" | "mainnet";
+  network: "signet" | "mainnet";
   networkFee: number;
   utxos: BtcUtxo[];
 }

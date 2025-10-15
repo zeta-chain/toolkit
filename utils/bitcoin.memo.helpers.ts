@@ -41,14 +41,11 @@ export const getDepositFee = async (api: string) => {
 export const bitcoinBuildUnsignedPsbtWithMemo = async (
   params: BitcoinTxParams
 ) => {
-  if (!params.network) {
-    throw new Error("Missing Bitcoin network (mainnet | signet).");
-  }
-
   const NETWORK =
     params.network === "mainnet"
       ? bitcoin.networks.bitcoin
       : bitcoin.networks.testnet;
+
   const memo = Buffer.from(params.memo || "", "hex");
 
   if (memo.length < EVM_ADDRESS_LENGTH) throw new Error(errorNoReceiver);
