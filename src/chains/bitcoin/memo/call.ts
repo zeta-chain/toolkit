@@ -21,7 +21,7 @@ export interface MemoCallParams {
   bitcoinApi?: string;
   /** Data to include in OP_RETURN output */
   data: string;
-  /** User's BTC address (same as userAddress, for clarity) */
+  /** User's BTC address for UTXOs, signing, and receiving change */
   fromAddress: string;
   /** ZetaChain gas price endpoint */
   gasPriceEndpoint?: string;
@@ -31,8 +31,6 @@ export interface MemoCallParams {
   network?: "signet" | "mainnet";
   /** Universal Contract address */
   receiver: string;
-  /** User's BTC address for receiving change */
-  userAddress: string;
 }
 
 /**
@@ -84,7 +82,7 @@ export const buildBitcoinMemoCallPsbt = async (
   const network = params.network || "signet";
 
   const { psbt, pickedUtxos } = await bitcoinBuildUnsignedPsbtWithMemo({
-    address: params.userAddress,
+    address: params.fromAddress,
     amount,
     api,
     depositFee,
