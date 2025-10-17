@@ -14,6 +14,17 @@ import {
 import { fetchUtxos } from "../../../../utils/bitcoin.utxo.helpers";
 
 /**
+ * Recommended fee rates from mempool API
+ */
+interface MempoolFeeRecommendation {
+  economyFee: number;
+  fastestFee: number;
+  halfHourFee: number;
+  hourFee: number;
+  minimumFee: number;
+}
+
+/**
  * Parameters for creating a Bitcoin memo call transaction
  */
 export interface MemoCallParams {
@@ -21,6 +32,8 @@ export interface MemoCallParams {
   bitcoinApi?: string;
   /** Data to include in OP_RETURN output */
   data: string;
+  /** Optional fee rate in sat/vB (if not provided, fetches from mempool API using halfHourFee) */
+  feeRate?: number;
   /** User's BTC address for UTXOs, signing, and receiving change */
   fromAddress: string;
   /** ZetaChain gas price endpoint */
@@ -64,16 +77,39 @@ export const buildBitcoinMemoCallPsbt = async (
 ): Promise<MemoCallPsbtResult> => {
   const api = params.bitcoinApi || DEFAULT_BITCOIN_API;
 
-  // Fetch UTXOs, fee rate, and deposit fee
+  // Fetch UTXOs
   const utxos = await fetchUtxos(params.fromAddress, api);
   if (!utxos.length) {
     throw new Error("No UTXOs found for address");
   }
 
+  // Fetch fee rate from mempool API if not provided
+  let feeRate = params.feeRate;
+  if (!feeRate) {
+    try {
+      const { data: feeRec } = await axios.get<MempoolFeeRecommendation>(
+        `${api}/v1/fees/recommended`
+      );
+      // Use halfHourFee with a minimum floor of 2 sat/vB
+      feeRate = Math.max(feeRec.halfHourFee, 2);
+    } catch (error) {
+      // Fallback to conservative default if API fails
+      console.warn("Failed to fetch fee rates, using default 3 sat/vB");
+      feeRate = 3;
+    }
+  }
+
   const memo = constructMemo(params.receiver, params.data);
 
   const amount = 0;
-  const networkFee = 600;
+
+  // Calculate network fee based on estimated transaction size
+  // Typical P2WPKH tx: 1 input (~68 vB) + 3 outputs (gateway + OP_RETURN + change) (~110 vB) ≈ 178 vB
+  // Add memo length overhead
+  const memoLength = memo ? Buffer.from(memo, "hex").length : 0;
+  const estimatedVsize = 68 + 110 + memoLength; // Conservative estimate
+  const networkFee = Math.ceil(estimatedVsize * feeRate);
+
   const depositFeeResponse = await getDepositFee(
     params.gasPriceEndpoint || DEFAULT_GAS_PRICE_API
   );
