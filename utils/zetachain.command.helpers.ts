@@ -221,7 +221,7 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
     )
     .option(
       "--abort-address <address>",
-      "Address to receive tokens if transaction isaborted",
+      "Address to receive tokens if transaction is aborted",
       ZeroAddress
     )
     .option(
