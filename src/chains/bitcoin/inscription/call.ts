@@ -95,8 +95,8 @@ export interface BroadcastCommitAndBuildRevealParams {
   fromAddress: string;
   /** ZetaChain gateway address */
   gatewayAddress: string;
-  /** Optional network override (defaults to signet) */
-  network?: "signet" | "mainnet";
+  /** Network (signet or mainnet) */
+  network: "signet" | "mainnet";
   /** Reveal fee in satoshis (from commit result) */
   revealFee: number;
   /** The commit PSBT after wallet signing (base64 encoded) */
@@ -239,9 +239,10 @@ export const broadcastCommitAndBuildRevealPsbt = async (
   params: BroadcastCommitAndBuildRevealParams
 ): Promise<InscriptionCallRevealPsbtResult> => {
   const api = params.bitcoinApi || DEFAULT_BITCOIN_API;
-  const network = params.network || "signet";
   const btcNetwork =
-    network === "mainnet" ? bitcoin.networks.bitcoin : bitcoin.networks.testnet;
+    params.network === "mainnet"
+      ? bitcoin.networks.bitcoin
+      : bitcoin.networks.testnet;
 
   try {
     // Parse and finalize the signed commit PSBT
