@@ -27,8 +27,8 @@ export interface MemoCallParams {
   gasPriceEndpoint?: string;
   /** ZetaChain gateway address to send to */
   gatewayAddress: string;
-  /** Optional network override (defaults to signet) */
-  network?: "signet" | "mainnet";
+  /** Network (signet or mainnet) */
+  network: "signet" | "mainnet";
   /** Universal Contract address */
   receiver: string;
 }
@@ -79,8 +79,6 @@ export const buildBitcoinMemoCallPsbt = async (
   );
   const depositFee = depositFeeResponse < 600 ? 600 : depositFeeResponse;
 
-  const network = params.network || "signet";
-
   const { psbt, pickedUtxos } = await bitcoinBuildUnsignedPsbtWithMemo({
     address: params.fromAddress,
     amount,
@@ -88,7 +86,7 @@ export const buildBitcoinMemoCallPsbt = async (
     depositFee,
     gateway: params.gatewayAddress,
     memo: memo || "",
-    network,
+    network: params.network,
     networkFee,
     utxos,
   });
