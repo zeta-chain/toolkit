@@ -76,7 +76,7 @@ const tryParseByteArrayString = (value: string): number[] | null => {
  * Normalize any supported address input into a 20-byte array.
  * Supports: 0x hex, hex without 0x, bech32 (any zeta* HRP), and decimal byte array strings.
  */
-const getAddressBytesFromAny = (input: string): Uint8Array => {
+const parseAddressInput = (input: string): Uint8Array => {
   const value = input.trim();
 
   if (isHexAddress(value)) {
@@ -102,21 +102,21 @@ const getAddressBytesFromAny = (input: string): Uint8Array => {
 };
 
 export interface UnifiedAddressFormats {
-  // EIP-55, with 0x
   bech32Acc: string;
   bech32Valcons: string;
   bech32Valoper: string;
   bytes: number[];
-  // uppercase, without 0x prefix
-  checksumHex: string;
-  hex: string;
+  // EIP-55 checksummed address with 0x prefix
+  checksummedAddress: string;
+  // uppercase hex without 0x prefix
+  hexUppercase: string;
 }
 
 /**
  * Convert an input address in any supported form into all common representations.
  */
 export const convertAddressAll = (input: string): UnifiedAddressFormats => {
-  const bytes = getAddressBytesFromAny(input);
+  const bytes = parseAddressInput(input);
   if (bytes.length !== 20) {
     throw new Error(
       `Invalid address length ${bytes.length}, expected 20 bytes`
@@ -124,19 +124,19 @@ export const convertAddressAll = (input: string): UnifiedAddressFormats => {
   }
 
   const hexLower = Buffer.from(bytes).toString("hex");
-  const checksumHex = ethers.getAddress(`0x${hexLower}`);
+  const checksummedAddress = ethers.getAddress(`0x${hexLower}`);
 
-  const hex = hexLower.toUpperCase();
-  const bech32Acc = hexToBech32(checksumHex, ZETA_HRP);
-  const bech32Valoper = hexToBech32(checksumHex, ZETA_VALOPER_HRP);
-  const bech32Valcons = hexToBech32(checksumHex, ZETA_VALCONS_HRP);
+  const hexUppercase = hexLower.toUpperCase();
+  const bech32Acc = hexToBech32(checksummedAddress, ZETA_HRP);
+  const bech32Valoper = hexToBech32(checksummedAddress, ZETA_VALOPER_HRP);
+  const bech32Valcons = hexToBech32(checksummedAddress, ZETA_VALCONS_HRP);
 
   return {
     bech32Acc,
     bech32Valcons,
     bech32Valoper,
     bytes: Array.from(bytes),
-    checksumHex,
-    hex,
+    checksummedAddress,
+    hexUppercase,
   };
 };

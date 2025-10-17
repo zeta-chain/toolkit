@@ -20,9 +20,10 @@ export const addressCommand = new Command("address")
           JSON.stringify(
             {
               bech32Acc: result.bech32Acc,
-              bech32Con: result.bech32Valcons,
-              bech32Val: result.bech32Valoper,
-              hex: result.checksumHex,
+              bech32Valcons: result.bech32Valcons,
+              bech32Valoper: result.bech32Valoper,
+              checksummedAddress: result.checksummedAddress,
+              hexUppercase: result.hexUppercase,
             },
             null,
             2
@@ -32,7 +33,7 @@ export const addressCommand = new Command("address")
       }
       const rows = [
         ["Format", "Address"],
-        ["Address (hex)", result.checksumHex],
+        ["Address (hex)", result.checksummedAddress],
         ["Bech32 Acc", result.bech32Acc],
         ["Bech32 Val", result.bech32Valoper],
         ["Bech32 Con", result.bech32Valcons],
