@@ -147,6 +147,7 @@
     "typechain-types"
   ],
   "dependencies": {
+    "@bitcoinerlab/secp256k1": "^1.2.0",
     "@coral-xyz/anchor": "^0.30.1",
     "@ethersproject/units": "^5.8.0",
     "@inquirer/prompts": "^2.1.1",

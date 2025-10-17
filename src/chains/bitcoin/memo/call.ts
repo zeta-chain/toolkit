@@ -50,7 +50,7 @@ export interface MemoCallPsbtResult {
 /**
  * Result from broadcasting a transaction
  */
-export interface BroadcastResult {
+export interface MemoBroadcastResult {
   /** Raw transaction hex */
   txHex: string;
   /** Transaction ID */
@@ -111,7 +111,7 @@ export const buildBitcoinMemoCallPsbt = async (
 export const finalizeBitcoinMemoCall = async (
   signedPsbtBase64: string,
   bitcoinApi?: string
-): Promise<BroadcastResult> => {
+): Promise<MemoBroadcastResult> => {
   const api = bitcoinApi || DEFAULT_BITCOIN_API;
 
   try {
