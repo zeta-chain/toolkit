@@ -67,7 +67,8 @@ const main = async (options: CallOptions) => {
 };
 
 export const callCommand = createSolanaCommandWithCommonOptions("call")
-  .description("Call a universal contract on ZetaChain")
+  .summary("Call a contract on ZetaChain from Solana")
+  .description("Call a universal contract on ZetaChain from Solana")
   .requiredOption(
     "--types <types...>",
     "List of parameter types (e.g. uint256 address)"

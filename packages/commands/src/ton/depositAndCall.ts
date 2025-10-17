@@ -76,6 +76,7 @@ const main = async (options: DepositAndCallOptions) => {
 export const depositAndCallCommand = createTonCommandWithCommonOptions(
   "deposit-and-call"
 )
+  .summary("Deposit TON and call a contract on ZetaChain")
   .description("Deposit TON and call a universal contract on ZetaChain")
   .requiredOption("--amount <amount>", "Amount in TON")
   .addOption(new Option("--types <types...>", "ABI types").conflicts(["data"]))
