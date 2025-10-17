@@ -87,7 +87,7 @@ export const withdrawCommand = new Command("withdraw").summary(
 
 addCommonZetachainCommandOptions(withdrawCommand)
   .description(
-    "Sends tokens from ZetaChain to a connected chain without making a contract call. You can set the receiver address, token amount, and advanced execution options."
+    "Send tokens from ZetaChain to a connected chain without making a contract call. Specify the receiver address, token amount, and advanced execution options."
   )
   .requiredOption("--amount <amount>", "The amount of tokens to withdraw")
   .action(async (options) => {
