@@ -69,16 +69,17 @@ const gatherCctxs = async (
     }
 
     const nextFrontier = new Set<string>();
+    const isDiscoveryRound = awaitingRootDiscovery;
 
     await Promise.all(
       [...frontier].map(async (hash) => {
         try {
           // In the very first round, try both endpoints so the root hash
           // can be either an inbound tx hash or a CCTX index/hash.
-          if (awaitingRootDiscovery) {
+          if (isDiscoveryRound) {
             let discovered: CrossChainTx[] = [];
 
-            // Try cctx single endpoint FIRST
+            // Try cctx single endpoint first
             const single = await getCctxByHash(rpc, hash);
             if (single) {
               discovered.push(single);
@@ -96,9 +97,6 @@ const gatherCctxs = async (
               return;
             }
 
-            // We discovered at least one CCTX; switch to inbound-only mode next rounds
-            awaitingRootDiscovery = false;
-
             for (const tx of discovered) {
               results.set(tx.index, tx);
               if (!queriedOnce.has(tx.index)) {
@@ -110,23 +108,40 @@ const gatherCctxs = async (
               queriedOnce.add(tx.index);
             }
           } else {
-            const cctxs = await getCctxDataByInboundHash(rpc, hash);
+            // Determine if this is a CCTX index (already in results) or an inbound hash
+            if (results.has(hash)) {
+              // This is a CCTX index - refresh it
+              const tx = await getCctxByHash(rpc, hash);
 
-            if (cctxs.length === 0) {
-              // Still 404 – keep trying
-              nextFrontier.add(hash);
-              return;
-            }
-
-            for (const tx of cctxs) {
-              results.set(tx.index, tx);
-              if (!queriedOnce.has(tx.index)) {
-                nextFrontier.add(tx.index);
+              if (!tx) {
+                nextFrontier.add(hash);
+                return;
               }
+
+              results.set(tx.index, tx);
               if (isPending(tx)) {
                 nextFrontier.add(tx.inbound_params.observed_hash);
               }
-              queriedOnce.add(tx.index);
+            } else {
+              // This is an inbound hash - query for CCTXs
+              const cctxs = await getCctxDataByInboundHash(rpc, hash);
+
+              if (cctxs.length === 0) {
+                // Still 404 – keep trying
+                nextFrontier.add(hash);
+                return;
+              }
+
+              for (const tx of cctxs) {
+                results.set(tx.index, tx);
+                if (!queriedOnce.has(tx.index)) {
+                  nextFrontier.add(tx.index);
+                }
+                if (isPending(tx)) {
+                  nextFrontier.add(tx.inbound_params.observed_hash);
+                }
+                queriedOnce.add(tx.index);
+              }
             }
           }
         } catch (err) {
@@ -134,6 +149,11 @@ const gatherCctxs = async (
         }
       })
     );
+
+    // Only flip the flag after all parallel tasks complete and we've found at least one CCTX
+    if (isDiscoveryRound && results.size > 0) {
+      awaitingRootDiscovery = false;
+    }
 
     // Emit snapshot (Map → Array) for UI/CLI consumers
     cctxEmitter.emit("cctx", Array.from(results.values()));
