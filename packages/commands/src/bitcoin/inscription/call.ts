@@ -25,7 +25,7 @@ import {
 import {
   calculateRevealFee,
   prepareUtxos,
-} from "../../../../../utils/bitcoin.helpers";
+} from "../../../../../utils/bitcoin.inscription.helpers";
 import { trim0x } from "../../../../../utils/trim0x";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
