@@ -37,8 +37,8 @@ export interface InscriptionCallParams {
   fromAddress: string;
   /** ZetaChain gateway address to send to */
   gatewayAddress: string;
-  /** Optional network override (defaults to signet) */
-  network?: "signet" | "mainnet";
+  /** Network (signet or mainnet) */
+  network: "signet" | "mainnet";
   /** x-only public key (32 bytes hex string or Uint8Array) for Taproot. If 33 bytes (compressed), first byte will be stripped automatically. */
   publicKey: string | Uint8Array;
   /** Universal Contract address (required if using types/values) */
