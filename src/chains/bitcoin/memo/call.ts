@@ -30,7 +30,7 @@ interface MempoolFeeRecommendation {
 export interface MemoCallParams {
   /** Optional API URL override */
   bitcoinApi?: string;
-  /** Data to include in OP_RETURN output */
+  /** Hex payload to include in OP_RETURN (0x‑prefixed allowed) */
   data: string;
   /** Optional fee rate in sat/vB (if not provided, fetches from mempool API using halfHourFee) */
   feeRate?: number;
@@ -42,7 +42,7 @@ export interface MemoCallParams {
   gatewayAddress: string;
   /** Network (signet or mainnet) */
   network: "signet" | "mainnet";
-  /** Universal Contract address */
+  /** Universal Contract EVM address (0x…20 bytes) */
   receiver: string;
 }
 
