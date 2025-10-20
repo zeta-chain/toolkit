@@ -47,7 +47,7 @@ const main = (options: EncodeOptions) => {
   const result = bitcoinEncode(
     options.receiver,
     payloadBuffer,
-    options.revertAddress,
+    { revertAddress: options.revertAddress },
     OpCode[options.opCode as keyof typeof OpCode],
     EncodingFormat[options.format as keyof typeof EncodingFormat]
   );

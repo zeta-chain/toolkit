@@ -4,20 +4,20 @@ import { solanaDepositAndCall } from "../../../../src/chains/solana/depositAndCa
 import { SOLANA_TOKEN_PROGRAM } from "../../../../types/shared.constants";
 import { handleError, validateAndParseSchema } from "../../../../utils";
 import { parseAbiValues } from "../../../../utils/parseAbiValues";
+import { getAPIbyChainId } from "../../../../utils/solana.browser.helpers";
 import {
   confirmSolanaTx,
   createRevertOptions,
   createSolanaCommandWithCommonOptions,
-  getAPIbyChainId,
-  getKeypair,
   prepareRevertOptions,
   solanaDepositAndCallOptionsSchema,
 } from "../../../../utils/solana.commands.helpers";
+import { getBrowserSafeKeypair } from "../../../../utils/solana.keypair.helpers";
 
 type DepositAndCallOptions = z.infer<typeof solanaDepositAndCallOptionsSchema>;
 
 const main = async (options: DepositAndCallOptions) => {
-  const keypair = await getKeypair({
+  const keypair = await getBrowserSafeKeypair({
     mnemonic: options.mnemonic,
     name: options.name,
     privateKey: options.privateKey,
@@ -30,13 +30,18 @@ const main = async (options: DepositAndCallOptions) => {
 
   const revertOptions = prepareRevertOptions(options);
 
+  // Create an Anchor PublicKey for CLI confirmation (which expects Anchor types)
+  const anchorPublicKey = new (
+    await import("@coral-xyz/anchor")
+  ).web3.PublicKey(keypair.publicKey.toBase58());
+
   await confirmSolanaTx({
     amount: options.amount,
     api: API,
     message: values.join(", "),
     mint: options.mint,
     receiver: options.receiver,
-    revertOptions: createRevertOptions(revertOptions, keypair.publicKey),
+    revertOptions: createRevertOptions(revertOptions, anchorPublicKey),
     sender: keypair.publicKey.toBase58(),
   });
 
@@ -69,6 +74,7 @@ const main = async (options: DepositAndCallOptions) => {
 export const depositAndCallCommand = createSolanaCommandWithCommonOptions(
   "deposit-and-call"
 )
+  .summary("Deposit tokens from Solana and call a contract on ZetaChain")
   .description(
     "Deposit tokens from Solana and call a universal contract on ZetaChain"
   )

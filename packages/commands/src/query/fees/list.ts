@@ -76,8 +76,9 @@ const main = async (params: FeesParams, options: FeesCLIOptions) => {
   }
 };
 
-export const listCommand = new Command("list")
-  .description("List withdraw gas fees for all ZRC-20 tokens")
+export const feesCommand = new Command("fees")
+  .summary("Get cross-chain fees")
+  .description("Estimate fees for cross-chain transactions")
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
@@ -85,9 +86,12 @@ export const listCommand = new Command("list")
     new Option("--rpc <url>", "RPC endpoint URL").default(DEFAULT_EVM_RPC_URL)
   )
   .addOption(
-    new Option("--gas-limit <limit>", "Gas limit for withdraw and call")
+    new Option(
+      "--gas-limit <limit>",
+      "Gas limit for withdraw and call transactions"
+    )
   )
-  .addOption(new Option("--json", "Output results in JSON format"))
+  .addOption(new Option("--json", "Output in JSON format"))
   .action(async (options) => {
     const params = feesParamsSchema.parse(options);
     const validatedOptions = feesCLIOptionsSchema.parse(options);

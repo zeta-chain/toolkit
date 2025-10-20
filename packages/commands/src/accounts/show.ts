@@ -39,9 +39,12 @@ const main = (options: ShowAccountOptions): void => {
 };
 
 export const showAccountsCommand = new Command("show")
-  .summary("Show details of an existing account")
+  .summary("View details of a specific account")
+  .description(
+    `Show the address, public key, and other details for a specific account. You must provide the chain type and account name.`
+  )
   .addOption(
-    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
+    new Option("--type <type>", "Chain type").choices(AvailableAccountTypes)
   )
   .requiredOption("--name <name>", "Account name")
   .action((opts) => {

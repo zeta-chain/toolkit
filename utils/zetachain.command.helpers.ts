@@ -190,34 +190,55 @@ export const getZRC20WithdrawFee = async (
 
 export const addCommonZetachainCommandOptions = (command: Command) => {
   return command
-    .requiredOption("--zrc20 <address>", "The address of ZRC-20 to pay fees")
+    .requiredOption(
+      "--zrc20 <address>",
+      "ZRC-20 token address to pay cross-chain fees"
+    )
     .requiredOption(
       "--receiver <address>",
-      "The address of the receiver contract on a connected chain. Non-hex strings will be automatically encoded to hex."
+      "Receiver contract address on the connected chain (non-hex strings will be encoded)"
     )
     .addOption(
       new Option("--name <name>", "Account name")
         .default(DEFAULT_ACCOUNT_NAME)
         .conflicts(["private-key"])
     )
-    .addOption(new Option("--chain-id <chainId>", "Chain ID of the network"))
+    .addOption(
+      new Option("--chain-id <chainId>", "Chain ID of the destination network")
+    )
     .addOption(
       new Option(
         "--private-key <key>",
         "Private key for signing transactions"
       ).conflicts(["name"])
     )
-    .addOption(new Option("--rpc <url>", "RPC URL of the network"))
+    .addOption(new Option("--rpc <url>", "ZetaChain RPC URL"))
     .option("--gateway <address>", "Gateway contract address on ZetaChain")
-    .option("--revert-address <address>", "Revert address", ZeroAddress)
-    .option("--abort-address <address>", "Abort address", ZeroAddress)
-    .option("--call-on-revert", "Whether to call on revert", false)
+    .option(
+      "--revert-address <address>",
+      "Address to receive tokens if the transaction reverts",
+      ZeroAddress
+    )
+    .option(
+      "--abort-address <address>",
+      "Address to receive tokens if transaction is aborted",
+      ZeroAddress
+    )
+    .option(
+      "--call-on-revert",
+      "Call onRevert handler if the transaction fails",
+      false
+    )
     .option(
       "--on-revert-gas-limit <limit>",
       "Gas limit for the revert transaction",
       "1000000"
     )
-    .option("--revert-message <message>", "Revert message", "0x")
+    .option(
+      "--revert-message <message>",
+      "Message to include in the revert call ",
+      "0x"
+    )
     .option(
       "--tx-options-gas-limit <limit>",
       "Gas limit for the transaction",
@@ -230,9 +251,13 @@ export const addCommonZetachainCommandOptions = (command: Command) => {
     )
     .option(
       "--call-options-gas-limit <limit>",
-      "Gas limit for the call",
+      "Gas limit for the contract call on the connected chain",
       "1000000"
     )
-    .option("--call-options-is-arbitrary-call", "Call any function", false)
+    .option(
+      "--call-options-is-arbitrary-call",
+      "Call any function (--function is required)",
+      false
+    )
     .option("--yes", "Skip confirmation prompt", false);
 };
