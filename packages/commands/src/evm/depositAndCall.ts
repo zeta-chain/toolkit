@@ -105,9 +105,13 @@ Parameter types: ${stringifiedTypes}
   }
 };
 
-export const depositAndCallCommand = new Command("deposit-and-call").summary(
-  "Deposit tokens and call a contract on ZetaChain from an EVM-compatible chain"
-);
+export const depositAndCallCommand = new Command("deposit-and-call")
+  .summary(
+    "Deposit tokens and call a contract on ZetaChain from an EVM-compatible chain"
+  )
+  .description(
+    "Deposit tokens and call a contract on ZetaChain from an EVM-compatible chain"
+  );
 
 addCommonEvmCommandOptions(depositAndCallCommand)
   .requiredOption("--amount <amount>", "Amount of tokens to deposit")

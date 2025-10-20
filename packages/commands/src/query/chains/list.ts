@@ -138,11 +138,12 @@ from that connected chain to be observed`);
 
 export const listCommand = new Command("list")
   .alias("l")
-  .description("List all supported chains")
+  .summary("List all connected chains")
+  .description("Retrieve a list of all supported chains connected to ZetaChain")
   .addOption(
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
-  .option("--json", "Output chains as JSON")
+  .option("--json", "Output in JSON format")
   .action(async (options: ChainsListOptions) => {
     const validatedOptions = chainsListOptionsSchema.parse(options);
     await main(validatedOptions);

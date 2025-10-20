@@ -74,6 +74,7 @@ const main = async (options: DepositAndCallOptions) => {
 export const depositAndCallCommand = createSolanaCommandWithCommonOptions(
   "deposit-and-call"
 )
+  .summary("Deposit tokens from Solana and call a contract on ZetaChain")
   .description(
     "Deposit tokens from Solana and call a universal contract on ZetaChain"
   )

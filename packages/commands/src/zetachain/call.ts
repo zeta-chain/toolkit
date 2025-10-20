@@ -131,14 +131,16 @@ ZetaChain Gateway: ${gatewayAddress}
   }
 };
 
-export const callCommand = new Command("call").summary(
-  "Call a contract on a connected chain from ZetaChain"
-);
+export const callCommand = new Command("call");
 
 addCommonZetachainCommandOptions(callCommand)
+  .summary("Call a contract on a connected chain from ZetaChain")
+  .description(
+    "Executes a contract call from ZetaChain to a connected chain without transferring tokens. You can specify the destination contract, function signature, parameters, and advanced options like revert handling and gas settings."
+  )
   .option(
     "--function <function>",
-    `Function to call (example: "hello(string)")`
+    `Function signature to call (example: "hello(string)")`
   )
   .option(
     "--types <types...>",
@@ -146,10 +148,11 @@ addCommonZetachainCommandOptions(callCommand)
   )
   .option("--values <values...>", "Parameter values for the function call")
   .addOption(
-    new Option(
-      "--data <data>",
-      "Raw data for non-EVM chains like Solana"
-    ).conflicts(["types", "values", "function"])
+    new Option("--data <data>", "Raw data").conflicts([
+      "types",
+      "values",
+      "function",
+    ])
   )
   .action(async (options) => {
     const validatedOptions = validateAndParseSchema(

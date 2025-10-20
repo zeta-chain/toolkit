@@ -31,8 +31,13 @@ const main = async (options: CreateAccountOptions) => {
 
 export const createAccountsCommand = new Command("create")
   .summary("Create a new account")
+  .description(
+    `Generates a new account for the specified chain type.
+
+You can name the account for easier identification; if no name is provided, it defaults to default.`
+  )
   .addOption(
-    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
+    new Option("--type <type>", "Chain type").choices(AvailableAccountTypes)
   )
   .option("--name <name>", "Account name", DEFAULT_ACCOUNT_NAME)
   .action(async (opts) => {

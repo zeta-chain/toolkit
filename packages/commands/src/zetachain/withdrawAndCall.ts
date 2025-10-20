@@ -149,14 +149,17 @@ ZetaChain Gateway: ${gatewayAddress}
 };
 
 export const withdrawAndCallCommand = new Command("withdraw-and-call").summary(
-  "Withdraw tokens from ZetaChain and call a contract on a connected chain"
+  "Withdraw tokens and call a contract on a connected chain"
 );
 
 addCommonZetachainCommandOptions(withdrawAndCallCommand)
+  .description(
+    "Combines token withdrawal from ZetaChain with a contract call on the connected chain in a single transaction. Supports full control over function parameters, gas settings, and revert handling."
+  )
   .requiredOption("--amount <amount>", "The amount of tokens to withdraw")
   .option(
     "--function <function>",
-    `Function to call (example: "hello(string)")`
+    `Function signature to call (example: "hello(string)")`
   )
   .option(
     "--types <types...>",
