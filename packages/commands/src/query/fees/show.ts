@@ -376,8 +376,7 @@ export const showCommand = new Command("show")
       options,
       showFeesOptionsSchema,
       {
-        exitOnError: false,
-        shouldLogError: true,
+        exitOnError: true,
       }
     );
     await main(validatedOptions);
