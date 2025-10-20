@@ -46,6 +46,18 @@ const main = async (options: CallOptions) => {
     );
 
     const revertAddress = options.revertAddress || address;
+    const abortAddress = options.abortAddress;
+    const revertMessage =
+      options.revertMessage !== undefined
+        ? Buffer.from(options.revertMessage, "utf8")
+        : undefined;
+
+    const revertOptions = {
+      abortAddress,
+      callOnRevert: true,
+      revertAddress,
+      ...(revertMessage !== undefined ? { revertMessage } : {}),
+    };
 
     let encodedMessage: string | undefined;
     let data: Buffer;
@@ -60,7 +72,7 @@ const main = async (options: CallOptions) => {
         bitcoinEncode(
           options.receiver,
           Buffer.from(trim0x(encodedMessage), "hex"),
-          revertAddress,
+          revertOptions,
           OpCode.Call,
           options.format
         ),
@@ -111,7 +123,7 @@ const main = async (options: CallOptions) => {
       operation: "Call",
       rawInscriptionData: data.toString("hex"),
       revealFee,
-      revertAddress,
+      revertOptions,
       sender: address,
     });
 

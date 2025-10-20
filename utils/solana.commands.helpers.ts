@@ -30,7 +30,7 @@ export const baseSolanaOptionsSchema = z.object({
   name: z.string().optional(),
   onRevertGasLimit: z.string(),
   privateKey: z.string().optional(),
-  recipient: z.string(),
+  receiver: z.string(),
   revertAddress: z.string().optional(),
   revertMessage: z.string(),
 });
@@ -212,7 +212,7 @@ export const isSOLBalanceSufficient = async (
 export const createSolanaCommandWithCommonOptions = (name: string): Command => {
   return new Command(name)
     .requiredOption(
-      "--recipient <recipient>",
+      "--receiver <receiver>",
       "EOA or contract address on ZetaChain"
     )
     .addOption(
@@ -289,14 +289,14 @@ export const confirmSolanaTx = async (options: {
   api: string;
   message?: string;
   mint?: string;
-  recipient: string;
+  receiver: string;
   revertOptions: SolanaRevertOptions;
   sender: string;
 }) => {
   console.log(`
 Network: ${options.api}
 Sender: ${options.sender}
-Recipient: ${options.recipient}
+receiver: ${options.receiver}
 Revert options: ${JSON.stringify(options.revertOptions)}${
     options.message ? `\nMessage: ${options.message}` : ""
   }${options.amount ? `\nAmount: ${options.amount}` : ""}${

@@ -14,6 +14,7 @@ import {
   getTonBalances,
   prepareMulticallContexts,
 } from "../../../utils/balances";
+import { getRpcUrl } from "../../../utils/chains";
 import { ZetaChainClient } from "./client";
 
 /**
@@ -79,7 +80,7 @@ export const getBalances = async function (
       );
       if (!chain) continue;
 
-      const rpc = this.getEndpoint("evm", chain.name);
+      const rpc = getRpcUrl(parseInt(chain.chain_id));
       let chainBalances: TokenBalance[];
 
       try {
