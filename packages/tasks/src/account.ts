@@ -1,6 +1,5 @@
 import { input } from "@inquirer/prompts";
 import { Keypair } from "@solana/web3.js";
-import { bech32 } from "bech32";
 import { validateMnemonic } from "bip39";
 import bs58 from "bs58";
 import * as envfile from "envfile";
@@ -12,16 +11,8 @@ import * as path from "path";
 
 import { numberArraySchema } from "../../../types/shared.schema";
 import { handleError, parseJson } from "../../../utils";
+import { hexToBech32 } from "../../../utils/address";
 import { generateBitcoinAddress } from "../../../utils/generateBitcoinAddress";
-
-export const hexToBech32Address = (
-  hexAddress: string,
-  prefix: string
-): string => {
-  const data = Buffer.from(hexAddress.substr(2), "hex");
-  const words = bech32.toWords(data);
-  return bech32.encode(prefix, words);
-};
 
 export const getWalletFromRecoveryInput = async (
   ethers: HardhatRuntimeEnvironment["ethers"]
@@ -153,7 +144,7 @@ export const main = async (
   console.log(`
   😃 EVM address: ${address}
     😃 Bitcoin address: ${generateBitcoinAddress(pk, "testnet")}
-    😃 Bech32 address: ${hexToBech32Address(address, "zeta")}`);
+    😃 Bech32 address: ${hexToBech32(address)}`);
 
   if (solanaWallet) {
     console.log(`

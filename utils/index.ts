@@ -1,4 +1,5 @@
 export * from "../src/chains/bitcoin/inscription/encode";
+export * from "./address";
 export * from "./api";
 export * from "./bitsize";
 export * from "./compareBigIntAndNumber";
