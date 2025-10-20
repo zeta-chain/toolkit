@@ -309,8 +309,11 @@ const main = async (options: CctxOptions) => {
 };
 
 export const cctxCommand = new Command("cctx")
-  .description("Query cross-chain transaction data in real-time")
-  .requiredOption("-h, --hash <hash>", "Inbound tx hash or CCTX hash")
+  .summary("Track the status of a cross-chain transaction.")
+  .description(
+    "Queries the real-time status of a cross-chain transaction by its inbound transaction hash. You can control polling frequency, timeout, and target RPC endpoint."
+  )
+  .requiredOption("--hash <hash>", "Inbound transaction hash")
   .option("-r, --rpc <rpc>", "RPC endpoint", DEFAULT_API_URL)
   .option(
     "-d, --delay <ms>",

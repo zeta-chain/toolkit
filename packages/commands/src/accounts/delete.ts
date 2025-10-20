@@ -53,8 +53,11 @@ const main = async (options: DeleteAccountOptions) => {
 
 export const deleteAccountsCommand = new Command("delete")
   .summary("Delete an existing account")
+  .description(
+    `Removes an account from the local key store. You must provide both the chain type and account name.`
+  )
   .addOption(
-    new Option("--type <type>", "Account type").choices(AvailableAccountTypes)
+    new Option("--type <type>", "Chain type").choices(AvailableAccountTypes)
   )
   .requiredOption("--name <name>", "Account name")
   .action(async (opts) => {
