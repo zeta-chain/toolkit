@@ -65,7 +65,7 @@ const main = async (options: ContractsShowOptions) => {
 
 export const showCommand = new Command("show")
   .alias("s")
-  .description("Show contract address for a specific chain and type")
+  .summary("Show a protocol contract address on a specific chain")
   .addOption(
     new Option("--rpc <url>", "Custom RPC URL").default(DEFAULT_EVM_RPC_URL)
   )
