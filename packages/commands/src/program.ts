@@ -8,6 +8,7 @@ import { evmCommand } from "./evm";
 import { faucetCommand } from "./faucet";
 import { queryCommand } from "./query";
 import { solanaCommand } from "./solana";
+import { stakingCommand } from "./staking";
 import { suiCommand } from "./sui";
 import { tonCommand } from "./ton";
 import { utilsCommand } from "./utils";
@@ -30,7 +31,7 @@ toolkitCommand.addCommand(suiCommand);
 toolkitCommand.addCommand(tonCommand);
 toolkitCommand.addCommand(utilsCommand);
 toolkitCommand.addCommand(zetachainCommand);
-
+toolkitCommand.addCommand(stakingCommand);
 showRequiredOptions(toolkitCommand);
 
 toolkitCommand.parse(process.argv);

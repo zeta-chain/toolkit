@@ -4,6 +4,7 @@ export * from "./evm";
 export * from "./faucet";
 export * from "./query";
 export * from "./solana";
+export * from "./staking";
 export * from "./sui";
 export * from "./ton";
 export * from "./utils";
