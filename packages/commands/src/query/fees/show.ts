@@ -17,7 +17,7 @@ import {
 } from "../../../../../types/contracts.types";
 import { showFeesDataSchema } from "../../../../../types/fees.types";
 import { evmAddressSchema } from "../../../../../types/shared.schema";
-import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
+import { handleError, validateAndParseSchema } from "../../../../../utils";
 import { fetchAllChainData } from "../chains/list";
 
 export type ShowFeesData = z.infer<typeof showFeesDataSchema>;
@@ -126,15 +126,45 @@ export const fetchShowFeesData = async (
     provider
   ) as UniswapV2Router02Contract;
 
-  const zetaTokenAddress = await router.WETH();
+  let zetaTokenAddress: string;
+  try {
+    zetaTokenAddress = await router.WETH();
+  } catch (error) {
+    handleError({
+      context: `Failed to get WETH address from router at ${routerAddress}`,
+      error,
+      shouldThrow: false,
+    });
+    throw error;
+  }
 
-  const path1 = [zetaTokenAddress, gasZRC20];
-  const amountsInForZeta = await router.getAmountsIn(gasFee, path1);
-  const zetaNeeded = amountsInForZeta[0];
+  let zetaNeeded: bigint;
+  try {
+    const path1 = [zetaTokenAddress, gasZRC20];
+    const amountsInForZeta = await router.getAmountsIn(gasFee, path1);
+    zetaNeeded = amountsInForZeta[0];
+  } catch (error) {
+    handleError({
+      context: `No liquidity pool found for ZETA → Gas Token conversion (path: [${zetaTokenAddress}, ${gasZRC20}], amount: ${gasFee})`,
+      error,
+      shouldThrow: false,
+    });
+    throw error;
+  }
 
-  const path2 = [source, zetaTokenAddress];
-  const amountsInForSource = await router.getAmountsIn(zetaNeeded, path2);
-  const sourceNeeded = amountsInForSource[0];
+  let sourceNeeded: bigint;
+  try {
+    const path2 = [source, zetaTokenAddress];
+    const amountsInForSource = await router.getAmountsIn(zetaNeeded, path2);
+    sourceNeeded = amountsInForSource[0];
+  } catch (error) {
+    handleError({
+      context: `No liquidity pool found for Source → ZETA conversion (path: [${source}, ${zetaTokenAddress}], amount: ${zetaNeeded})`,
+      error,
+      shouldThrow: false,
+    });
+    throw error;
+  }
 
   const sourceDecimals: number = Number(await sourceContract.decimals());
   const sourceSymbol: string = await sourceContract.symbol();
