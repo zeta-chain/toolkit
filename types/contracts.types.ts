@@ -1,3 +1,5 @@
+import type { IZRC20 } from "@zetachain/protocol-contracts/types/IZRC20.sol/IZRC20";
+import type { IZRC20Metadata as IZRC20MetadataType } from "@zetachain/protocol-contracts/types/IZRC20.sol/IZRC20Metadata";
 import type { UniswapV2Router02 } from "@zetachain/protocol-contracts/types/UniswapV2Router02";
 import { ContractTransactionResponse, ethers } from "ethers";
 
@@ -20,7 +22,9 @@ export type CallOptions = {
   isArbitraryCall: boolean;
 };
 
-export type UniswapV2Router02Contract = UniswapV2Router02;
+export type UniswapV2Router02Contract = ethers.Contract & UniswapV2Router02;
+export type IZRC20Contract = ethers.Contract & IZRC20;
+export type IZRC20Metadata = ethers.Contract & IZRC20MetadataType;
 
 export type ZRC20Contract = ethers.Contract & {
   COIN_TYPE: () => Promise<number>;

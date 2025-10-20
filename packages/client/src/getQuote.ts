@@ -36,7 +36,7 @@ const getAmounts = async (
     uniswapV2Router02,
     UniswapV2RouterABI.abi,
     provider
-  ) as unknown as UniswapV2Router02Contract;
+  ) as UniswapV2Router02Contract;
 
   const path = [tokenA, tokenB];
 

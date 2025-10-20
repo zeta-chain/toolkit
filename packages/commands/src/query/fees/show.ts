@@ -1,8 +1,5 @@
 import UniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
 import ZRC20ABI from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
-import type { IZRC20 } from "@zetachain/protocol-contracts/types/IZRC20.sol/IZRC20";
-import type { IZRC20Metadata } from "@zetachain/protocol-contracts/types/IZRC20.sol/IZRC20Metadata";
-import type { UniswapV2Router02 } from "@zetachain/protocol-contracts/types/UniswapV2Router02";
 import chalk from "chalk";
 import { Command, Option } from "commander";
 import { ethers } from "ethers";
@@ -13,12 +10,31 @@ import {
   DEFAULT_API_URL,
   DEFAULT_EVM_RPC_URL,
 } from "../../../../../src/constants/api";
+import {
+  IZRC20Contract,
+  IZRC20Metadata,
+  UniswapV2Router02Contract,
+} from "../../../../../types/contracts.types";
 import { showFeesDataSchema } from "../../../../../types/fees.types";
 import { evmAddressSchema } from "../../../../../types/shared.schema";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 import { fetchAllChainData } from "../chains/list";
 
 export type ShowFeesData = z.infer<typeof showFeesDataSchema>;
+
+const showFeesOptionsSchema = z.object({
+  api: z.string(),
+  gasLimit: z.union([z.string(), z.number()]).optional(),
+  json: z.boolean().optional(),
+  router: evmAddressSchema,
+  rpc: z.string(),
+  source: evmAddressSchema.optional(),
+  sourceChain: z.union([z.string(), z.number()]).optional(),
+  target: evmAddressSchema.optional(),
+  targetChain: z.union([z.string(), z.number()]).optional(),
+});
+
+export type ShowFeesOptions = z.infer<typeof showFeesOptionsSchema>;
 
 export const fetchShowFeesData = async (
   target: string,
@@ -34,7 +50,7 @@ export const fetchShowFeesData = async (
     target,
     ZRC20ABI.abi,
     provider
-  ) as unknown as IZRC20;
+  ) as IZRC20Contract;
 
   let gasZRC20: string;
   let gasFee: bigint;
@@ -49,7 +65,7 @@ export const fetchShowFeesData = async (
     gasZRC20,
     ZRC20ABI.abi,
     provider
-  ) as unknown as IZRC20Metadata;
+  ) as IZRC20Metadata;
   const gasSymbol = await gasTokenContract.symbol();
   const gasDecimals: number = Number(await gasTokenContract.decimals());
 
@@ -102,28 +118,22 @@ export const fetchShowFeesData = async (
     source,
     ZRC20ABI.abi,
     provider
-  ) as unknown as IZRC20Metadata;
+  ) as IZRC20Metadata;
 
   const router = new ethers.Contract(
     routerAddress,
     UniswapV2RouterABI.abi,
     provider
-  ) as unknown as UniswapV2Router02;
+  ) as UniswapV2Router02Contract;
 
   const zetaTokenAddress = await router.WETH();
 
   const path1 = [zetaTokenAddress, gasZRC20];
-  const amountsInForZeta = (await router.getAmountsIn(
-    gasFee,
-    path1
-  )) as unknown as [bigint, bigint];
+  const amountsInForZeta = await router.getAmountsIn(gasFee, path1);
   const zetaNeeded = amountsInForZeta[0];
 
   const path2 = [source, zetaTokenAddress];
-  const amountsInForSource = (await router.getAmountsIn(
-    zetaNeeded,
-    path2
-  )) as unknown as [bigint, bigint];
+  const amountsInForSource = await router.getAmountsIn(zetaNeeded, path2);
   const sourceNeeded = amountsInForSource[0];
 
   const sourceDecimals: number = Number(await sourceContract.decimals());
@@ -141,19 +151,7 @@ export const fetchShowFeesData = async (
   return result;
 };
 
-const main = async (options: unknown) => {
-  const showFeesOptionsSchema = z.object({
-    api: z.string(),
-    gasLimit: z.union([z.string(), z.number()]).optional(),
-    json: z.boolean().optional(),
-    router: evmAddressSchema,
-    rpc: z.string(),
-    source: evmAddressSchema.optional(),
-    sourceChain: z.union([z.string(), z.number()]).optional(),
-    target: evmAddressSchema.optional(),
-    targetChain: z.union([z.string(), z.number()]).optional(),
-  });
-
+const main = async (options: ShowFeesOptions) => {
   const {
     target,
     targetChain,
@@ -164,10 +162,7 @@ const main = async (options: unknown) => {
     json,
     api,
     gasLimit,
-  } = validateAndParseSchema(options, showFeesOptionsSchema, {
-    exitOnError: false,
-    shouldLogError: true,
-  });
+  } = options;
 
   let resolvedTarget = target;
   let resolvedSource = source;
@@ -376,4 +371,14 @@ export const showCommand = new Command("show")
     new Option("--api <url>", "API endpoint URL").default(DEFAULT_API_URL)
   )
   .addOption(new Option("--json", "Output results in JSON format"))
-  .action(main);
+  .action(async (options) => {
+    const validatedOptions = validateAndParseSchema(
+      options,
+      showFeesOptionsSchema,
+      {
+        exitOnError: false,
+        shouldLogError: true,
+      }
+    );
+    await main(validatedOptions);
+  });
