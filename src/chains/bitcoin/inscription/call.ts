@@ -176,7 +176,7 @@ export const buildBitcoinInscriptionCallCommitPsbt = async (
       bitcoinEncode(
         params.receiver,
         Buffer.from(trim0x(encodedMessage), "hex"),
-        revertAddress,
+        { revertAddress },
         OpCode.DepositAndCall,
         params.format || EncodingFormat.ABI
       ),
