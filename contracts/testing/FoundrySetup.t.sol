@@ -17,6 +17,7 @@ import {NodeLogicMock} from "./mockGateway/NodeLogicMock.sol";
 import {WrapGatewayZEVM} from "./mockGateway/WrapGatewayZEVM.sol";
 import {WrapGatewayEVM} from "./mockGateway/WrapGatewayEVM.sol";
 import {GatewayZEVM} from "@zetachain/protocol-contracts/contracts/zevm/GatewayZEVM.sol";
+import {CoreRegistry} from "@zetachain/protocol-contracts/contracts/zevm/CoreRegistry.sol";
 import {GatewayEVM} from "@zetachain/protocol-contracts/contracts/evm/GatewayEVM.sol";
 import {ZetaConnectorNonNative} from "@zetachain/protocol-contracts/contracts/evm/ZetaConnectorNonNative.sol";
 import {console} from "forge-std/console.sol";
@@ -33,6 +34,14 @@ contract FoundrySetup is Test {
     uint256 public chainIdZeta = 7000;
     uint256 public chainIdETH = 5;
     uint256 public chainIdBNB = 97;
+
+    // Fixed CoreRegistry proxy address requirement
+    address public constant CORE_REGISTRY_ADDRESS =
+        address(0x7CCE3Eb018bf23e1FE2a32692f2C77592D110394);
+    // EIP-1967 implementation slot: bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1)
+    bytes32 internal constant ERC1967_IMPLEMENTATION_SLOT =
+        bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1);
+    address public coreRegistry;
 
     ZetaSetup public zetaSetup;
     EVMSetup public evmSetup;
@@ -189,5 +198,38 @@ contract FoundrySetup is Test {
             zetaSetup.wzeta(),
             evmSetup.zetaToken(chainIdBNB)
         );
+
+        // Deploy CoreRegistry implementation
+        vm.startPrank(deployer);
+        CoreRegistry coreRegistryImpl = new CoreRegistry();
+        vm.stopPrank();
+
+        // Deploy a temporary proxy to obtain runtime bytecode
+        ERC1967Proxy tempProxy = new ERC1967Proxy(
+            address(coreRegistryImpl),
+            bytes("")
+        );
+        bytes memory proxyRuntime = address(tempProxy).code;
+
+        // Write proxy runtime code to the desired fixed address
+        vm.etch(CORE_REGISTRY_ADDRESS, proxyRuntime);
+
+        // Point proxy to implementation at the fixed address
+        vm.store(
+            CORE_REGISTRY_ADDRESS,
+            ERC1967_IMPLEMENTATION_SLOT,
+            bytes32(uint256(uint160(address(coreRegistryImpl))))
+        );
+
+        // Initialize CoreRegistry via proxy at the fixed address
+        vm.startPrank(deployer);
+        CoreRegistry(CORE_REGISTRY_ADDRESS).initialize(
+            deployer,
+            deployer,
+            address(zetaSetup.wrapGatewayZEVM())
+        );
+        vm.stopPrank();
+
+        coreRegistry = CORE_REGISTRY_ADDRESS;
     }
 }
