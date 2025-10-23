@@ -234,6 +234,22 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ZetaConnectorNonNative__factory>;
     getContractFactory(
+      name: "BaseRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.BaseRegistry__factory>;
+    getContractFactory(
+      name: "IBaseRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IBaseRegistry__factory>;
+    getContractFactory(
+      name: "IBaseRegistryErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IBaseRegistryErrors__factory>;
+    getContractFactory(
+      name: "IBaseRegistryEvents",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IBaseRegistryEvents__factory>;
+    getContractFactory(
       name: "Abortable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Abortable__factory>;
@@ -242,9 +258,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Revertable__factory>;
     getContractFactory(
+      name: "CoreRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoreRegistry__factory>;
+    getContractFactory(
       name: "GatewayZEVM",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.GatewayZEVM__factory>;
+    getContractFactory(
+      name: "ICoreRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ICoreRegistry__factory>;
     getContractFactory(
       name: "IGatewayZEVM",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -774,6 +798,26 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ZetaConnectorNonNative>;
     getContractAt(
+      name: "BaseRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.BaseRegistry>;
+    getContractAt(
+      name: "IBaseRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IBaseRegistry>;
+    getContractAt(
+      name: "IBaseRegistryErrors",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IBaseRegistryErrors>;
+    getContractAt(
+      name: "IBaseRegistryEvents",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IBaseRegistryEvents>;
+    getContractAt(
       name: "Abortable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -784,10 +828,20 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Revertable>;
     getContractAt(
+      name: "CoreRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoreRegistry>;
+    getContractAt(
       name: "GatewayZEVM",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.GatewayZEVM>;
+    getContractAt(
+      name: "ICoreRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ICoreRegistry>;
     getContractAt(
       name: "IGatewayZEVM",
       address: string | ethers.Addressable,
@@ -1325,6 +1379,22 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ZetaConnectorNonNative>;
     deployContract(
+      name: "BaseRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.BaseRegistry>;
+    deployContract(
+      name: "IBaseRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IBaseRegistry>;
+    deployContract(
+      name: "IBaseRegistryErrors",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IBaseRegistryErrors>;
+    deployContract(
+      name: "IBaseRegistryEvents",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IBaseRegistryEvents>;
+    deployContract(
       name: "Abortable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Abortable>;
@@ -1333,9 +1403,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Revertable>;
     deployContract(
+      name: "CoreRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CoreRegistry>;
+    deployContract(
       name: "GatewayZEVM",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GatewayZEVM>;
+    deployContract(
+      name: "ICoreRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ICoreRegistry>;
     deployContract(
       name: "IGatewayZEVM",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1865,6 +1943,26 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ZetaConnectorNonNative>;
     deployContract(
+      name: "BaseRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.BaseRegistry>;
+    deployContract(
+      name: "IBaseRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IBaseRegistry>;
+    deployContract(
+      name: "IBaseRegistryErrors",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IBaseRegistryErrors>;
+    deployContract(
+      name: "IBaseRegistryEvents",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IBaseRegistryEvents>;
+    deployContract(
       name: "Abortable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1875,10 +1973,20 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Revertable>;
     deployContract(
+      name: "CoreRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CoreRegistry>;
+    deployContract(
       name: "GatewayZEVM",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.GatewayZEVM>;
+    deployContract(
+      name: "ICoreRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ICoreRegistry>;
     deployContract(
       name: "IGatewayZEVM",
       args: any[],

@@ -95,7 +95,7 @@ contract FoundrySetup is Test {
                 deployer: deployer,
                 tss: tss
             }),
-            "USDC",
+            "USDC.ETH",
             false,
             chainIdETH,
             6
@@ -124,7 +124,7 @@ contract FoundrySetup is Test {
                 deployer: deployer,
                 tss: tss
             }),
-            "USDC",
+            "USDC.BNB",
             false,
             chainIdBNB,
             6
@@ -231,5 +231,49 @@ contract FoundrySetup is Test {
         vm.stopPrank();
 
         coreRegistry = CORE_REGISTRY_ADDRESS;
+
+        // Register created ZRC20 tokens in CoreRegistry
+        vm.startPrank(deployer);
+        // Register UniswapV2Router02 on ZetaChain (current chain)
+        CoreRegistry(coreRegistry).registerContract(
+            block.chainid,
+            "uniswapV2Router02",
+            abi.encodePacked(zetaSetup.uniswapV2Router())
+        );
+        // ETH chain tokens
+        CoreRegistry(coreRegistry).registerZRC20Token(
+            eth_eth.zrc20,
+            eth_eth.symbol,
+            eth_eth.chainId,
+            bytes(""), // native gas coin has no origin address
+            "Gas",
+            eth_eth.decimals
+        );
+        CoreRegistry(coreRegistry).registerZRC20Token(
+            usdc_eth.zrc20,
+            usdc_eth.symbol,
+            usdc_eth.chainId,
+            abi.encodePacked(usdc_eth.asset),
+            "ERC20",
+            usdc_eth.decimals
+        );
+        // BNB chain tokens
+        CoreRegistry(coreRegistry).registerZRC20Token(
+            bnb_bnb.zrc20,
+            bnb_bnb.symbol,
+            bnb_bnb.chainId,
+            bytes(""), // native gas coin has no origin address
+            "Gas",
+            bnb_bnb.decimals
+        );
+        CoreRegistry(coreRegistry).registerZRC20Token(
+            usdc_bnb.zrc20,
+            usdc_bnb.symbol,
+            usdc_bnb.chainId,
+            abi.encodePacked(usdc_bnb.asset),
+            "ERC20",
+            usdc_bnb.decimals
+        );
+        vm.stopPrank();
     }
 }

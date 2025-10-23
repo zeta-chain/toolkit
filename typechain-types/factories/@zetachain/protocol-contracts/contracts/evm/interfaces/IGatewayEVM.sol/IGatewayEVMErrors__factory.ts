@@ -10,18 +10,7 @@ import type {
 
 const _abi = [
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "spender",
-        type: "address",
-      },
-    ],
+    inputs: [],
     name: "ApprovalFailed",
     type: "error",
   },
@@ -66,29 +55,12 @@ const _abi = [
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-    ],
+    inputs: [],
     name: "NotWhitelistedInCustody",
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "provided",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "maximum",
-        type: "uint256",
-      },
-    ],
+    inputs: [],
     name: "PayloadSizeExceeded",
     type: "error",
   },

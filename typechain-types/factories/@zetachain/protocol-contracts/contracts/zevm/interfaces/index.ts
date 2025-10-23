@@ -5,4 +5,5 @@ export * as iGatewayZevmSol from "./IGatewayZEVM.sol";
 export * as iwzetaSol from "./IWZETA.sol";
 export * as izrc20Sol from "./IZRC20.sol";
 export * as universalContractSol from "./UniversalContract.sol";
+export { ICoreRegistry__factory } from "./ICoreRegistry__factory";
 export { ISystem__factory } from "./ISystem__factory";

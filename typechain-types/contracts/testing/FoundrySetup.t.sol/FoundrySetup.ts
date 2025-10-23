@@ -55,12 +55,14 @@ export declare namespace StdInvariant {
 export interface FoundrySetupInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "CORE_REGISTRY_ADDRESS"
       | "FUNGIBLE_MODULE_ADDRESS"
       | "IS_TEST"
       | "bnb_bnb"
       | "chainIdBNB"
       | "chainIdETH"
       | "chainIdZeta"
+      | "coreRegistry"
       | "deployer"
       | "eth_eth"
       | "evmSetup"
@@ -111,6 +113,10 @@ export interface FoundrySetupInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(
+    functionFragment: "CORE_REGISTRY_ADDRESS",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "FUNGIBLE_MODULE_ADDRESS",
     values?: undefined
   ): string;
@@ -126,6 +132,10 @@ export interface FoundrySetupInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "chainIdZeta",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "coreRegistry",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "deployer", values?: undefined): string;
@@ -187,6 +197,10 @@ export interface FoundrySetupInterface extends Interface {
   encodeFunctionData(functionFragment: "zetaSetup", values?: undefined): string;
 
   decodeFunctionResult(
+    functionFragment: "CORE_REGISTRY_ADDRESS",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "FUNGIBLE_MODULE_ADDRESS",
     data: BytesLike
   ): Result;
@@ -196,6 +210,10 @@ export interface FoundrySetupInterface extends Interface {
   decodeFunctionResult(functionFragment: "chainIdETH", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "chainIdZeta",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "coreRegistry",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "deployer", data: BytesLike): Result;
@@ -582,6 +600,8 @@ export interface FoundrySetup extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  CORE_REGISTRY_ADDRESS: TypedContractMethod<[], [string], "view">;
+
   FUNGIBLE_MODULE_ADDRESS: TypedContractMethod<[], [string], "view">;
 
   IS_TEST: TypedContractMethod<[], [boolean], "view">;
@@ -607,6 +627,8 @@ export interface FoundrySetup extends BaseContract {
   chainIdETH: TypedContractMethod<[], [bigint], "view">;
 
   chainIdZeta: TypedContractMethod<[], [bigint], "view">;
+
+  coreRegistry: TypedContractMethod<[], [string], "view">;
 
   deployer: TypedContractMethod<[], [string], "view">;
 
@@ -713,6 +735,9 @@ export interface FoundrySetup extends BaseContract {
   ): T;
 
   getFunction(
+    nameOrSignature: "CORE_REGISTRY_ADDRESS"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "FUNGIBLE_MODULE_ADDRESS"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -744,6 +769,9 @@ export interface FoundrySetup extends BaseContract {
   getFunction(
     nameOrSignature: "chainIdZeta"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "coreRegistry"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "deployer"
   ): TypedContractMethod<[], [string], "view">;
