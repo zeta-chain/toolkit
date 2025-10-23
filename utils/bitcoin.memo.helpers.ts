@@ -38,10 +38,14 @@ export const getDepositFee = async (api: string) => {
   }
 };
 
-export const bitcoinMakeTransactionWithMemo = async (
+export const bitcoinBuildUnsignedPsbtWithMemo = async (
   params: BitcoinTxParams
 ) => {
-  const TESTNET = bitcoin.networks.testnet;
+  const NETWORK =
+    params.network === "mainnet"
+      ? bitcoin.networks.bitcoin
+      : bitcoin.networks.testnet;
+
   const memo = Buffer.from(params.memo || "", "hex");
 
   if (memo.length < EVM_ADDRESS_LENGTH) throw new Error(errorNoReceiver);
@@ -66,7 +70,7 @@ export const bitcoinMakeTransactionWithMemo = async (
     )
   );
 
-  const psbt = new bitcoin.Psbt({ network: TESTNET });
+  const psbt = new bitcoin.Psbt({ network: NETWORK });
 
   psbt.addOutput({
     address: params.gateway,
@@ -92,8 +96,63 @@ export const bitcoinMakeTransactionWithMemo = async (
     });
   });
 
-  picked.forEach((_, i) => psbt.signInput(i, params.key));
+  return {
+    pickedUtxos: picked,
+    psbt,
+  };
+};
+
+export const bitcoinSignAndFinalizeTransactionWithMemo = ({
+  psbt,
+  key,
+  pickedUtxos,
+}: {
+  key: bitcoin.Signer;
+  pickedUtxos: BtcUtxo[];
+  psbt: bitcoin.Psbt;
+}) => {
+  pickedUtxos.forEach((_, i) => psbt.signInput(i, key));
   psbt.finalizeAllInputs();
 
   return psbt.extractTransaction().toHex();
+};
+
+/**
+ * Constructs and validates a memo string from receiver address and data
+ * @param receiver - The receiver address (hex string, with or without 0x prefix)
+ * @param data - The data to include in the memo (hex string, with or without 0x prefix)
+ * @returns The constructed memo string
+ * @throws Error if the combined length exceeds 80 bytes
+ */
+export const constructMemo = (receiver: string, data?: string): string => {
+  const strip0x = (s: string) => (s?.startsWith("0x") ? s.slice(2) : s || "");
+  const isEvenHex = (s: string) =>
+    s.length % 2 === 0 && /^[0-9a-fA-F]*$/.test(s);
+
+  const cleanReceiver = strip0x(receiver);
+  const cleanData = strip0x(data ?? "");
+
+  if (
+    cleanReceiver.length !== EVM_ADDRESS_LENGTH * 2 ||
+    !isEvenHex(cleanReceiver)
+  ) {
+    throw new Error(
+      "Invalid receiver: must be a 20-byte (40-hex) EVM address."
+    );
+  }
+  if (cleanData && !isEvenHex(cleanData)) {
+    throw new Error("Invalid data: must be an even-length hex string.");
+  }
+
+  const receiverLength = cleanReceiver.length / 2;
+  const dataLength = cleanData.length / 2;
+  const totalLength = receiverLength + dataLength;
+
+  if (totalLength > MAX_MEMO_LENGTH) {
+    throw new Error(
+      `Memo too long: ${totalLength} bytes. Maximum allowed is ${MAX_MEMO_LENGTH} bytes (receiver + data).`
+    );
+  }
+
+  return cleanReceiver + cleanData;
 };
