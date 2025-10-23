@@ -77,19 +77,21 @@ export const getGatewayFunctionSignatureByName = (
     // call(address,bytes,(...))
     call: callFunctions.find((f) => f.inputs.length === 3),
 
-    // depositAndCall(address,bytes,(...)) - native
-    depositAndCallNative: depositAndCallFunctions.find(
-      (f) => f.inputs.length === 3
-    ),
     // depositAndCall(address,uint256,address,bytes,(...)) - erc20
     depositAndCallErc20: depositAndCallFunctions.find(
       (f) => f.inputs.length === 5
     ),
 
-    // deposit(address,(...)) - native
-    depositNative: depositFunctions.find((f) => f.inputs.length === 2),
+    // depositAndCall(address,bytes,(...)) - native
+    depositAndCallNative: depositAndCallFunctions.find(
+      (f) => f.inputs.length === 3
+    ),
+
     // deposit(address,uint256,address,(...)) - erc20
     depositErc20: depositFunctions.find((f) => f.inputs.length === 4),
+
+    // deposit(address,(...)) - native
+    depositNative: depositFunctions.find((f) => f.inputs.length === 2),
   };
 
   return signatures[methodName];
