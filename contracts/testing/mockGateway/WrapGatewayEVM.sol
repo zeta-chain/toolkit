@@ -40,6 +40,8 @@ contract WrapGatewayEVM {
             )
         );
 
+    receive() external payable {}
+
     constructor(address _gateway, address _nodeLogic, uint256 _chainId) {
         GATEWAY_IMPL = _gateway;
         NODE_LOGIC = _nodeLogic;

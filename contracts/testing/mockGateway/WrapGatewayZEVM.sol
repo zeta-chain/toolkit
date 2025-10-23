@@ -35,6 +35,8 @@ contract WrapGatewayZEVM {
         NODE_LOGIC = _nodeLogic;
     }
 
+    receive() external payable {}
+
     fallback() external payable {
         // First delegate call to implementation for all functions
         (bool success, bytes memory result) = GATEWAY_ZEVM_IMPL.delegatecall(

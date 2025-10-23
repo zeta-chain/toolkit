@@ -11,6 +11,11 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "AdditionalActionDisabled",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "ApprovalFailed",
     type: "error",
   },
@@ -30,8 +35,45 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "required",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "provided",
+        type: "uint256",
+      },
+    ],
+    name: "ExcessETHProvided",
+    type: "error",
+  },
+  {
     inputs: [],
     name: "ExecutionFailed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "FeeTransferFailed",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "expected",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "provided",
+        type: "uint256",
+      },
+    ],
+    name: "IncorrectValueProvided",
     type: "error",
   },
   {
@@ -42,6 +84,22 @@ const _abi = [
   {
     inputs: [],
     name: "InsufficientETHAmount",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "required",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "provided",
+        type: "uint256",
+      },
+    ],
+    name: "InsufficientFee",
     type: "error",
   },
   {
@@ -387,6 +445,25 @@ const _abi = [
     inputs: [
       {
         indexed: false,
+        internalType: "uint256",
+        name: "oldFeeWei",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newFeeWei",
+        type: "uint256",
+      },
+    ],
+    name: "UpdatedAdditionalActionFee",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
         internalType: "address",
         name: "oldTSSAddress",
         type: "address",
@@ -448,7 +525,7 @@ const _abi = [
     ],
     name: "call",
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
     type: "function",
   },
   {
@@ -503,7 +580,57 @@ const _abi = [
     ],
     name: "deposit",
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "revertAddress",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "callOnRevert",
+            type: "bool",
+          },
+          {
+            internalType: "address",
+            name: "abortAddress",
+            type: "address",
+          },
+          {
+            internalType: "bytes",
+            name: "revertMessage",
+            type: "bytes",
+          },
+          {
+            internalType: "uint256",
+            name: "onRevertGasLimit",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct RevertOptions",
+        name: "revertOptions",
+        type: "tuple",
+      },
+    ],
+    name: "deposit",
+    outputs: [],
+    stateMutability: "payable",
     type: "function",
   },
   {
@@ -547,6 +674,61 @@ const _abi = [
       },
     ],
     name: "deposit",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "payload",
+        type: "bytes",
+      },
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "revertAddress",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "callOnRevert",
+            type: "bool",
+          },
+          {
+            internalType: "address",
+            name: "abortAddress",
+            type: "address",
+          },
+          {
+            internalType: "bytes",
+            name: "revertMessage",
+            type: "bytes",
+          },
+          {
+            internalType: "uint256",
+            name: "onRevertGasLimit",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct RevertOptions",
+        name: "revertOptions",
+        type: "tuple",
+      },
+    ],
+    name: "depositAndCall",
     outputs: [],
     stateMutability: "payable",
     type: "function",
@@ -658,7 +840,7 @@ const _abi = [
     ],
     name: "depositAndCall",
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
     type: "function",
   },
   {

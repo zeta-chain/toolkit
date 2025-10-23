@@ -11,6 +11,11 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "AdditionalActionDisabled",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "ApprovalFailed",
     type: "error",
   },
@@ -30,8 +35,45 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "required",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "provided",
+        type: "uint256",
+      },
+    ],
+    name: "ExcessETHProvided",
+    type: "error",
+  },
+  {
     inputs: [],
     name: "ExecutionFailed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "FeeTransferFailed",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "expected",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "provided",
+        type: "uint256",
+      },
+    ],
+    name: "IncorrectValueProvided",
     type: "error",
   },
   {
@@ -42,6 +84,22 @@ const _abi = [
   {
     inputs: [],
     name: "InsufficientETHAmount",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "required",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "provided",
+        type: "uint256",
+      },
+    ],
+    name: "InsufficientFee",
     type: "error",
   },
   {
