@@ -76,7 +76,7 @@ const main = async (params: FeesParams, options: FeesCLIOptions) => {
   }
 };
 
-export const listCommand = new Command("fees")
+export const listCommand = new Command("list")
   .summary("List withdraw gas fees")
   .description("List withdraw gas fees for all ZRC-20 tokens")
   .addOption(
