@@ -1379,14 +1379,7 @@
   dependencies:
     "@noble/hashes" "1.8.0"
 
-"@noble/curves@^1.4.2", "@noble/curves@^1.6.0", "@noble/curves@^1.8.0", "@noble/curves@^1.9.4", "@noble/curves@~1.9.0":
-  version "1.9.7"
-  resolved "https://registry.npmjs.org/@noble/curves/-/curves-1.9.7.tgz#79d04b4758a43e4bca2cbdc62e7771352fa6b951"
-  integrity sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==
-  dependencies:
-    "@noble/hashes" "1.8.0"
-
-"@noble/curves@^1.7.0":
+"@noble/curves@^1.4.2", "@noble/curves@^1.6.0", "@noble/curves@^1.7.0", "@noble/curves@^1.8.0", "@noble/curves@^1.9.4", "@noble/curves@~1.9.0":
   version "1.9.7"
   resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.9.7.tgz#79d04b4758a43e4bca2cbdc62e7771352fa6b951"
   integrity sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==
@@ -3031,10 +3024,10 @@
   dependencies:
     ethers "^6.13.2"
 
-"@zetachain/protocol-contracts@^14.0.0":
-  version "14.0.0"
-  resolved "https://registry.npmjs.org/@zetachain/protocol-contracts/-/protocol-contracts-14.0.0.tgz#3a8c74f339b261432e54b70afe79a299422d619e"
-  integrity sha512-0cZ/K6I8hsi3BDV88pVwN0ffyKS2axDYOnP/n90Zxchz2hXuJt9i3vTb3qHdmyi036dlbIG1MdXu2hctTqTHEQ==
+"@zetachain/protocol-contracts@14.1.0":
+  version "14.1.0"
+  resolved "https://registry.npmjs.org/@zetachain/protocol-contracts/-/protocol-contracts-14.1.0.tgz#989e64d335ae00268788a097e20dc9a50510b48a"
+  integrity sha512-jW9Agw3OemzenC8sesrMOQo47p0GDnzh6q6zp9n4XSVDheuNMf0rLzQdZkJO31Y0NN2tZxne14sPGYxlGheaOQ==
   dependencies:
     "@openzeppelin/contracts" "^5.0.2"
     "@openzeppelin/contracts-upgradeable" "^5.0.2"

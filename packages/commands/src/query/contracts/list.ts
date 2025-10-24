@@ -19,6 +19,29 @@ interface ContractData {
   contractType: string;
 }
 
+/**
+ * For Sui chains (chain IDs 103 and 105), contract addresses are 64 bytes (128 hex chars)
+ * representing two concatenated 32-byte values. Split them and display as comma-separated.
+ */
+const splitSuiCombinedAddress = (bytesHex: string): string => {
+  const hex = bytesHex.startsWith("0x") ? bytesHex.slice(2) : bytesHex;
+  if (hex.length !== 128) return formatAddress(bytesHex);
+  const partA = hex.slice(0, 64);
+  const partB = hex.slice(64, 128);
+  return `0x${partA}\n0x${partB}`;
+};
+
+const formatAddressForChain = (
+  bytesHex: string,
+  chainId: ethers.BigNumberish
+): string => {
+  const id = chainId.toString();
+  if (id === "103" || id === "105") {
+    return splitSuiCombinedAddress(bytesHex);
+  }
+  return formatAddress(bytesHex);
+};
+
 export const fetchContracts = async (
   rpcUrl: string
 ): Promise<ContractData[]> => {
@@ -48,7 +71,9 @@ const formatContractsTable = (
 
     if (columns.includes("type")) baseRow.push(contract.contractType);
     if (columns.includes("address"))
-      baseRow.push(formatAddress(contract.addressBytes));
+      baseRow.push(
+        formatAddressForChain(contract.addressBytes, contract.chainId)
+      );
 
     return baseRow;
   });
@@ -73,7 +98,7 @@ const main = async (options: ContractsListOptions) => {
 
     if (options.json) {
       const jsonOutput = sortedContracts.map((c: ContractData) => ({
-        address: formatAddress(c.addressBytes),
+        address: formatAddressForChain(c.addressBytes, c.chainId),
         chainId: c.chainId.toString(),
         type: c.contractType,
       }));

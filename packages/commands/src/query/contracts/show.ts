@@ -16,6 +16,29 @@ interface ContractData {
   contractType: string;
 }
 
+/**
+ * For Sui chains (chain IDs 103 and 105), contract addresses are 64 bytes (128 hex chars)
+ * representing two concatenated 32-byte values. Split them and display newline-separated.
+ */
+const splitSuiCombinedAddress = (bytesHex: string): string => {
+  const hex = bytesHex.startsWith("0x") ? bytesHex.slice(2) : bytesHex;
+  if (hex.length !== 128) return formatAddress(bytesHex);
+  const partA = hex.slice(0, 64);
+  const partB = hex.slice(64, 128);
+  return `0x${partA}\n0x${partB}`;
+};
+
+const formatAddressForChain = (
+  bytesHex: string,
+  chainId: ethers.BigNumberish
+): string => {
+  const id = chainId.toString();
+  if (id === "103" || id === "105") {
+    return splitSuiCombinedAddress(bytesHex);
+  }
+  return formatAddress(bytesHex);
+};
+
 const findContractByChainId = (
   contracts: ContractData[],
   chainId: string,
@@ -56,7 +79,10 @@ const main = async (options: ContractsShowOptions) => {
       process.exit(1);
     }
 
-    const address = formatAddress(contract.addressBytes);
+    const address = formatAddressForChain(
+      contract.addressBytes,
+      contract.chainId
+    );
     console.log(address);
   } catch (error) {
     console.error(chalk.red("Error details:"), error);
