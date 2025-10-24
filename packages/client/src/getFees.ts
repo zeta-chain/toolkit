@@ -3,7 +3,7 @@ import ZRC20 from "@zetachain/protocol-contracts/abi/ZRC20.sol/ZRC20.json";
 import axios from "axios";
 import { BigNumberish, ethers } from "ethers";
 
-import { ZRC20Contract } from "../../../types/contracts.types";
+import { IZRC20Contract } from "../../../types/contracts.types";
 import { ForeignCoin } from "../../../types/foreignCoins.types";
 import {
   ConvertGasToZetaResponse,
@@ -22,7 +22,7 @@ const fetchZEVMFees = async (
     zrc20.address,
     ZRC20.abi,
     provider
-  ) as ZRC20Contract;
+  ) as IZRC20Contract;
   let withdrawGasFee: BigNumberish;
   try {
     [, withdrawGasFee] = await contract.withdrawGasFee();
