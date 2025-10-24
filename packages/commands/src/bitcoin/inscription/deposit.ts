@@ -25,7 +25,7 @@ import {
   calculateRevealFee,
   prepareUtxos,
   safeParseBitcoinAmount,
-} from "../../../../../utils/bitcoin.helpers";
+} from "../../../../../utils/bitcoin.inscription.helpers";
 import { validateAndParseSchema } from "../../../../../utils/validateAndParseSchema";
 
 type DepositOptions = z.infer<typeof inscriptionDepositOptionsSchema>;
