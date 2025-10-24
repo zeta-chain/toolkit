@@ -91,7 +91,7 @@ export const makeCommitTransaction = async (
   feeSat = BITCOIN_FEES.DEFAULT_COMMIT_FEE_SAT
 ) => {
   const scriptItems = [
-    key.publicKey.slice(1, 33),
+    Buffer.from(key.publicKey.slice(1, 33)),
     bitcoin.opcodes.OP_CHECKSIG,
     bitcoin.opcodes.OP_FALSE,
     bitcoin.opcodes.OP_IF,
@@ -101,7 +101,7 @@ export const makeCommitTransaction = async (
   if (inscriptionData.length > MAX_SCRIPT_ELEMENT_SIZE) {
     for (let i = 0; i < inscriptionData.length; i += MAX_SCRIPT_ELEMENT_SIZE) {
       const end = Math.min(i + MAX_SCRIPT_ELEMENT_SIZE, inscriptionData.length);
-      scriptItems.push(inscriptionData.slice(i, end));
+      scriptItems.push(Buffer.from(inscriptionData.slice(i, end)));
     }
   } else {
     scriptItems.push(inscriptionData as number | Buffer<ArrayBuffer>);
@@ -111,8 +111,9 @@ export const makeCommitTransaction = async (
 
   const leafScript = bitcoin.script.compile(scriptItems);
   /* p2tr */
+  const internalKey = Buffer.from(key.publicKey.slice(1, 33));
   const { output: commitScript, witness } = bitcoin.payments.p2tr({
-    internalPubkey: key.publicKey.slice(1, 33),
+    internalPubkey: internalKey,
     network,
     redeem: { output: leafScript, redeemVersion: LEAF_VERSION_TAPSCRIPT },
     scriptTree: { output: leafScript },
@@ -122,7 +123,7 @@ export const makeCommitTransaction = async (
   const { revealFee, vsize } = calculateRevealFee(
     {
       controlBlock: witness[witness.length - 1],
-      internalKey: key.publicKey.slice(1, 33),
+      internalKey,
       leafScript,
     },
     BITCOIN_FEES.DEFAULT_REVEAL_FEE_RATE
@@ -167,7 +168,7 @@ export const makeCommitTransaction = async (
 
   return {
     controlBlock: witness[witness.length - 1],
-    internalKey: key.publicKey.slice(1, 33),
+    internalKey,
     leafScript,
     txHex: psbt.extractTransaction().toHex(),
   };

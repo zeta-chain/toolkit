@@ -120,7 +120,7 @@ Configuration options including signer and optional gateway address
 
 ###### signer
 
-`AbstractSigner`\<`null` \| `Provider`\> = `...`
+`AbstractSigner`\<`Provider` \| `null`\> = `...`
 
 ###### txOptions?
 
@@ -208,7 +208,7 @@ Configuration options including signer and optional gateway address
 
 ###### signer
 
-`AbstractSigner`\<`null` \| `Provider`\> = `...`
+`AbstractSigner`\<`Provider` \| `null`\> = `...`
 
 ###### txOptions?
 
@@ -305,7 +305,7 @@ Configuration options including signer and optional gateway address
 
 ###### signer
 
-`AbstractSigner`\<`null` \| `Provider`\> = `...`
+`AbstractSigner`\<`Provider` \| `null`\> = `...`
 
 ###### txOptions?
 
