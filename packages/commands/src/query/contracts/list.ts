@@ -19,6 +19,25 @@ interface ContractData {
   contractType: string;
 }
 
+const normalizeHex = (hex: string): string =>
+  (hex || "").toLowerCase().startsWith("0x")
+    ? (hex || "").toLowerCase()
+    : `0x${(hex || "").toLowerCase()}`;
+
+const deduplicateContracts = (contracts: ContractData[]): ContractData[] => {
+  const seen = new Set<string>();
+  const unique: ContractData[] = [];
+  for (const c of contracts) {
+    const key = `${c.chainId.toString()}::${c.contractType}::${normalizeHex(
+      c.addressBytes
+    )}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(c);
+  }
+  return unique;
+};
+
 /**
  * For Sui chains (chain IDs 103 and 105), contract addresses are 64 bytes (128 hex chars)
  * representing two concatenated 32-byte values. Split them and display as comma-separated.
@@ -88,11 +107,14 @@ const main = async (options: ContractsListOptions) => {
 
   try {
     const contracts = await fetchContracts(options.rpc);
+    const uniqueContracts = deduplicateContracts(contracts);
     if (!options.json) {
-      spinner?.succeed(`Successfully fetched ${contracts.length} contracts`);
+      spinner?.succeed(
+        `Successfully fetched ${uniqueContracts.length} contracts`
+      );
     }
 
-    const sortedContracts = [...contracts].sort(
+    const sortedContracts = [...uniqueContracts].sort(
       (a, b) => parseInt(a.chainId.toString()) - parseInt(b.chainId.toString())
     );
 
@@ -106,7 +128,7 @@ const main = async (options: ContractsListOptions) => {
       return;
     }
 
-    if (contracts.length === 0) {
+    if (uniqueContracts.length === 0) {
       console.log(chalk.yellow("No contracts found in the registry"));
       return;
     }
