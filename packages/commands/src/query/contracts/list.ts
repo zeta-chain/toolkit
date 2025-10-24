@@ -150,7 +150,7 @@ const main = async (options: ContractsListOptions) => {
 
 export const listCommand = new Command("list")
   .alias("l")
-  .summary("List protocol contracts contracts on all connected chains")
+  .summary("List protocol contracts on all connected chains")
   .addOption(
     new Option("--rpc <url>", "Custom RPC URL").default(DEFAULT_EVM_RPC_URL)
   )
