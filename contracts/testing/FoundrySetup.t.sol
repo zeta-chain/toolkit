@@ -240,6 +240,12 @@ contract FoundrySetup is Test {
             "uniswapV2Router02",
             abi.encodePacked(zetaSetup.uniswapV2Router())
         );
+        // Register ZETA token on current chain
+        CoreRegistry(coreRegistry).registerContract(
+            block.chainid,
+            "zetaToken",
+            abi.encodePacked(zetaSetup.wzeta())
+        );
         // ETH chain tokens
         CoreRegistry(coreRegistry).registerZRC20Token(
             eth_eth.zrc20,
