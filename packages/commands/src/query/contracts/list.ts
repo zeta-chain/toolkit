@@ -144,6 +144,7 @@ const main = async (options: ContractsListOptions) => {
       spinner?.fail("Failed to fetch contracts");
     }
     console.error(chalk.red("Error details:"), error);
+    process.exit(1);
   }
 };
 

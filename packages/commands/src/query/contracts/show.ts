@@ -86,6 +86,7 @@ const main = async (options: ContractsShowOptions) => {
     console.log(address);
   } catch (error) {
     console.error(chalk.red("Error details:"), error);
+    process.exit(1);
   }
 };
 
