@@ -18,7 +18,7 @@ interface ContractData {
 
 /**
  * For Sui chains (chain IDs 103 and 105), contract addresses are 64 bytes (128 hex chars)
- * representing two concatenated 32-byte values. Split them and display newline-separated.
+ * representing two concatenated 32-byte values. Split them and display on separate lines.
  */
 const splitSuiCombinedAddress = (bytesHex: string): string => {
   const hex = bytesHex.startsWith("0x") ? bytesHex.slice(2) : bytesHex;
