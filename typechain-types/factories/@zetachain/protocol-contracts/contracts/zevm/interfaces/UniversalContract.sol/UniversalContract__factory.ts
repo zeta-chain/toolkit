@@ -73,41 +73,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        components: [
-          {
-            internalType: "bytes",
-            name: "sender",
-            type: "bytes",
-          },
-          {
-            internalType: "address",
-            name: "senderEVM",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "chainID",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct MessageContext",
-        name: "context",
-        type: "tuple",
-      },
-      {
-        internalType: "bytes",
-        name: "message",
-        type: "bytes",
-      },
-    ],
-    name: "onCall",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "registry",
     outputs: [

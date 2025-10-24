@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as interfaces from "./interfaces";
+export { BaseRegistry__factory } from "./BaseRegistry__factory";

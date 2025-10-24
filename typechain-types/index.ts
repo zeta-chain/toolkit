@@ -118,6 +118,8 @@ export type { ZetaConnectorNative } from "./@zetachain/protocol-contracts/contra
 export { ZetaConnectorNative__factory } from "./factories/@zetachain/protocol-contracts/contracts/evm/ZetaConnectorNative__factory";
 export type { ZetaConnectorNonNative } from "./@zetachain/protocol-contracts/contracts/evm/ZetaConnectorNonNative";
 export { ZetaConnectorNonNative__factory } from "./factories/@zetachain/protocol-contracts/contracts/evm/ZetaConnectorNonNative__factory";
+export type { BaseRegistry } from "./@zetachain/protocol-contracts/contracts/helpers/BaseRegistry";
+export { BaseRegistry__factory } from "./factories/@zetachain/protocol-contracts/contracts/helpers/BaseRegistry__factory";
 export type { IBaseRegistry } from "./@zetachain/protocol-contracts/contracts/helpers/interfaces/IBaseRegistry.sol/IBaseRegistry";
 export { IBaseRegistry__factory } from "./factories/@zetachain/protocol-contracts/contracts/helpers/interfaces/IBaseRegistry.sol/IBaseRegistry__factory";
 export type { IBaseRegistryErrors } from "./@zetachain/protocol-contracts/contracts/helpers/interfaces/IBaseRegistry.sol/IBaseRegistryErrors";
@@ -128,6 +130,8 @@ export type { Abortable } from "./@zetachain/protocol-contracts/contracts/Revert
 export { Abortable__factory } from "./factories/@zetachain/protocol-contracts/contracts/Revert.sol/Abortable__factory";
 export type { Revertable } from "./@zetachain/protocol-contracts/contracts/Revert.sol/Revertable";
 export { Revertable__factory } from "./factories/@zetachain/protocol-contracts/contracts/Revert.sol/Revertable__factory";
+export type { CoreRegistry } from "./@zetachain/protocol-contracts/contracts/zevm/CoreRegistry";
+export { CoreRegistry__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/CoreRegistry__factory";
 export type { GatewayZEVM } from "./@zetachain/protocol-contracts/contracts/zevm/GatewayZEVM";
 export { GatewayZEVM__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/GatewayZEVM__factory";
 export type { ICoreRegistry } from "./@zetachain/protocol-contracts/contracts/zevm/interfaces/ICoreRegistry";
@@ -152,8 +156,6 @@ export type { UniversalContract } from "./@zetachain/protocol-contracts/contract
 export { UniversalContract__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/interfaces/UniversalContract.sol/UniversalContract__factory";
 export type { ZContract } from "./@zetachain/protocol-contracts/contracts/zevm/interfaces/UniversalContract.sol/ZContract";
 export { ZContract__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/interfaces/UniversalContract.sol/ZContract__factory";
-export type { GatewayZEVMValidations } from "./@zetachain/protocol-contracts/contracts/zevm/libraries/GatewayZEVMValidations";
-export { GatewayZEVMValidations__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/libraries/GatewayZEVMValidations__factory";
 export type { SystemContract } from "./@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContract";
 export { SystemContract__factory } from "./factories/@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContract__factory";
 export type { SystemContractErrors } from "./@zetachain/protocol-contracts/contracts/zevm/SystemContract.sol/SystemContractErrors";

@@ -327,6 +327,25 @@ const _abi = [
     inputs: [
       {
         indexed: false,
+        internalType: "uint256",
+        name: "oldFeeWei",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newFeeWei",
+        type: "uint256",
+      },
+    ],
+    name: "UpdatedAdditionalActionFee",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
         internalType: "address",
         name: "oldTSSAddress",
         type: "address",

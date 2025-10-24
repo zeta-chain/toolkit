@@ -15,45 +15,13 @@ const _abi = [
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "recipient",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
+    inputs: [],
     name: "FailedZetaSent",
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "GasFeeTransferFailed",
-    type: "error",
-  },
-  {
     inputs: [],
-    name: "InsufficientAmount",
+    name: "GasFeeTransferFailed",
     type: "error",
   },
   {
@@ -63,22 +31,21 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InsufficientZRC20Amount",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InsufficientZetaAmount",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidTarget",
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "provided",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "maximum",
-        type: "uint256",
-      },
-    ],
+    inputs: [],
     name: "MessageSizeExceeded",
     type: "error",
   },
@@ -88,92 +55,23 @@ const _abi = [
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "recipient",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
+    inputs: [],
     name: "WithdrawalFailed",
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "zrc20",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
+    inputs: [],
     name: "ZRC20BurnFailed",
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "zrc20",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
+    inputs: [],
     name: "ZRC20DepositFailed",
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "zrc20",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "from",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "ZRC20TransferFailed",
-    type: "error",
-  },
-  {
     inputs: [],
-    name: "ZeroGasPrice",
+    name: "ZRC20TransferFailed",
     type: "error",
   },
   {
@@ -546,19 +444,6 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "target",
-        type: "address",
-      },
-    ],
-    name: "deposit",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
         name: "zrc20",
         type: "address",
       },
@@ -603,6 +488,11 @@ const _abi = [
         type: "tuple",
       },
       {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
         internalType: "address",
         name: "target",
         type: "address",
@@ -615,7 +505,7 @@ const _abi = [
     ],
     name: "depositAndCall",
     outputs: [],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
     type: "function",
   },
   {

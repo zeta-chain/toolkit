@@ -5,5 +5,5 @@ export * as systemContractSol from "./SystemContract.sol";
 export * as wzetaSol from "./WZETA.sol";
 export * as zrc20Sol from "./ZRC20.sol";
 export * as interfaces from "./interfaces";
-export * as libraries from "./libraries";
+export { CoreRegistry__factory } from "./CoreRegistry__factory";
 export { GatewayZEVM__factory } from "./GatewayZEVM__factory";
