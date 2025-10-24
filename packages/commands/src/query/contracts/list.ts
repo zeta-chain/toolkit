@@ -9,7 +9,7 @@ import { z } from "zod";
 import { CONTRACT_REGISTRY_ADDRESS } from "../../../../../src/constants/addresses";
 import { DEFAULT_EVM_RPC_URL } from "../../../../../src/constants/api";
 import { contractsListOptionsSchema } from "../../../../../src/schemas/commands/contracts";
-import { formatAddress } from "../../../../../utils/addressResolver";
+import { formatAddressForChain } from "../../../../../utils/addressResolver";
 
 type ContractsListOptions = z.infer<typeof contractsListOptionsSchema>;
 
@@ -36,29 +36,6 @@ const deduplicateContracts = (contracts: ContractData[]): ContractData[] => {
     unique.push(c);
   }
   return unique;
-};
-
-/**
- * For Sui chains (chain IDs 103 and 105), contract addresses are 64 bytes (128 hex chars)
- * representing two concatenated 32-byte values. Split them and display newline-separated.
- */
-const splitSuiCombinedAddress = (bytesHex: string): string => {
-  const hex = bytesHex.startsWith("0x") ? bytesHex.slice(2) : bytesHex;
-  if (hex.length !== 128) return formatAddress(bytesHex);
-  const partA = hex.slice(0, 64);
-  const partB = hex.slice(64, 128);
-  return `0x${partA}\n0x${partB}`;
-};
-
-const formatAddressForChain = (
-  bytesHex: string,
-  chainId: ethers.BigNumberish
-): string => {
-  const id = chainId.toString();
-  if (id === "103" || id === "105") {
-    return splitSuiCombinedAddress(bytesHex);
-  }
-  return formatAddress(bytesHex);
 };
 
 export const fetchContracts = async (

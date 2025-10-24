@@ -320,3 +320,30 @@ export const formatAddress = (bytesHex: string): string => {
     return bytesHex;
   }
 };
+
+/**
+ * For Sui chains (chain IDs 103 and 105), contract addresses are 64 bytes (128 hex chars)
+ * representing two concatenated 32-byte values. Split them and display on separate lines.
+ */
+export const splitSuiCombinedAddress = (bytesHex: string): string => {
+  const hex = bytesHex.startsWith("0x") ? bytesHex.slice(2) : bytesHex;
+  if (hex.length !== 128) return formatAddress(bytesHex);
+  const partA = hex.slice(0, 64);
+  const partB = hex.slice(64, 128);
+  return `0x${partA}\n0x${partB}`;
+};
+
+/**
+ * Formats an address based on the chain ID, applying chain-specific formatting rules.
+ * For Sui chains (103, 105), splits combined addresses; otherwise uses standard formatting.
+ */
+export const formatAddressForChain = (
+  bytesHex: string,
+  chainId: ethers.BigNumberish
+): string => {
+  const id = chainId.toString();
+  if (id === "103" || id === "105") {
+    return splitSuiCombinedAddress(bytesHex);
+  }
+  return formatAddress(bytesHex);
+};
