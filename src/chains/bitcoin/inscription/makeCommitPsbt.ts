@@ -5,7 +5,7 @@ import {
   BITCOIN_SCRIPT,
   ESTIMATED_VIRTUAL_SIZE,
 } from "../../../../types/bitcoin.constants";
-import { calculateRevealFee } from "../../../../utils/bitcoin.helpers";
+import { calculateRevealFee } from "../../../../utils/bitcoin.inscription.helpers";
 
 export const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
 

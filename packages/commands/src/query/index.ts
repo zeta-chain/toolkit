@@ -3,6 +3,7 @@ import { Command } from "commander";
 import { balancesCommand } from "./balances";
 import { cctxCommand } from "./cctx";
 import { chainsCommand } from "./chains";
+import { contractsCommand } from "./contracts";
 import { feesCommand } from "./fees";
 import { tokensCommand } from "./tokens";
 
@@ -16,6 +17,7 @@ You can retrieve balances, token information, supported chain details, cross-cha
   )
   .addCommand(balancesCommand)
   .addCommand(cctxCommand)
+  .addCommand(contractsCommand)
   .addCommand(feesCommand)
   .addCommand(tokensCommand)
   .addCommand(chainsCommand)
