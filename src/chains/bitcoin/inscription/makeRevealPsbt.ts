@@ -4,7 +4,7 @@ import {
   BITCOIN_LIMITS,
   BITCOIN_SCRIPT,
 } from "../../../../types/bitcoin.constants";
-import { calculateRevealFee } from "../../../../utils/bitcoin.helpers";
+import { calculateRevealFee } from "../../../../utils/bitcoin.inscription.helpers";
 
 export interface CommitData {
   controlBlock: Buffer;

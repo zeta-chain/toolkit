@@ -13,7 +13,7 @@ import type { BtcTxById, BtcUtxo } from "../types/bitcoin.types";
 
 export const LEAF_VERSION_TAPSCRIPT = BITCOIN_SCRIPT.LEAF_VERSION_TAPSCRIPT;
 import type { PreparedUtxo } from "../src/chains/bitcoin/inscription/makeCommitPsbt";
-import { fetchUtxos } from "./bitcoin.command.helpers";
+import { fetchUtxos } from "./bitcoin.utxo.helpers";
 
 /**
  * Encodes a number as a Bitcoin compact size.
@@ -104,7 +104,7 @@ export const makeCommitTransaction = async (
       scriptItems.push(Buffer.from(inscriptionData.slice(i, end)));
     }
   } else {
-    scriptItems.push(Buffer.from(inscriptionData));
+    scriptItems.push(inscriptionData as number | Buffer<ArrayBuffer>);
   }
 
   scriptItems.push(bitcoin.opcodes.OP_ENDIF);

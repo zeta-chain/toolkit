@@ -1,4 +1,3 @@
-import * as bitcoin from "bitcoinjs-lib";
 import { z } from "zod";
 
 import { EncodingFormat } from "../src/chains/bitcoin/inscription/encode";
@@ -34,8 +33,8 @@ export interface BitcoinTxParams {
   api: string;
   depositFee: number;
   gateway: string;
-  key: bitcoin.Signer;
   memo?: string;
+  network: "signet" | "mainnet";
   networkFee: number;
   utxos: BtcUtxo[];
 }
