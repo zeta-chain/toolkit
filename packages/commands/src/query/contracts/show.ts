@@ -97,10 +97,10 @@ export const showCommand = new Command("show")
     new Option("--rpc <url>", "Custom RPC URL").default(DEFAULT_EVM_RPC_URL)
   )
   .addOption(
-    new Option("--chain-id -c <chainId>", "Chain ID").makeOptionMandatory()
+    new Option("-c, --chain-id <chainId>", "Chain ID").makeOptionMandatory()
   )
   .addOption(
-    new Option("--type -t <type>", "Contract type").makeOptionMandatory()
+    new Option("-t, --type <type>", "Contract type").makeOptionMandatory()
   )
   .action(async (options: ContractsShowOptions) => {
     const validatedOptions = contractsShowOptionsSchema.parse(options);
