@@ -178,7 +178,14 @@ const formatCCTX = (cctx: CrossChainTx) => {
   } = cctx;
   const { sender_chain_id, sender, amount, coin_type } = inbound_params;
   const { receiver_chainId, receiver } = outbound_params[0];
-  const { status, status_message, error_message = "" } = cctx_status;
+  const {
+    status,
+    status_message,
+    isAbortRefunded,
+    error_message = "",
+    error_message_abort,
+    error_message_revert,
+  } = cctx_status;
   const {
     revert_address,
     call_on_revert,
@@ -245,7 +252,8 @@ Receiver: ${receiver}
   ) {
     const isReverted = status === "Reverted";
     const isPendingRevert = status === "PendingRevert";
-    const isAborted = status === "Aborted";
+    const isAborted = status === "Aborted" && isAbortRefunded === true;
+    const isAbortFailed = status === "Aborted" && isAbortRefunded === false;
 
     const statusIcon = isPendingRevert ? "🔄" : "✅";
     let statusMessage = "Unknown";
@@ -255,6 +263,8 @@ Receiver: ${receiver}
       statusMessage = "Revert pending";
     } else if (isAborted) {
       statusMessage = "Abort executed";
+    } else if (isAbortFailed) {
+      statusMessage = "Abort failed";
     }
 
     const revertAddress =
@@ -264,22 +274,26 @@ Receiver: ${receiver}
 
     const revertMessage = revert_message
       ? Buffer.from(revert_message, "base64").toString("hex")
-      : "null";
+      : "-";
 
     let chainDetails = "Unknown";
     if (isReverted || isPendingRevert) {
       chainDetails = `${receiver_chainId} → ${outbound_params[1].receiver_chainId} ${statusIcon} ${statusMessage}`;
     } else if (isAborted) {
       chainDetails = `${receiver_chainId} ${statusIcon} ${statusMessage}`;
+    } else if (isAbortFailed) {
+      chainDetails = `${receiver_chainId} ❌ ${statusMessage}`;
     }
 
     let revertOrAbortTx = `
 ${chainDetails}
-Revert Address:   ${revertAddress}
-Call on Revert:   ${call_on_revert}
-Abort Address:    ${abort_address}
-Revert Message:   ${revertMessage}
-Revert Gas Limit: ${revert_gas_limit}
+Reason for revert: ${error_message_revert}
+Reason for abort:  ${error_message_abort}
+Revert Address:    ${revertAddress}
+Call on Revert:    ${call_on_revert}
+Abort Address:     ${abort_address}
+Revert Message:    ${revertMessage}
+Revert Gas Limit:  ${revert_gas_limit}
 `;
 
     if (isReverted && outbound_params[1].hash !== "") {
