@@ -56,6 +56,7 @@ export type InboundHashToCctxResponseReturnType = z.infer<
 
 export interface CrossChainTx {
   cctx_status: {
+    abort_message: string;
     created_timestamp: string;
     error_message: string;
     error_message_abort: string;
