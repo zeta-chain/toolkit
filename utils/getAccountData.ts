@@ -1,5 +1,4 @@
 import {
-  AccountData,
   accountDataSchema,
   AvailableAccountTypes,
   BitcoinAccountData,

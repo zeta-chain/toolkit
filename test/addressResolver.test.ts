@@ -32,13 +32,13 @@ jest.mock("../utils/accounts", () => ({
   getAccountData: jest.fn(),
 }));
 
-import { accountExists, getAccountData } from "../utils/getAccountData";
 import {
   resolveBitcoinAddress,
   resolveEvmAddress,
   resolveSolanaAddress,
 } from "../utils/addressResolver";
 import { safeExists, safeReadFile } from "../utils/fsUtils";
+import { accountExists, getAccountData } from "../utils/getAccountData";
 
 // Sample addresses for testing
 const VALID_EVM_ADDRESS = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";

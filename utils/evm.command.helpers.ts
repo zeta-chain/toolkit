@@ -10,9 +10,9 @@ import {
   evmPrivateKeySchema,
   numericStringSchema,
 } from "../types/shared.schema";
-import { getAccountData } from "./getAccountData";
 import { hasSufficientBalanceEvm } from "./balances";
 import { getRpcUrl } from "./chains";
+import { getAccountData } from "./getAccountData";
 import { handleError } from "./handleError";
 
 export const baseEvmOptionsSchema = z.object({
