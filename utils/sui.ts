@@ -1,14 +1,14 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
+import { HDKey } from "@scure/bip32";
+import { mnemonicToSeedSync } from "@scure/bip39";
 import { bech32 } from "bech32";
-import { mnemonicToSeedSync } from "bip39";
-import { HDKey } from "ethereum-cryptography/hdkey";
 import { z } from "zod";
 
 import { SuiAccountData } from "../types/accounts.types";
 import { suiGatewayAddressSchema } from "../types/shared.schema";
-import { getAccountData } from "./accounts";
+import { getAccountData } from "./getAccountData";
 import { getAddress } from "./getAddress";
 import { validateAndParseSchema } from "./validateAndParseSchema";
 

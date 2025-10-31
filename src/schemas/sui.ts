@@ -11,6 +11,15 @@ export const suiOptionsSchema = z.object({
   signer: z.instanceof(Ed25519Keypair),
 });
 
+// Browser-friendly schema without Ed25519Keypair requirement
+export const suiBrowserOptionsSchema = z.object({
+  chainId: z.enum(chainIds),
+  gasLimit: z.string().optional(),
+  gatewayObject: z.string().optional(),
+  gatewayPackage: z.string().optional(),
+  signerAddress: z.string().optional(), // Optional: only needed for non-native token transfers
+});
+
 export const suiDepositParamsSchema = z.object({
   amount: z.string(),
   receiver: z.string(),

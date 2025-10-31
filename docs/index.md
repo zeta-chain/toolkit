@@ -56,6 +56,18 @@ await zetachainCall(
 All Toolkit capabilities are also exposed through [`zetachain`
 CLI](https://github.com/zeta-chain/cli).
 
+## Variables
+
+### suiBrowserOptionsSchema
+
+> `const` **suiBrowserOptionsSchema**: `ZodObject`\<\{ `chainId`: `ZodEnum`\<\[`"105"`, `"103"`, `"104"`\]\>; `gasLimit`: `ZodOptional`\<`ZodString`\>; `gatewayObject`: `ZodOptional`\<`ZodString`\>; `gatewayPackage`: `ZodOptional`\<`ZodString`\>; `signerAddress`: `ZodOptional`\<`ZodString`\>; \}, `"strip"`, `ZodTypeAny`, \{ `chainId`: `"105"` \| `"103"` \| `"104"`; `gasLimit?`: `string`; `gatewayObject?`: `string`; `gatewayPackage?`: `string`; `signerAddress?`: `string`; \}, \{ `chainId`: `"105"` \| `"103"` \| `"104"`; `gasLimit?`: `string`; `gatewayObject?`: `string`; `gatewayPackage?`: `string`; `signerAddress?`: `string`; \}\>
+
+***
+
+### suiDepositAndCallParamsSchema
+
+> `const` **suiDepositAndCallParamsSchema**: `ZodObject`\<\{ `amount`: `ZodString`; `receiver`: `ZodString`; `token`: `ZodOptional`\<`ZodString`\>; `types`: `ZodArray`\<`ZodString`, `"many"`\>; `values`: `ZodArray`\<`ZodUnion`\<\[`ZodString`, `ZodBigInt`, `ZodBoolean`\]\>, `"many"`\>; \}, `"strip"`, `ZodTypeAny`, \{ `amount`: `string`; `receiver`: `string`; `token?`: `string`; `types`: `string`[]; `values`: (`string` \| `bigint` \| `boolean`)[]; \}, \{ `amount`: `string`; `receiver`: `string`; `token?`: `string`; `types`: `string`[]; `values`: (`string` \| `bigint` \| `boolean`)[]; \}\>
+
 ## Functions
 
 ### evmCall()
@@ -328,6 +340,99 @@ Configuration options including signer and optional gateway address
 `Promise`\<`ContractTransactionResponse`\>
 
 Promise that resolves to the transaction receipt
+
+***
+
+### prepareSuiDepositAndCall()
+
+> **prepareSuiDepositAndCall**(`params`, `options`): `Promise`\<\{ `client`: `SuiJsonRpcClient`; `transaction`: `Transaction`; \}\>
+
+Prepares a Sui deposit and call transaction for browser wallet signing.
+
+This function is designed for browser environments where wallet adapters
+(like Slush, Sui Wallet, etc.) handle transaction signing. It builds the
+same transaction as suiDepositAndCall but returns the unsigned Transaction
+object instead of executing it.
+
+#### Parameters
+
+##### params
+
+The deposit and call parameters including amount, receiver, coin type, function types/values
+
+###### amount
+
+`string` = `...`
+
+###### receiver
+
+`string` = `...`
+
+###### token?
+
+`string` = `...`
+
+###### types
+
+`string`[] = `...`
+
+###### values
+
+(`string` \| `bigint` \| `boolean`)[] = `...`
+
+##### options
+
+Configuration options including chain ID, gas limit, gateway settings, and optional signer address
+
+###### chainId
+
+`"105"` \| `"103"` \| `"104"` = `...`
+
+###### gasLimit?
+
+`string` = `...`
+
+###### gatewayObject?
+
+`string` = `...`
+
+###### gatewayPackage?
+
+`string` = `...`
+
+###### signerAddress?
+
+`string` = `...`
+
+#### Returns
+
+`Promise`\<\{ `client`: `SuiJsonRpcClient`; `transaction`: `Transaction`; \}\>
+
+Object containing the unsigned Transaction and SuiClient
+
+#### Example
+
+```typescript
+// In a browser with wallet adapter
+const { transaction, client } = await prepareSuiDepositAndCall(
+  {
+    amount: "0.1",
+    receiver: "0x123...",
+    types: ["string"],
+    values: ["hello"]
+  },
+  {
+    chainId: "105",
+    signerAddress: "0xabc..." // Current wallet address
+  }
+);
+
+// Sign and execute with wallet adapter
+const result = await walletAdapter.signAndExecuteTransaction({
+  transaction,
+  options: { showEffects: true }
+});
+```
 
 ***
 

@@ -19,7 +19,7 @@ import {
   typesAndValuesLengthRefineRule,
 } from "../types/shared.schema";
 import { handleError } from "./";
-import { getAccountData } from "./accounts";
+import { getAccountData } from "./getAccountData";
 import { trim0x } from "./trim0x";
 
 export const baseSolanaOptionsSchema = z.object({

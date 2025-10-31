@@ -11,7 +11,7 @@ import {
   TONAccountData,
 } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
-import { accountExists, getAccountData } from "./accounts";
+import { accountExists, getAccountData } from "./getAccountData";
 
 /**
  * Check if a string is a valid EVM address

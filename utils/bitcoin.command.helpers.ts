@@ -18,7 +18,7 @@ import {
 } from "../types/bitcoin.constants";
 import { formatEncodingChoices } from "../types/bitcoin.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
-import { getAccountData } from "./accounts";
+import { getAccountData } from "./getAccountData";
 import { handleError } from "./handleError";
 export interface BitcoinKeyPair {
   address: string;
