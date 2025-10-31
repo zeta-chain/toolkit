@@ -27,7 +27,7 @@ jest.mock("../utils/keyPaths", () => ({
   getAccountKeyPath: jest.fn().mockReturnValue("/mock/path/account.json"),
 }));
 
-jest.mock("../utils/accounts", () => ({
+jest.mock("../utils/getAccountData", () => ({
   accountExists: jest.fn(),
   getAccountData: jest.fn(),
 }));
