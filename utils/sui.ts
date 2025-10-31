@@ -12,8 +12,6 @@ import { getAccountData } from "./getAccountData";
 import { getAddress } from "./getAddress";
 import { validateAndParseSchema } from "./validateAndParseSchema";
 
-console.debug("UTILS/SUI.TS SHIPPED V2 - browser-safe deps only");
-
 export const GAS_BUDGET = 10_000_000;
 export const SUI_GAS_COIN_TYPE = "0x2::sui::SUI";
 export const SUI_DEFAULT_DECIMALS = "9";
