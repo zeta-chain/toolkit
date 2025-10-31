@@ -14,7 +14,7 @@ import {
   numericStringSchema,
   rpcOrChainIdRefineRule,
 } from "../types/shared.schema";
-import { getAccountData } from "./accounts";
+import { getAccountData } from "./getAccountData";
 import { getRpcUrl } from "./chains";
 import { handleError } from "./handleError";
 import { toHexString } from "./toHexString";

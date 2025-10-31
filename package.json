@@ -31,6 +31,11 @@
       "import": "./dist/esm/src/chains/solana/index.js",
       "default": "./dist/cjs/src/chains/solana/index.js"
     },
+    "./chains/sui": {
+      "types": "./dist/types/src/chains/sui/index.d.ts",
+      "import": "./dist/esm/src/chains/sui/index.js",
+      "default": "./dist/cjs/src/chains/sui/index.js"
+    },
     "./tasks": {
       "types": "./dist/types/packages/tasks/src/index.d.ts",
       "import": "./dist/esm/packages/tasks/src/index.js",
@@ -156,6 +161,8 @@
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@openzeppelin/contracts": "^5.0.2",
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "@scure/bip32": "^2.0.1",
+    "@scure/bip39": "^2.0.1",
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/web3.js": "1.95.8",
     "@ton/core": "^0.60.1",

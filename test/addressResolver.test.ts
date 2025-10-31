@@ -32,7 +32,7 @@ jest.mock("../utils/accounts", () => ({
   getAccountData: jest.fn(),
 }));
 
-import { accountExists, getAccountData } from "../utils/accounts";
+import { accountExists, getAccountData } from "../utils/getAccountData";
 import {
   resolveBitcoinAddress,
   resolveEvmAddress,

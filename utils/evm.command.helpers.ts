@@ -10,7 +10,7 @@ import {
   evmPrivateKeySchema,
   numericStringSchema,
 } from "../types/shared.schema";
-import { getAccountData } from "./accounts";
+import { getAccountData } from "./getAccountData";
 import { hasSufficientBalanceEvm } from "./balances";
 import { getRpcUrl } from "./chains";
 import { handleError } from "./handleError";
