@@ -47,9 +47,7 @@ export const solanaEncode = async ({
 
   const instructionSysvar = {
     isWritable: false,
-    publicKey: ethers.hexlify(
-      anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY.toBytes()
-    ),
+    publicKey: ethers.hexlify(anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY.toBytes()),
   };
 
   let baseAccounts;
