@@ -20,7 +20,11 @@ export const solanaEncode = async ({
   mint,
   accounts = [],
 }: EncodeOptions) => {
-  const connectedPdaAccount = new anchor.web3.PublicKey(connected);
+  const connectedProgramId = new anchor.web3.PublicKey(connected);
+  const [connectedPdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("connected", "utf-8")],
+    connectedProgramId
+  );
   const [pdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("meta", "utf-8")],
     new anchor.web3.PublicKey(gateway)
@@ -39,6 +43,13 @@ export const solanaEncode = async ({
   const systemProgram = {
     isWritable: false,
     publicKey: ethers.hexlify(anchor.web3.SystemProgram.programId.toBytes()),
+  };
+
+  const instructionSysvar = {
+    isWritable: false,
+    publicKey: ethers.hexlify(
+      anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY.toBytes()
+    ),
   };
 
   let baseAccounts;
@@ -72,9 +83,10 @@ export const solanaEncode = async ({
       gatewayPda,
       tokenProgram,
       systemProgram,
+      instructionSysvar,
     ];
   } else {
-    baseAccounts = [pda, gatewayPda, systemProgram];
+    baseAccounts = [pda, gatewayPda, systemProgram, instructionSysvar];
   }
 
   // Parse additional accounts using our utility function
