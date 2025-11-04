@@ -14,10 +14,7 @@ const main = async (options: EncodeOptions) => {
 
 export const encodeCommand = new Command("encode")
   .summary("Encode payload data for Solana")
-  .requiredOption(
-    "--connected <address>",
-    "Connected program address used to derive the PDA"
-  )
+  .requiredOption("--connected <address>", "Connected program address")
   .requiredOption("--data <data>", "Data to encode")
   .requiredOption("--gateway <address>", "Gateway program address")
   .option("--mint <address>", "Mint address for SPL token operations")
