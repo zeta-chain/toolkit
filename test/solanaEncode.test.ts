@@ -1,4 +1,26 @@
+import * as anchor from "@coral-xyz/anchor";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
+import { ethers } from "ethers";
+
 import { solanaEncode } from "../packages/client/src/solanaEncode";
+
+type EncodedResult = {
+  accounts: Array<{ isWritable: boolean; publicKey: string }>;
+  data: string;
+};
+
+const tupleSignature = [
+  "tuple(tuple(bytes32 publicKey, bool isWritable)[] accounts, bytes data)",
+];
+
+const decodeEncodedResult = (encoded: string): EncodedResult =>
+  ethers.AbiCoder.defaultAbiCoder().decode(
+    tupleSignature,
+    encoded
+  )[0] as unknown as EncodedResult;
+
+const hexlifyPubkey = (pubkey: anchor.web3.PublicKey) =>
+  ethers.hexlify(pubkey.toBytes());
 
 describe("solanaEncode", () => {
   it("should encode basic data without mint", async () => {
@@ -8,11 +30,37 @@ describe("solanaEncode", () => {
       gateway: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
     };
 
-    const expected =
-      "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000000030b650b5c456bbc1c19bb901bb1fe3538d91402596d1675db7e3d40fc2f98306a0000000000000000000000000000000000000000000000000000000000000001803e2c72756c303bd21a5b950e10ab343e82118c123dbf6e53e326c496649b4d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003736f6c0000000000000000000000000000000000000000000000000000000000";
+    const connectedProgramId = new anchor.web3.PublicKey(input.connected);
+    const [connectedPdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("connected", "utf-8")],
+      connectedProgramId
+    );
+    const [gatewayPdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("meta", "utf-8")],
+      new anchor.web3.PublicKey(input.gateway)
+    );
 
     const result = await solanaEncode(input);
-    expect(result).toBe(expected);
+    const { accounts, data: encodedData } = decodeEncodedResult(result);
+
+    expect(encodedData).toBe(ethers.hexlify(ethers.toUtf8Bytes(input.data)));
+    expect(accounts).toHaveLength(4);
+
+    expect(accounts[0].publicKey).toBe(hexlifyPubkey(connectedPdaAccount));
+    expect(accounts[0].isWritable).toBe(true);
+
+    expect(accounts[1].publicKey).toBe(hexlifyPubkey(gatewayPdaAccount));
+    expect(accounts[1].isWritable).toBe(false);
+
+    expect(accounts[2].publicKey).toBe(
+      hexlifyPubkey(anchor.web3.SystemProgram.programId)
+    );
+    expect(accounts[2].isWritable).toBe(false);
+
+    expect(accounts[3].publicKey).toBe(
+      hexlifyPubkey(anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY)
+    );
+    expect(accounts[3].isWritable).toBe(false);
   });
 
   it("should encode data with mint", async () => {
@@ -23,11 +71,54 @@ describe("solanaEncode", () => {
       mint: "A4NAzqwdGRxDxbRfiX5uMPdia6RbGJ3U3W9gvutNzBay",
     };
 
-    const expected =
-      "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000001e000000000000000000000000000000000000000000000000000000000000000060b650b5c456bbc1c19bb901bb1fe3538d91402596d1675db7e3d40fc2f98306a0000000000000000000000000000000000000000000000000000000000000001fb0520680b6a72b1d16b8a6627f0651df92d4fcae652b9b6899f44552bfbb5a400000000000000000000000000000000000000000000000000000000000000018695dd4bb5e0900a15c95bd37fc7ac7f64dc6005ae131136ad36cd9967a11bb20000000000000000000000000000000000000000000000000000000000000000803e2c72756c303bd21a5b950e10ab343e82118c123dbf6e53e326c496649b4d000000000000000000000000000000000000000000000000000000000000000006ddf6e1d765a193d9cbe146ceeb79ac1cb485ed5f5b37913a8cf5857eff00a90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003736f6c0000000000000000000000000000000000000000000000000000000000";
+    const connectedProgramId = new anchor.web3.PublicKey(input.connected);
+    const [connectedPdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("connected", "utf-8")],
+      connectedProgramId
+    );
+    const [gatewayPdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("meta", "utf-8")],
+      new anchor.web3.PublicKey(input.gateway)
+    );
+    const mintPubkey = new anchor.web3.PublicKey(input.mint);
+    const connectedPdaAta = await getAssociatedTokenAddress(
+      mintPubkey,
+      connectedPdaAccount,
+      true
+    );
 
     const result = await solanaEncode(input);
-    expect(result).toBe(expected);
+    const { accounts, data: encodedData } = decodeEncodedResult(result);
+
+    expect(encodedData).toBe(ethers.hexlify(ethers.toUtf8Bytes(input.data)));
+    expect(accounts).toHaveLength(7);
+
+    expect(accounts[0].publicKey).toBe(hexlifyPubkey(connectedPdaAccount));
+    expect(accounts[0].isWritable).toBe(true);
+
+    expect(accounts[1].publicKey).toBe(hexlifyPubkey(connectedPdaAta));
+    expect(accounts[1].isWritable).toBe(true);
+
+    expect(accounts[2].publicKey).toBe(hexlifyPubkey(mintPubkey));
+    expect(accounts[2].isWritable).toBe(false);
+
+    expect(accounts[3].publicKey).toBe(hexlifyPubkey(gatewayPdaAccount));
+    expect(accounts[3].isWritable).toBe(false);
+
+    expect(accounts[4].publicKey).toBe(
+      hexlifyPubkey(anchor.utils.token.TOKEN_PROGRAM_ID)
+    );
+    expect(accounts[4].isWritable).toBe(false);
+
+    expect(accounts[5].publicKey).toBe(
+      hexlifyPubkey(anchor.web3.SystemProgram.programId)
+    );
+    expect(accounts[5].isWritable).toBe(false);
+
+    expect(accounts[6].publicKey).toBe(
+      hexlifyPubkey(anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY)
+    );
+    expect(accounts[6].isWritable).toBe(false);
   });
 
   it("should encode data with mint and additional accounts", async () => {
@@ -42,11 +133,68 @@ describe("solanaEncode", () => {
       mint: "A4NAzqwdGRxDxbRfiX5uMPdia6RbGJ3U3W9gvutNzBay",
     };
 
-    const expected =
-      "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000026000000000000000000000000000000000000000000000000000000000000000080b650b5c456bbc1c19bb901bb1fe3538d91402596d1675db7e3d40fc2f98306a0000000000000000000000000000000000000000000000000000000000000001fb0520680b6a72b1d16b8a6627f0651df92d4fcae652b9b6899f44552bfbb5a400000000000000000000000000000000000000000000000000000000000000018695dd4bb5e0900a15c95bd37fc7ac7f64dc6005ae131136ad36cd9967a11bb20000000000000000000000000000000000000000000000000000000000000000803e2c72756c303bd21a5b950e10ab343e82118c123dbf6e53e326c496649b4d000000000000000000000000000000000000000000000000000000000000000006ddf6e1d765a193d9cbe146ceeb79ac1cb485ed5f5b37913a8cf5857eff00a90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005500bd811d9233154acf43b49e6e76e71f7327b491f687ba1d443997506025010000000000000000000000000000000000000000000000000000000000000001ccbb0d078f40dfc4c229d95aea785bf159dff1459594e2879df26f2b26dbe98b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003736f6c0000000000000000000000000000000000000000000000000000000000";
+    const connectedProgramId = new anchor.web3.PublicKey(input.connected);
+    const [connectedPdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("connected", "utf-8")],
+      connectedProgramId
+    );
+    const [gatewayPdaAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("meta", "utf-8")],
+      new anchor.web3.PublicKey(input.gateway)
+    );
+    const mintPubkey = new anchor.web3.PublicKey(input.mint);
+    const connectedPdaAta = await getAssociatedTokenAddress(
+      mintPubkey,
+      connectedPdaAccount,
+      true
+    );
 
     const result = await solanaEncode(input);
-    expect(result).toBe(expected);
+    const { accounts, data: encodedData } = decodeEncodedResult(result);
+
+    expect(encodedData).toBe(ethers.hexlify(ethers.toUtf8Bytes(input.data)));
+    expect(accounts).toHaveLength(9);
+
+    expect(accounts[0].publicKey).toBe(hexlifyPubkey(connectedPdaAccount));
+    expect(accounts[0].isWritable).toBe(true);
+
+    expect(accounts[1].publicKey).toBe(hexlifyPubkey(connectedPdaAta));
+    expect(accounts[1].isWritable).toBe(true);
+
+    expect(accounts[2].publicKey).toBe(hexlifyPubkey(mintPubkey));
+    expect(accounts[2].isWritable).toBe(false);
+
+    expect(accounts[3].publicKey).toBe(hexlifyPubkey(gatewayPdaAccount));
+    expect(accounts[3].isWritable).toBe(false);
+
+    expect(accounts[4].publicKey).toBe(
+      hexlifyPubkey(anchor.utils.token.TOKEN_PROGRAM_ID)
+    );
+    expect(accounts[4].isWritable).toBe(false);
+
+    expect(accounts[5].publicKey).toBe(
+      hexlifyPubkey(anchor.web3.SystemProgram.programId)
+    );
+    expect(accounts[5].isWritable).toBe(false);
+
+    expect(accounts[6].publicKey).toBe(
+      hexlifyPubkey(anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY)
+    );
+    expect(accounts[6].isWritable).toBe(false);
+
+    const additionalAccounts = input.accounts.map((account) => {
+      const [publicKey, isWritable] = account.split(":");
+      return {
+        isWritable: isWritable === "true",
+        publicKey: hexlifyPubkey(new anchor.web3.PublicKey(publicKey)),
+      };
+    });
+
+    additionalAccounts.forEach((expectedAccount, index) => {
+      const account = accounts[index + 7];
+      expect(account.publicKey).toBe(expectedAccount.publicKey);
+      expect(account.isWritable).toBe(expectedAccount.isWritable);
+    });
   });
 
   it("should throw error for invalid account format", async () => {
