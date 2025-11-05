@@ -64,7 +64,11 @@ const gatherCctxs = async (
   while (true) {
     // Check if we've exceeded the timeout (skip if timeout is 0)
     if (timeoutMs > 0 && Date.now() - startTime > timeoutMs) {
-      console.log("\nTimeout reached. Exiting...");
+      console.log(
+        `\n${
+          Array.from(results.values()).length
+        } CCTXs found. Timeout reached. Exiting...`
+      );
       return;
     }
 
@@ -311,7 +315,8 @@ Revert Gas Limit:  ${revert_gas_limit}
  * CLI entry – clears screen and prints the list of indexes each round.
  */
 const main = async (options: CctxOptions) => {
-  const { hash, rpc, delay, timeout } = options;
+  const { hash, rpc, delay, interactive } = options;
+  const timeout = interactive ? options.timeout : 5000;
   cctxEmitter.on("cctx", (all) => {
     console.clear();
     all.forEach((cctx) => {
@@ -329,6 +334,7 @@ export const cctxCommand = new Command("cctx")
   )
   .requiredOption("--hash <hash>", "Inbound transaction hash")
   .option("-r, --rpc <rpc>", "RPC endpoint", DEFAULT_API_URL)
+  .option("--non-interactive", "Run in non-interactive mode.")
   .option(
     "-d, --delay <ms>",
     "Delay between polling rounds in milliseconds",
