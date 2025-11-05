@@ -5,7 +5,7 @@ import { Command, Option } from "commander";
 import { TONAccountData } from "../types/accounts.types";
 import { DEFAULT_ACCOUNT_NAME } from "../types/shared.constants";
 import { DEFAULT_ENDPOINT } from "../types/ton.constants";
-import { getAccountData } from "./accounts";
+import { getAccountData } from "./getAccountData";
 import { getAddress } from "./getAddress";
 import { handleError } from "./handleError";
 

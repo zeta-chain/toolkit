@@ -1,3 +1,4 @@
+import * as ecc from "@bitcoinerlab/secp256k1";
 import confirm from "@inquirer/confirm";
 import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
@@ -11,18 +12,12 @@ import bs58 from "bs58";
 import ECPairFactory from "ecpair";
 import { ethers } from "ethers";
 import path from "path";
-import * as ecc from "tiny-secp256k1";
 
 import {
   AccountData,
   accountDataSchema,
   AccountInfo,
   AvailableAccountTypes,
-  BitcoinAccountData,
-  EVMAccountData,
-  SolanaAccountData,
-  SuiAccountData,
-  TONAccountData,
 } from "../types/accounts.types";
 import {
   safeExists,
@@ -45,35 +40,6 @@ export const accountExists = (
   if (!accountName) return false;
   const keyPath = getAccountKeyPath(accountType, accountName);
   return safeExists(keyPath);
-};
-
-/**
- * Get account data by account name and type
- * @typeparam T The expected account data type
- */
-export const getAccountData = <
-  T extends
-    | EVMAccountData
-    | SolanaAccountData
-    | BitcoinAccountData
-    | SuiAccountData
-    | TONAccountData
->(
-  accountType: (typeof AvailableAccountTypes)[number],
-  accountName: string
-): T | undefined => {
-  const keyPath = getAccountKeyPath(accountType, accountName);
-
-  if (!safeExists(keyPath)) {
-    return undefined;
-  }
-
-  try {
-    const keyData = parseJson(safeReadFile(keyPath), accountDataSchema);
-    return keyData as T;
-  } catch {
-    return undefined;
-  }
 };
 
 const createEVMAccount = (privateKey?: string): AccountData => {

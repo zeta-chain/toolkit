@@ -4,7 +4,7 @@ import bs58 from "bs58";
 
 import { SolanaAccountData } from "../types/accounts.types";
 import { hexStringSchema } from "../types/shared.schema";
-import { getAccountData } from "./accounts";
+import { getAccountData } from "./getAccountData";
 import { handleError } from "./handleError";
 import { trim0x } from "./trim0x";
 
