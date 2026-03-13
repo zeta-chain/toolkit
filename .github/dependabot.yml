@@ -1,14 +1,50 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/"
+    directories:
+      - "/"
+
+    # VERSION UPDATES (scheduled)
     schedule:
       interval: "daily"
     commit-message:
       prefix: "chore(deps): "
-    labels:
-      - "dependencies"
-    allow:
-      - dependency-name: "@zetachain/networks"
-      - dependency-name: "@zetachain/protocol-contracts"
-      - dependency-name: "@zetachain/addresses"
+    labels: ["dependencies"]
+    open-pull-requests-limit: 2   # limits *version* PRs; security PRs ignore this
+
+    groups:
+      # 1) ZetaChain packages together
+      zetachain-version:
+        patterns:
+          - "@zetachain/networks"
+          - "@zetachain/protocol-contracts"
+          - "@zetachain/addresses"
+
+      # 2) Everything else in one PR (exclude ZetaChain deps to avoid overlap)
+      everything-else-version:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@zetachain/networks"
+          - "@zetachain/protocol-contracts"
+          - "@zetachain/addresses"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # SECURITY UPDATES (event-driven; schedule is ignored)
+      zetachain-security:
+        applies-to: security-updates
+        patterns:
+          - "@zetachain/networks"
+          - "@zetachain/protocol-contracts"
+          - "@zetachain/addresses"
+
+      everything-else-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@zetachain/networks"
+          - "@zetachain/protocol-contracts"
+          - "@zetachain/addresses"
