@@ -9,6 +9,7 @@
     "typedoc-plugin-markdown",
     "typedoc-plugin-frontmatter"
   ],
+  "fileExtension": ".mdx",
   "readmeFrontmatter": {
     "title": "Toolkit"
   },
